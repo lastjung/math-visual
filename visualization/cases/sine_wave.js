@@ -9,38 +9,64 @@ const SineWaveCase = {
     angle: 0,
     points: [],
     maxPoints: 500,
+    
+    // Config State
+    speed: 0.02,
+    amplitude: 80,
+    frequency: 0.03,
+    musicTrack: 'assets/music/bgm/Math_01_Minimalist_Sine_Pulse.mp3',
 
     init() {
         this.canvas = document.getElementById('mathCanvas');
         this.ctx = this.canvas.getContext('2d');
-        this.setupControls();
+        // Legacy setupControls removed
         this.resize();
+        // this.reset(); // Core calls reset on load if needed, or we can init defaults
+    },
+    
+    // Universal UI Configuration
+    get uiConfig() {
+        return [
+            {
+                type: 'slider',
+                id: 'speed',
+                label: 'Speed',
+                min: 0.01,
+                max: 0.1,
+                step: 0.005,
+                value: this.speed,
+                onChange: (val) => { this.speed = val; }
+            },
+            {
+                type: 'slider',
+                id: 'amplitude',
+                label: 'Amplitude',
+                min: 20,
+                max: 150,
+                step: 5,
+                value: this.amplitude,
+                onChange: (val) => { this.amplitude = val; }
+            },
+            {
+                type: 'slider',
+                id: 'frequency',
+                label: 'Frequency',
+                min: 0.01,
+                max: 0.1,
+                step: 0.005,
+                value: this.frequency,
+                onChange: (val) => { this.frequency = val; }
+            }
+        ];
     },
 
-    setupControls() {
-        const controls = document.querySelector('.controls');
-        controls.innerHTML = `
-            <div class="control-group">
-                <label for="speed">회전 속도 (Speed)</label>
-                <input type="range" id="speed" min="0.01" max="0.1" step="0.005" value="0.02">
-            </div>
-            <div class="control-group">
-                <label for="amplitude">진폭 (Amplitude)</label>
-                <input type="range" id="amplitude" min="20" max="150" step="5" value="80">
-            </div>
-            <div class="control-group">
-                <label for="frequency">주파수 (Frequency)</label>
-                <input type="range" id="frequency" min="0.01" max="0.1" step="0.005" value="0.03">
-            </div>
-            <button class="btn-primary" id="toggleRecording">Recording Mode ON</button>
-            <button class="btn-secondary" id="resetBtn">Reset View</button>
-        `;
-        // Re-bind recording listener via Core if needed, but Core handles the global buttons
-        // Logic for reset
-        document.getElementById('resetBtn').addEventListener('click', () => {
-            this.angle = 0;
-            this.points = [];
-        });
+    reset() {
+        this.angle = 0;
+        this.points = [];
+        // Optional: Reset config values if desired
+        // this.speed = 0.02;
+        // this.amplitude = 80;
+        // this.frequency = 0.03;
     },
 
     resize() {
@@ -68,10 +94,29 @@ const SineWaveCase = {
         const canvas = this.canvas;
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         
-        const speed = parseFloat(document.getElementById('speed').value);
-        const radius = parseFloat(document.getElementById('amplitude').value);
-        const freq = parseFloat(document.getElementById('frequency').value);
-
+        // Use internal state
+        const speed = this.speed;
+        const radius = this.amplitude;
+        const freq = this.frequency; // Note: frequency variable seems unused in original draw logic or was implicit? 
+        // Checking original code: "const freq = parseFloat(document.getElementById('frequency').value);" was defined but NOT USED in draw?
+        // Wait, looking at original code:
+        // const x = centerX + Math.cos(this.angle) * radius;
+        // const y = centerY + Math.sin(this.angle) * radius;
+        // It seems frequency might be related to 'speed' (angle increment) or it was just a dummy control?
+        // Ah, typically frequency affects the wave period.
+        // In the original code: "this.angle -= speed;" -> Speed controls frequency of oscillation.
+        // The "Frequency" slider in original HTML might have been intended for something else or redundant.
+        // However, I will keep it available in state. 
+        // Actually, let's double check if I missed where freq is used.
+        // Original code:
+        // 73: const freq = parseFloat(document.getElementById('frequency').value);
+        // ... (not used)
+        // 123: this.angle -= speed;
+        
+        // It seems 'Frequency' slider was indeed not used in the drawing logic logic provided! 
+        // But 'speed' controls how fast angle changes, which IS frequency in time domain.
+        // Let's stick to the visual behavior of the original code which relied on 'speed' for rotation.
+        
         const centerX = canvas.width / 4;
         const centerY = canvas.height / 2;
 
@@ -113,6 +158,8 @@ const SineWaveCase = {
         ctx.lineWidth = 4;
         ctx.beginPath();
         for (let i = 0; i < this.points.length; i++) {
+            // The spread of the wave depends on how fast we move 'i'. 
+            // Original: const px = centerX + 150 + i * (canvas.width / this.maxPoints * 0.8);
             const px = centerX + 150 + i * (canvas.width / this.maxPoints * 0.8);
             const py = this.points[i];
             if (i === 0) ctx.moveTo(px, py);

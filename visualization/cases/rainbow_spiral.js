@@ -14,6 +14,11 @@ const RainbowSpiralCase = {
     time: 0,
     growth: 0,
     
+    // Config State
+    speed: 0.02,
+    dotSize: 4,
+    musicTrack: 'assets/music/bgm/Math_02_Fractal_Recursive_Ambient.mp3',
+    
     // The Golden Angle: 360 * (1 - 1/phi) ~= 137.50776 degrees
     goldenAngle: Math.PI * (3 - Math.sqrt(5)), 
 
@@ -21,42 +26,51 @@ const RainbowSpiralCase = {
         this.canvas = document.getElementById('mathCanvas');
         if (!this.canvas) return;
         this.ctx = this.canvas.getContext('2d');
-        this.setupControls();
+        // Legacy setupControls removed
         this.resize();
         this.reset();
+    },
+
+    // Universal UI Configuration
+    get uiConfig() {
+        return [
+            {
+                type: 'info',
+                label: 'Golden Angle',
+                value: '137.507...°'
+            },
+            {
+                type: 'slider',
+                id: 'spiralSpeed',
+                label: 'Spin Speed',
+                min: 0.001,
+                max: 0.1,
+                step: 0.001,
+                value: this.speed,
+                onChange: (val) => { this.speed = val; }
+            },
+            {
+                type: 'slider',
+                id: 'pointSize',
+                label: 'Dot Size',
+                min: 1,
+                max: 10,
+                step: 0.5,
+                value: this.dotSize,
+                onChange: (val) => { this.dotSize = val; }
+            }
+        ];
     },
 
     reset() {
         this.time = 0;
         this.growth = 0;
+        // Reset defaults if desired, or keep last set value
+        // this.speed = 0.02; 
         if (this.ctx) {
             this.ctx.fillStyle = '#000000';
             this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
         }
-    },
-
-    setupControls() {
-        const controls = document.querySelector('.controls');
-        if (!controls) return;
-        
-        controls.innerHTML = `
-            <div class="control-group">
-                <label>황금각 (Golden Angle)</label>
-                <div style="font-family: monospace; color: var(--brilliant-green);">137.507...°</div>
-            </div>
-            <div class="control-group">
-                <label for="spiralSpeed">회전 속도 (Spin)</label>
-                <input type="range" id="spiralSpeed" min="0.001" max="0.1" step="0.001" value="0.02">
-            </div>
-            <div class="control-group">
-                <label for="pointSize">점 크기 (Dot Size)</label>
-                <input type="range" id="pointSize" min="1" max="10" step="0.5" value="4">
-            </div>
-            <button class="btn-primary" id="restartSpiral">다시 성장 (Re-Bloom)</button>
-        `;
-        
-        const btn = document.getElementById('restartSpiral');
-        if (btn) btn.addEventListener('click', () => this.reset());
     },
 
     resize() {
@@ -92,8 +106,9 @@ const RainbowSpiralCase = {
         ctx.fillRect(0, 0, width, height);
 
         // 2. Constants & Controls
-        const speed = parseFloat(document.getElementById('spiralSpeed')?.value || 0.02);
-        const dotBaseSize = parseFloat(document.getElementById('pointSize')?.value || 4);
+        // Use internal state
+        const speed = this.speed;
+        const dotBaseSize = this.dotSize;
         
         this.time += speed;
 

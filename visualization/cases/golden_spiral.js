@@ -18,6 +18,7 @@ const GoldenSpiralCase = {
     // Config
     maxSteps: 1000,     // Effectively Infinite
     speed: 0.006, 
+    musicTrack: 'assets/music/bgm/Math_09_Fibonacci_Golden_Ratio.mp3',
     
     // Expanded Pastel Palette (12 colors for variety)
     colors: [
@@ -47,15 +48,37 @@ const GoldenSpiralCase = {
         this.canvas = document.getElementById('mathCanvas');
         if (!this.canvas) return;
         this.ctx = this.canvas.getContext('2d');
-        this.setupControls();
+        // Legacy setupControls removed
         this.resize();
         this.reset();
+    },
+    
+    // Universal UI Configuration
+    get uiConfig() {
+        return [
+            {
+                type: 'slider',
+                id: 'buildSpeed',
+                label: 'Speed',
+                min: 0.002,
+                max: 0.03,
+                step: 0.001,
+                value: this.speed,
+                onChange: (val, labelEl) => {
+                    this.speed = val;
+                    if (val < 0.005) labelEl.textContent = "Slow";
+                    else if (val < 0.01) labelEl.textContent = "Normal";
+                    else labelEl.textContent = "Fast";
+                }
+            }
+        ];
     },
 
     reset() {
         this.step = 0;
         this.progress = 0;
         this.squares = [];
+        this.speed = 0.006; // Reset speed as well
         
         // Initial Square
         this.squares.push({
@@ -77,166 +100,6 @@ const GoldenSpiralCase = {
         this.targetY = -5;
     },
 
-    setupControls() {
-        // Remove existing controls if any
-        const existingDock = document.getElementById('floating-dock-container');
-        if (existingDock) existingDock.remove();
-        const existingPanel = document.getElementById('settings-panel');
-        if (existingPanel) existingPanel.remove();
-
-        // 1. Settings Panel (Hidden by default)
-        const panel = document.createElement('div');
-        panel.id = 'settings-panel';
-        panel.style.cssText = `
-            position: fixed; bottom: 100px; left: 50%; transform: translate(-50%, 20px); 
-            opacity: 0; pointer-events: none; transition: all 0.3s ease; 
-            background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px);
-            padding: 24px; border-radius: 24px; width: 320px; 
-            box-shadow: 0 10px 40px rgba(0,0,0,0.2); z-index: 1000;
-            display: flex; flex-direction: column; gap: 16px;
-        `;
-        panel.innerHTML = `
-            <div>
-                <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
-                    <label style="font-weight:700; color:#333;">Speed</label>
-                    <span id="speed-val" style="font-family:monospace; color:#29cc57;">Normal</span>
-                </div>
-                <input type="range" id="buildSpeed" min="0.002" max="0.03" step="0.001" value="0.006" style="width:100%; accent-color:#29cc57;">
-            </div>
-            <div style="font-size:0.8rem; color:#666; text-align:center;">
-                Press <b style="color:#000;">ESC</b> to exit Fullscreen
-            </div>
-        `;
-        document.body.appendChild(panel);
-
-        const speedInput = document.getElementById('buildSpeed');
-        const speedVal = document.getElementById('speed-val');
-        speedInput.oninput = (e) => {
-            const v = parseFloat(e.target.value);
-            if (v < 0.005) speedVal.textContent = "Slow";
-            else if (v < 0.01) speedVal.textContent = "Normal";
-            else speedVal.textContent = "Fast";
-        };
-
-        // 2. Floating Dock
-        const dock = document.createElement('div');
-        dock.id = 'floating-dock-container';
-        dock.style.cssText = `
-            position: fixed; bottom: 30px; left: 50%; transform: translate(-50%, 0); 
-            z-index: 1001; display: flex; gap: 12px; align-items: center; 
-            background: rgba(30, 30, 40, 0.7); backdrop-filter: blur(20px); 
-            padding: 12px 20px; border-radius: 50px; 
-            border: 1px solid rgba(255, 255, 255, 0.1); 
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
-            transition: opacity 0.3s;
-        `;
-        
-        // Helper for Icon Buttons
-        const createBtn = (html, title, onClick) => {
-            const b = document.createElement('button');
-            b.innerHTML = html;
-            b.title = title;
-            b.onclick = onClick;
-            b.style.cssText = `
-                background: rgba(255,255,255,0.1); border: none; color: white; 
-                width: 40px; height: 40px; border-radius: 50%; cursor: pointer; 
-                display: flex; justify-content: center; align-items: center; 
-                font-size: 1.2rem; transition: all 0.2s;
-            `;
-            b.onmouseover = () => b.style.background = 'rgba(255,255,255,0.2)';
-            b.onmouseout = () => b.style.background = 'rgba(255,255,255,0.1)';
-            return b;
-        };
-
-        // Settings Button
-        const btnSettings = createBtn('⚙️', 'Settings', () => {
-             const isHidden = panel.style.opacity === '0';
-             panel.style.opacity = isHidden ? '1' : '0';
-             panel.style.pointerEvents = isHidden ? 'auto' : 'none';
-             panel.style.transform = isHidden ? 'translate(-50%, 0)' : 'translate(-50%, 20px)';
-        });
-        
-        // Reset Button
-        const btnReset = createBtn('↺', 'Reset', () => {
-            this.reset();
-            // Auto start if paused
-            if (!this.animationId) {
-                const loop = () => {
-                    this.draw();
-                    this.animationId = requestAnimationFrame(loop);
-                };
-                loop();
-                updatePlayBtn(true);
-            }
-        });
-
-        // Play/Pause Main Button
-        const btnPlay = document.createElement('button');
-        btnPlay.style.cssText = `
-            background: linear-gradient(135deg, #29cc57, #009b2b); 
-            color: white; border: none; border-radius: 30px; 
-            padding: 0 24px; height: 44px; font-weight: 700; 
-            font-family: 'Inter', sans-serif; font-size: 0.95rem;
-            display: flex; align-items: center; gap: 8px; cursor: pointer;
-            box-shadow: 0 4px 15px rgba(41, 204, 87, 0.4);
-            transition: transform 0.1s;
-        `;
-        const updatePlayBtn = (isRunning) => {
-            btnPlay.innerHTML = isRunning ? '<span>❚❚</span> <span>Hold</span>' : '<span>▶</span> <span>Resume</span>';
-            btnPlay.style.background = isRunning ? 
-                'linear-gradient(135deg, #29cc57, #009b2b)' : 
-                'linear-gradient(135deg, #ffb74d, #f57c00)';
-        };
-        updatePlayBtn(true); // Default running
-
-        btnPlay.onclick = () => {
-            if (this.animationId) {
-                this.stop();
-                updatePlayBtn(false);
-            } else {
-                const loop = () => {
-                    this.draw();
-                    this.animationId = requestAnimationFrame(loop);
-                };
-                loop();
-                updatePlayBtn(true);
-            }
-        };
-        btnPlay.onmousedown = () => btnPlay.style.transform = 'scale(0.95)';
-        btnPlay.onmouseup = () => btnPlay.style.transform = 'scale(1)';
-
-        // Hide UI Button
-        const btnHide = createBtn('👁️', 'Cinematic Mode', () => {
-             document.body.classList.add('hide-ui');
-             dock.style.opacity = '0'; // Hide dock too
-             dock.style.pointerEvents = 'none';
-             this.resize();
-        });
-
-        // Append to Dock
-        dock.appendChild(btnSettings);
-        dock.appendChild(btnHide); // Moved Hide next to settings
-        dock.appendChild(document.createElement('div')).style.cssText = "width:1px; height:20px; background:rgba(255,255,255,0.2); margin:0 4px;";
-        dock.appendChild(btnReset);
-        dock.appendChild(btnPlay);
-
-        document.body.appendChild(dock);
-
-        // ESC Listener to show Dock
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') {
-                document.body.classList.remove('hide-ui');
-                dock.style.opacity = '1';
-                dock.style.pointerEvents = 'auto';
-                this.resize();
-            }
-        });
-        
-        // Hide original controls area
-        const originalControls = document.querySelector('.controls');
-        if (originalControls) originalControls.style.display = 'none';
-    },
-
     resize() {
         if (!this.canvas || !this.canvas.parentElement) return;
         this.canvas.width = this.canvas.parentElement.clientWidth;
@@ -246,7 +109,7 @@ const GoldenSpiralCase = {
 
     start() {
         if (this.animationId) return;
-        this.reset(); 
+        // this.reset(); // Don't auto-reset on resume, just loop
         const loop = () => {
             this.draw();
             this.animationId = requestAnimationFrame(loop);
@@ -366,9 +229,9 @@ const GoldenSpiralCase = {
         // Background - Keep it dark for contrast
         ctx.fillStyle = '#111'; 
         ctx.fillRect(0, 0, width, height);
-
-        const speed = parseFloat(document.getElementById('buildSpeed')?.value || 0.006);
-        const glowAmnt = parseFloat(document.getElementById('glowAmount')?.value || 15);
+        
+        // Use internal state speed
+        const speed = this.speed;
 
         // Initialize speed & threshold with default
         let currentSpeed = speed;
