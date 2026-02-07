@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Coding Math Visualizer | Brilliant Style</title>
+    <link rel="stylesheet" href="style.css" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div class="container">
+        <!-- Tab Selection -->
+        <nav class="case-tabs">
+            <div class="tab active" data-case="golden">Golden Spiral</div>
+            <div class="tab" data-case="rainbow">Rainbow Spiral</div>
+            <div class="tab" data-case="sine">Sine Wave</div>
+        </nav>
+
+        <header id="header">
+            <h1 id="main-title">Fibonacci Golden Spiral</h1>
+            <p class="subtitle" id="main-subtitle">The infinite beauty of nature's mathematical expansion.</p>
+        </header>
+
+        <main class="dashboard-card">
+            <!-- Visualization Canvas -->
+            <div class="canvas-container" id="capture-zone">
+                <canvas id="mathCanvas"></canvas>
+            </div>
+
+            <!-- Controls (Dynamic) -->
+            <aside class="controls">
+                <!-- Dynamic Controls -->
+            </aside>
+        </main>
+    </div>
+
+    <!-- Sleep Mode Overlay -->
+    <div id="sleep-overlay">
+        <div class="sleep-content">
+            <h2>Deep Sleep Mode</h2>
+            <p>System paused due to inactivity.<br>Move mouse or click to resume.</p>
+            <div class="btn-primary" onclick="Core.resetIdleTimer()">Resume Activity</div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="core.js"></script>
+    <script src="cases/sine_wave.js"></script>
+    <script src="cases/rainbow_spiral.js"></script>
+    <script src="cases/golden_spiral.js"></script>
+    <script>
+        // Tab Management
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                
+                const caseName = tab.getAttribute('data-case');
+                if (caseName === 'sine') {
+                    document.getElementById('main-title').textContent = 'The Geometry of Sine';
+                    document.getElementById('main-subtitle').textContent = 'How circular motion transforms into beautiful waves.';
+                    Core.loadCase(SineWaveCase);
+                } else if (caseName === 'rainbow') {
+                    document.getElementById('main-title').textContent = 'Rainbow Spiral';
+                    document.getElementById('main-subtitle').textContent = 'A colorful feast blooming from the Golden Angle.';
+                    Core.loadCase(RainbowSpiralCase);
+                } else if (caseName === 'golden') {
+                    document.getElementById('main-title').textContent = 'Fibonacci Golden Spiral';
+                    document.getElementById('main-subtitle').textContent = "The infinite beauty of nature's mathematical expansion.";
+                    Core.loadCase(GoldenSpiralCase);
+                }
+            });
+        });
+
+        // Load Default Case (Golden Spiral)
+        window.onload = () => {
+            if (typeof GoldenSpiralCase !== 'undefined') {
+                Core.loadCase(GoldenSpiralCase);
+            } else {
+                console.error("GoldenSpiralCase failed to load!");
+            }
+        };
+    </script>
+  </body>
+</html>

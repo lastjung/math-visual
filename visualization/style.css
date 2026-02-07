@@ -1,0 +1,355 @@
+/* Brilliant-Style Design System for Math Visualization */
+:root {
+  /* Colors */
+  --brilliant-green: #29cc57;
+  --brilliant-green-dark: #009b2b;
+  --brilliant-bg-soft: #eef4ff;
+  --brilliant-text-primary: #000000;
+  --brilliant-text-muted: #555555;
+  --white: #ffffff;
+  --deep-blue: #27455c;
+
+  /* Fonts */
+  --font-heading: "Georgia", serif;
+  --font-body: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+
+  /* Layout */
+  --radius-pill: 48px;
+  --radius-card: 20px;
+  --shadow-tactile: 0px 4px 0px 0px var(--brilliant-green-dark);
+  --shadow-soft: 0px 8px 30px rgba(0, 0, 0, 0.08);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background-color: var(--brilliant-bg-soft);
+  color: var(--brilliant-text-primary);
+  font-family: var(--font-body);
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+
+/* Layout Containers */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 40px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 32px;
+}
+
+/* Header Section */
+header {
+  text-align: center;
+  max-width: 800px;
+}
+
+h1 {
+  font-family: var(--font-heading);
+  font-size: 3rem;
+  margin-bottom: 12px;
+  color: var(--deep-blue);
+}
+
+p.subtitle {
+  font-size: 1.2rem;
+  color: var(--brilliant-text-muted);
+}
+
+/* Case Selection Tabs */
+.case-tabs {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.tab {
+    padding: 10px 20px;
+    background: var(--white);
+    border-radius: var(--radius-pill);
+    cursor: pointer;
+    font-weight: 600;
+    color: var(--deep-blue);
+    border: 1px solid #e2e8f0;
+    transition: all 0.2s;
+}
+
+.tab.active {
+    background: var(--brilliant-green);
+    color: var(--white);
+    border-color: var(--brilliant-green);
+    box-shadow: 0px 4px 0px 0px var(--brilliant-green-dark);
+}
+
+.tab:hover:not(.active) {
+    background: #f8fafc;
+}
+
+/* Main Dashboard Card */
+.dashboard-card {
+  background: var(--white);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-soft);
+  width: 100%;
+  padding: 32px;
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  gap: 32px;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+/* Visualization Canvas Area */
+.canvas-container {
+  background: #fcfdff;
+  border-radius: 12px;
+  border: 2px dashed #e0e7ff;
+  position: relative;
+  min-height: 500px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+}
+
+canvas {
+  width: 100%;
+  height: 100%;
+}
+
+/* Control Panel */
+.controls {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.control-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.control-group label {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--deep-blue);
+}
+
+/* Custom Range Input Style */
+input[type=range] {
+  -webkit-appearance: none;
+  width: 100%;
+  background: transparent;
+  margin: 10px 0;
+}
+
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  height: 18px;
+  width: 18px;
+  border-radius: 50%;
+  background: #29cc57;
+  cursor: pointer;
+  margin-top: -7px;
+  box-shadow: 0 2px 6px rgba(41, 204, 87, 0.4);
+  border: 2px solid #fff;
+  transition: transform 0.1s;
+}
+
+input[type=range]::-webkit-slider-thumb:hover {
+    transform: scale(1.1);
+}
+
+input[type=range]::-webkit-slider-runnable-track {
+  width: 100%;
+  height: 4px;
+  cursor: pointer;
+  background: rgba(0,0,0,0.05);
+  border-radius: 2px;
+  border: 1px solid rgba(0,0,0,0.02);
+}
+
+input[type=range]:focus {
+  outline: none;
+}
+
+
+/* Brilliant Style Buttons */
+.btn-primary {
+  background-color: var(--brilliant-green);
+  color: var(--white);
+  border: none;
+  border-radius: var(--radius-pill);
+  padding: 14px 28px;
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 1rem;
+  cursor: pointer;
+  box-shadow: var(--shadow-tactile);
+  transition:
+    transform 0.1s,
+    box-shadow 0.1s;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+}
+
+.btn-primary:active {
+  transform: translateY(2px);
+  box-shadow: 0px 2px 0px 0px var(--brilliant-green-dark);
+}
+
+.btn-secondary {
+  background: transparent;
+  border: 2px solid #e2e8f0;
+  color: var(--deep-blue);
+  border-radius: var(--radius-pill);
+  padding: 12px 24px;
+  font-family: var(--font-body);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: center;
+}
+
+.btn-secondary:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+}
+
+/* Recording Mode Styles (for YouTube) */
+body.recording-mode .dashboard-card {
+  grid-template-columns: 1fr;
+  padding: 0;
+  box-shadow: none;
+  background: transparent;
+}
+
+body.recording-mode .controls,
+body.recording-mode header,
+body.recording-mode .btn-secondary {
+  display: none;
+}
+
+body.recording-mode .canvas-container {
+  border: none;
+  background: var(--brilliant-bg-soft);
+}
+
+/* Responsive for Shorts (Vertical View) */
+@media (max-width: 768px) {
+  .dashboard-card {
+    grid-template-columns: 1fr;
+  }
+
+  h1 {
+    font-size: 2rem;
+  }
+}
+
+/* Sleep Mode Overlay */
+#sleep-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(41, 204, 87, 0.1);
+  backdrop-filter: blur(10px);
+  z-index: 9999;
+  display: none;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  text-align: center;
+}
+
+.sleep-content {
+  background: var(--white);
+  padding: 40px;
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-soft);
+}
+
+.sleep-content h2 {
+  font-family: var(--font-heading);
+  color: var(--brilliant-green);
+  font-size: 2.5rem;
+  margin-bottom: 20px;
+}
+
+.sleep-content p {
+  font-size: 1.1rem;
+  color: var(--brilliant-text-muted);
+  margin-bottom: 30px;
+}
+
+/* UI Toggle & Fullscreen Mode */
+body.hide-ui .case-tabs,
+body.hide-ui #header,
+body.hide-ui .controls {
+    display: none !important;
+}
+
+body.hide-ui .container {
+    max-width: 100%;
+    padding: 0;
+    margin: 0;
+    height: 100vh;
+}
+
+body.hide-ui main.dashboard-card {
+    background: #000;
+    border: none;
+    box-shadow: none;
+    padding: 0;
+    height: 100vh;
+    width: 100vw;
+    display: block; /* Override grid */
+}
+
+body.hide-ui .canvas-container {
+    width: 100vw;
+    height: 100vh;
+    border-radius: 0;
+    border: none;
+    margin: 0;
+    max-height: none; 
+}
+
+/* Floating Toggle Button */
+#ui-toggle-btn {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 10000;
+    padding: 10px 16px;
+    background: rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    cursor: pointer;
+    backdrop-filter: blur(4px);
+    font-family: var(--font-body);
+    font-size: 0.8rem;
+    transition: all 0.3s ease;
+}
+
+#ui-toggle-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    color: #fff;
+}
+
+body.hide-ui #ui-toggle-btn {
+    opacity: 0.2;
+}
+body.hide-ui #ui-toggle-btn:hover {
+    opacity: 1;
+}
