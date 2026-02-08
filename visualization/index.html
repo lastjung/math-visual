@@ -17,6 +17,8 @@
             <div class="tab active" data-case="golden">Golden Spiral</div>
             <div class="tab" data-case="rainbow">Rainbow Spiral</div>
             <div class="tab" data-case="sine">Sine Wave</div>
+            <div class="tab" data-case="hexagon">Hex Grid</div>
+            <div class="tab" data-case="pathfinding">Pathfinding</div>
         </nav>
 
         <header id="header">
@@ -52,6 +54,8 @@
     <script src="cases/sine_wave.js"></script>
     <script src="cases/rainbow_spiral.js"></script>
     <script src="cases/golden_spiral.js"></script>
+    <script src="cases/hexagon_grid.js"></script>
+    <script src="cases/pathfinding.js"></script>
     <script>
         // Tab Management
         document.querySelectorAll('.tab').forEach(tab => {
@@ -72,6 +76,14 @@
                     document.getElementById('main-title').textContent = 'Fibonacci Golden Spiral';
                     document.getElementById('main-subtitle').textContent = "The infinite beauty of nature's mathematical expansion.";
                     Core.loadCase(GoldenSpiralCase);
+                } else if (caseName === 'hexagon') {
+                    document.getElementById('main-title').textContent = 'Hexagonal Grid';
+                    document.getElementById('main-subtitle').textContent = 'Exploring the mathematical beauty of hexagonal tiling.';
+                    Core.loadCase(HexagonGridCase);
+                } else if (caseName === 'pathfinding') {
+                    document.getElementById('main-title').textContent = 'A* Pathfinding';
+                    document.getElementById('main-subtitle').textContent = 'Finding the shortest path in a hexagonal maze.';
+                    Core.loadCase(PathfindingCase);
                 }
             });
         });

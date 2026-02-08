@@ -119,6 +119,15 @@ const Core = {
                         valDisplay.textContent = v; // Simple update
                         if (ctrl.onChange) ctrl.onChange(v, valDisplay); // Custom handler
                     };
+                } else if (ctrl.type === 'button') {
+                     row.style.textAlign = 'center';
+                     row.innerHTML = `<button class="btn-primary" id="${ctrl.id}" style="width:100%; margin-top:4px;">${ctrl.value}</button>`;
+                     panel.appendChild(row);
+                     
+                     const btn = row.querySelector(`#${ctrl.id}`);
+                     btn.onclick = () => {
+                         if (ctrl.onClick) ctrl.onClick();
+                     };
                 } else if (ctrl.type === 'info') {
                      row.style.textAlign = 'center';
                      row.style.marginBottom = '8px';
@@ -150,7 +159,10 @@ const Core = {
     resetCase() {
         if (this.currentCase && this.currentCase.reset) {
             this.currentCase.reset();
-            if (!this.isRunning) this.togglePlay(); // Auto-play on reset
+            // Auto-play on reset unless case forbids it
+            if (!this.isRunning && this.currentCase.autoPlayOnReset !== false) {
+                 this.togglePlay(); 
+            }
         }
     },
 
