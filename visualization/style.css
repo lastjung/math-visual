@@ -105,10 +105,17 @@ p.subtitle {
   box-shadow: var(--shadow-soft);
   width: 100%;
   padding: 32px;
-  display: grid;
-  grid-template-columns: 1fr 320px; 
+  display: flex; /* Default for mobile */
+  flex-direction: column;
   gap: 32px;
   border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+@media (min-width: 1025px) {
+    .dashboard-card {
+        display: grid;
+        grid-template-columns: 1fr 340px; 
+    }
 }
 
 /* Visualization Canvas Area */
@@ -131,9 +138,18 @@ canvas {
 
 /* Control Panel */
 .controls {
-  display: flex;
+  display: none; /* Hidden by default (mobile) */
   flex-direction: column;
   gap: 24px;
+}
+
+@media (min-width: 1025px) {
+    .controls {
+        display: flex !important;
+        border-left: 1px solid #edf2f7;
+        padding-left: 32px;
+        min-width: 340px;
+    }
 }
 
 .control-group {
@@ -503,6 +519,28 @@ body.hide-ui #ui-toggle-btn:hover {
 
 .play-btn:active {
     transform: scale(0.95);
+}
+
+/* Responsive Visibility for Universal Controls */
+@media (min-width: 1025px) {
+    #floating-dock-container,
+    #settings-panel {
+        display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+        pointer-events: none !important;
+    }
+}
+
+@media (max-width: 1024px) {
+    .controls {
+        display: none !important;
+    }
+    #floating-dock-container {
+        display: flex !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+    }
 }
 
 /* Hide UI Logic */

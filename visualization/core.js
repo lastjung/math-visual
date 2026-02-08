@@ -20,6 +20,7 @@ const Core = {
             if (this.currentCase && this.currentCase.resize) {
                 this.currentCase.resize();
             }
+            this.updateControls(); // Refresh UI layout (sidebar vs dock)
         });
     },
 
@@ -88,14 +89,48 @@ const Core = {
     },
 
     updateControls() {
-        const panel = document.getElementById('settings-panel');
+        // Find active container
+        const isDesktop = window.innerWidth > 1024;
+        const panel = isDesktop ? document.querySelector('.controls') : document.getElementById('settings-panel');
         if (!panel) return;
-        panel.innerHTML = ''; // Clear existing
+        
+        panel.innerHTML = ''; // Clear existing content
+
+        // Add Global Controls for Desktop Sidebar
+        if (isDesktop) {
+            const globalGroup = document.createElement('div');
+            globalGroup.className = 'setting-item';
+            globalGroup.style.marginBottom = '16px';
+            globalGroup.style.paddingBottom = '16px';
+            globalGroup.style.borderBottom = '1px solid #eee';
+            
+            globalGroup.innerHTML = `
+                <div class="setting-header" style="margin-bottom:12px;">
+                    <label>Master Controls</label>
+                </div>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px;">
+                    <button class="btn-primary" id="sidebar-reset" style="padding:10px 0; font-size:0.8rem;">↺ Reset</button>
+                    <button class="btn-primary" id="sidebar-play" style="padding:10px 0; font-size:0.8rem;">
+                        ${this.isRunning ? '❚❚ Pause' : '▶ Resume'}
+                    </button>
+                </div>
+                <button class="btn-secondary" id="sidebar-bgm" style="width:100%; margin-top:8px; font-size:0.8rem;">
+                    BGM: ${window.audioManager && !window.audioManager.isMuted ? 'ON' : 'OFF'}
+                </button>
+            `;
+            panel.appendChild(globalGroup);
+
+            panel.querySelector('#sidebar-reset').onclick = () => this.resetCase();
+            panel.querySelector('#sidebar-play').onclick = () => this.togglePlay();
+            panel.querySelector('#sidebar-bgm').onclick = () => {
+                this.toggleAudio();
+                this.updateControls(); // Refresh button text
+            };
+        }
 
         if (this.currentCase && this.currentCase.uiConfig) {
             const controls = this.currentCase.uiConfig;
             
-            // Generate Controls
             controls.forEach(ctrl => {
                 const row = document.createElement('div');
                 row.className = 'setting-item';
@@ -116,12 +151,12 @@ const Core = {
                     
                     input.oninput = (e) => {
                         const v = parseFloat(e.target.value);
-                        valDisplay.textContent = v; // Simple update
-                        if (ctrl.onChange) ctrl.onChange(v, valDisplay); // Custom handler
+                        valDisplay.textContent = v;
+                        if (ctrl.onChange) ctrl.onChange(v, valDisplay);
                     };
                 } else if (ctrl.type === 'button') {
                      row.style.textAlign = 'center';
-                     row.innerHTML = `<button class="btn-primary" id="${ctrl.id}" style="width:100%; margin-top:4px;">${ctrl.value}</button>`;
+                     row.innerHTML = `<button class="btn-primary" id="${ctrl.id}" style="width:100%; margin-top:4px;">${ctrl.value || ctrl.label}</button>`;
                      panel.appendChild(row);
                      
                      const btn = row.querySelector(`#${ctrl.id}`);
@@ -143,20 +178,8 @@ const Core = {
                     select.onchange = (e) => {
                         if (ctrl.onChange) ctrl.onChange(e.target.value);
                     };
-                } else if (ctrl.type === 'info') {
-                     row.style.textAlign = 'center';
-                     row.style.marginBottom = '8px';
-                     row.innerHTML = `<div style="font-weight:700; color:#333;">${ctrl.label}</div>
-                                      <div style="font-family:monospace; color:var(--brilliant-green);">${ctrl.value}</div>`;
-                     panel.appendChild(row);
                 }
             });
-
-            // Footer
-             const footer = document.createElement('div');
-             footer.style.cssText = "font-size:0.8rem; color:#666; text-align:center; margin-top:8px;";
-             footer.innerHTML = `Press <b style="color:#000;">ESC</b> to exit Fullscreen`;
-             panel.appendChild(footer);
         }
     },
 
