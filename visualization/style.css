@@ -106,7 +106,7 @@ p.subtitle {
   width: 100%;
   padding: 32px;
   display: grid;
-  grid-template-columns: 1fr; /* Changed from 1fr 300px to 1fr */
+  grid-template-columns: 1fr 320px; 
   gap: 32px;
   border: 1px solid rgba(0, 0, 0, 0.05);
 }
@@ -406,6 +406,24 @@ body.hide-ui #ui-toggle-btn:hover {
 .setting-value {
     font-family: monospace;
     color: var(--brilliant-green);
+}
+
+.setting-select {
+    width: 100%;
+    padding: 10px;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    background: #fff;
+    font-family: inherit;
+    font-size: 0.9rem;
+    color: var(--deep-blue);
+    cursor: pointer;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.setting-select:focus {
+    border-color: var(--brilliant-green);
 }
 
 /* Floating Dock */

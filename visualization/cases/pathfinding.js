@@ -219,7 +219,14 @@ const PathfindingCase = {
         this.walls.delete(this.key(this.startNode));
         this.walls.delete(this.key(this.goalNode));
         
-        // this.runAStar(); // Removed implicit run
+        // Reset Search State
+        this.path = [];
+        this.isSearching = false;
+        this.foundPath = false;
+        this.cameFrom = {};
+        this.costSoFar = {};
+        this.frontier = new PriorityQueue();
+        
         this.draw();
     },
 

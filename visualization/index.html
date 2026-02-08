@@ -19,6 +19,9 @@
             <div class="tab" data-case="sine">Sine Wave</div>
             <div class="tab" data-case="hexagon">Hex Grid</div>
             <div class="tab" data-case="pathfinding">Pathfinding</div>
+            <div class="tab" data-case="damage">Damage Rolls</div>
+            <div class="tab" data-case="circular">Circular Obstacles</div>
+            <div class="tab" data-case="polygon-map">Polygon Map</div>
         </nav>
 
         <header id="header">
@@ -56,6 +59,10 @@
     <script src="cases/golden_spiral.js"></script>
     <script src="cases/hexagon_grid.js"></script>
     <script src="cases/pathfinding.js"></script>
+    <script src="cases/damage_rolls.js"></script>
+    <script src="https://unpkg.com/delaunator@5.0.0/delaunator.min.js"></script>
+    <script src="cases/circular_pathfinding.js"></script>
+    <script src="cases/polygon_map.js"></script>
     <script>
         // Tab Management
         document.querySelectorAll('.tab').forEach(tab => {
@@ -84,6 +91,18 @@
                     document.getElementById('main-title').textContent = 'A* Pathfinding';
                     document.getElementById('main-subtitle').textContent = 'Finding the shortest path in a hexagonal maze.';
                     Core.loadCase(PathfindingCase);
+                } else if (caseName === 'damage') {
+                    document.getElementById('main-title').textContent = 'Probability: Damage Rolls';
+                    document.getElementById('main-subtitle').textContent = 'Exploring dice probability distributions and variance.';
+                    Core.loadCase(DamageRollsCase);
+                } else if (caseName === 'circular') {
+                    document.getElementById('main-title').textContent = 'Circular Obstacle Pathfinding';
+                    document.getElementById('main-subtitle').textContent = 'Finding the shortest path around round obstacles.';
+                    Core.loadCase(CircularPathfindingCase);
+                } else if (caseName === 'polygon-map') {
+                    document.getElementById('main-title').textContent = 'Polygonal Map Generation';
+                    document.getElementById('main-subtitle').textContent = 'Procedural island generation using Voronoi diagrams.';
+                    Core.loadCase(PolygonMapCase);
                 }
             });
         });

@@ -128,6 +128,21 @@ const Core = {
                      btn.onclick = () => {
                          if (ctrl.onClick) ctrl.onClick();
                      };
+                } else if (ctrl.type === 'select') {
+                    row.innerHTML = `
+                        <div class="setting-header">
+                            <label>${ctrl.label}</label>
+                        </div>
+                        <select id="${ctrl.id}" class="setting-select">
+                            ${ctrl.options.map(opt => `<option value="${opt.value}" ${opt.value === ctrl.value ? 'selected' : ''}>${opt.label}</option>`).join('')}
+                        </select>
+                    `;
+                    panel.appendChild(row);
+                    
+                    const select = row.querySelector('select');
+                    select.onchange = (e) => {
+                        if (ctrl.onChange) ctrl.onChange(e.target.value);
+                    };
                 } else if (ctrl.type === 'info') {
                      row.style.textAlign = 'center';
                      row.style.marginBottom = '8px';
@@ -243,9 +258,16 @@ const Core = {
             this.currentCase.destroy();
         }
         
-        // Hide legacy controls if they exist in HTML
+        // Desktop sidebar logic: Force layout update on load
         const legacyControls = document.querySelector('.controls');
-        if(legacyControls) legacyControls.style.display = 'none';
+        if (legacyControls) {
+            legacyControls.style.display = (window.innerWidth > 1024) ? 'flex' : 'none';
+        }
+        
+        const dashboardCard = document.querySelector('.dashboard-card');
+        if (dashboardCard) {
+            dashboardCard.style.gridTemplateColumns = (window.innerWidth > 1024) ? '1fr 320px' : '1fr';
+        }
 
         this.currentCase = caseInstance;
         this.currentCase.init();
