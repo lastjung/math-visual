@@ -4,98 +4,74 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Polygon Sound - Harmonic Geometry</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- External Libraries -->
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    
+    <!-- Math-sound compatible style -->
     <link rel="stylesheet" href="style.css">
 </head>
-<body class="bg-slate-950 text-white min-h-screen overflow-hidden font-sans">
-    <div id="app" class="flex flex-col items-center justify-center min-h-screen p-4">
-        
-        <!-- Main Dashboard Container -->
-        <div class="w-full max-w-4xl bg-slate-900/50 backdrop-blur-2xl rounded-[3rem] border border-white/10 shadow-2xl overflow-hidden flex flex-col">
-            
-            <!-- Header -->
-            <header class="p-8 border-b border-white/5 flex items-center justify-between">
-                <div class="flex items-center gap-5">
-                    <div class="p-4 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-3xl shadow-xl shadow-blue-500/20">
-                        <i data-lucide="shapes" class="w-8 h-8 text-white"></i>
-                    </div>
-                    <div>
-                        <h1 class="text-3xl font-black tracking-tighter uppercase italic">Polygon Sound</h1>
-                        <p class="text-xs text-slate-500 font-bold uppercase tracking-[0.3em]">Geometric Polyrhythm & Harmony</p>
-                    </div>
-                </div>
-                
-                <div class="flex items-center gap-4">
-                    <button id="playBtn" class="group px-8 py-3.5 bg-white text-slate-950 rounded-2xl font-black flex items-center gap-3 transition-all hover:scale-105 active:scale-95 shadow-lg shadow-white/10">
-                        <span class="icon"><i data-lucide="play" class="fill-current w-5 h-5"></i></span>
-                        <span class="label">START</span>
-                    </button>
-                    <button id="resetBtn" class="p-3.5 bg-slate-800/50 text-slate-400 rounded-2xl hover:text-white hover:bg-slate-700 transition-all">
-                        <i data-lucide="rotate-ccw" class="w-6 h-6"></i>
-                    </button>
-                </div>
-            </header>
+<body>
+    <div class="container">
+        <!-- 1. Header (Shared) -->
+        <header class="header">
+            <h1>Polygon Sound</h1>
+            <p class="subtitle">#geometry #harmonic #rhythm</p>
+        </header>
 
-            <!-- Visualizer Area -->
-            <main class="relative flex-1 flex flex-col items-center justify-center p-4 min-h-[450px]">
-                <canvas id="mainCanvas"></canvas>
-                
-                <!-- Overlay Legend (Optional) -->
-                <div class="absolute top-8 left-8 p-4 bg-white/5 rounded-2xl border border-white/5 backdrop-blur-md hidden md:block">
-                    <div id="currentNote" class="text-3xl font-black text-blue-400">---</div>
-                    <div class="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1">Last Hit</div>
-                </div>
-            </main>
+        <!-- 2. Main Canvas Area (Shared Layout) -->
+        <div class="canvas-wrapper">
+            <span class="function-title" id="currentNote">---</span>
+            <span class="canvas-clock" id="infoText">Layer 1</span>
+            <canvas id="mainCanvas"></canvas>
+        </div>
 
-            <!-- Piano Keyboard & Controls -->
-            <footer class="p-6 bg-slate-950/50 border-t border-white/5 space-y-6">
-                
-                <!-- Piano View -->
-                <div class="relative w-full max-w-sm mx-auto h-24 flex px-2" id="pianoContainer">
-                    <!-- Javascript will inject keys here -->
-                </div>
+        <!-- 3. Formula Space (Replaced with Piano) -->
+        <div class="formula-display">
+            <div id="pianoContainer">
+                <!-- Javascript will inject keys -->
+            </div>
+        </div>
 
-                <!-- Control Grid -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                    <!-- Sides Selector -->
-                    <div class="space-y-4">
-                        <div class="flex items-center justify-between">
-                            <span class="text-[11px] font-black text-slate-500 uppercase tracking-widest">Vertices</span>
-                            <span id="sidesValue" class="text-blue-400 font-black">5</span>
-                        </div>
-                        <div class="flex flex-wrap gap-2" id="sidesSelector">
-                            <!-- JS injected buttons -->
-                        </div>
-                    </div>
+        <!-- 4. Main Controls (Shared Layout) -->
+        <div class="controls">
+            <button id="playBtn" class="control-btn" title="Start/Stop">
+                <i data-lucide="play" id="playIcon"></i>
+            </button>
+            <button id="resetBtn" class="control-btn" title="Reset">
+                <i data-lucide="rotate-ccw"></i>
+            </button>
+        </div>
 
-                    <!-- Skip / Star Type -->
-                    <div class="space-y-4 border-l border-white/5 md:pl-10">
-                        <div class="flex items-center justify-between">
-                            <span class="text-[11px] font-black text-slate-500 uppercase tracking-widest">Star Type</span>
-                            <span id="skipValue" class="text-emerald-400 font-black">1</span>
-                        </div>
-                        <div class="flex gap-2" id="skipSelector">
-                            <!-- JS injected buttons -->
-                        </div>
-                    </div>
+        <!-- 5. Layer Tabs (Category Style) -->
+        <div class="category-tabs" id="layerSelector">
+            <!-- Layers will be injected here -->
+        </div>
 
-                    <!-- Velocity Selector -->
-                    <div class="space-y-4 border-l border-white/5 md:pl-10">
-                        <span class="text-[11px] font-black text-slate-500 uppercase tracking-widest block">Rotation Speed</span>
-                        <div class="flex items-center gap-4">
-                            <input type="range" id="speedSlider" min="0.1" max="5" step="0.1" value="1" 
-                                class="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-blue-500">
-                            <span id="speedValue" class="text-sm font-black w-8">1.0x</span>
-                        </div>
-                    </div>
-                </div>
-            </footer>
+        <!-- 6. Detail Settings (Function Selector Style) -->
+        <div class="function-selector">
+            <!-- Vertices Selector Row -->
+            <div class="selector-row" id="sidesSelector">
+                <!-- V3, V4, V5... injected here -->
+            </div>
+            <!-- Star Type Selector Row -->
+            <div class="selector-row" id="skipSelector">
+                <!-- Skip 1, Skip 2... injected here -->
+            </div>
+        </div>
+
+        <!-- 7. Sliders Area (Shared) -->
+        <div class="sliders-container">
+            <div class="slider-control">
+                <span class="slider-icon">⏱</span>
+                <input type="range" id="speedSlider" min="0.1" max="5" step="0.1" value="1">
+                <span id="speedValue" class="slider-value">1.0x</span>
+            </div>
         </div>
     </div>
 
-    <!-- Entry Point -->
+    <!-- Main Entry -->
     <script type="module" src="app.js"></script>
 </body>
 </html>
