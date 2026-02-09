@@ -97,9 +97,8 @@ export function renderLayerControls() {
     const currentLayer = state.layers[state.activeLayerIndex];
     renderSidesSelector(currentLayer);
     
-    // Update Info Text on Canvas (Show Gen if active)
-    const genText = currentLayer.customVertices ? ` (GEN ${currentLayer.genValue})` : '';
-    document.getElementById('infoText').textContent = `L-${state.activeLayerIndex + 1}: ${currentLayer.sides}-FOLD${genText}`;
+    // Update Info Text on Canvas (Right side)
+    document.getElementById('infoText').textContent = `L-${state.activeLayerIndex + 1}`;
 }
 
 function renderSidesSelector(layer) {
@@ -268,13 +267,34 @@ export function render() {
 }
 
 function updateUI_Dynamic() {
-    // 1. Current Note Banner
-    if (state.lastHitNote) {
-        const noteEl = document.getElementById('currentNote');
-        noteEl.textContent = state.lastHitNote;
-        noteEl.style.color = NOTE_COLORS[state.lastHitNote];
-        noteEl.style.textShadow = `0 0 20px ${NOTE_COLORS[state.lastHitNote]}AA`;
+    const activeIdx = state.activeLayerIndex;
+    const layer = state.layers[activeIdx];
+    if (!layer) return;
+
+    // 1. Main Banner - Polygon Name (instead of hit note)
+    const bannerEl = document.getElementById('currentNote');
+    
+    // Naming Logic
+    let name = '';
+    if (layer.customVertices) {
+        const step = layer.genValue;
+        const count = layer.customVertices.length;
+        
+        // GCD check for Star (If step and 12 are coprime, it's a 12-point star)
+        const gcd = (a, b) => b ? gcd(b, a % b) : a;
+        if (count === 12 && gcd(12, step) === 1) {
+            name = `${step}-STAR`;
+        } else {
+            name = `${count}-GON`;
+        }
+    } else {
+        const names = { 3: 'TRIANGLE', 4: 'SQUARE', 5: 'PENTAGON', 6: 'HEXAGON' };
+        name = names[layer.sides] || `${layer.sides}-GON`;
     }
+
+    bannerEl.textContent = name;
+    bannerEl.style.color = layer.color;
+    bannerEl.style.textShadow = `0 0 10px ${layer.color}66`; // Shadow reduced for less distraction
 
     // 2. Piano Keys Animation
     LINEAR_NOTES.forEach((note, i) => {
