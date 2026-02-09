@@ -83,6 +83,31 @@ const MATH_FUNCTIONS = {
     },
 
     // ========== 🌸 CURVES (유명한 곡선 - Parametric/Polar) ==========
+    lissajous: {
+        category: 'curves',
+        name: 'Lissajous',
+        type: 'parametric',
+        x: (t) => 3 * Math.sin(3 * t),
+        y: (t) => 2 * Math.sin(4 * t),
+        formula: 'x=3sin(3t), y=2sin(4t)',
+        latex: '\\begin{cases} x = 3\\sin(3t) \\\\ y = 2\\sin(4t) \\end{cases}',
+        tRange: { min: 0, max: 2 * Math.PI },
+        viewBox: { xMin: -4, xMax: 4, yMin: -3, yMax: 3 },
+        audioScale: 300,
+        baseFreq: 330
+    },
+    rose: {
+        category: 'curves',
+        name: 'Rose',
+        type: 'polar',
+        r: (theta) => Math.cos(4 * theta),
+        formula: 'r = cos(4θ)',
+        latex: 'r = \\cos(4\\theta)',
+        thetaRange: { min: 0, max: 2 * Math.PI },
+        viewBox: { xMin: -2, xMax: 2, yMin: -2, yMax: 2 },
+        audioScale: 400,
+        baseFreq: 440
+    },
     heart: {
         category: 'curves',
         name: 'Heart',
@@ -238,6 +263,18 @@ const MATH_FUNCTIONS = {
         audioScale: 320,
         baseFreq: 300
     },
+
+    fmSynth: {
+        category: 'sound',
+        name: 'FM Synth',
+        type: 'cartesian',
+        fn: (x) => Math.sin(x * 6 + 2 * Math.sin(x * 12)),
+        formula: 'f(x) = sin(6x + 2sin(12x))',
+        latex: 'f(x) = \\sin(6x + 2\\sin(12x))',
+        range: { xMin: -3, xMax: 3, yMin: -2, yMax: 2 },
+        audioScale: 400,
+        baseFreq: 440
+    },
     chirp: {
         category: 'sound',
         name: 'Chirp',
@@ -305,6 +342,19 @@ const MATH_FUNCTIONS = {
         range: { xMin: -4, xMax: 4, yMin: -0.5, yMax: 1.5 },
         audioScale: 600,
         baseFreq: 500
+    },
+    epicycloid: {
+        category: 'math',
+        name: 'Epicycloid',
+        type: 'parametric',
+        x: (t) => 3 * Math.cos(t) - Math.cos(3 * t),
+        y: (t) => 3 * Math.sin(t) - Math.sin(3 * t),
+        formula: 'x=3cost-cos3t, y=3sint-sin3t',
+        latex: '\\begin{cases} x = 3\\cos t - \\cos 3t \\\\ y = 3\\sin t - \\sin 3t \\end{cases}',
+        tRange: { min: 0, max: 2 * Math.PI },
+        viewBox: { xMin: -5, xMax: 5, yMin: -5, yMax: 5 },
+        audioScale: 250,
+        baseFreq: 300
     },
     hyperbolic: {
         category: 'math',
@@ -413,7 +463,12 @@ const state = {
     zoom: 1,
     drawProgress: 0,
     functionIndex: 1,
-    timerStartTime: null
+    functionIndex: 1,
+    timerStartTime: null,
+    // Auto Play State
+    isAutoPlaying: false,
+    autoQueue: [],
+    autoLoopCount: 0
 };
 
 // ==========================================
@@ -427,6 +482,7 @@ const elements = {
     playBtn: document.getElementById('playBtn'),
     stopBtn: document.getElementById('stopBtn'),
     resetBtn: document.getElementById('resetBtn'),
+    autoBtn: document.getElementById('autoBtn'),
     zoomSlider: document.getElementById('zoomSlider'),
     zoomValue: document.getElementById('zoomValue'),
     volumeSlider: document.getElementById('volumeSlider'),
@@ -500,7 +556,11 @@ function setupEventListeners() {
     elements.stopBtn.addEventListener('click', stop);
     elements.resetBtn.addEventListener('click', reset);
     
-    // Zoom control
+    // Auto Play Button
+    if (elements.autoBtn) {
+        elements.autoBtn.addEventListener('click', toggleAutoPlay);
+    }
+
     elements.zoomSlider.addEventListener('input', (e) => {
         state.zoom = e.target.value / 100;
         elements.zoomValue.textContent = `${e.target.value}%`;
@@ -721,13 +781,16 @@ function drawCartesianCurve(funcData, width, height, progress) {
     const xRange = xMax - xMin;
     const yRange = yMax - yMin;
 
-    graphCtx.strokeStyle = '#000000';
-    graphCtx.lineWidth = 2;
+    // Draw Axes first
+    
+    let isFirst = true;
+
+    // Use Category Color
+    graphCtx.strokeStyle = getCategoryColor(funcData.category);
+    graphCtx.lineWidth = 3;
     graphCtx.lineCap = 'round';
     graphCtx.lineJoin = 'round';
     graphCtx.beginPath();
-    
-    let isFirst = true;
     for (let i = 0; i <= steps; i++) {
         const x = xMin + (xRange * i) / 500;
         let y;
@@ -768,8 +831,9 @@ function drawPolarCurve(funcData, width, height, progress) {
     const xRange = xMax - xMin;
     const yRange = yMax - yMin;
 
-    graphCtx.strokeStyle = '#000000';
-    graphCtx.lineWidth = 2;
+    // Use Category Color
+    graphCtx.strokeStyle = getCategoryColor(funcData.category);
+    graphCtx.lineWidth = 3;
     graphCtx.lineCap = 'round';
     graphCtx.lineJoin = 'round';
     graphCtx.beginPath();
@@ -822,8 +886,9 @@ function drawParametricCurve(funcData, width, height, progress) {
     const xRange = xMax - xMin;
     const yRange = yMax - yMin;
 
-    graphCtx.strokeStyle = '#000000';
-    graphCtx.lineWidth = 2;
+    // Use Category Color
+    graphCtx.strokeStyle = getCategoryColor(funcData.category);
+    graphCtx.lineWidth = 3;
     graphCtx.lineCap = 'round';
     graphCtx.lineJoin = 'round';
     graphCtx.beginPath();
@@ -1006,8 +1071,27 @@ function animate() {
 
     // 진행률 업데이트
     state.drawProgress += 0.004 * state.speed;
+    
+    // Loop End Detection
     if (state.drawProgress > 1) {
         state.drawProgress = 0;
+        
+        // Auto Play Logic: 3 loops per function
+        if (state.isAutoPlaying) {
+            state.autoLoopCount++;
+            if (state.autoLoopCount >= 3) {
+                // Stop current pattern
+                state.isPlaying = false;
+                stopSound();
+                cancelAnimationFrame(state.animationId);
+                
+                // Rest 1s then Next
+                setTimeout(() => {
+                    playNextAuto();
+                }, 1000);
+                return; // Stop animate loop here
+            }
+        }
     }
 
     // 그래프 클리어 & 다시 그리기
@@ -1102,17 +1186,28 @@ function drawParametricPoint(funcData, width, height, progress) {
 }
 
 function drawPoint(canvasX, canvasY, category, height) {
-    const colors = {
-        waves: '#8b5cf6',
-        curves: '#ec4899',
-        sound: '#f59e0b',
-        math: '#10b981',
-        bytebeat: '#ef4444'
-    };
-    graphCtx.fillStyle = colors[category] || '#3b82f6';
+    const color = getCategoryColor(category);
+    graphCtx.fillStyle = color;
     graphCtx.beginPath();
-    graphCtx.arc(canvasX, Math.max(5, Math.min(height - 5, canvasY)), 6, 0, Math.PI * 2);
+    graphCtx.arc(canvasX, Math.max(5, Math.min(height - 5, canvasY)), 8, 0, Math.PI * 2);
     graphCtx.fill();
+    
+    // 포인트 외곽선 (가독성)
+    graphCtx.strokeStyle = '#ffffff';
+    graphCtx.lineWidth = 2;
+    graphCtx.stroke();
+}
+
+// 헬퍼: 카테고리별 테마 색상 반환
+function getCategoryColor(category) {
+    const colors = {
+        waves: '#8b5cf6',   // Violet
+        curves: '#ec4899',  // Pink
+        sound: '#f59e0b',   // Amber
+        math: '#10b981',    // Emerald
+        bytebeat: '#ef4444' // Red
+    };
+    return colors[category] || '#3b82f6'; // Default Blue
 }
 
 function drawWaveform() {
@@ -1194,6 +1289,14 @@ function pause() {
 }
 
 function stop() {
+    // Auto Play Reset
+    if (state.isAutoPlaying) {
+        state.isAutoPlaying = false;
+        state.autoQueue = [];
+        state.autoLoopCount = 0;
+        if (elements.autoBtn) elements.autoBtn.classList.remove('playing');
+    }
+
     pause();
     state.timerStartTime = null;
     elements.canvasClock.textContent = '00:00.00';
@@ -1220,3 +1323,62 @@ window.addEventListener('load', () => {
         selectFunction(state.currentFunction);
     }
 });
+
+
+// ==========================================
+// Auto Play Functions (Random 4 Songs x 3 Loops)
+// ==========================================
+function toggleAutoPlay() {
+    if (state.isAutoPlaying) {
+        stop(); // This will clear auto play state
+    } else {
+        startAutoPlay();
+    }
+}
+
+function startAutoPlay() {
+    stop(); // Reset everything first
+    
+    // Pick 4 distinct random functions
+    const keys = Object.keys(MATH_FUNCTIONS);
+    // Fisher-Yates shuffle
+    for (let i = keys.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [keys[i], keys[j]] = [keys[j], keys[i]];
+    }
+    
+    state.autoQueue = keys.slice(0, 4); // Select top 4
+    
+    if (state.autoQueue.length === 0) return;
+    
+    state.isAutoPlaying = true;
+    state.autoLoopCount = 0;
+    
+    if (elements.autoBtn) {
+        elements.autoBtn.classList.add('playing');
+        // Visual feedback (Gold color)
+        elements.autoBtn.style.backgroundColor = '#fcd34d'; // Amber-300
+    }
+    
+    playNextAuto();
+}
+
+function playNextAuto() {
+    if (!state.isAutoPlaying) return;
+    
+    if (state.autoQueue.length === 0) {
+        // Finished sequence
+        stop(); 
+        return;
+    }
+    
+    const nextFunc = state.autoQueue.shift();
+    selectFunction(nextFunc);
+    
+    state.autoLoopCount = 0;
+    
+    // Slight delay before starting to ensure UI updates
+    setTimeout(() => {
+        if (state.isAutoPlaying) play();
+    }, 1000);
+}
