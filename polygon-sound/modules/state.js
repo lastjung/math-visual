@@ -16,8 +16,7 @@ export const state = {
     
     // Geometry Settings (Multi-Layer)
     layers: [
-        { sides: 3, skip: 1, color: '#ff7675', rotationOffset: 0 }, // Triangle
-        { sides: 4, skip: 1, color: '#54a0ff', rotationOffset: 0 }  // Square
+        { sides: 3, genValue: 1, customVertices: null, color: '#ff7675', rotationOffset: 0 } // L-1
     ],
     activeLayerIndex: 0,
     

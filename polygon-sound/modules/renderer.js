@@ -61,7 +61,7 @@ export function renderLayerControls() {
         const tab = document.createElement('button');
         tab.className = `layer-tab ${state.activeLayerIndex === idx ? 'active' : ''}`;
         tab.style.borderBottom = `3px solid ${layer.color}`;
-        tab.textContent = `LAYER ${idx + 1}`;
+        tab.textContent = `L-${idx + 1}`;
         tab.onclick = () => {
             state.activeLayerIndex = idx;
             renderLayerControls();
@@ -96,43 +96,67 @@ export function renderLayerControls() {
     // Update Detail Setting Row selectors for Active Layer
     const currentLayer = state.layers[state.activeLayerIndex];
     renderSidesSelector(currentLayer);
-    renderSkipButtons(currentLayer);
     
-    // Update Info Text on Canvas
-    document.getElementById('infoText').textContent = `LAYER ${state.activeLayerIndex + 1}: ${currentLayer.sides}-FOLD`;
+    // Update Info Text on Canvas (Show Gen if active)
+    const genText = currentLayer.customVertices ? ` (GEN ${currentLayer.genValue})` : '';
+    document.getElementById('infoText').textContent = `L-${state.activeLayerIndex + 1}: ${currentLayer.sides}-FOLD${genText}`;
 }
 
 function renderSidesSelector(layer) {
     const container = document.getElementById('sidesSelector');
     container.innerHTML = '';
+    
+    // Default Buttons (3V ~ 12V)
     [3, 4, 5, 6, 7, 8, 12].forEach(n => {
         const btn = document.createElement('button');
-        btn.className = `sel-btn ${layer.sides === n ? 'active' : ''}`;
+        btn.className = `sel-btn ${layer.sides === n && !layer.customVertices ? 'active' : ''}`;
         btn.textContent = `${n}V`;
         btn.onclick = () => {
             layer.sides = n;
+            layer.customVertices = null; // Reset to normal mode
             renderLayerControls();
         };
         container.appendChild(btn);
     });
-}
 
-function renderSkipButtons(layer) {
-    const container = document.getElementById('skipSelector');
-    container.innerHTML = '';
-    [1, 2, 3, 4, 5].forEach(s => {
-        const disabled = s >= layer.sides / 2 && s !== 1;
-        if (disabled) return;
+    // --- Custom Generator (Added next to 12V) ---
+    const genGroup = document.createElement('div');
+    genGroup.className = 'gen-group';
+    
+    const genBtn = document.createElement('button');
+    genBtn.className = `sel-btn gen-btn ${layer.customVertices ? 'active' : ''}`;
+    genBtn.textContent = 'Gen';
+    
+    const select = document.createElement('select');
+    select.id = 'customSidesSelect';
+    select.className = 'gen-select';
+    for (let i = 2; i <= 11; i++) {
+        const opt = document.createElement('option');
+        opt.value = i;
+        opt.textContent = i;
+        if (i === layer.genValue) opt.selected = true;
+        select.appendChild(opt);
+    }
+
+    genBtn.onclick = () => {
+        const step = parseInt(select.value);
+        layer.genValue = step;
         
-        const btn = document.createElement('button');
-        btn.className = `sel-btn ${layer.skip === s ? 'active' : ''}`;
-        btn.textContent = `SKIP ${s}`;
-        btn.onclick = () => {
-            layer.skip = s;
-            renderLayerControls();
-        };
-        container.appendChild(btn);
-    });
+        // --- The "MOD 12 == 0" STOP LOOP ---
+        let current = 0;
+        const vertices = [];
+        do {
+            vertices.push(current);
+            current = (current + step) % 12;
+        } while (current !== 0);
+        
+        layer.customVertices = vertices;
+        renderLayerControls();
+    };
+
+    genGroup.appendChild(genBtn);
+    genGroup.appendChild(select);
+    container.appendChild(genGroup);
 }
 
 function removeLastLayer() {
@@ -147,7 +171,8 @@ function addLayer() {
     const colors = ['#ff7675', '#54a0ff', '#5f27cd', '#ff9f43'];
     state.layers.push({
         sides: 3,
-        skip: 1,
+        genValue: 1,
+        customVertices: null,
         color: colors[state.layers.length] || '#fff',
         rotationOffset: 0
     });
@@ -204,12 +229,27 @@ export function render() {
         ctx.globalAlpha = state.activeLayerIndex === idx ? 0.9 : 0.2; 
         
         ctx.beginPath();
-        const step = (360 / layer.sides) * layer.skip;
-        for (let i = 0; i <= layer.sides; i++) {
-            const rad = (i * step) * (Math.PI / 180);
-            const px = RADIUS * Math.cos(rad);
-            const py = RADIUS * Math.sin(rad);
-            if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+
+        if (layer.customVertices) {
+            // --- Custom Mode: Use generated indices ---
+            layer.customVertices.forEach((vIdx, i) => {
+                const rad = (vIdx * 30) * (Math.PI / 180);
+                const px = RADIUS * Math.cos(rad);
+                const py = RADIUS * Math.sin(rad);
+                if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+            });
+            // Close shape
+            const startRad = (layer.customVertices[0] * 30) * (Math.PI / 180);
+            ctx.lineTo(RADIUS * Math.cos(startRad), RADIUS * Math.sin(startRad));
+        } else {
+            // --- Standard Mode: Pure Regular Polygons ---
+            const step = (360 / layer.sides);
+            for (let i = 0; i <= layer.sides; i++) {
+                const rad = (i * step) * (Math.PI / 180);
+                const px = RADIUS * Math.cos(rad);
+                const py = RADIUS * Math.sin(rad);
+                if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+            }
         }
         ctx.stroke();
         ctx.restore();

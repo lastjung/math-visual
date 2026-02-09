@@ -18,16 +18,32 @@ export function updateGeometry() {
 
     // 모든 레이어에 대해 검사
     state.layers.forEach((layer) => {
-        for (let s = 0; s < layer.sides; s++) {
-            const offset = (s * 360) / layer.sides;
-            const currentVertexAngle = (state.rotation + offset) % 360;
-            const prevVertexAngle = (prevRot + offset) % 360;
+        if (layer.customVertices) {
+            // --- Custom Mode Collision ---
+            layer.customVertices.forEach((vIdx) => {
+                const offset = vIdx * 30; // Index (0~11) to Angle
+                const currentVertexAngle = (state.rotation + offset) % 360;
+                const prevVertexAngle = (prevRot + offset) % 360;
 
-            for (let n = 0; n < 12; n++) {
-                const targetAngle = (n * 30) % 360;
-                
-                if (hasCrossed(prevVertexAngle, currentVertexAngle, targetAngle)) {
-                    triggerHit(n, targetAngle, layer.color);
+                for (let n = 0; n < 12; n++) {
+                    const targetAngle = (n * 30) % 360;
+                    if (hasCrossed(prevVertexAngle, currentVertexAngle, targetAngle)) {
+                        triggerHit(n, targetAngle, layer.color);
+                    }
+                }
+            });
+        } else {
+            // --- Standard Mode Collision ---
+            for (let s = 0; s < layer.sides; s++) {
+                const offset = (s * 360) / layer.sides;
+                const currentVertexAngle = (state.rotation + offset) % 360;
+                const prevVertexAngle = (prevRot + offset) % 360;
+
+                for (let n = 0; n < 12; n++) {
+                    const targetAngle = (n * 30) % 360;
+                    if (hasCrossed(prevVertexAngle, currentVertexAngle, targetAngle)) {
+                        triggerHit(n, targetAngle, layer.color);
+                    }
                 }
             }
         }
