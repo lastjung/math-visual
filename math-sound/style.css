@@ -1,0 +1,391 @@
+/* ==========================================
+   Math Sound Visualizer - Style
+   zackdmath 스타일 참고: 미니멀 + 클린
+   26개 함수 지원 + 카테고리 탭
+   ========================================== */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    --bg-color: #ffffff;
+    --text-color: #1a1a1a;
+    --line-color: #000000;
+    --accent-color: #3b82f6;
+    --accent-hover: #2563eb;
+    --gray-light: #f3f4f6;
+    --gray-mid: #9ca3af;
+    --gray-dark: #6b7280;
+    --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    --radius: 12px;
+    --radius-sm: 8px;
+    
+    /* Category Colors */
+    --waves-color: #8b5cf6;
+    --curves-color: #ec4899;
+    --sound-color: #f59e0b;
+    --math-color: #10b981;
+    --bytebeat-color: #ef4444;
+}
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 20px;
+    padding-top: 40px;
+}
+
+.container {
+    width: 100%;
+    max-width: 520px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    transform-origin: top center;
+    transition: transform 0.3s ease;
+}
+
+/* Header */
+.header {
+    text-align: center;
+}
+
+.header h1 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    margin-bottom: 4px;
+}
+
+.subtitle {
+    font-size: 0.875rem;
+    color: var(--gray-mid);
+}
+
+/* Canvas Wrapper */
+.canvas-wrapper {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    background: var(--bg-color);
+    border: 1px solid var(--gray-light);
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: var(--shadow);
+}
+
+#graphCanvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+/* Axis Labels */
+.axis-label {
+    position: absolute;
+    font-size: 0.875rem;
+    font-style: italic;
+    color: var(--gray-dark);
+}
+
+.y-label {
+    top: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.x-label {
+    bottom: 8px;
+    right: 12px;
+}
+
+/* Function Title on Canvas */
+.function-title {
+    position: absolute;
+    top: 12px;
+    left: 16px;
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--text-color);
+    z-index: 10;
+    letter-spacing: -0.02em;
+    text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
+}
+
+/* Formula Display */
+.formula-display {
+    font-size: 1.25rem;
+    min-height: 2.5rem;
+    text-align: center;
+    padding: 0 10px;
+}
+
+#formulaText {
+    font-family: 'Times New Roman', serif;
+}
+
+/* Waveform */
+.waveform-wrapper {
+    width: 100%;
+    height: 70px;
+    background: var(--gray-light);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+}
+
+#waveformCanvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+/* Controls */
+.controls {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+}
+
+.control-btn {
+    width: 52px;
+    height: 52px;
+    border: none;
+    border-radius: 50%;
+    background: var(--gray-light);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.control-btn:hover {
+    background: var(--accent-color);
+    color: white;
+    transform: scale(1.05);
+}
+
+.control-btn:active {
+    transform: scale(0.95);
+}
+
+.control-btn .icon {
+    font-size: 1.2rem;
+}
+
+.play-btn.playing {
+    background: var(--accent-color);
+    color: white;
+}
+
+/* Category Tabs */
+.category-tabs {
+    display: flex;
+    gap: 4px;
+    background: var(--gray-light);
+    padding: 4px;
+    border-radius: 24px;
+    overflow-x: auto;
+    max-width: 100%;
+}
+
+.category-tab {
+    padding: 8px 14px;
+    border: none;
+    border-radius: 20px;
+    background: transparent;
+    font-size: 0.8rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+    color: var(--gray-dark);
+}
+
+.category-tab:hover {
+    background: rgba(255, 255, 255, 0.8);
+    color: var(--text-color);
+}
+
+.category-tab.active {
+    background: white;
+    color: var(--text-color);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Category-specific active colors */
+.category-tab.active[data-category="waves"] { color: var(--waves-color); }
+.category-tab.active[data-category="curves"] { color: var(--curves-color); }
+.category-tab.active[data-category="sound"] { color: var(--sound-color); }
+.category-tab.active[data-category="math"] { color: var(--math-color); }
+.category-tab.active[data-category="bytebeat"] { color: var(--bytebeat-color); }
+
+/* Function Selector */
+.function-selector {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    justify-content: center;
+    min-height: 36px;
+}
+
+.func-btn {
+    padding: 7px 14px;
+    border: 1px solid var(--gray-light);
+    border-radius: 18px;
+    background: var(--bg-color);
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.func-btn:hover {
+    border-color: var(--accent-color);
+    color: var(--accent-color);
+    transform: translateY(-1px);
+}
+
+.func-btn.active {
+    background: var(--accent-color);
+    border-color: var(--accent-color);
+    color: white;
+}
+
+/* Category-specific button colors */
+[data-category="waves"] .func-btn.active { background: var(--waves-color); border-color: var(--waves-color); }
+[data-category="curves"] .func-btn.active { background: var(--curves-color); border-color: var(--curves-color); }
+[data-category="sound"] .func-btn.active { background: var(--sound-color); border-color: var(--sound-color); }
+[data-category="math"] .func-btn.active { background: var(--math-color); border-color: var(--math-color); }
+[data-category="bytebeat"] .func-btn.active { background: var(--bytebeat-color); border-color: var(--bytebeat-color); }
+
+/* Sliders Container */
+.sliders-container {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    max-width: 320px;
+}
+
+.slider-control {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.slider-icon {
+    font-size: 1.1rem;
+    width: 24px;
+    text-align: center;
+}
+
+input[type="range"] {
+    flex: 1;
+    height: 6px;
+    -webkit-appearance: none;
+    appearance: none;
+    background: var(--gray-light);
+    border-radius: 3px;
+    outline: none;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    background: var(--accent-color);
+    border-radius: 50%;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+
+input[type="range"]::-webkit-slider-thumb:hover {
+    transform: scale(1.2);
+}
+
+.slider-value {
+    font-size: 0.8rem;
+    color: var(--gray-mid);
+    min-width: 36px;
+    text-align: right;
+}
+
+/* Function Counter */
+.function-counter {
+    font-size: 0.75rem;
+    color: var(--gray-mid);
+}
+
+#currentIndex {
+    font-weight: 600;
+    color: var(--accent-color);
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+    body {
+        padding: 16px;
+        padding-top: 24px;
+    }
+    
+    .container {
+        gap: 16px;
+    }
+    
+    .header h1 {
+        font-size: 1.25rem;
+    }
+    
+    .control-btn {
+        width: 46px;
+        height: 46px;
+    }
+    
+    .category-tabs {
+        padding: 3px;
+    }
+    
+    .category-tab {
+        padding: 6px 10px;
+        font-size: 0.75rem;
+    }
+    
+    .func-btn {
+        padding: 5px 10px;
+        font-size: 0.75rem;
+    }
+    
+    .formula-display {
+        font-size: 1rem;
+    }
+}
+
+/* Animation for drawing effect */
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.85; }
+}
+
+.drawing .canvas-wrapper {
+    animation: pulse 0.8s ease-in-out infinite;
+}
+
+/* Smooth transitions for category changes */
+.function-selector {
+    animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-5px); }
+    to { opacity: 1; transform: translateY(0); }
+}

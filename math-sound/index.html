@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Sound of Equations</title>
+    
+    <!-- KaTeX for LaTeX rendering -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <h1>The Sound of Equations</h1>
+            <p class="subtitle">#maths #sound #visualization</p>
+        </header>
+
+        <!-- Main Canvas Area -->
+        <div class="canvas-wrapper">
+            <span class="function-title" id="functionTitle">Sine</span>
+            <canvas id="graphCanvas"></canvas>
+            <!-- Axis Labels -->
+            <span class="axis-label y-label">y</span>
+            <span class="axis-label x-label">x</span>
+        </div>
+
+        <!-- Formula Display -->
+        <div class="formula-display">
+            <span id="formulaText"></span>
+        </div>
+
+        <!-- Waveform Visualization -->
+        <div class="waveform-wrapper">
+            <canvas id="waveformCanvas"></canvas>
+        </div>
+
+        <!-- Controls -->
+        <div class="controls">
+            <button id="playBtn" class="control-btn play-btn" title="재생/일시정지">
+                <span class="icon">▶</span>
+            </button>
+            <button id="stopBtn" class="control-btn stop-btn" title="정지">
+                <span class="icon">■</span>
+            </button>
+            <button id="resetBtn" class="control-btn reset-btn" title="리셋">
+                <span class="icon">↺</span>
+            </button>
+        </div>
+
+        <!-- Category Tabs -->
+        <div class="category-tabs">
+            <button class="category-tab active" data-category="waves">🎵 Waves</button>
+            <button class="category-tab" data-category="curves">🌸 Curves</button>
+            <button class="category-tab" data-category="sound">🔊 Sound</button>
+            <button class="category-tab" data-category="math">📐 Math</button>
+            <button class="category-tab" data-category="bytebeat">⚡ Byte</button>
+        </div>
+
+        <!-- Function Selector (changes based on category) -->
+        <div class="function-selector" id="functionSelector">
+            <!-- Populated by JavaScript -->
+        </div>
+
+        <!-- Sliders -->
+        <div class="sliders-container">
+            <!-- Zoom Control -->
+            <div class="slider-control zoom-control">
+                <span class="slider-icon">🔍</span>
+                <input type="range" id="zoomSlider" min="50" max="200" value="100">
+                <span id="zoomValue" class="slider-value">100%</span>
+            </div>
+
+            <!-- Volume Control -->
+            <div class="slider-control">
+                <span class="slider-icon">🔊</span>
+                <input type="range" id="volumeSlider" min="0" max="100" value="50">
+                <span id="volumeValue" class="slider-value">50%</span>
+            </div>
+
+            <!-- Speed Control -->
+            <div class="slider-control">
+                <span class="slider-icon">⏱</span>
+                <input type="range" id="speedSlider" min="1" max="10" value="5">
+                <span id="speedValue" class="slider-value">1x</span>
+            </div>
+        </div>
+
+        <!-- Function Counter -->
+        <div class="function-counter">
+            <span id="currentIndex">1</span> / <span id="totalCount">26</span> functions
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,1180 @@
+/**
+ * Math Sound Visualizer
+ * 수학 함수를 소리와 그래프로 동시에 표현
+ * 
+ * 지원 좌표계:
+ * - Cartesian: y = f(x)
+ * - Polar: r = f(θ)
+ * - Parametric: r(t) = ⟨x(t), y(t)⟩
+ * 
+ * Web Audio API + Canvas 2D
+ */
+
+// ==========================================
+// 수학 함수 정의
+// ==========================================
+const MATH_FUNCTIONS = {
+    // ========== 🎵 WAVES (기본 파형 - Cartesian) ==========
+    sine: {
+        category: 'waves',
+        name: 'Sine',
+        type: 'cartesian',
+        fn: (x) => Math.sin(x * 2 * Math.PI),
+        formula: 'f(x) = sin(2πx)',
+        latex: 'f(x) = \\sin(2\\pi x)',
+        range: { xMin: -2, xMax: 2, yMin: -1.5, yMax: 1.5 },
+        audioScale: 440,
+        baseFreq: 440
+    },
+    cosine: {
+        category: 'waves',
+        name: 'Cosine',
+        type: 'cartesian',
+        fn: (x) => Math.cos(x * 2 * Math.PI),
+        formula: 'f(x) = cos(2πx)',
+        latex: 'f(x) = \\cos(2\\pi x)',
+        range: { xMin: -2, xMax: 2, yMin: -1.5, yMax: 1.5 },
+        audioScale: 440,
+        baseFreq: 440
+    },
+    square: {
+        category: 'waves',
+        name: 'Square',
+        type: 'cartesian',
+        fn: (x) => Math.sign(Math.sin(x * 2 * Math.PI)),
+        formula: 'f(x) = sign(sin(2πx))',
+        latex: 'f(x) = \\text{sign}(\\sin(2\\pi x))',
+        range: { xMin: -2, xMax: 2, yMin: -1.5, yMax: 1.5 },
+        audioScale: 300,
+        baseFreq: 330
+    },
+    sawtooth: {
+        category: 'waves',
+        name: 'Sawtooth',
+        type: 'cartesian',
+        fn: (x) => 2 * (x - Math.floor(x + 0.5)),
+        formula: 'f(x) = 2(x - ⌊x + 0.5⌋)',
+        latex: 'f(x) = 2(x - \\lfloor x + 0.5 \\rfloor)',
+        range: { xMin: -2, xMax: 2, yMin: -1.5, yMax: 1.5 },
+        audioScale: 350,
+        baseFreq: 220
+    },
+    triangle: {
+        category: 'waves',
+        name: 'Triangle',
+        type: 'cartesian',
+        fn: (x) => 2 * Math.abs(2 * (x - Math.floor(x + 0.5))) - 1,
+        formula: 'f(x) = 2|2(x - ⌊x+0.5⌋)| - 1',
+        latex: 'f(x) = 2|2(x - \\lfloor x + 0.5 \\rfloor)| - 1',
+        range: { xMin: -2, xMax: 2, yMin: -1.5, yMax: 1.5 },
+        audioScale: 380,
+        baseFreq: 280
+    },
+    pulse: {
+        category: 'waves',
+        name: 'Pulse',
+        type: 'cartesian',
+        fn: (x) => (x % 1) < 0.3 ? 1 : -1,
+        formula: 'f(x) = pulse(x, 30%)',
+        latex: 'f(x) = \\text{pulse}(x, 30\\%)',
+        range: { xMin: -2, xMax: 2, yMin: -1.5, yMax: 1.5 },
+        audioScale: 250,
+        baseFreq: 260
+    },
+
+    // ========== 🌸 CURVES (유명한 곡선 - Parametric/Polar) ==========
+    heart: {
+        category: 'curves',
+        name: 'Heart',
+        type: 'parametric',
+        x: (t) => 16 * Math.pow(Math.sin(t), 3),
+        y: (t) => 13 * Math.cos(t) - 5 * Math.cos(2*t) - 2 * Math.cos(3*t) - Math.cos(4*t),
+        formula: 'r⃗(t) = ⟨16sin³t, 13cost - 5cos2t - ...⟩',
+        latex: '\\vec{r}(t) = \\langle 16\\sin^3 t, 13\\cos t - 5\\cos 2t - 2\\cos 3t - \\cos 4t \\rangle',
+        tRange: { min: 0, max: 2 * Math.PI },
+        viewBox: { xMin: -20, xMax: 20, yMin: -20, yMax: 18 },
+        audioScale: 200,
+        baseFreq: 220
+    },
+    cardioid: {
+        category: 'curves',
+        name: 'Cardioid',
+        type: 'polar',
+        r: (theta) => 1 - Math.cos(theta),
+        formula: 'r = 1 - cos(θ)',
+        latex: 'r = 1 - \\cos(\\theta)',
+        thetaRange: { min: 0, max: 2 * Math.PI },
+        viewBox: { xMin: -2.5, xMax: 2.5, yMin: -2.5, yMax: 2.5 },
+        audioScale: 280,
+        baseFreq: 300
+    },
+    rose4: {
+        category: 'curves',
+        name: 'Rose 4',
+        type: 'polar',
+        r: (theta) => Math.cos(4 * theta),
+        formula: 'r = cos(4θ)',
+        latex: 'r = \\cos(4\\theta)',
+        thetaRange: { min: 0, max: 2 * Math.PI },
+        viewBox: { xMin: -1.5, xMax: 1.5, yMin: -1.5, yMax: 1.5 },
+        audioScale: 320,
+        baseFreq: 350
+    },
+    rose3: {
+        category: 'curves',
+        name: 'Rose 3',
+        type: 'polar',
+        r: (theta) => Math.sin(3 * theta),
+        formula: 'r = sin(3θ)',
+        latex: 'r = \\sin(3\\theta)',
+        thetaRange: { min: 0, max: Math.PI },
+        viewBox: { xMin: -1.5, xMax: 1.5, yMin: -1.5, yMax: 1.5 },
+        audioScale: 340,
+        baseFreq: 380
+    },
+    lissajous: {
+        category: 'curves',
+        name: 'Lissajous',
+        type: 'parametric',
+        x: (t) => Math.sin(3 * t),
+        y: (t) => Math.sin(4 * t),
+        formula: 'r⃗(t) = ⟨sin(3t), sin(4t)⟩',
+        latex: '\\vec{r}(t) = \\langle \\sin(3t), \\sin(4t) \\rangle',
+        tRange: { min: 0, max: 2 * Math.PI },
+        viewBox: { xMin: -1.5, xMax: 1.5, yMin: -1.5, yMax: 1.5 },
+        audioScale: 360,
+        baseFreq: 400
+    },
+    butterfly: {
+        category: 'curves',
+        name: 'Butterfly',
+        type: 'polar',
+        r: (theta) => Math.exp(Math.sin(theta)) - 2 * Math.cos(4 * theta) + Math.pow(Math.sin((2 * theta - Math.PI) / 24), 5),
+        formula: 'r = eˢⁱⁿᶿ - 2cos(4θ) + ...',
+        latex: 'r = e^{\\sin\\theta} - 2\\cos(4\\theta) + \\sin^5\\left(\\frac{2\\theta-\\pi}{24}\\right)',
+        thetaRange: { min: 0, max: 12 * Math.PI },
+        viewBox: { xMin: -5, xMax: 5, yMin: -5, yMax: 5 },
+        audioScale: 180,
+        baseFreq: 260
+    },
+    spiral: {
+        category: 'curves',
+        name: 'Spiral',
+        type: 'polar',
+        r: (theta) => 0.1 * theta,
+        formula: 'r = 0.1θ (Archimedean)',
+        latex: 'r = 0.1\\theta',
+        thetaRange: { min: 0, max: 6 * Math.PI },
+        viewBox: { xMin: -3, xMax: 3, yMin: -3, yMax: 3 },
+        audioScale: 250,
+        baseFreq: 350
+    },
+    lemniscate: {
+        category: 'curves',
+        name: 'Lemniscate',
+        type: 'polar',
+        r: (theta) => Math.sqrt(Math.max(0, 2 * Math.cos(2 * theta))),
+        formula: 'r² = 2cos(2θ)',
+        latex: 'r^2 = 2\\cos(2\\theta)',
+        thetaRange: { min: -Math.PI/4, max: Math.PI/4 },
+        viewBox: { xMin: -2, xMax: 2, yMin: -1.5, yMax: 1.5 },
+        audioScale: 300,
+        baseFreq: 320
+    },
+
+    // ========== 🔊 SOUND (소리 합성 - Cartesian) ==========
+    trumpet: {
+        category: 'sound',
+        name: 'Trumpet',
+        type: 'cartesian',
+        fn: (x) => x === 0 ? 1 : Math.sin(x * 20) / (Math.abs(x) + 0.1),
+        formula: 'f(x) = sin(20x) / (|x| + 0.1)',
+        latex: 'f(x) = \\frac{\\sin(20x)}{|x| + 0.1}',
+        range: { xMin: -3, xMax: 3, yMin: -2, yMax: 2 },
+        audioScale: 300,
+        baseFreq: 280
+    },
+    fmSynth: {
+        category: 'sound',
+        name: 'FM Synth',
+        type: 'cartesian',
+        fn: (x) => Math.sin(x * 6 + Math.sin(x * 18)),
+        formula: 'f(x) = sin(6x + sin(18x))',
+        latex: 'f(x) = \\sin(6x + \\sin(18x))',
+        range: { xMin: -3, xMax: 3, yMin: -1.5, yMax: 1.5 },
+        audioScale: 400,
+        baseFreq: 440
+    },
+    amSynth: {
+        category: 'sound',
+        name: 'AM Synth',
+        type: 'cartesian',
+        fn: (x) => Math.sin(x * 8) * (1 + 0.5 * Math.sin(x * 2)),
+        formula: 'f(x) = sin(8x)·(1 + 0.5sin(2x))',
+        latex: 'f(x) = \\sin(8x) \\cdot (1 + 0.5\\sin(2x))',
+        range: { xMin: -3, xMax: 3, yMin: -2, yMax: 2 },
+        audioScale: 350,
+        baseFreq: 380
+    },
+    harmonics: {
+        category: 'sound',
+        name: 'Harmonics',
+        type: 'cartesian',
+        fn: (x) => Math.sin(x * 4) + Math.sin(x * 8) / 2 + Math.sin(x * 12) / 3 + Math.sin(x * 16) / 4,
+        formula: 'f(x) = Σ sin(nx)/n',
+        latex: 'f(x) = \\sum_{n=1}^{4} \\frac{\\sin(4nx)}{n}',
+        range: { xMin: -3, xMax: 3, yMin: -2.5, yMax: 2.5 },
+        audioScale: 280,
+        baseFreq: 260
+    },
+    beating: {
+        category: 'sound',
+        name: 'Beating',
+        type: 'cartesian',
+        fn: (x) => Math.sin(x * 20) * Math.sin(x),
+        formula: 'f(x) = sin(20x)·sin(x)',
+        latex: 'f(x) = \\sin(20x) \\cdot \\sin(x)',
+        range: { xMin: -4, xMax: 4, yMin: -1.5, yMax: 1.5 },
+        audioScale: 320,
+        baseFreq: 300
+    },
+    chirp: {
+        category: 'sound',
+        name: 'Chirp',
+        type: 'cartesian',
+        fn: (x) => Math.sin(x * x * 4),
+        formula: 'f(x) = sin(4x²)',
+        latex: 'f(x) = \\sin(4x^2)',
+        range: { xMin: -4, xMax: 4, yMin: -1.5, yMax: 1.5 },
+        audioScale: 250,
+        baseFreq: 350
+    },
+
+    // ========== 📐 MATH (수학적 함수 - Cartesian) ==========
+    gaussian: {
+        category: 'math',
+        name: 'Gaussian',
+        type: 'cartesian',
+        fn: (x) => Math.exp(-x * x),
+        formula: 'f(x) = e^(-x²)',
+        latex: 'f(x) = e^{-x^2}',
+        range: { xMin: -3, xMax: 3, yMin: -0.5, yMax: 1.5 },
+        audioScale: 500,
+        baseFreq: 440
+    },
+    sinc: {
+        category: 'math',
+        name: 'Sinc',
+        type: 'cartesian',
+        fn: (x) => x === 0 ? 1 : Math.sin(x * 4 * Math.PI) / (x * 4 * Math.PI),
+        formula: 'f(x) = sin(4πx)/(4πx)',
+        latex: 'f(x) = \\frac{\\sin(4\\pi x)}{4\\pi x}',
+        range: { xMin: -3, xMax: 3, yMin: -0.5, yMax: 1.5 },
+        audioScale: 400,
+        baseFreq: 380
+    },
+    damped: {
+        category: 'math',
+        name: 'Damped',
+        type: 'cartesian',
+        fn: (x) => Math.exp(-Math.abs(x) * 0.5) * Math.sin(x * 8),
+        formula: 'f(x) = e^(-0.5|x|)·sin(8x)',
+        latex: 'f(x) = e^{-0.5|x|} \\cdot \\sin(8x)',
+        range: { xMin: -4, xMax: 4, yMin: -1.5, yMax: 1.5 },
+        audioScale: 350,
+        baseFreq: 320
+    },
+    chaos: {
+        category: 'math',
+        name: 'Chaos',
+        type: 'cartesian',
+        fn: (x) => Math.sin(x * 5) * Math.cos(x * 3) + Math.sin(x * 11) * 0.5,
+        formula: 'f(x) = sin(5x)cos(3x) + 0.5sin(11x)',
+        latex: 'f(x) = \\sin(5x)\\cos(3x) + 0.5\\sin(11x)',
+        range: { xMin: -3, xMax: 3, yMin: -2, yMax: 2 },
+        audioScale: 180,
+        baseFreq: 260
+    },
+    logistic: {
+        category: 'math',
+        name: 'Logistic',
+        type: 'cartesian',
+        fn: (x) => 1 / (1 + Math.exp(-x * 2)),
+        formula: 'f(x) = 1/(1 + e^(-2x))',
+        latex: 'f(x) = \\frac{1}{1 + e^{-2x}}',
+        range: { xMin: -4, xMax: 4, yMin: -0.5, yMax: 1.5 },
+        audioScale: 600,
+        baseFreq: 500
+    },
+    hyperbolic: {
+        category: 'math',
+        name: 'Hyperbolic',
+        type: 'parametric',
+        x: (t) => Math.cosh(t * 0.5),
+        y: (t) => Math.sinh(t * 0.5),
+        formula: 'r⃗(t) = ⟨cosh(t/2), sinh(t/2)⟩',
+        latex: '\\vec{r}(t) = \\langle \\cosh(t/2), \\sinh(t/2) \\rangle',
+        tRange: { min: -4, max: 4 },
+        viewBox: { xMin: -1, xMax: 4, yMin: -3, yMax: 3 },
+        audioScale: 300,
+        baseFreq: 340
+    },
+
+    // ========== ⚡ BYTEBEAT (비트 연산 - Cartesian) ==========
+    byteClassic: {
+        category: 'bytebeat',
+        name: 'Classic',
+        type: 'cartesian',
+        fn: (x) => {
+            const t = Math.floor((x + 4) * 1000);
+            return ((t & (t >> 8)) % 256) / 128 - 1;
+        },
+        formula: 'f(t) = t & (t >> 8)',
+        latex: 'f(t) = t \\land (t \\gg 8)',
+        range: { xMin: -4, xMax: 4, yMin: -1.5, yMax: 1.5 },
+        audioScale: 100,
+        baseFreq: 200
+    },
+    byteMelody: {
+        category: 'bytebeat',
+        name: 'Melody',
+        type: 'cartesian',
+        fn: (x) => {
+            const t = Math.floor((x + 4) * 500);
+            return ((t * ((t >> 12 | t >> 8) & 63 & t >> 4)) % 256) / 128 - 1;
+        },
+        formula: 'f(t) = t·((t>>12|t>>8)&63&t>>4)',
+        latex: 'f(t) = t \\cdot ((t \\gg 12 \\lor t \\gg 8) \\land 63 \\land t \\gg 4)',
+        range: { xMin: -4, xMax: 4, yMin: -1.5, yMax: 1.5 },
+        audioScale: 80,
+        baseFreq: 180
+    },
+    byteXor: {
+        category: 'bytebeat',
+        name: 'XOR',
+        type: 'cartesian',
+        fn: (x) => {
+            const t = Math.floor((x + 4) * 800);
+            return ((t ^ (t >> 4)) % 256) / 128 - 1;
+        },
+        formula: 'f(t) = t ^ (t >> 4)',
+        latex: 'f(t) = t \\oplus (t \\gg 4)',
+        range: { xMin: -4, xMax: 4, yMin: -1.5, yMax: 1.5 },
+        audioScale: 120,
+        baseFreq: 220
+    },
+    byteComplex: {
+        category: 'bytebeat',
+        name: 'Complex',
+        type: 'cartesian',
+        fn: (x) => {
+            const t = Math.floor((x + 4) * 600);
+            return (((t * 5 & t >> 7) | (t * 3 & t >> 10)) % 256) / 128 - 1;
+        },
+        formula: 'f(t) = (t*5&t>>7)|(t*3&t>>10)',
+        latex: 'f(t) = (t \\cdot 5 \\land t \\gg 7) \\lor (t \\cdot 3 \\land t \\gg 10)',
+        range: { xMin: -4, xMax: 4, yMin: -1.5, yMax: 1.5 },
+        audioScale: 90,
+        baseFreq: 190
+    }
+};
+
+// 카테고리별 함수 그룹화
+const CATEGORIES = {
+    waves: { name: '🎵 Waves', functions: [] },
+    curves: { name: '🌸 Curves', functions: [] },
+    sound: { name: '🔊 Sound', functions: [] },
+    math: { name: '📐 Math', functions: [] },
+    bytebeat: { name: '⚡ Byte', functions: [] }
+};
+
+// 함수들을 카테고리별로 분류
+Object.keys(MATH_FUNCTIONS).forEach(key => {
+    const func = MATH_FUNCTIONS[key];
+    if (CATEGORIES[func.category]) {
+        CATEGORIES[func.category].functions.push(key);
+    }
+});
+
+// ==========================================
+// 앱 상태
+// ==========================================
+const state = {
+    currentFunction: 'sine',
+    currentCategory: 'waves',
+    isPlaying: false,
+    animationId: null,
+    audioContext: null,
+    gainNode: null,
+    analyser: null,
+    bufferSource: null,
+    volume: 0.5,
+    speed: 1,
+    zoom: 1,
+    drawProgress: 0,
+    functionIndex: 1
+};
+
+// ==========================================
+// DOM 요소
+// ==========================================
+const elements = {
+    graphCanvas: document.getElementById('graphCanvas'),
+    waveformCanvas: document.getElementById('waveformCanvas'),
+    formulaText: document.getElementById('formulaText'),
+    functionTitle: document.getElementById('functionTitle'),
+    playBtn: document.getElementById('playBtn'),
+    stopBtn: document.getElementById('stopBtn'),
+    resetBtn: document.getElementById('resetBtn'),
+    zoomSlider: document.getElementById('zoomSlider'),
+    zoomValue: document.getElementById('zoomValue'),
+    volumeSlider: document.getElementById('volumeSlider'),
+    volumeValue: document.getElementById('volumeValue'),
+    speedSlider: document.getElementById('speedSlider'),
+    speedValue: document.getElementById('speedValue'),
+    functionSelector: document.getElementById('functionSelector'),
+    categoryTabs: document.querySelectorAll('.category-tab'),
+    currentIndex: document.getElementById('currentIndex'),
+    totalCount: document.getElementById('totalCount'),
+    container: document.querySelector('.container')
+};
+
+// Canvas contexts
+let graphCtx, waveformCtx;
+
+// ==========================================
+// 초기화
+// ==========================================
+function init() {
+    setupCanvas();
+    setupEventListeners();
+    elements.totalCount.textContent = Object.keys(MATH_FUNCTIONS).length;
+    selectCategory('waves');
+    selectFunction('sine');
+    drawStaticGraph();
+}
+
+function setupCanvas() {
+    // Graph Canvas
+    const graphRect = elements.graphCanvas.getBoundingClientRect();
+    elements.graphCanvas.width = graphRect.width * window.devicePixelRatio;
+    elements.graphCanvas.height = graphRect.height * window.devicePixelRatio;
+    graphCtx = elements.graphCanvas.getContext('2d');
+    graphCtx.scale(window.devicePixelRatio, window.devicePixelRatio);
+
+    // Waveform Canvas
+    const waveRect = elements.waveformCanvas.getBoundingClientRect();
+    elements.waveformCanvas.width = waveRect.width * window.devicePixelRatio;
+    elements.waveformCanvas.height = waveRect.height * window.devicePixelRatio;
+    waveformCtx = elements.waveformCanvas.getContext('2d');
+    waveformCtx.scale(window.devicePixelRatio, window.devicePixelRatio);
+}
+
+function setupEventListeners() {
+    elements.playBtn.addEventListener('click', togglePlay);
+    elements.stopBtn.addEventListener('click', stop);
+    elements.resetBtn.addEventListener('click', reset);
+    
+    // Zoom control
+    elements.zoomSlider.addEventListener('input', (e) => {
+        state.zoom = e.target.value / 100;
+        elements.zoomValue.textContent = `${e.target.value}%`;
+        elements.container.style.transform = `scale(${state.zoom})`;
+    });
+
+    elements.volumeSlider.addEventListener('input', (e) => {
+        state.volume = e.target.value / 100;
+        elements.volumeValue.textContent = `${e.target.value}%`;
+        if (state.gainNode) {
+            state.gainNode.gain.setValueAtTime(state.volume, state.audioContext.currentTime);
+        }
+    });
+
+    elements.speedSlider.addEventListener('input', (e) => {
+        state.speed = e.target.value / 5;
+        elements.speedValue.textContent = `${state.speed.toFixed(1)}x`;
+        if (state.bufferSource) {
+            state.bufferSource.playbackRate.value = state.speed;
+        }
+    });
+
+    // Category tabs
+    elements.categoryTabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            selectCategory(tab.dataset.category);
+        });
+    });
+
+    // 창 크기 변경 시 캔버스 재설정
+    window.addEventListener('resize', () => {
+        setupCanvas();
+        if (!state.isPlaying) {
+            drawStaticGraph();
+        }
+    });
+
+    // 키보드 단축키
+    document.addEventListener('keydown', (e) => {
+        if (e.code === 'Space') {
+            e.preventDefault();
+            togglePlay();
+        } else if (e.code === 'ArrowRight') {
+            navigateFunction(1);
+        } else if (e.code === 'ArrowLeft') {
+            navigateFunction(-1);
+        } else if (e.key === '+' || e.key === '=') {
+            adjustZoom(10);
+        } else if (e.key === '-' || e.key === '_') {
+            adjustZoom(-10);
+        } else if (e.key === '0') {
+            setZoom(100);
+        }
+    });
+}
+
+// 줌 조절 함수
+function adjustZoom(delta) {
+    const newZoom = Math.max(50, Math.min(200, parseInt(elements.zoomSlider.value) + delta));
+    setZoom(newZoom);
+}
+
+function setZoom(value) {
+    state.zoom = value / 100;
+    elements.zoomSlider.value = value;
+    elements.zoomValue.textContent = `${value}%`;
+    elements.container.style.transform = `scale(${state.zoom})`;
+}
+
+// ==========================================
+// 카테고리 선택
+// ==========================================
+function selectCategory(category) {
+    state.currentCategory = category;
+    
+    // 탭 상태 업데이트
+    elements.categoryTabs.forEach(tab => {
+        tab.classList.toggle('active', tab.dataset.category === category);
+    });
+
+    // 함수 버튼 생성
+    renderFunctionButtons(category);
+
+    // 첫 번째 함수 선택 (현재 카테고리에 없으면)
+    const funcs = CATEGORIES[category].functions;
+    if (funcs.length > 0 && !funcs.includes(state.currentFunction)) {
+        selectFunction(funcs[0]);
+    }
+}
+
+function renderFunctionButtons(category) {
+    const container = elements.functionSelector;
+    container.innerHTML = '';
+    container.dataset.category = category;
+
+    CATEGORIES[category].functions.forEach(funcKey => {
+        const func = MATH_FUNCTIONS[funcKey];
+        const btn = document.createElement('button');
+        btn.className = 'func-btn' + (funcKey === state.currentFunction ? ' active' : '');
+        btn.dataset.func = funcKey;
+        btn.textContent = func.name;
+        btn.addEventListener('click', () => selectFunction(funcKey));
+        container.appendChild(btn);
+    });
+}
+
+// ==========================================
+// 함수 선택
+// ==========================================
+function selectFunction(funcName) {
+    state.currentFunction = funcName;
+    
+    // 버튼 상태 업데이트
+    document.querySelectorAll('.func-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.func === funcName);
+    });
+
+    // 함수 인덱스 계산
+    const allFuncs = Object.keys(MATH_FUNCTIONS);
+    state.functionIndex = allFuncs.indexOf(funcName) + 1;
+    elements.currentIndex.textContent = state.functionIndex;
+
+    const funcData = MATH_FUNCTIONS[funcName];
+
+    // 캔버스 상단 제목 업데이트
+    elements.functionTitle.textContent = funcData.name;
+
+    // 수식 표시 (KaTeX)
+    if (window.katex) {
+        try {
+            katex.render(funcData.latex, elements.formulaText, {
+                throwOnError: false
+            });
+        } catch (e) {
+            elements.formulaText.textContent = funcData.formula;
+        }
+    } else {
+        elements.formulaText.textContent = funcData.formula;
+    }
+
+    // 카테고리 자동 전환
+    if (funcData.category !== state.currentCategory) {
+        selectCategory(funcData.category);
+    }
+
+    // 기존 재생 중지
+    if (state.isPlaying) {
+        stopSound();
+        if (state.animationId) {
+            cancelAnimationFrame(state.animationId);
+        }
+    }
+
+    // 먼저 전체 그래프 표시
+    state.drawProgress = 0;
+    drawStaticGraph();
+
+    // 0.3초 후 자동 재생 시작
+    setTimeout(() => {
+        play();
+    }, 300);
+}
+
+function navigateFunction(direction) {
+    const allFuncs = Object.keys(MATH_FUNCTIONS);
+    let newIndex = allFuncs.indexOf(state.currentFunction) + direction;
+    if (newIndex < 0) newIndex = allFuncs.length - 1;
+    if (newIndex >= allFuncs.length) newIndex = 0;
+    selectFunction(allFuncs[newIndex]);
+}
+
+// ==========================================
+// 그래프 그리기 (좌표계별 분기)
+// ==========================================
+function drawStaticGraph() {
+    const funcData = MATH_FUNCTIONS[state.currentFunction];
+    const width = elements.graphCanvas.offsetWidth;
+    const height = elements.graphCanvas.offsetHeight;
+
+    // 캔버스 클리어
+    graphCtx.clearRect(0, 0, width, height);
+    graphCtx.fillStyle = '#ffffff';
+    graphCtx.fillRect(0, 0, width, height);
+
+    // 좌표계에 따라 다르게 그리기
+    switch (funcData.type) {
+        case 'parametric':
+            drawParametricCurve(funcData, width, height, 1.0);
+            break;
+        case 'polar':
+            drawPolarCurve(funcData, width, height, 1.0);
+            break;
+        case 'cartesian':
+        default:
+            drawCartesianCurve(funcData, width, height, 1.0);
+            break;
+    }
+}
+
+// Cartesian 그래프 (y = f(x))
+function drawCartesianCurve(funcData, width, height, progress) {
+    const { xMin, xMax, yMin, yMax } = funcData.range;
+    
+    // 축 그리기
+    drawAxes(width, height, xMin, xMax, yMin, yMax);
+
+    const steps = Math.floor(500 * progress);
+    const xRange = xMax - xMin;
+    const yRange = yMax - yMin;
+
+    graphCtx.strokeStyle = '#000000';
+    graphCtx.lineWidth = 2;
+    graphCtx.lineCap = 'round';
+    graphCtx.lineJoin = 'round';
+    graphCtx.beginPath();
+    
+    let isFirst = true;
+    for (let i = 0; i <= steps; i++) {
+        const x = xMin + (xRange * i) / 500;
+        let y;
+        try {
+            y = funcData.fn(x);
+        } catch (e) {
+            continue;
+        }
+
+        if (!isFinite(y) || isNaN(y)) continue;
+
+        const canvasX = ((x - xMin) / xRange) * width;
+        const canvasY = ((yMax - y) / yRange) * height;
+
+        if (canvasY < -100 || canvasY > height + 100) continue;
+
+        if (isFirst) {
+            graphCtx.moveTo(canvasX, canvasY);
+            isFirst = false;
+        } else {
+            graphCtx.lineTo(canvasX, canvasY);
+        }
+    }
+    
+    graphCtx.stroke();
+}
+
+// Polar 그래프 (r = f(θ))
+function drawPolarCurve(funcData, width, height, progress) {
+    const { xMin, xMax, yMin, yMax } = funcData.viewBox;
+    const { min: thetaMin, max: thetaMax } = funcData.thetaRange;
+    
+    // 축 그리기
+    drawAxes(width, height, xMin, xMax, yMin, yMax);
+
+    const steps = Math.floor(1000 * progress);
+    const thetaRange = thetaMax - thetaMin;
+    const xRange = xMax - xMin;
+    const yRange = yMax - yMin;
+
+    graphCtx.strokeStyle = '#000000';
+    graphCtx.lineWidth = 2;
+    graphCtx.lineCap = 'round';
+    graphCtx.lineJoin = 'round';
+    graphCtx.beginPath();
+    
+    let isFirst = true;
+    for (let i = 0; i <= steps; i++) {
+        const theta = thetaMin + (thetaRange * i) / 1000;
+        let r;
+        try {
+            r = funcData.r(theta);
+        } catch (e) {
+            continue;
+        }
+
+        if (!isFinite(r) || isNaN(r)) continue;
+
+        // Polar to Cartesian
+        const x = r * Math.cos(theta);
+        const y = r * Math.sin(theta);
+
+        const canvasX = ((x - xMin) / xRange) * width;
+        const canvasY = ((yMax - y) / yRange) * height;
+
+        if (canvasX < -50 || canvasX > width + 50 || canvasY < -50 || canvasY > height + 50) {
+            isFirst = true;
+            continue;
+        }
+
+        if (isFirst) {
+            graphCtx.moveTo(canvasX, canvasY);
+            isFirst = false;
+        } else {
+            graphCtx.lineTo(canvasX, canvasY);
+        }
+    }
+    
+    graphCtx.stroke();
+}
+
+// Parametric 그래프 (r⃗(t) = ⟨x(t), y(t)⟩)
+function drawParametricCurve(funcData, width, height, progress) {
+    const { xMin, xMax, yMin, yMax } = funcData.viewBox;
+    const { min: tMin, max: tMax } = funcData.tRange;
+    
+    // 축 그리기
+    drawAxes(width, height, xMin, xMax, yMin, yMax);
+
+    const steps = Math.floor(1000 * progress);
+    const tRange = tMax - tMin;
+    const xRange = xMax - xMin;
+    const yRange = yMax - yMin;
+
+    graphCtx.strokeStyle = '#000000';
+    graphCtx.lineWidth = 2;
+    graphCtx.lineCap = 'round';
+    graphCtx.lineJoin = 'round';
+    graphCtx.beginPath();
+    
+    let isFirst = true;
+    for (let i = 0; i <= steps; i++) {
+        const t = tMin + (tRange * i) / 1000;
+        let x, y;
+        try {
+            x = funcData.x(t);
+            y = funcData.y(t);
+        } catch (e) {
+            continue;
+        }
+
+        if (!isFinite(x) || isNaN(x) || !isFinite(y) || isNaN(y)) continue;
+
+        const canvasX = ((x - xMin) / xRange) * width;
+        const canvasY = ((yMax - y) / yRange) * height;
+
+        if (canvasX < -50 || canvasX > width + 50 || canvasY < -50 || canvasY > height + 50) {
+            isFirst = true;
+            continue;
+        }
+
+        if (isFirst) {
+            graphCtx.moveTo(canvasX, canvasY);
+            isFirst = false;
+        } else {
+            graphCtx.lineTo(canvasX, canvasY);
+        }
+    }
+    
+    graphCtx.stroke();
+}
+
+function drawAxes(width, height, xMin, xMax, yMin, yMax) {
+    const xRange = xMax - xMin;
+    const yRange = yMax - yMin;
+    const centerX = ((-xMin) / xRange) * width;
+    const centerY = ((yMax) / yRange) * height;
+
+    graphCtx.strokeStyle = '#e5e7eb';
+    graphCtx.lineWidth = 1;
+
+    // X축
+    if (centerY >= 0 && centerY <= height) {
+        graphCtx.beginPath();
+        graphCtx.moveTo(0, centerY);
+        graphCtx.lineTo(width, centerY);
+        graphCtx.stroke();
+    }
+
+    // Y축
+    if (centerX >= 0 && centerX <= width) {
+        graphCtx.beginPath();
+        graphCtx.moveTo(centerX, 0);
+        graphCtx.lineTo(centerX, height);
+        graphCtx.stroke();
+    }
+
+    // 화살표
+    graphCtx.fillStyle = '#9ca3af';
+    
+    // X축 화살표
+    graphCtx.beginPath();
+    graphCtx.moveTo(width - 10, centerY - 4);
+    graphCtx.lineTo(width, centerY);
+    graphCtx.lineTo(width - 10, centerY + 4);
+    graphCtx.fill();
+
+    // Y축 화살표
+    graphCtx.beginPath();
+    graphCtx.moveTo(centerX - 4, 10);
+    graphCtx.lineTo(centerX, 0);
+    graphCtx.lineTo(centerX + 4, 10);
+    graphCtx.fill();
+}
+
+// ==========================================
+// 오디오 엔진
+// ==========================================
+function initAudio() {
+    if (state.audioContext) return;
+
+    state.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    
+    state.gainNode = state.audioContext.createGain();
+    state.gainNode.gain.setValueAtTime(state.volume, state.audioContext.currentTime);
+    state.gainNode.connect(state.audioContext.destination);
+
+    state.analyser = state.audioContext.createAnalyser();
+    state.analyser.fftSize = 2048;
+    state.analyser.connect(state.gainNode);
+}
+
+function createSoundFromFunction() {
+    const funcData = MATH_FUNCTIONS[state.currentFunction];
+    const sampleRate = state.audioContext.sampleRate;
+    const duration = 4;
+    const numSamples = sampleRate * duration;
+    
+    const buffer = state.audioContext.createBuffer(1, numSamples, sampleRate);
+    const channelData = buffer.getChannelData(0);
+
+    for (let i = 0; i < numSamples; i++) {
+        const t = i / sampleRate;
+        const progress = t / duration;
+        let y = 0;
+
+        try {
+            switch (funcData.type) {
+                case 'parametric': {
+                    const tParam = funcData.tRange.min + (funcData.tRange.max - funcData.tRange.min) * progress;
+                    y = funcData.y(tParam);
+                    break;
+                }
+                case 'polar': {
+                    const theta = funcData.thetaRange.min + (funcData.thetaRange.max - funcData.thetaRange.min) * progress;
+                    y = funcData.r(theta);
+                    break;
+                }
+                case 'cartesian':
+                default: {
+                    const x = funcData.range.xMin + (funcData.range.xMax - funcData.range.xMin) * progress;
+                    y = funcData.fn(x);
+                    break;
+                }
+            }
+        } catch (e) {
+            y = 0;
+        }
+
+        if (!isFinite(y) || isNaN(y)) y = 0;
+        y = Math.max(-1, Math.min(1, y / 10));
+
+        const freq = funcData.baseFreq + y * funcData.audioScale;
+        channelData[i] = Math.sin(2 * Math.PI * freq * t) * 0.5;
+    }
+
+    return buffer;
+}
+
+function playSound() {
+    initAudio();
+    
+    if (state.bufferSource) {
+        try {
+            state.bufferSource.stop();
+        } catch (e) {}
+    }
+
+    const buffer = createSoundFromFunction();
+    state.bufferSource = state.audioContext.createBufferSource();
+    state.bufferSource.buffer = buffer;
+    state.bufferSource.connect(state.analyser);
+    state.bufferSource.loop = true;
+    state.bufferSource.playbackRate.value = state.speed;
+    state.bufferSource.start();
+}
+
+function stopSound() {
+    if (state.bufferSource) {
+        try {
+            state.bufferSource.stop();
+        } catch (e) {}
+        state.bufferSource = null;
+    }
+}
+
+// ==========================================
+// 애니메이션
+// ==========================================
+function animate() {
+    if (!state.isPlaying) return;
+
+    const funcData = MATH_FUNCTIONS[state.currentFunction];
+    const width = elements.graphCanvas.offsetWidth;
+    const height = elements.graphCanvas.offsetHeight;
+
+    // 진행률 업데이트
+    state.drawProgress += 0.004 * state.speed;
+    if (state.drawProgress > 1) {
+        state.drawProgress = 0;
+    }
+
+    // 그래프 클리어 & 다시 그리기
+    graphCtx.clearRect(0, 0, width, height);
+    graphCtx.fillStyle = '#ffffff';
+    graphCtx.fillRect(0, 0, width, height);
+
+    // 좌표계에 따라 다르게 그리기
+    switch (funcData.type) {
+        case 'parametric':
+            drawParametricCurve(funcData, width, height, state.drawProgress);
+            drawParametricPoint(funcData, width, height, state.drawProgress);
+            break;
+        case 'polar':
+            drawPolarCurve(funcData, width, height, state.drawProgress);
+            drawPolarPoint(funcData, width, height, state.drawProgress);
+            break;
+        case 'cartesian':
+        default:
+            drawCartesianCurve(funcData, width, height, state.drawProgress);
+            drawCartesianPoint(funcData, width, height, state.drawProgress);
+            break;
+    }
+
+    // 파형 그리기
+    drawWaveform();
+
+    state.animationId = requestAnimationFrame(animate);
+}
+
+// 현재 포인트 그리기 함수들
+function drawCartesianPoint(funcData, width, height, progress) {
+    const { xMin, xMax, yMin, yMax } = funcData.range;
+    const currentX = xMin + (xMax - xMin) * progress;
+    let currentY;
+    try {
+        currentY = funcData.fn(currentX);
+    } catch (e) {
+        return;
+    }
+    
+    if (!isFinite(currentY) || isNaN(currentY)) return;
+    
+    const canvasX = progress * width;
+    const canvasY = ((yMax - currentY) / (yMax - yMin)) * height;
+    
+    drawPoint(canvasX, canvasY, funcData.category, height);
+}
+
+function drawPolarPoint(funcData, width, height, progress) {
+    const { xMin, xMax, yMin, yMax } = funcData.viewBox;
+    const { min: thetaMin, max: thetaMax } = funcData.thetaRange;
+    const theta = thetaMin + (thetaMax - thetaMin) * progress;
+    let r;
+    try {
+        r = funcData.r(theta);
+    } catch (e) {
+        return;
+    }
+    
+    if (!isFinite(r) || isNaN(r)) return;
+    
+    const x = r * Math.cos(theta);
+    const y = r * Math.sin(theta);
+    const canvasX = ((x - xMin) / (xMax - xMin)) * width;
+    const canvasY = ((yMax - y) / (yMax - yMin)) * height;
+    
+    drawPoint(canvasX, canvasY, funcData.category, height);
+}
+
+function drawParametricPoint(funcData, width, height, progress) {
+    const { xMin, xMax, yMin, yMax } = funcData.viewBox;
+    const { min: tMin, max: tMax } = funcData.tRange;
+    const t = tMin + (tMax - tMin) * progress;
+    let x, y;
+    try {
+        x = funcData.x(t);
+        y = funcData.y(t);
+    } catch (e) {
+        return;
+    }
+    
+    if (!isFinite(x) || isNaN(x) || !isFinite(y) || isNaN(y)) return;
+    
+    const canvasX = ((x - xMin) / (xMax - xMin)) * width;
+    const canvasY = ((yMax - y) / (yMax - yMin)) * height;
+    
+    drawPoint(canvasX, canvasY, funcData.category, height);
+}
+
+function drawPoint(canvasX, canvasY, category, height) {
+    const colors = {
+        waves: '#8b5cf6',
+        curves: '#ec4899',
+        sound: '#f59e0b',
+        math: '#10b981',
+        bytebeat: '#ef4444'
+    };
+    graphCtx.fillStyle = colors[category] || '#3b82f6';
+    graphCtx.beginPath();
+    graphCtx.arc(canvasX, Math.max(5, Math.min(height - 5, canvasY)), 6, 0, Math.PI * 2);
+    graphCtx.fill();
+}
+
+function drawWaveform() {
+    if (!state.analyser) return;
+
+    const width = elements.waveformCanvas.offsetWidth;
+    const height = elements.waveformCanvas.offsetHeight;
+    const bufferLength = state.analyser.frequencyBinCount;
+    const dataArray = new Uint8Array(bufferLength);
+    state.analyser.getByteTimeDomainData(dataArray);
+
+    waveformCtx.fillStyle = '#f3f4f6';
+    waveformCtx.fillRect(0, 0, width, height);
+
+    const colors = {
+        waves: '#8b5cf6',
+        curves: '#ec4899',
+        sound: '#f59e0b',
+        math: '#10b981',
+        bytebeat: '#ef4444'
+    };
+    const funcData = MATH_FUNCTIONS[state.currentFunction];
+    waveformCtx.strokeStyle = colors[funcData.category] || '#3b82f6';
+    waveformCtx.lineWidth = 2;
+    waveformCtx.beginPath();
+
+    const sliceWidth = width / bufferLength;
+    let x = 0;
+
+    for (let i = 0; i < bufferLength; i++) {
+        const v = dataArray[i] / 128.0;
+        const y = (v * height) / 2;
+
+        if (i === 0) {
+            waveformCtx.moveTo(x, y);
+        } else {
+            waveformCtx.lineTo(x, y);
+        }
+        x += sliceWidth;
+    }
+
+    waveformCtx.lineTo(width, height / 2);
+    waveformCtx.stroke();
+}
+
+// ==========================================
+// 컨트롤
+// ==========================================
+function togglePlay() {
+    if (state.isPlaying) {
+        pause();
+    } else {
+        play();
+    }
+}
+
+function play() {
+    state.isPlaying = true;
+    elements.playBtn.classList.add('playing');
+    elements.playBtn.querySelector('.icon').textContent = '❚❚';
+    document.body.classList.add('drawing');
+    
+    playSound();
+    animate();
+}
+
+function pause() {
+    state.isPlaying = false;
+    elements.playBtn.classList.remove('playing');
+    elements.playBtn.querySelector('.icon').textContent = '▶';
+    document.body.classList.remove('drawing');
+    
+    stopSound();
+    if (state.animationId) {
+        cancelAnimationFrame(state.animationId);
+    }
+}
+
+function stop() {
+    pause();
+    reset();
+}
+
+function reset() {
+    state.drawProgress = 0;
+    drawStaticGraph();
+    
+    const width = elements.waveformCanvas.offsetWidth;
+    const height = elements.waveformCanvas.offsetHeight;
+    waveformCtx.fillStyle = '#f3f4f6';
+    waveformCtx.fillRect(0, 0, width, height);
+}
+
+// ==========================================
+// 시작
+// ==========================================
+document.addEventListener('DOMContentLoaded', init);
+
+window.addEventListener('load', () => {
+    if (window.katex) {
+        selectFunction(state.currentFunction);
+    }
+});
