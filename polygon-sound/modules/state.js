@@ -30,6 +30,9 @@ export const state = {
     // Canvas Buffer
     ctx: null,
     pixelRatio: window.devicePixelRatio || 1,
+    canvasSize: 520, 
+    radius: 180,
+    center: { x: 250, y: 250 },
     
     // Visual Effects
     particles: [],

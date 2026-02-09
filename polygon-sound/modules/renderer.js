@@ -6,22 +6,30 @@
 import { state } from './state.js';
 import { CIRCLE_NOTES, LINEAR_NOTES, NOTE_COLORS } from './constants.js';
 
-const RADIUS = 180;
-let CENTER = { x: 250, y: 250 };
-
 export function initRenderer() {
     const canvas = document.getElementById('mainCanvas');
-    const wrapper = canvas.parentElement;
     
-    // Set internal resolution based on CSS size (Math-sound strategy)
-    const size = wrapper.clientWidth || 500;
-    canvas.width = size * state.pixelRatio;
-    canvas.height = size * state.pixelRatio;
-    
-    CENTER = { x: size / 2, y: size / 2 };
-    
+    const updateSize = () => {
+        const wrapper = canvas.parentElement;
+        const size = wrapper.clientWidth || 500;
+        
+        state.canvasSize = size;
+        canvas.width = size * state.pixelRatio;
+        canvas.height = size * state.pixelRatio;
+        
+        state.center = { x: size / 2, y: size / 2 };
+        // Increase RADIUS to 90% of the half-size (240px if size is 520px)
+        state.radius = (size / 2) * 0.92;
+        
+        if (state.ctx) {
+            state.ctx.setTransform(1, 0, 0, 1, 0, 0);
+            state.ctx.scale(state.pixelRatio, state.pixelRatio);
+        }
+    };
+
     state.ctx = canvas.getContext('2d');
-    state.ctx.scale(state.pixelRatio, state.pixelRatio);
+    updateSize();
+    window.addEventListener('resize', updateSize);
 
     renderPiano();
     renderLayerControls();
@@ -69,31 +77,22 @@ export function renderLayerControls() {
         layerContainer.appendChild(tab);
     });
 
-    // +, - 버튼 컨테이너
-    const actionGroup = document.createElement('div');
-    actionGroup.className = 'flex gap-2 ml-2';
-
-    // 레이어 추가 (+)
+    // Add/Remove Buttons directly
     if (state.layers.length < 4) {
         const addBtn = document.createElement('button');
         addBtn.className = 'layer-tab';
         addBtn.innerHTML = '+';
         addBtn.onclick = addLayer;
-        actionGroup.appendChild(addBtn);
+        layerContainer.appendChild(addBtn);
     }
 
-    // 레이어 삭제 (-)
     if (state.layers.length > 1) {
         const subBtn = document.createElement('button');
         subBtn.className = 'layer-tab';
         subBtn.innerHTML = '-';
         subBtn.onclick = removeLastLayer;
-        actionGroup.appendChild(subBtn);
+        layerContainer.appendChild(subBtn);
     }
-
-    layerContainer.appendChild(actionGroup);
-
-    // Update Detail Setting Row selectors for Active Layer
     const currentLayer = state.layers[state.activeLayerIndex];
     renderSidesSelector(currentLayer);
     
@@ -186,7 +185,9 @@ export function render() {
     const ctx = state.ctx;
     if (!ctx) return;
     
-    const size = 520; 
+    const size = state.canvasSize; 
+    const center = state.center;
+    const radius = state.radius;
 
     // Clear with slight trail
     ctx.fillStyle = 'rgba(15, 23, 42, 0.2)'; 
@@ -196,14 +197,14 @@ export function render() {
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
     ctx.lineWidth = 1;
     ctx.beginPath();
-    ctx.arc(CENTER.x, CENTER.y, RADIUS, 0, Math.PI * 2);
+    ctx.arc(center.x, center.y, radius, 0, Math.PI * 2);
     ctx.stroke();
 
     // Draw Static Note Points (Subtle)
     CIRCLE_NOTES.forEach((note, i) => {
         const angle = (i * 30 - 90) * (Math.PI / 180);
-        const x = CENTER.x + RADIUS * Math.cos(angle);
-        const y = CENTER.y + RADIUS * Math.sin(angle);
+        const x = center.x + radius * Math.cos(angle);
+        const y = center.y + radius * Math.sin(angle);
         const intensity = state.activeKeys[LINEAR_NOTES.indexOf(note)];
         const color = NOTE_COLORS[note];
 
@@ -220,7 +221,7 @@ export function render() {
     // Draw Rotating Polygons
     state.layers.forEach((layer, idx) => {
         ctx.save();
-        ctx.translate(CENTER.x, CENTER.y);
+        ctx.translate(center.x, center.y);
         ctx.rotate((state.rotation - 90) * (Math.PI / 180));
         
         ctx.strokeStyle = layer.color;
@@ -233,20 +234,20 @@ export function render() {
             // --- Custom Mode: Use generated indices ---
             layer.customVertices.forEach((vIdx, i) => {
                 const rad = (vIdx * 30) * (Math.PI / 180);
-                const px = RADIUS * Math.cos(rad);
-                const py = RADIUS * Math.sin(rad);
+                const px = radius * Math.cos(rad);
+                const py = radius * Math.sin(rad);
                 if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
             });
             // Close shape
             const startRad = (layer.customVertices[0] * 30) * (Math.PI / 180);
-            ctx.lineTo(RADIUS * Math.cos(startRad), RADIUS * Math.sin(startRad));
+            ctx.lineTo(radius * Math.cos(startRad), radius * Math.sin(startRad));
         } else {
             // --- Standard Mode: Pure Regular Polygons ---
             const step = (360 / layer.sides);
             for (let i = 0; i <= layer.sides; i++) {
                 const rad = (i * step) * (Math.PI / 180);
-                const px = RADIUS * Math.cos(rad);
-                const py = RADIUS * Math.sin(rad);
+                const px = radius * Math.cos(rad);
+                const py = radius * Math.sin(rad);
                 if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
             }
         }

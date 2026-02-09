@@ -5,7 +5,7 @@
 import { state } from './modules/state.js';
 import { initAudio } from './modules/audio.js';
 import { updateGeometry } from './modules/geometry.js';
-import { initRenderer, render } from './modules/renderer.js';
+import { initRenderer, render, renderLayerControls } from './modules/renderer.js';
 
 function init() {
     // 1. Initialize Renderer (Canvas & UI)
@@ -24,6 +24,7 @@ function init() {
 function setupEventListeners() {
     const playBtn = document.getElementById('playBtn');
     const resetBtn = document.getElementById('resetBtn');
+    const randomBtn = document.getElementById('randomBtn');
     const speedSlider = document.getElementById('speedSlider');
 
     playBtn.onclick = () => {
@@ -31,19 +32,12 @@ function setupEventListeners() {
         state.isPlaying = !state.isPlaying;
         
         // UI Update
-        const icon = playBtn.querySelector('.icon');
-        const label = playBtn.querySelector('.label');
-        
         if (state.isPlaying) {
-            icon.innerHTML = '<i data-lucide="square" class="fill-current w-5 h-5"></i>';
-            label.textContent = 'STOP';
-            playBtn.classList.replace('bg-white', 'bg-rose-500');
-            playBtn.classList.replace('text-slate-950', 'text-white');
+            playBtn.innerHTML = '<i data-lucide="square" class="icon-lg fill-current"></i>';
+            playBtn.classList.add('playing');
         } else {
-            icon.innerHTML = '<i data-lucide="play" class="fill-current w-5 h-5"></i>';
-            label.textContent = 'START';
-            playBtn.classList.replace('bg-rose-500', 'bg-white');
-            playBtn.classList.replace('text-white', 'text-slate-950');
+            playBtn.innerHTML = '<i data-lucide="play" class="icon-lg fill-current"></i>';
+            playBtn.classList.remove('playing');
         }
         lucide.createIcons();
     };
@@ -53,13 +47,45 @@ function setupEventListeners() {
         state.isPlaying = false;
         state.particles = [];
         state.activeKeys.fill(0);
-        if (document.getElementById('playBtn').querySelector('.label').textContent === 'STOP') {
-            document.getElementById('playBtn').click();
+        
+        // Reset UI to Stop state
+        playBtn.innerHTML = '<i data-lucide="play" class="icon-lg fill-current"></i>';
+        playBtn.classList.remove('playing');
+        lucide.createIcons();
+    };
+
+    randomBtn.onclick = () => {
+        const layer = state.layers[state.activeLayerIndex];
+        
+        // Randomly decide between Standard (60%) and Gen (40%)
+        const isGen = Math.random() > 0.6;
+        
+        if (isGen) {
+            // Gen Mode
+            const step = Math.floor(Math.random() * 10) + 2; // 2~11
+            layer.genValue = step;
+            
+            // Calculate vertices
+            let current = 0;
+            const vertices = [];
+            do {
+                vertices.push(current);
+                current = (current + step) % 12;
+            } while (current !== 0);
+            layer.customVertices = vertices;
+        } else {
+            // Standard Mode
+            const n = Math.floor(Math.random() * 10) + 3; // 3~12
+            layer.sides = n;
+            layer.customVertices = null;
         }
+        
+        renderLayerControls();
     };
 
     speedSlider.oninput = (e) => {
         state.speed = parseFloat(e.target.value);
+        document.getElementById('speedValue').textContent = `${state.speed.toFixed(1)}x`;
     };
 }
 

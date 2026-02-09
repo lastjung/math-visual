@@ -68,12 +68,11 @@ function triggerHit(noteIndex, angle, color) {
 
 function createParticles(angle, color) {
     const rad = (angle - 90) * (Math.PI / 180);
-    const centerX = 250; 
-    const centerY = 220; 
-    const radius = 140;
+    const center = state.center;
+    const radius = state.radius;
 
-    const x = centerX + radius * Math.cos(rad);
-    const y = centerY + radius * Math.sin(rad);
+    const x = center.x + radius * Math.cos(rad);
+    const y = center.y + radius * Math.sin(rad);
 
     for (let i = 0; i < 8; i++) {
         state.particles.push({

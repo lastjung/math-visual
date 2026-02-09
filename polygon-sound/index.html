@@ -34,19 +34,25 @@
             </div>
         </div>
 
-        <!-- 4. Main Controls (Shared Layout) -->
-        <div class="controls">
-            <button id="playBtn" class="control-btn" title="Start/Stop">
-                <i data-lucide="play" id="playIcon"></i>
-            </button>
-            <button id="resetBtn" class="control-btn" title="Reset">
-                <i data-lucide="rotate-ccw"></i>
-            </button>
-        </div>
+        <!-- 4. Unified Controls & Layers -->
+        <div class="main-controls-container">
+            <!-- Playback Controls -->
+            <div class="playback-group">
+                <button id="playBtn" class="circle-btn play-btn" title="Start/Stop">
+                    <i data-lucide="play" class="icon-lg"></i>
+                </button>
+                <button id="resetBtn" class="circle-btn" title="Reset">
+                    <i data-lucide="rotate-ccw"></i>
+                </button>
+                <button id="randomBtn" class="circle-btn" title="Randomize">
+                    <i data-lucide="dice-5"></i>
+                </button>
+            </div>
 
-        <!-- 5. Layer Tabs (Category Style) -->
-        <div class="category-tabs" id="layerSelector">
-            <!-- Layers will be injected here -->
+            <!-- Layer Tabs (Inject L-1, + here) -->
+            <div id="layerSelector" class="layer-group">
+                <!-- Javascript will inject layers here -->
+            </div>
         </div>
 
         <!-- 6. Detail Settings (Function Selector Style) -->
