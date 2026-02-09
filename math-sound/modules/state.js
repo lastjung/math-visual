@@ -12,6 +12,7 @@ export const state = {
     gainNode: null,
     analyser: null,
     bufferSource: null,
+    activeNodes: new Map(), // To manage multiple layers
     volume: 0.5,
     speed: 1,
     zoom: 1,

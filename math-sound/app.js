@@ -1,6 +1,6 @@
 import { MATH_FUNCTIONS, CATEGORIES } from './modules/constants.js';
 import { state, elements, ctx } from './modules/state.js';
-import { playSound, stopSound } from './modules/audio.js';
+import { playSound, stopSound, stopAllSounds } from './modules/audio.js';
 import { drawStaticGraph, animate, setRendererCallbacks } from './modules/renderer.js';
 
 // ==========================================
@@ -57,6 +57,15 @@ function setupEventListeners() {
     elements.resetBtn.addEventListener('click', reset);
     
     if (elements.autoBtn) elements.autoBtn.addEventListener('click', toggleAutoPlay);
+    
+    const layerBtn = document.getElementById('layerBtn');
+    if (layerBtn) layerBtn.addEventListener('click', addLayer);
+
+    const clearAllBtn = document.getElementById('clearAllBtn');
+    if (clearAllBtn) clearAllBtn.addEventListener('click', () => {
+        stopAllSounds();
+        renderMixer();
+    });
 
     elements.zoomSlider.addEventListener('input', (e) => {
         state.zoom = e.target.value / 100;
@@ -73,7 +82,9 @@ function setupEventListeners() {
     elements.speedSlider.addEventListener('input', (e) => {
         state.speed = e.target.value / 5;
         elements.speedValue.textContent = `${state.speed.toFixed(1)}x`;
-        if (state.bufferSource) state.bufferSource.playbackRate.value = state.speed;
+        state.activeNodes.forEach(node => {
+            if (node.playbackRate) node.playbackRate.value = state.speed;
+        });
     });
 
     elements.categoryTabs.forEach(tab => {
@@ -89,6 +100,7 @@ function setupEventListeners() {
         if (e.code === 'Space') { e.preventDefault(); togglePlay(); }
         else if (e.code === 'ArrowRight') navigateFunction(1);
         else if (e.code === 'ArrowLeft') navigateFunction(-1);
+        else if (e.key === 'Enter') addLayer();
     });
 }
 
@@ -140,7 +152,7 @@ function selectFunction(funcName) {
     if (funcData.category !== state.currentCategory) selectCategory(funcData.category);
 
     if (state.isPlaying) {
-        stopSound();
+        playSound(funcName); 
         if (state.animationId) cancelAnimationFrame(state.animationId);
     }
 
@@ -153,7 +165,12 @@ function selectFunction(funcName) {
     elements.canvasWrapper.classList.add('zoom-in-effect');
     
     drawStaticGraph();
-    setTimeout(() => play(), 500);
+    setTimeout(() => {
+        if (state.isPlaying) {
+            playSound(state.currentFunction);
+            animate();
+        }
+    }, 500);
 }
 
 function navigateFunction(direction) {
@@ -181,13 +198,52 @@ function play() {
     animate();
 }
 
+function addLayer() {
+    playSound(state.currentFunction, true);
+    renderMixer();
+}
+
+function renderMixer() {
+    const mixerPanel = document.getElementById('mixerPanel');
+    const container = document.getElementById('activeLayers');
+    if (!mixerPanel || !container) return;
+
+    const layers = Array.from(state.activeNodes.keys()).filter(id => id !== '__preview__');
+
+    if (layers.length === 0) {
+        mixerPanel.classList.add('hidden');
+        return;
+    }
+
+    mixerPanel.classList.remove('hidden');
+    container.innerHTML = '';
+
+    layers.forEach(id => {
+        const funcId = id.split('_')[0];
+        const func = MATH_FUNCTIONS[funcId];
+
+        const tag = document.createElement('div');
+        tag.className = 'layer-tag';
+        tag.innerHTML = `
+            <span>${func.name}</span>
+            <span class="remove-layer" data-id="${id}">✕</span>
+        `;
+        tag.querySelector('.remove-layer').addEventListener('click', (e) => {
+            stopSound(id);
+            renderMixer();
+        });
+        container.appendChild(tag);
+    });
+}
+
 function pause() {
     state.isPlaying = false;
     elements.playBtn.classList.remove('playing');
     elements.playBtn.querySelector('.icon').textContent = '▶';
     document.body.classList.remove('drawing');
-    stopSound();
+    stopAllSounds();
     if (state.animationId) cancelAnimationFrame(state.animationId);
+    renderMixer();
 }
 
 function stop() {
@@ -208,8 +264,10 @@ function reset() {
     drawStaticGraph();
     const width = elements.waveformCanvas.offsetWidth;
     const height = elements.waveformCanvas.offsetHeight;
-    ctx.waveform.fillStyle = '#f3f4f6';
-    ctx.waveform.fillRect(0, 0, width, height);
+    if (ctx.waveform) {
+        ctx.waveform.fillStyle = '#f3f4f6';
+        ctx.waveform.fillRect(0, 0, width, height);
+    }
 }
 
 // ==========================================
@@ -232,7 +290,6 @@ function startAutoPlay() {
     state.autoLoopCount = 0;
     if (elements.autoBtn) {
         elements.autoBtn.classList.add('playing');
-        elements.autoBtn.style.backgroundColor = '#fcd34d';
     }
     playNextAuto();
 }

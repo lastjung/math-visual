@@ -58,6 +58,20 @@
             <button id="autoBtn" class="control-btn auto-btn" title="랜덤 재생 (4곡 x 3회)">
                 <span class="icon">🎲</span>
             </button>
+            <button id="layerBtn" class="control-btn layer-btn" title="레이어 추가 (Perform)">
+                <span class="icon">🎹</span>
+            </button>
+        </div>
+
+        <!-- Live Layers (Performance Mixer) -->
+        <div id="mixerPanel" class="mixer-panel hidden">
+            <div class="mixer-header">
+                <h3>Live Mixer</h3>
+                <button id="clearAllBtn" class="clear-all-btn">Clear All</button>
+            </div>
+            <div id="activeLayers" class="active-layers">
+                <!-- Populated by JavaScript -->
+            </div>
         </div>
 
         <!-- Category Tabs -->

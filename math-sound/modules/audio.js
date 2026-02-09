@@ -20,8 +20,8 @@ export function initAudio() {
     state.analyser.connect(state.gainNode);
 }
 
-export function createSoundFromFunction() {
-    const funcData = MATH_FUNCTIONS[state.currentFunction];
+export function createSoundFromFunction(functionId = state.currentFunction) {
+    const funcData = MATH_FUNCTIONS[functionId];
     const sampleRate = state.audioContext.sampleRate;
     const duration = 4;
     const numSamples = sampleRate * duration;
@@ -67,29 +67,57 @@ export function createSoundFromFunction() {
     return buffer;
 }
 
-export function playSound() {
+export function playSound(functionId = state.currentFunction, forceLayer = false) {
     initAudio();
     
-    if (state.bufferSource) {
-        try {
-            state.bufferSource.stop();
-        } catch (e) {}
-    }
+    if (forceLayer) {
+        // Create an independent layer that persists
+        const buffer = createSoundFromFunction(functionId);
+        const source = state.audioContext.createBufferSource();
+        source.buffer = buffer;
+        source.loop = true;
+        source.playbackRate.value = state.speed;
+        source.connect(state.analyser);
+        source.start();
+        
+        const layerId = `${functionId}_${Date.now()}`;
+        state.activeNodes.set(layerId, source);
+    } else {
+        // This is a PREVIEW sound (only one at a time)
+        const oldPreview = state.activeNodes.get('__preview__');
+        if (oldPreview) {
+            try { oldPreview.stop(); } catch (e) {}
+            state.activeNodes.delete('__preview__');
+        }
 
-    const buffer = createSoundFromFunction();
-    state.bufferSource = state.audioContext.createBufferSource();
-    state.bufferSource.buffer = buffer;
-    state.bufferSource.connect(state.analyser);
-    state.bufferSource.loop = true;
-    state.bufferSource.playbackRate.value = state.speed;
-    state.bufferSource.start();
+        const buffer = createSoundFromFunction(functionId);
+        const source = state.audioContext.createBufferSource();
+        source.buffer = buffer;
+        source.loop = true;
+        source.playbackRate.value = state.speed;
+        source.connect(state.analyser);
+        source.start();
+        
+        state.activeNodes.set('__preview__', source);
+        state.currentFunction = functionId;
+    }
 }
 
-export function stopSound() {
-    if (state.bufferSource) {
+export function stopSound(layerId) {
+    const source = state.activeNodes.get(layerId);
+    if (source) {
         try {
-            state.bufferSource.stop();
+            source.stop();
         } catch (e) {}
-        state.bufferSource = null;
+        state.activeNodes.delete(layerId);
     }
+}
+
+export function stopAllSounds() {
+    state.activeNodes.forEach((source, id) => {
+        try {
+            source.stop();
+        } catch (e) {}
+    });
+    state.activeNodes.clear();
 }

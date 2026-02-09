@@ -227,6 +227,90 @@ body {
     color: #ffffff;
 }
 
+.layer-btn.active {
+    background: var(--accent-color);
+    color: #ffffff;
+}
+
+/* Mixer Panel */
+.mixer-panel {
+    width: 100%;
+    background: var(--card-bg);
+    backdrop-filter: var(--glass-blur);
+    border-radius: var(--radius-sm);
+    padding: 16px;
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.mixer-panel.hidden {
+    display: none;
+}
+
+.mixer-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+}
+
+.mixer-panel h3 {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+}
+
+.clear-all-btn {
+    font-size: 0.75rem;
+    padding: 4px 10px;
+    background: var(--gray-light);
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    color: var(--text-muted);
+}
+
+.clear-all-btn:hover {
+    background: var(--bytebeat-color);
+    color: white;
+}
+
+.active-layers {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.layer-tag {
+    background: #ffffff;
+    padding: 8px 14px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    border: 1px solid rgba(0,0,0,0.05);
+}
+
+.layer-tag .remove-layer {
+    cursor: pointer;
+    color: var(--bytebeat-color);
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(239, 68, 68, 0.1);
+    border-radius: 50%;
+}
+
 /* Category Tabs - Glass Pill */
 .category-tabs {
     display: flex;

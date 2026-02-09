@@ -316,7 +316,7 @@ export const MATH_FUNCTIONS = {
         baseFreq: 440
     },
     steppyWave: {
-        category: 'math',
+        category: 'waves',
         name: 'Steppy Wave',
         type: 'cartesian',
         fn: (x) => {
@@ -328,9 +328,10 @@ export const MATH_FUNCTIONS = {
         latex: 'f(x) = \\cos(3x) + \\text{sgn}(\\sin(6x)) + \\frac{1}{2}\\tan(x)',
         range: { xMin: -2, xMax: 2, yMin: -4, yMax: 4 },
         audioScale: 120,
-        },
+        baseFreq: 180
+    },
     tanhTan: {
-        category: 'math',
+        category: 'waves',
         name: 'Tanh-Tan',
         type: 'cartesian',
         fn: (x) => 3 * Math.tanh(Math.tan(x * Math.PI)),
@@ -350,6 +351,50 @@ export const MATH_FUNCTIONS = {
         range: { xMin: -3, xMax: 3, yMin: -2, yMax: 2 },
         audioScale: 400,
         baseFreq: 440
+    },
+    wobbleBass: {
+        category: 'sound',
+        name: 'Wobble Bass',
+        type: 'cartesian',
+        fn: (x) => Math.sin(x * (20 + 10 * Math.sin(x * 2))),
+        formula: 'f(x) = sin(x·(20 + 10sin(2x)))',
+        latex: 'f(x) = \\sin(x \\cdot (20 + 10\\sin(2x)))',
+        range: { xMin: -4, xMax: 4, yMin: -1.5, yMax: 1.5 },
+        audioScale: 150,
+        baseFreq: 110
+    },
+    gatedNoise: {
+        category: 'sound',
+        name: 'Gated Noise',
+        type: 'cartesian',
+        fn: (x) => Math.sin(x * 100) * Math.floor(Math.sin(x) + 1.1),
+        formula: 'f(x) = sin(100x)·⌊sin(x)+1.1⌋',
+        latex: 'f(x) = \\sin(100x) \\cdot \\lfloor \\sin(x) + 1.1 \\rfloor',
+        range: { xMin: -4, xMax: 4, yMin: -1.5, yMax: 1.5 },
+        audioScale: 200,
+        baseFreq: 440
+    },
+    warpWave: {
+        category: 'sound',
+        name: 'Warp Wave',
+        type: 'cartesian',
+        fn: (x) => Math.sin(10 * Math.sin(x)),
+        formula: 'f(x) = sin(10sin(x))',
+        latex: 'f(x) = \\sin(10\\sin(x))',
+        range: { xMin: -4, xMax: 4, yMin: -1.5, yMax: 1.5 },
+        audioScale: 300,
+        baseFreq: 220
+    },
+    recursiveSine: {
+        category: 'sound',
+        name: 'Recursive Sine',
+        type: 'cartesian',
+        fn: (x) => Math.sin(x + Math.sin(x + Math.sin(x))),
+        formula: 'f(x) = sin(x+sin(x+sin(x)))',
+        latex: 'f(x) = \\sin(x + \\sin(x + \\sin(x)))',
+        range: { xMin: -10, xMax: 10, yMin: -1.5, yMax: 1.5 },
+        audioScale: 400,
+        baseFreq: 330
     },
     chirp: {
         category: 'sound',
@@ -424,7 +469,7 @@ export const MATH_FUNCTIONS = {
         baseFreq: 380
     },
     damped: {
-        category: 'math',
+        category: 'waves',
         name: 'Damped',
         type: 'cartesian',
         fn: (x) => Math.exp(-Math.abs(x) * 0.5) * Math.sin(x * 8),
@@ -435,7 +480,7 @@ export const MATH_FUNCTIONS = {
         baseFreq: 320
     },
     chaos: {
-        category: 'math',
+        category: 'waves',
         name: 'Chaos',
         type: 'cartesian',
         fn: (x) => Math.sin(x * 5) * Math.cos(x * 3) + Math.sin(x * 11) * 0.5,
@@ -457,7 +502,7 @@ export const MATH_FUNCTIONS = {
         baseFreq: 500
     },
     epicycloid: {
-        category: 'math',
+        category: 'curves',
         name: 'Epicycloid',
         type: 'parametric',
         x: (t) => 3 * Math.cos(t) - Math.cos(3 * t),
