@@ -412,7 +412,8 @@ const state = {
     speed: 1,
     zoom: 1,
     drawProgress: 0,
-    functionIndex: 1
+    functionIndex: 1,
+    timerStartTime: null
 };
 
 // ==========================================
@@ -436,7 +437,9 @@ const elements = {
     categoryTabs: document.querySelectorAll('.category-tab'),
     currentIndex: document.getElementById('currentIndex'),
     totalCount: document.getElementById('totalCount'),
-    container: document.querySelector('.container')
+    container: document.querySelector('.container'),
+    canvasWrapper: document.querySelector('.canvas-wrapper'),
+    canvasClock: document.getElementById('canvasClock')
 };
 
 // Canvas contexts
@@ -452,6 +455,28 @@ function init() {
     selectCategory('waves');
     selectFunction('sine');
     drawStaticGraph();
+}
+
+function updateTimer() {
+    if (!state.isPlaying || !state.timerStartTime) {
+        if (!state.isPlaying && !state.timerStartTime) {
+            elements.canvasClock.textContent = '00:00.00';
+        }
+        return;
+    }
+    
+    const now = performance.now();
+    const diff = now - state.timerStartTime;
+    
+    const mins = Math.floor(diff / 60000);
+    const secs = Math.floor((diff % 60000) / 1000);
+    const ms = Math.floor((diff % 1000) / 10);
+    
+    const mm = String(mins).padStart(2, '0');
+    const ss = String(secs).padStart(2, '0');
+    const msm = String(ms).padStart(2, '0');
+    
+    elements.canvasClock.textContent = `${mm}:${ss}.${msm}`;
 }
 
 function setupCanvas() {
@@ -548,7 +573,7 @@ function setZoom(value) {
 // ==========================================
 // 카테고리 선택
 // ==========================================
-function selectCategory(category) {
+function selectCategory(category, autoSelectFirst = false) {
     state.currentCategory = category;
     
     // 탭 상태 업데이트
@@ -559,10 +584,12 @@ function selectCategory(category) {
     // 함수 버튼 생성
     renderFunctionButtons(category);
 
-    // 첫 번째 함수 선택 (현재 카테고리에 없으면)
-    const funcs = CATEGORIES[category].functions;
-    if (funcs.length > 0 && !funcs.includes(state.currentFunction)) {
-        selectFunction(funcs[0]);
+    // autoSelectFirst가 true일 때만 첫 번째 함수 선택
+    if (autoSelectFirst) {
+        const funcs = CATEGORIES[category].functions;
+        if (funcs.length > 0 && !funcs.includes(state.currentFunction)) {
+            selectFunction(funcs[0]);
+        }
     }
 }
 
@@ -629,14 +656,22 @@ function selectFunction(funcName) {
         }
     }
 
-    // 먼저 전체 그래프 표시
+    // 타이머와 진행률 초기화
+    state.timerStartTime = null;
+    elements.canvasClock.textContent = '00:00.00';
     state.drawProgress = 0;
+    
+    // 줌인 애니메이션 리셋 및 적용
+    elements.canvasWrapper.classList.remove('zoom-in-effect');
+    void elements.canvasWrapper.offsetWidth; // 리플로우 강제
+    elements.canvasWrapper.classList.add('zoom-in-effect');
+    
     drawStaticGraph();
 
-    // 0.3초 후 자동 재생 시작
+    // 0.5초 후 자동 재생 시작 (요청하신 대로 변경)
     setTimeout(() => {
         play();
-    }, 300);
+    }, 500);
 }
 
 function navigateFunction(direction) {
@@ -1000,6 +1035,9 @@ function animate() {
     // 파형 그리기
     drawWaveform();
 
+    // 타이머 업데이트
+    updateTimer();
+
     state.animationId = requestAnimationFrame(animate);
 }
 
@@ -1133,6 +1171,7 @@ function togglePlay() {
 
 function play() {
     state.isPlaying = true;
+    state.timerStartTime = performance.now(); // 타이머 시작
     elements.playBtn.classList.add('playing');
     elements.playBtn.querySelector('.icon').textContent = '❚❚';
     document.body.classList.add('drawing');
@@ -1143,6 +1182,7 @@ function play() {
 
 function pause() {
     state.isPlaying = false;
+    // 일시정지 시 타이머는 멈춤 (필요시 state.timerStartTime 조절 로직 추가 가능)
     elements.playBtn.classList.remove('playing');
     elements.playBtn.querySelector('.icon').textContent = '▶';
     document.body.classList.remove('drawing');
@@ -1155,6 +1195,8 @@ function pause() {
 
 function stop() {
     pause();
+    state.timerStartTime = null;
+    elements.canvasClock.textContent = '00:00.00';
     reset();
 }
 
