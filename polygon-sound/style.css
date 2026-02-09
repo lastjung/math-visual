@@ -143,10 +143,10 @@ body {
     left: 50%;
     top: 50%;
     transform: translate(-50%, -50%);
-    font-size: 0.7rem;
+    font-size: 1.1rem;
     letter-spacing: 0.08em;
     text-transform: uppercase;
-    color: rgba(255, 255, 255, 0.35);
+    color: #38bdf8; /* Sky Blue */
     z-index: 10;
     pointer-events: none;
 }

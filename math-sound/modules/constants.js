@@ -253,6 +253,93 @@ export const MATH_FUNCTIONS = {
         audioScale: 320,
         baseFreq: 300
     },
+    beating2: {
+        category: 'sound',
+        name: 'Beating 2',
+        type: 'cartesian',
+        fn: (x) => {
+            // x를 적절히 스케일링하여 시각적으로 맥놀이가 잘 보이게 조정
+            const t = x * 10; 
+            return 12 * (Math.sin(t - 30) + Math.sin(0.9 * (t - 30)));
+        },
+        formula: 'f(x) = 12(sin(x-30) + sin(0.9(x-30)))',
+        latex: 'f(x) = 12(\\sin(x-30) + \\sin(0.9(x-30)))',
+        range: { xMin: -10, xMax: 10, yMin: -25, yMax: 25 },
+        audioScale: 100,
+        baseFreq: 220
+    },
+    vibration: {
+        category: 'sound',
+        name: 'Vibration',
+        type: 'cartesian',
+        fn: (x) => x * Math.sin(x * 10),
+        formula: 'f(x) = x · sin(x)',
+        latex: 'f(x) = x \\cdot \\sin(x)',
+        range: { xMin: -10, xMax: 10, yMin: -12, yMax: 12 },
+        audioScale: 150,
+        baseFreq: 330
+    },
+    diamond: {
+        category: 'sound',
+        name: 'Diamond',
+        type: 'cartesian',
+        fn: (x) => (2 - Math.abs(x)) * Math.sin(x * 60),
+        formula: 'f(x) = (2-|x|)·sin(120x)',
+        latex: 'f(x) = (2-|x|) \\cdot \\sin(120x)',
+        range: { xMin: -2, xMax: 2, yMin: -2.5, yMax: 2.5 },
+        audioScale: 120,
+        baseFreq: 440
+    },
+    arctanWave: {
+        category: 'sound',
+        name: 'Arctan Wave',
+        type: 'cartesian',
+        fn: (x) => 3 * Math.atan(3 * Math.sin(x * 4 * Math.PI)), // Scale period to match visual
+        formula: 'f(x) = 3arctan(3sin(2x))',
+        latex: 'f(x) = 3 \\arctan(3 \\sin(2x))',
+        range: { xMin: -2, xMax: 2, yMin: -5, yMax: 5 },
+        audioScale: 100,
+        baseFreq: 220
+    },
+    monsterWave: {
+        category: 'sound',
+        name: 'Monster Wave',
+        type: 'cartesian',
+        fn: (x) => {
+            const envelope = (Math.sqrt(Math.max(0, 4 - x * x)) * (0.2 + Math.abs(Math.sin(2.3 * x))) + 3 * Math.exp(-15 * x * x));
+            return envelope * Math.sin(100 * x);
+        },
+        formula: 'f(x) = (√(4-x²)·(0.2+|sin(2.3x)|)+3e⁻¹⁵ˣ²)·sin(100x)',
+        latex: 'f(x) = \\left(\\sqrt{4-x^2} \\cdot (0.2 + |\\sin(2.3x)|) + 3e^{-15x^2}\\right) \\cdot \\sin(100x)',
+        range: { xMin: -2.1, xMax: 2.1, yMin: -5, yMax: 5 },
+        audioScale: 100,
+        baseFreq: 440
+    },
+    steppyWave: {
+        category: 'math',
+        name: 'Steppy Wave',
+        type: 'cartesian',
+        fn: (x) => {
+            const t = x * 2 * Math.PI;
+            // tan이 무한대로 발산하지 않도록 안전하게 가공하여 반영
+            return Math.cos(3 * t) + Math.sign(Math.sin(6 * t)) + 0.3 * Math.max(-2, Math.min(2, Math.tan(t / 2)));
+        },
+        formula: 'f(x) = cos(3x) + sgn(sin(6x)) + 0.5·tan(x)',
+        latex: 'f(x) = \\cos(3x) + \\text{sgn}(\\sin(6x)) + \\frac{1}{2}\\tan(x)',
+        range: { xMin: -2, xMax: 2, yMin: -4, yMax: 4 },
+        audioScale: 120,
+        },
+    tanhTan: {
+        category: 'math',
+        name: 'Tanh-Tan',
+        type: 'cartesian',
+        fn: (x) => 3 * Math.tanh(Math.tan(x * Math.PI)),
+        formula: 'f(x) = 3tanh(tan(x))',
+        latex: 'f(x) = 3 \\tanh(\\tan(x))',
+        range: { xMin: -2, xMax: 2, yMin: -4, yMax: 4 },
+        audioScale: 150,
+        baseFreq: 220
+    },
     fmSynth2: { // Renamed key to avoid duplication
         category: 'sound',
         name: 'FM Synth',
@@ -277,6 +364,43 @@ export const MATH_FUNCTIONS = {
     },
 
     // ========== 📐 MATH (수학적 함수 - Cartesian) ==========
+    fourierSquare: {
+        category: 'math',
+        name: 'Fourier Square',
+        type: 'cartesian',
+        fn: (x) => {
+            let sum = 0;
+            const phase = x * 2 * Math.PI;
+            for (let n = 0; n <= 10; n++) {
+                const k = 2 * n + 1;
+                sum += Math.sin(k * phase) / k;
+            }
+            return -(24 / Math.PI) * sum;
+        },
+        formula: 'f(x) = -24/π Σ sin((2n+1)x)/(2n+1)',
+        latex: 'f(x) = -\\frac{24}{\\pi} \\sum_{n=0}^{10} \\frac{\\sin((2n+1)x)}{2n+1}',
+        range: { xMin: -2, xMax: 2, yMin: -10, yMax: 10 },
+        audioScale: 100,
+        baseFreq: 110
+    },
+    complexWave: {
+        category: 'math',
+        name: 'Complex Wave',
+        type: 'cartesian',
+        fn: (x) => {
+            let sum = 0;
+            const phase = x * 2 * Math.PI;
+            for (let n = 0; n <= 7; n++) {
+                sum += Math.sin((4 * n + 1) * phase) / (n + 1);
+            }
+            return (24 / Math.PI) * sum;
+        },
+        formula: 'f(x) = 24/π Σ sin((4n+1)x)/(n+1)',
+        latex: 'f(x) = \\frac{24}{\\pi} \\sum_{n=0}^{7} \\frac{\\sin((4n+1)x)}{n+1}',
+        range: { xMin: -2, xMax: 2, yMin: -15, yMax: 15 },
+        audioScale: 80,
+        baseFreq: 130
+    },
     gaussian: {
         category: 'math',
         name: 'Gaussian',
@@ -358,7 +482,17 @@ export const MATH_FUNCTIONS = {
         audioScale: 300,
         baseFreq: 340
     },
-
+    parabola: {
+        category: 'math',
+        name: 'Parabola',
+        type: 'cartesian',
+        fn: (x) => x * x,
+        formula: 'f(x) = x²',
+        latex: 'f(x) = x^2',
+        range: { xMin: -2, xMax: 2, yMin: -0.5, yMax: 4.5 },
+        audioScale: 200,
+        baseFreq: 220
+    },
     // ========== ⚡ BYTEBEAT (비트 연산 - Cartesian) ==========
     byteClassic: {
         category: 'bytebeat',
@@ -387,6 +521,22 @@ export const MATH_FUNCTIONS = {
         range: { xMin: -4, xMax: 4, yMin: -1.5, yMax: 1.5 },
         audioScale: 80,
         baseFreq: 180
+    },
+    stereoLove: {
+        category: 'bytebeat',
+        name: 'Stereo Love',
+        type: 'cartesian',
+        fn: (x) => {
+            const t = Math.floor((x + 5) * 1000);
+            // Edward Maya - Stereo Love bytebeat implementation
+            const melody = (t * ((t >> 12 | t >> 8) & 63 & t >> 4));
+            return (melody % 256) / 128 - 1;
+        },
+        formula: 'f(t) = t·((t>>12|t>>8)&63&t>>4)',
+        latex: 'f(t) = t \\cdot ((t \\gg 12 \\lor t \\gg 8) \\land 63 \\land t \\gg 4)',
+        range: { xMin: -5, xMax: 5, yMin: -1.2, yMax: 1.2 },
+        audioScale: 100,
+        baseFreq: 200
     },
     byteXor: {
         category: 'bytebeat',

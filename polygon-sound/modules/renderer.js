@@ -97,7 +97,8 @@ export function renderLayerControls() {
     renderSidesSelector(currentLayer);
     
     // Update Info Text on Canvas (Right side)
-    document.getElementById('infoText').textContent = `L-${state.activeLayerIndex + 1}`;
+    // Info Text will be updated in updateUI_Dynamic as a timer
+    // document.getElementById('infoText').textContent = `L-${state.activeLayerIndex + 1}`;
 }
 
 function renderSidesSelector(layer) {
@@ -354,5 +355,20 @@ function updateUI_Dynamic() {
         const scaleName = state.currentScale || DEFAULT_SCALE;
         const chordName = state.currentChord || '';
         centerInfo.textContent = chordName ? `${scaleName} · ${chordName}` : scaleName;
+    }
+
+    // 5. Timer (Top Right)
+    const infoText = document.getElementById('infoText');
+    if (infoText) {
+        const totalSeconds = state.elapsedTime || 0;
+        const mins = Math.floor(totalSeconds / 60);
+        const secs = Math.floor(totalSeconds % 60);
+        const ms = Math.floor((totalSeconds % 1) * 100);
+        
+        const minsStr = mins.toString().padStart(2, '0');
+        const secsStr = secs.toString().padStart(2, '0');
+        const msStr = ms.toString().padStart(2, '0');
+        
+        infoText.textContent = `${minsStr}:${secsStr}.${msStr}`;
     }
 }

@@ -8,7 +8,8 @@ import { LINEAR_NOTES, CIRCLE_NOTES, SCALES, DEFAULT_SCALE, CHORDS } from './con
 
 export function updateGeometry() {
     const prevRot = state.rotation;
-    state.rotation = (state.rotation + state.speed) % 360;
+    // 시계/반시계 방향 모두 대응하는 회전 업데이트
+    state.rotation = (state.rotation + state.speed + 360) % 360;
 
     // Decay piano keys
     for (let i = 0; i < 12; i++) {
@@ -55,15 +56,24 @@ export function updateGeometry() {
         }
     });
 
-    // Advance chord on full rotation (bar)
-    if (prevRot > state.rotation) {
-        advanceChord();
+    // 0도 지점(마디)을 지날 때 코드 변경
+    if (state.speed > 0) {
+        if (prevRot > state.rotation) advanceChord(1);
+    } else if (state.speed < 0) {
+        if (prevRot < state.rotation) advanceChord(-1);
     }
 }
 
 function hasCrossed(prev, curr, target) {
-    if (prev <= target && curr >= target) return true;
-    if (prev > curr && (target >= prev || target <= curr)) return true;
+    if (state.speed >= 0) {
+        // 시계 방향: prev <= target < curr
+        if (prev <= target && curr >= target) return true;
+        if (prev > curr && (target >= prev || target <= curr)) return true;
+    } else {
+        // 반시계 방향: curr < target <= prev
+        if (prev >= target && curr <= target) return true;
+        if (prev < curr && (target <= prev || target >= curr)) return true;
+    }
     return false;
 }
 
@@ -83,9 +93,11 @@ function triggerHit(noteIndex, angle, color) {
     createParticles(angle, color);
 }
 
-function advanceChord() {
+function advanceChord(direction = 1) {
     if (!state.chordProgression || state.chordProgression.length === 0) return;
-    state.chordIndex = (state.chordIndex + 1) % state.chordProgression.length;
+    
+    // 방향에 따른 인덱스 변경 (양수: 다음, 음수: 이전)
+    state.chordIndex = (state.chordIndex + direction + state.chordProgression.length) % state.chordProgression.length;
     state.currentChord = state.chordProgression[state.chordIndex];
     applyChordShape();
 }

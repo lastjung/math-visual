@@ -13,6 +13,8 @@ export const state = {
     animationId: null,
     rotation: 0,
     speed: 1.0,
+    elapsedTime: 0, // In seconds
+    lastFrameTime: 0,
     
     // Geometry Settings (Multi-Layer)
     layers: [

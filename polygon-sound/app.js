@@ -51,6 +51,7 @@ function setupEventListeners() {
         state.isPlaying = false;
         state.particles = [];
         state.activeKeys.fill(0);
+        state.elapsedTime = 0; // Reset timer
         
         // Reset UI to Stop state
         playBtn.innerHTML = '<i data-lucide="play" class="icon-lg fill-current"></i>';
@@ -132,8 +133,13 @@ function parseProgression(text) {
     return raw.filter(token => Object.prototype.hasOwnProperty.call(CHORDS, token));
 }
 
-function loop() {
+function loop(timestamp) {
+    if (!state.lastFrameTime) state.lastFrameTime = timestamp;
+    const delta = (timestamp - state.lastFrameTime) / 1000; // in seconds
+    state.lastFrameTime = timestamp;
+
     if (state.isPlaying) {
+        state.elapsedTime += delta;
         updateGeometry();
     }
     render();
