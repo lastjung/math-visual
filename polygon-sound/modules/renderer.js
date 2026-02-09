@@ -347,4 +347,12 @@ function updateUI_Dynamic() {
 
     // 3. Speed slider value
     document.getElementById('speedValue').textContent = `${state.speed.toFixed(1)}x`;
+
+    // 4. Center info (Scale / Chord)
+    const centerInfo = document.getElementById('centerInfo');
+    if (centerInfo) {
+        const scaleName = state.currentScale || DEFAULT_SCALE;
+        const chordName = state.currentChord || '';
+        centerInfo.textContent = chordName ? `${scaleName} · ${chordName}` : scaleName;
+    }
 }

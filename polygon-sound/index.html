@@ -24,6 +24,7 @@
         <div class="canvas-wrapper">
             <span class="function-title" id="currentNote">---</span>
             <span class="canvas-clock" id="infoText">L-1</span>
+            <span class="center-info" id="centerInfo">Scale · Chord</span>
             <canvas id="mainCanvas"></canvas>
         </div>
 
@@ -69,6 +70,7 @@
             <div class="slider-control scale-toggle">
                 <label for="scaleSelect" class="scale-label">Scale</label>
                 <select id="scaleSelect" class="scale-select">
+                    <option value="All">All</option>
                     <option value="Pentatonic">Pentatonic</option>
                     <option value="Dorian">Dorian</option>
                     <option value="Phrygian">Phrygian</option>
@@ -77,6 +79,10 @@
                 </select>
             </div>
             <div class="scale-hint" id="scaleHint" aria-live="polite"></div>
+            <div class="slider-control progression-toggle">
+                <label for="progressionInput" class="progression-label">Progression</label>
+                <input id="progressionInput" class="progression-input" type="text" spellcheck="false" placeholder="e.g. C F G Am">
+            </div>
 
             <div class="slider-control">
                 <span class="slider-icon">⏱</span>

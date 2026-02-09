@@ -39,5 +39,10 @@ export const state = {
     shake: 0,
 
     // Modes
-    currentScale: 'Pentatonic'
+    currentScale: 'All',
+    chordProgressionText: '',
+    chordProgression: [],
+    chordIndex: 0,
+    currentChord: '',
+    lastChordApplied: null
 };

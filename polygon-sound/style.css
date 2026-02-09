@@ -138,6 +138,19 @@ body {
     z-index: 10;
 }
 
+.center-info {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 0.7rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.35);
+    z-index: 10;
+    pointer-events: none;
+}
+
 /* ==========================================
    PIANO KEYBOARD (Replacing Formula)
    ========================================== */
@@ -456,4 +469,35 @@ input[type="range"]::-webkit-slider-thumb {
     text-align: center;
     margin-top: -6px;
     letter-spacing: 0.01em;
+}
+
+.progression-toggle {
+    justify-content: center;
+    gap: 10px;
+}
+
+.progression-label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.progression-input {
+    background: rgba(255, 255, 255, 0.05);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 12px;
+    padding: 6px 10px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    min-width: 160px;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.progression-input:focus {
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
 }

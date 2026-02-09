@@ -6,7 +6,7 @@ import { state } from './modules/state.js';
 import { initAudio } from './modules/audio.js';
 import { updateGeometry } from './modules/geometry.js';
 import { initRenderer, render, renderLayerControls } from './modules/renderer.js';
-import { SCALE_HINTS, DEFAULT_SCALE } from './modules/constants.js';
+import { SCALE_HINTS, DEFAULT_SCALE, CHORDS, DEFAULT_PROGRESS } from './modules/constants.js';
 
 function init() {
     // 1. Initialize Renderer (Canvas & UI)
@@ -14,6 +14,9 @@ function init() {
     
     // 2. Setup Event Listeners
     setupEventListeners();
+
+    // 2-1. Initialize progression from default/state
+    applyProgressionInput(state.chordProgressionText);
     
     // 3. Lucide Icons
     lucide.createIcons();
@@ -92,11 +95,19 @@ function setupEventListeners() {
     const scaleSelect = document.getElementById('scaleSelect');
     const scaleHint = document.getElementById('scaleHint');
     if (scaleSelect) {
-        scaleSelect.value = state.currentScale;
+        scaleSelect.value = state.currentScale || DEFAULT_SCALE;
         updateScaleHint(scaleSelect.value, scaleHint);
         scaleSelect.onchange = (e) => {
             state.currentScale = e.target.value;
             updateScaleHint(state.currentScale, scaleHint);
+        };
+    }
+
+    const progressionInput = document.getElementById('progressionInput');
+    if (progressionInput) {
+        progressionInput.value = state.chordProgressionText || DEFAULT_PROGRESS;
+        progressionInput.onchange = (e) => {
+            applyProgressionInput(e.target.value);
         };
     }
 }
@@ -105,6 +116,20 @@ function updateScaleHint(scaleName, hintEl) {
     if (!hintEl) return;
     const name = scaleName || DEFAULT_SCALE;
     hintEl.textContent = SCALE_HINTS[name] || '';
+}
+
+function applyProgressionInput(text) {
+    const parsed = parseProgression(text);
+    state.chordProgressionText = text;
+    state.chordProgression = parsed;
+    state.chordIndex = 0;
+    state.currentChord = state.chordProgression[0] || '';
+    state.lastChordApplied = null;
+}
+
+function parseProgression(text) {
+    const raw = (text || '').split(/[\s,]+/).map(t => t.trim()).filter(Boolean);
+    return raw.filter(token => Object.prototype.hasOwnProperty.call(CHORDS, token));
 }
 
 function loop() {

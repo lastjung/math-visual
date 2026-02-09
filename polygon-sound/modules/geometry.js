@@ -4,7 +4,7 @@
 
 import { state } from './state.js';
 import { playNote } from './audio.js';
-import { LINEAR_NOTES, CIRCLE_NOTES, SCALES, DEFAULT_SCALE } from './constants.js';
+import { LINEAR_NOTES, CIRCLE_NOTES, SCALES, DEFAULT_SCALE, CHORDS } from './constants.js';
 
 export function updateGeometry() {
     const prevRot = state.rotation;
@@ -15,6 +15,12 @@ export function updateGeometry() {
         state.activeKeys[i] = Math.max(0, state.activeKeys[i] - 0.05);
     }
     state.shake = Math.max(0, state.shake - 0.5);
+
+    // Ensure chord shape is applied when playing
+    if (state.lastChordApplied !== state.currentChord) {
+        applyChordShape();
+        state.lastChordApplied = state.currentChord;
+    }
 
     // 모든 레이어에 대해 검사
     state.layers.forEach((layer) => {
@@ -48,6 +54,11 @@ export function updateGeometry() {
             }
         }
     });
+
+    // Advance chord on full rotation (bar)
+    if (prevRot > state.rotation) {
+        advanceChord();
+    }
 }
 
 function hasCrossed(prev, curr, target) {
@@ -61,7 +72,8 @@ function triggerHit(noteIndex, angle, color) {
     
     const scaleName = state.currentScale || DEFAULT_SCALE;
     const scaleNotes = SCALES[scaleName] || SCALES[DEFAULT_SCALE];
-    if (scaleNotes.includes(noteName)) {
+    const chordNotes = CHORDS[state.currentChord] || [];
+    if (chordNotes.includes(noteName) || scaleNotes.includes(noteName)) {
         playNote(noteName);
     }
     
@@ -69,6 +81,26 @@ function triggerHit(noteIndex, angle, color) {
     state.lastHitNote = noteName;
 
     createParticles(angle, color);
+}
+
+function advanceChord() {
+    if (!state.chordProgression || state.chordProgression.length === 0) return;
+    state.chordIndex = (state.chordIndex + 1) % state.chordProgression.length;
+    state.currentChord = state.chordProgression[state.chordIndex];
+    applyChordShape();
+}
+
+function applyChordShape() {
+    if (!state.currentChord) return;
+    const chordNotes = CHORDS[state.currentChord] || [];
+    const vertices = chordNotes
+        .map(note => CIRCLE_NOTES.indexOf(note))
+        .filter(idx => idx >= 0);
+
+    const layer = state.layers[state.activeLayerIndex];
+    if (layer && vertices.length > 0) {
+        layer.customVertices = vertices;
+    }
 }
 
 function createParticles(angle, color) {

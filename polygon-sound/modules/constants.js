@@ -42,6 +42,7 @@ export const NOTE_COLORS = {
 
 // 스케일 프리셋 (C 루트 기준)
 export const SCALES = {
+    'All': ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B'],
     'Pentatonic': ['C', 'D', 'E', 'G', 'A'],
     'Dorian': ['C', 'D', 'Eb', 'F', 'G', 'A', 'Bb'],
     'Phrygian': ['C', 'Db', 'Eb', 'F', 'G', 'Ab', 'Bb'],
@@ -49,12 +50,22 @@ export const SCALES = {
     'Whole-tone': ['C', 'D', 'E', 'Gb', 'Ab', 'Bb']
 };
 
-export const DEFAULT_SCALE = 'Pentatonic';
+export const DEFAULT_SCALE = 'All';
 
 export const SCALE_HINTS = {
+    'All': 'All 12 notes available',
     'Pentatonic': 'Calm, forgiving melodies',
     'Dorian': 'Dreamy with a touch of melancholy',
     'Phrygian': 'Exotic, tense color',
     'Blues': 'Gritty soul vibe',
     'Whole-tone': 'Floating, unstable feel'
 };
+
+export const CHORDS = {
+    'C': ['C', 'E', 'G'],
+    'F': ['F', 'A', 'C'],
+    'G': ['G', 'B', 'D'],
+    'Am': ['A', 'C', 'E']
+};
+
+export const DEFAULT_PROGRESS = '';
