@@ -6,6 +6,7 @@ import { state } from './modules/state.js';
 import { initAudio } from './modules/audio.js';
 import { updateGeometry } from './modules/geometry.js';
 import { initRenderer, render, renderLayerControls } from './modules/renderer.js';
+import { SCALE_HINTS, DEFAULT_SCALE } from './modules/constants.js';
 
 function init() {
     // 1. Initialize Renderer (Canvas & UI)
@@ -87,6 +88,23 @@ function setupEventListeners() {
         state.speed = parseFloat(e.target.value);
         document.getElementById('speedValue').textContent = `${state.speed.toFixed(1)}x`;
     };
+
+    const scaleSelect = document.getElementById('scaleSelect');
+    const scaleHint = document.getElementById('scaleHint');
+    if (scaleSelect) {
+        scaleSelect.value = state.currentScale;
+        updateScaleHint(scaleSelect.value, scaleHint);
+        scaleSelect.onchange = (e) => {
+            state.currentScale = e.target.value;
+            updateScaleHint(state.currentScale, scaleHint);
+        };
+    }
+}
+
+function updateScaleHint(scaleName, hintEl) {
+    if (!hintEl) return;
+    const name = scaleName || DEFAULT_SCALE;
+    hintEl.textContent = SCALE_HINTS[name] || '';
 }
 
 function loop() {

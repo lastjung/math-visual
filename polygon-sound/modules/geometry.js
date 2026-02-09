@@ -4,7 +4,7 @@
 
 import { state } from './state.js';
 import { playNote } from './audio.js';
-import { LINEAR_NOTES, CIRCLE_NOTES } from './constants.js';
+import { LINEAR_NOTES, CIRCLE_NOTES, SCALES, DEFAULT_SCALE } from './constants.js';
 
 export function updateGeometry() {
     const prevRot = state.rotation;
@@ -58,7 +58,12 @@ function hasCrossed(prev, curr, target) {
 
 function triggerHit(noteIndex, angle, color) {
     const noteName = CIRCLE_NOTES[noteIndex];
-    playNote(noteName);
+    
+    const scaleName = state.currentScale || DEFAULT_SCALE;
+    const scaleNotes = SCALES[scaleName] || SCALES[DEFAULT_SCALE];
+    if (scaleNotes.includes(noteName)) {
+        playNote(noteName);
+    }
     
     state.activeKeys[LINEAR_NOTES.indexOf(noteName)] = 1.0;
     state.lastHitNote = noteName;

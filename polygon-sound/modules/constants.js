@@ -39,3 +39,22 @@ export const NOTE_COLORS = {
     'Bb': '#ff6b6b',  // Light Red
     'F': '#ced4da'    // Grey
 };
+
+// 스케일 프리셋 (C 루트 기준)
+export const SCALES = {
+    'Pentatonic': ['C', 'D', 'E', 'G', 'A'],
+    'Dorian': ['C', 'D', 'Eb', 'F', 'G', 'A', 'Bb'],
+    'Phrygian': ['C', 'Db', 'Eb', 'F', 'G', 'Ab', 'Bb'],
+    'Blues': ['C', 'Eb', 'F', 'Gb', 'G', 'Bb'],
+    'Whole-tone': ['C', 'D', 'E', 'Gb', 'Ab', 'Bb']
+};
+
+export const DEFAULT_SCALE = 'Pentatonic';
+
+export const SCALE_HINTS = {
+    'Pentatonic': 'Calm, forgiving melodies',
+    'Dorian': 'Dreamy with a touch of melancholy',
+    'Phrygian': 'Exotic, tense color',
+    'Blues': 'Gritty soul vibe',
+    'Whole-tone': 'Floating, unstable feel'
+};

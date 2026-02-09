@@ -36,5 +36,8 @@ export const state = {
     
     // Visual Effects
     particles: [],
-    shake: 0
+    shake: 0,
+
+    // Modes
+    currentScale: 'Pentatonic'
 };

@@ -4,7 +4,7 @@
  */
 
 import { state } from './state.js';
-import { CIRCLE_NOTES, LINEAR_NOTES, NOTE_COLORS } from './constants.js';
+import { CIRCLE_NOTES, LINEAR_NOTES, NOTE_COLORS, SCALES, DEFAULT_SCALE } from './constants.js';
 
 export function initRenderer() {
     const canvas = document.getElementById('mainCanvas');
@@ -208,14 +208,40 @@ export function render() {
         const intensity = state.activeKeys[LINEAR_NOTES.indexOf(note)];
         const color = NOTE_COLORS[note];
 
+        const scaleName = state.currentScale || DEFAULT_SCALE;
+        const scaleNotes = SCALES[scaleName] || SCALES[DEFAULT_SCALE];
+        const isScaleNote = scaleNotes.includes(note);
+
+        let baseRadius = 2.5;
+        let baseAlpha = 0.1;
+
+        if (!isScaleNote) {
+            // Muted notes: Dimmed
+            baseAlpha = 0.02;
+            baseRadius = 1.5;
+        } else {
+            // Active scale notes: Highlighted Ring
+            ctx.save();
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 1.5;
+            ctx.globalAlpha = 0.6;
+            ctx.beginPath();
+            ctx.arc(x, y, 6, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.restore();
+            
+            // Slightly boost base visibility
+            baseAlpha = 0.3;
+        }
+
         if (intensity > 0) {
             ctx.fillStyle = color;
             ctx.globalAlpha = intensity;
             ctx.beginPath(); ctx.arc(x, y, 5 * intensity + 3, 0, Math.PI * 2); ctx.fill();
             ctx.globalAlpha = 1;
         }
-        ctx.fillStyle = intensity > 0.1 ? '#fff' : 'rgba(255,255,255,0.1)';
-        ctx.beginPath(); ctx.arc(x, y, 2.5, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = intensity > 0.1 ? '#fff' : `rgba(255,255,255,${baseAlpha})`;
+        ctx.beginPath(); ctx.arc(x, y, baseRadius, 0, Math.PI * 2); ctx.fill();
     });
 
     // Draw Rotating Polygons
