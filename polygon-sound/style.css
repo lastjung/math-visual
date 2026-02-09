@@ -61,7 +61,10 @@ body {
 /* Desktop Step */
 @media (min-width: 1024px) {
     .container {
-        max-width: 800px;
+        max-width: 720px;
+    }
+    .formula-display {
+        height: 160px; /* Desktop Height - More Playable! */
     }
 }
 
@@ -140,17 +143,18 @@ body {
    ========================================== */
 .formula-display {
     width: 100%;
-    height: 70px;
+    height: 70px; /* Mobile Default */
     display: flex;
     justify-content: center;
 }
 
 #pianoContainer {
     display: flex;
-    width: 100%;
-    max-width: 320px;
+    width: 80%; /* Reduced width for Mobile */
+    max-width: 520px;
     height: 100%;
-    gap: 1px;
+    margin: 0 auto; /* Center alignment */
+    gap: 2px;
 }
 
 .piano-key {

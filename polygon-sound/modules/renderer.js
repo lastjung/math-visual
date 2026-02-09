@@ -128,7 +128,7 @@ function renderSidesSelector(layer) {
     const select = document.createElement('select');
     select.id = 'customSidesSelect';
     select.className = 'gen-select';
-    for (let i = 2; i <= 11; i++) {
+    for (let i = 2; i <= 12; i++) {
         const opt = document.createElement('option');
         opt.value = i;
         opt.textContent = i;
@@ -232,15 +232,24 @@ export function render() {
 
         if (layer.customVertices) {
             // --- Custom Mode: Use generated indices ---
-            layer.customVertices.forEach((vIdx, i) => {
-                const rad = (vIdx * 30) * (Math.PI / 180);
+            if (layer.customVertices.length === 1) {
+                // Special Case: 12-GON (Line from Center)
+                const rad = (layer.customVertices[0] * 30) * (Math.PI / 180);
                 const px = radius * Math.cos(rad);
                 const py = radius * Math.sin(rad);
-                if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
-            });
-            // Close shape
-            const startRad = (layer.customVertices[0] * 30) * (Math.PI / 180);
-            ctx.lineTo(radius * Math.cos(startRad), radius * Math.sin(startRad));
+                ctx.moveTo(0, 0); // Start from Center
+                ctx.lineTo(px, py);
+            } else {
+                layer.customVertices.forEach((vIdx, i) => {
+                    const rad = (vIdx * 30) * (Math.PI / 180);
+                    const px = radius * Math.cos(rad);
+                    const py = radius * Math.sin(rad);
+                    if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+                });
+                // Close shape
+                const startRad = (layer.customVertices[0] * 30) * (Math.PI / 180);
+                ctx.lineTo(radius * Math.cos(startRad), radius * Math.sin(startRad));
+            }
         } else {
             // --- Standard Mode: Pure Regular Polygons ---
             const step = (360 / layer.sides);
@@ -303,11 +312,10 @@ function updateUI_Dynamic() {
         const intensity = state.activeKeys[i];
         if (intensity > 0) {
             key.style.backgroundColor = NOTE_COLORS[note];
-            key.className = 'piano-key active';
+            key.classList.add('active');
         } else {
             key.style.backgroundColor = '';
-            const isBlack = note.includes('b');
-            key.className = `piano-key ${isBlack ? 'black' : 'white'}`;
+            key.classList.remove('active');
         }
     });
 
