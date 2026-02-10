@@ -18,7 +18,6 @@ export function setRendererCallbacks(timerCb, autoCb, stopAudioCb) {
 }
 
 export function drawStaticGraph() {
-    const funcData = MATH_FUNCTIONS[state.currentFunction];
     const width = elements.graphCanvas.offsetWidth;
     const height = elements.graphCanvas.offsetHeight;
     const graphCtx = ctx.graph;
@@ -27,34 +26,75 @@ export function drawStaticGraph() {
     graphCtx.fillStyle = '#ffffff';
     graphCtx.fillRect(0, 0, width, height);
 
+    // 1. Draw Axis first
+    const funcData = MATH_FUNCTIONS[state.currentFunction];
+    const { xMin, xMax, yMin, yMax } = getBounds(funcData);
+    drawAxes(width, height, xMin, xMax, yMin, yMax);
+
+    // 2. Draw Background MIDI Layers
+    drawBackgroundLayers(width, height);
+
+    // 3. Draw Main Active Curve
+    drawLayer(state.currentFunction, width, height, 1.0);
+}
+
+function getBounds(funcData) {
+    if (funcData.type === 'polar' || funcData.type === 'parametric') {
+        return funcData.viewBox;
+    }
+    return funcData.range;
+}
+
+function drawLayer(funcKey, width, height, progress, isBackground = false) {
+    const funcData = MATH_FUNCTIONS[funcKey];
+    const graphCtx = ctx.graph;
+    
+    graphCtx.save();
+    if (isBackground) {
+        graphCtx.strokeStyle = '#d1d5db'; // Subtle Light Gray
+        graphCtx.lineWidth = 1.5;
+        graphCtx.setLineDash([5, 5]); // Optional: dashed line for background
+    } else {
+        graphCtx.strokeStyle = getCategoryColor(funcData.category);
+        graphCtx.lineWidth = 3;
+    }
+    
     switch (funcData.type) {
         case 'parametric':
-            drawParametricCurve(funcData, width, height, 1.0);
+            drawParametricCurveInternal(funcData, width, height, progress);
             break;
         case 'polar':
-            drawPolarCurve(funcData, width, height, 1.0);
+            drawPolarCurveInternal(funcData, width, height, progress);
             break;
         case 'cartesian':
         default:
-            drawCartesianCurve(funcData, width, height, 1.0);
+            drawCartesianCurveInternal(funcData, width, height, progress);
             break;
     }
+    graphCtx.restore();
 }
 
-export function drawCartesianCurve(funcData, width, height, progress) {
+function drawBackgroundLayers(width, height) {
+    const layers = Array.from(state.activeNodes.keys()).filter(id => id !== '__preview__');
+    layers.forEach(id => {
+        const funcId = id.split('_')[0];
+        // Don't redraw the current function if it's already active as a layer
+        // (Avoid overlapping main bold curve with its gray version)
+        if (funcId !== state.currentFunction) {
+            drawLayer(funcId, width, height, 1.0, true);
+        }
+    });
+}
+
+function drawCartesianCurveInternal(funcData, width, height, progress) {
     const { xMin, xMax, yMin, yMax } = funcData.range;
     const graphCtx = ctx.graph;
-    drawAxes(width, height, xMin, xMax, yMin, yMax);
 
     const steps = Math.floor(500 * progress);
     const xRange = xMax - xMin;
     const yRange = yMax - yMin;
     
     let isFirst = true;
-    graphCtx.strokeStyle = getCategoryColor(funcData.category);
-    graphCtx.lineWidth = 3;
-    graphCtx.lineCap = 'round';
-    graphCtx.lineJoin = 'round';
     graphCtx.beginPath();
 
     for (let i = 0; i <= steps; i++) {
@@ -79,21 +119,16 @@ export function drawCartesianCurve(funcData, width, height, progress) {
     graphCtx.stroke();
 }
 
-export function drawPolarCurve(funcData, width, height, progress) {
+function drawPolarCurveInternal(funcData, width, height, progress) {
     const { xMin, xMax, yMin, yMax } = funcData.viewBox;
     const { min: thetaMin, max: thetaMax } = funcData.thetaRange;
     const graphCtx = ctx.graph;
-    drawAxes(width, height, xMin, xMax, yMin, yMax);
 
     const steps = Math.floor(1000 * progress);
     const thetaRange = thetaMax - thetaMin;
     const xRange = xMax - xMin;
     const yRange = yMax - yMin;
 
-    graphCtx.strokeStyle = getCategoryColor(funcData.category);
-    graphCtx.lineWidth = 3;
-    graphCtx.lineCap = 'round';
-    graphCtx.lineJoin = 'round';
     graphCtx.beginPath();
     
     let isFirst = true;
@@ -123,21 +158,16 @@ export function drawPolarCurve(funcData, width, height, progress) {
     graphCtx.stroke();
 }
 
-export function drawParametricCurve(funcData, width, height, progress) {
+function drawParametricCurveInternal(funcData, width, height, progress) {
     const { xMin, xMax, yMin, yMax } = funcData.viewBox;
     const { min: tMin, max: tMax } = funcData.tRange;
     const graphCtx = ctx.graph;
-    drawAxes(width, height, xMin, xMax, yMin, yMax);
 
     const steps = Math.floor(1000 * progress);
     const tRange = tMax - tMin;
     const xRange = xMax - xMin;
     const yRange = yMax - yMin;
 
-    graphCtx.strokeStyle = getCategoryColor(funcData.category);
-    graphCtx.lineWidth = 3;
-    graphCtx.lineCap = 'round';
-    graphCtx.lineJoin = 'round';
     graphCtx.beginPath();
     
     let isFirst = true;
@@ -167,6 +197,37 @@ export function drawParametricCurve(funcData, width, height, progress) {
         }
     }
     graphCtx.stroke();
+}
+
+// Keep original exported wrappers for compatibility if needed, though we primarily use drawLayer now
+export function drawCartesianCurve(funcData, width, height, progress) {
+    const graphCtx = ctx.graph;
+    graphCtx.save();
+    graphCtx.strokeStyle = getCategoryColor(funcData.category);
+    graphCtx.lineWidth = 3;
+    drawAxes(width, height, funcData.range.xMin, funcData.range.xMax, funcData.range.yMin, funcData.range.yMax);
+    drawCartesianCurveInternal(funcData, width, height, progress);
+    graphCtx.restore();
+}
+
+export function drawPolarCurve(funcData, width, height, progress) {
+    const graphCtx = ctx.graph;
+    graphCtx.save();
+    graphCtx.strokeStyle = getCategoryColor(funcData.category);
+    graphCtx.lineWidth = 3;
+    drawAxes(width, height, funcData.viewBox.xMin, funcData.viewBox.xMax, funcData.viewBox.yMin, funcData.viewBox.yMax);
+    drawPolarCurveInternal(funcData, width, height, progress);
+    graphCtx.restore();
+}
+
+export function drawParametricCurve(funcData, width, height, progress) {
+    const graphCtx = ctx.graph;
+    graphCtx.save();
+    graphCtx.strokeStyle = getCategoryColor(funcData.category);
+    graphCtx.lineWidth = 3;
+    drawAxes(width, height, funcData.viewBox.xMin, funcData.viewBox.xMax, funcData.viewBox.yMin, funcData.viewBox.yMax);
+    drawParametricCurveInternal(funcData, width, height, progress);
+    graphCtx.restore();
 }
 
 export function drawAxes(width, height, xMin, xMax, yMin, yMax) {
@@ -234,18 +295,26 @@ export function animate() {
     graphCtx.fillStyle = '#ffffff';
     graphCtx.fillRect(0, 0, width, height);
 
+    // 1. Draw Axis
+    const { xMin, xMax, yMin, yMax } = getBounds(funcData);
+    drawAxes(width, height, xMin, xMax, yMin, yMax);
+
+    // 2. Draw Background MIDI Layers
+    drawBackgroundLayers(width, height);
+
+    // 3. Draw Main Active Curve
+    drawLayer(state.currentFunction, width, height, state.drawProgress);
+    
+    // 4. Draw Point for main curve
     switch (funcData.type) {
         case 'parametric':
-            drawParametricCurve(funcData, width, height, state.drawProgress);
             drawParametricPoint(funcData, width, height, state.drawProgress);
             break;
         case 'polar':
-            drawPolarCurve(funcData, width, height, state.drawProgress);
             drawPolarPoint(funcData, width, height, state.drawProgress);
             break;
         case 'cartesian':
         default:
-            drawCartesianCurve(funcData, width, height, state.drawProgress);
             drawCartesianPoint(funcData, width, height, state.drawProgress);
             break;
     }
