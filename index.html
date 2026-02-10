@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Math & Sound Visualization Portal</title>
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --bg: #0f172a;
+            --card-bg: #1e293b;
+            --text: #f8fafc;
+            --text-muted: #94a3b8;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', -apple-system, system-ui, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 1000px;
+            width: 100%;
+            text-align: center;
+        }
+
+        header {
+            margin-bottom: 4rem;
+        }
+
+        h1 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, #818cf8 0%, #c084fc 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 800;
+        }
+
+        p.subtitle {
+            font-size: 1.25rem;
+            color: var(--text-muted);
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            width: 100%;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 1.5rem;
+            padding: 2.5rem;
+            text-decoration: none;
+            color: var(--text);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--primary);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .card:hover {
+            transform: translateY(-10px);
+            background: #24314c;
+            border-color: rgba(99, 102, 241, 0.5);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2);
+        }
+
+        .card:hover::before {
+            opacity: 1;
+        }
+
+        .icon {
+            font-size: 3.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .card h2 {
+            margin-bottom: 0.75rem;
+            font-size: 1.5rem;
+        }
+
+        .card p {
+            color: var(--text-muted);
+            line-height: 1.6;
+        }
+
+        .badge {
+            margin-top: 1.5rem;
+            padding: 0.4rem 1rem;
+            background: rgba(99, 102, 241, 0.1);
+            color: var(--primary);
+            border-radius: 2rem;
+            font-size: 0.8rem;
+            font-weight: 600;
+            border: 1px solid rgba(99, 102, 241, 0.2);
+        }
+
+        footer {
+            margin-top: 5rem;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        /* Colors for different projects */
+        .card.math::before { background: #8b5cf6; }
+        .card.polygon::before { background: #ec4899; }
+        .card.visual::before { background: #10b981; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Math Visual Portal</h1>
+            <p class="subtitle">수학과 소리가 만나는 인터렉티브 시각화 플랫폼</p>
+        </header>
+
+        <div class="grid">
+            <a href="./math-sound/" class="card math">
+                <div class="icon">📐</div>
+                <h2>Math Sound</h2>
+                <p>수학 함수를 소리로 변환하고 미디 레이어를 구성하는 강력한 비주얼라이저</p>
+                <div class="badge">Performance</div>
+            </a>
+
+            <a href="./polygon-sound/" class="card polygon">
+                <div class="icon">🌸</div>
+                <h2>Polygon Sound</h2>
+                <p>다각형의 기하학적 구조와 하모닉 관계를 소리로 시각화</p>
+                <div class="badge">Geometry</div>
+            </a>
+
+            <a href="./visualization/" class="card visual">
+                <div class="icon">📊</div>
+                <h2>Visualization</h2>
+                <p>다양한 수학적 모델과 데이터를 위한 범용 시각화 프레임워크</p>
+                <div class="badge">Components</div>
+            </a>
+        </div>
+
+        <footer>
+            &copy; 2026 Math Visual Project. All rights reserved.
+        </footer>
+    </div>
+</body>
+</html>

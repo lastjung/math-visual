@@ -27,3 +27,20 @@ To run all applications locally:
 - `polygon-sound/`: Polygon-based harmonic visualizer.
 - `visualization/`: General-purpose visualization framework.
 - `server.sh`: Local development server script.
+
+---
+
+## 🛠️ Technical Stack
+
+이 프로젝트는 별도의 무거운 프레임워크 없이 웹 표준 기술만을 사용하여 고성능 시각화를 구현했습니다.
+
+- **Core**: Vanilla JavaScript (ES6+ Modules)
+- **Audio**: Web Audio API (실시간 함수 음 합성 및 오디오 분석)
+- **Graphics**: HTML5 Canvas 2D API (고속 프레임 렌더링)
+- **Math**: KaTeX (LaTeX 수학 수식 렌더링)
+- **UI/UX**: Vanilla CSS3 (Flexbox, Grid, Glassmorphism 애니메이션)
+- **Server**: Node.js `serve` (정적 파일 호스팅)
+
+## 🎨 Visualization Portal
+
+루트 주소([http://localhost:3000](http://localhost:3000))로 접속하면 세 가지 프로젝트를 선택할 수 있는 **프리미엄 포털 페이지**가 나타납니다. 각 프로젝트는 독립적인 모듈로 구성되어 있으면서도 일관된 디자인 언어를 공유합니다.
