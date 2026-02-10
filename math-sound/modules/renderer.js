@@ -31,8 +31,8 @@ export function drawStaticGraph() {
     const { xMin, xMax, yMin, yMax } = getBounds(funcData);
     drawAxes(width, height, xMin, xMax, yMin, yMax);
 
-    // 2. Draw Background MIDI Layers
-    drawBackgroundLayers(width, height);
+    // 2. Draw Background MIDI Layers (Static view at 1.0)
+    drawBackgroundLayers(width, height, 1.0);
 
     // 3. Draw Main Active Curve
     drawLayer(state.currentFunction, width, height, 1.0);
@@ -74,16 +74,36 @@ function drawLayer(funcKey, width, height, progress, isBackground = false) {
     graphCtx.restore();
 }
 
-function drawBackgroundLayers(width, height) {
+function drawBackgroundLayers(width, height, progress) {
     const layers = Array.from(state.activeNodes.keys()).filter(id => id !== '__preview__');
     layers.forEach(id => {
         const funcId = id.split('_')[0];
-        // Don't redraw the current function if it's already active as a layer
-        // (Avoid overlapping main bold curve with its gray version)
         if (funcId !== state.currentFunction) {
-            drawLayer(funcId, width, height, 1.0, true);
+            drawLayer(funcId, width, height, progress, true);
+            
+            // Draw points for background too!
+            const funcData = MATH_FUNCTIONS[funcId];
+            drawLayerPoint(funcData, width, height, progress, true);
         }
     });
+}
+
+/**
+ * Common point drawing logic to avoid redundant switches
+ */
+function drawLayerPoint(funcData, width, height, progress, isBackground = false) {
+    switch (funcData.type) {
+        case 'parametric':
+            drawParametricPoint(funcData, width, height, progress, isBackground);
+            break;
+        case 'polar':
+            drawPolarPoint(funcData, width, height, progress, isBackground);
+            break;
+        case 'cartesian':
+        default:
+            drawCartesianPoint(funcData, width, height, progress, isBackground);
+            break;
+    }
 }
 
 function drawCartesianCurveInternal(funcData, width, height, progress) {
@@ -299,32 +319,21 @@ export function animate() {
     const { xMin, xMax, yMin, yMax } = getBounds(funcData);
     drawAxes(width, height, xMin, xMax, yMin, yMax);
 
-    // 2. Draw Background MIDI Layers
-    drawBackgroundLayers(width, height);
+    // 2. Draw Background MIDI Layers (Animates with main progress)
+    drawBackgroundLayers(width, height, state.drawProgress);
 
     // 3. Draw Main Active Curve
     drawLayer(state.currentFunction, width, height, state.drawProgress);
     
     // 4. Draw Point for main curve
-    switch (funcData.type) {
-        case 'parametric':
-            drawParametricPoint(funcData, width, height, state.drawProgress);
-            break;
-        case 'polar':
-            drawPolarPoint(funcData, width, height, state.drawProgress);
-            break;
-        case 'cartesian':
-        default:
-            drawCartesianPoint(funcData, width, height, state.drawProgress);
-            break;
-    }
+    drawLayerPoint(funcData, width, height, state.drawProgress, false);
 
     drawWaveform();
     updateTimerCallback();
     state.animationId = requestAnimationFrame(animate);
 }
 
-export function drawCartesianPoint(funcData, width, height, progress) {
+export function drawCartesianPoint(funcData, width, height, progress, isBackground = false) {
     const { xMin, xMax, yMin, yMax } = funcData.range;
     const currentX = xMin + (xMax - xMin) * progress;
     let currentY;
@@ -333,10 +342,10 @@ export function drawCartesianPoint(funcData, width, height, progress) {
     
     const canvasX = progress * width;
     const canvasY = ((yMax - currentY) / (yMax - yMin)) * height;
-    drawPoint(canvasX, canvasY, funcData.category, height);
+    drawPoint(canvasX, canvasY, funcData.category, height, isBackground);
 }
 
-export function drawPolarPoint(funcData, width, height, progress) {
+export function drawPolarPoint(funcData, width, height, progress, isBackground = false) {
     const { xMin, xMax, yMin, yMax } = funcData.viewBox;
     const { min: thetaMin, max: thetaMax } = funcData.thetaRange;
     const theta = thetaMin + (thetaMax - thetaMin) * progress;
@@ -348,10 +357,10 @@ export function drawPolarPoint(funcData, width, height, progress) {
     const y = r * Math.sin(theta);
     const canvasX = ((x - xMin) / (xMax - xMin)) * width;
     const canvasY = ((yMax - y) / (yMax - yMin)) * height;
-    drawPoint(canvasX, canvasY, funcData.category, height);
+    drawPoint(canvasX, canvasY, funcData.category, height, isBackground);
 }
 
-export function drawParametricPoint(funcData, width, height, progress) {
+export function drawParametricPoint(funcData, width, height, progress, isBackground = false) {
     const { xMin, xMax, yMin, yMax } = funcData.viewBox;
     const { min: tMin, max: tMax } = funcData.tRange;
     const t = tMin + (tMax - tMin) * progress;
@@ -364,18 +373,18 @@ export function drawParametricPoint(funcData, width, height, progress) {
     
     const canvasX = ((x - xMin) / (xMax - xMin)) * width;
     const canvasY = ((yMax - y) / (yMax - yMin)) * height;
-    drawPoint(canvasX, canvasY, funcData.category, height);
+    drawPoint(canvasX, canvasY, funcData.category, height, isBackground);
 }
 
-export function drawPoint(canvasX, canvasY, category, height) {
+export function drawPoint(canvasX, canvasY, category, height, isBackground = false) {
     const graphCtx = ctx.graph;
-    const color = getCategoryColor(category);
+    const color = isBackground ? '#d1d5db' : getCategoryColor(category);
     graphCtx.fillStyle = color;
     graphCtx.beginPath();
-    graphCtx.arc(canvasX, Math.max(5, Math.min(height - 5, canvasY)), 8, 0, Math.PI * 2);
+    graphCtx.arc(canvasX, Math.max(5, Math.min(height - 5, canvasY)), isBackground ? 5 : 8, 0, Math.PI * 2);
     graphCtx.fill();
     graphCtx.strokeStyle = '#ffffff';
-    graphCtx.lineWidth = 2;
+    graphCtx.lineWidth = isBackground ? 1 : 2;
     graphCtx.stroke();
 }
 

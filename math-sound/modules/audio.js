@@ -74,49 +74,64 @@ export function playSound(functionId = state.currentFunction, forceLayer = false
         // Create an independent layer that persists
         const buffer = createSoundFromFunction(functionId);
         const source = state.audioContext.createBufferSource();
+        const layerGain = state.audioContext.createGain();
+        
+        // MIDI layers are 50% of the master volume to prevent clipping
+        layerGain.gain.setValueAtTime(state.volume * 0.5, state.audioContext.currentTime);
+        
         source.buffer = buffer;
         source.loop = true;
         source.playbackRate.value = state.speed;
-        source.connect(state.analyser);
+        
+        source.connect(layerGain);
+        layerGain.connect(state.analyser);
         source.start();
         
         const layerId = `${functionId}_${Date.now()}`;
-        state.activeNodes.set(layerId, source);
+        state.activeNodes.set(layerId, { source, gain: layerGain });
     } else {
         // This is a PREVIEW sound (only one at a time)
         const oldPreview = state.activeNodes.get('__preview__');
         if (oldPreview) {
-            try { oldPreview.stop(); } catch (e) {}
+            try { oldPreview.source.stop(); } catch (e) {}
             state.activeNodes.delete('__preview__');
         }
 
         const buffer = createSoundFromFunction(functionId);
         const source = state.audioContext.createBufferSource();
+        // Preview is 100% of the volume
+        const previewGain = state.audioContext.createGain();
+        previewGain.gain.setValueAtTime(state.volume, state.audioContext.currentTime);
+
         source.buffer = buffer;
         source.loop = true;
         source.playbackRate.value = state.speed;
-        source.connect(state.analyser);
+        
+        source.connect(previewGain);
+        previewGain.connect(state.analyser);
         source.start();
         
-        state.activeNodes.set('__preview__', source);
+        state.activeNodes.set('__preview__', { source, gain: previewGain });
         state.currentFunction = functionId;
     }
 }
 
 export function stopSound(layerId) {
-    const source = state.activeNodes.get(layerId);
-    if (source) {
-        try {
-            source.stop();
-        } catch (e) {}
+    const node = state.activeNodes.get(layerId);
+    if (node) {
+        try { node.source.stop(); } catch (e) {}
         state.activeNodes.delete(layerId);
     }
 }
 
+export function stopPreview() {
+    stopSound('__preview__');
+}
+
 export function stopAllSounds() {
-    state.activeNodes.forEach((source, id) => {
+    state.activeNodes.forEach((node, id) => {
         try {
-            source.stop();
+            node.source.stop();
         } catch (e) {}
     });
     state.activeNodes.clear();

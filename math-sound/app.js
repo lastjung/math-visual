@@ -1,6 +1,6 @@
 import { MATH_FUNCTIONS, CATEGORIES } from './modules/constants.js';
 import { state, elements, ctx } from './modules/state.js';
-import { playSound, stopSound, stopAllSounds } from './modules/audio.js';
+import { playSound, stopSound, stopAllSounds, stopPreview } from './modules/audio.js';
 import { drawStaticGraph, animate, setRendererCallbacks } from './modules/renderer.js';
 
 // ==========================================
@@ -103,14 +103,23 @@ function setupEventListeners() {
     elements.volumeSlider.addEventListener('input', (e) => {
         state.volume = e.target.value / 100;
         elements.volumeValue.textContent = `${e.target.value}%`;
-        if (state.gainNode) state.gainNode.gain.setValueAtTime(state.volume, state.audioContext.currentTime);
+        
+        // Update all active nodes
+        state.activeNodes.forEach((node, id) => {
+            const multiplier = (id === '__preview__') ? 1.0 : 0.5;
+            if (node.gain) {
+                node.gain.gain.setValueAtTime(state.volume * multiplier, state.audioContext.currentTime);
+            }
+        });
     });
 
     elements.speedSlider.addEventListener('input', (e) => {
         state.speed = e.target.value / 5;
         elements.speedValue.textContent = `${state.speed.toFixed(1)}x`;
         state.activeNodes.forEach(node => {
-            if (node.playbackRate) node.playbackRate.value = state.speed;
+            if (node.source && node.source.playbackRate) {
+                node.source.playbackRate.value = state.speed;
+            }
         });
     });
 
@@ -283,11 +292,21 @@ function play() {
     elements.playBtn.classList.add('playing');
     elements.playBtn.querySelector('.icon').textContent = '❚❚';
     document.body.classList.add('drawing');
+    
+    // Ensure audio context is running (resume if suspended by browser)
+    if (state.audioContext && state.audioContext.state === 'suspended') {
+        state.audioContext.resume();
+    }
+    
     playSound();
     animate();
 }
 
 function addLayer(funcName) {
+    // Resume context if needed
+    if (state.audioContext && state.audioContext.state === 'suspended') {
+        state.audioContext.resume();
+    }
     const targetFunc = funcName || state.currentFunction;
     playSound(targetFunc, true);
     renderMixer();
@@ -331,7 +350,10 @@ function pause() {
     elements.playBtn.classList.remove('playing');
     elements.playBtn.querySelector('.icon').textContent = '▶';
     document.body.classList.remove('drawing');
-    stopAllSounds();
+    
+    // Only stop the preview sound, keep MIDI layers active
+    stopPreview();
+    
     if (state.animationId) cancelAnimationFrame(state.animationId);
     renderMixer();
 }
@@ -351,6 +373,8 @@ function stop() {
 
 function reset() {
     state.drawProgress = 0;
+    stopAllSounds();
+    renderMixer();
     drawStaticGraph();
     const width = elements.waveformCanvas.offsetWidth;
     const height = elements.waveformCanvas.offsetHeight;
