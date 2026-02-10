@@ -18,6 +18,13 @@
 
 ---
 
+### 🎹 Live Performance & MIDI Mixer
+
+라이브 믹서 기능을 통해 여러 수학 함수를 중첩하여 자신만의 사운드를 연주할 수 있습니다.
+![Live Mixer Mockup](../assets/live_mixer_mockup.png)
+
+---
+
 ## 📐 Included Functions (58개)
 
 ### 🎵 Basic (기초 파형) - 10개
