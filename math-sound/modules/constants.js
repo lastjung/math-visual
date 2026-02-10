@@ -137,7 +137,7 @@ export const MATH_FUNCTIONS = {
     },
     rose3: {
         category: 'curves',
-        name: 'Rose 3',
+        name: 'Rose 3 (n=3)',
         type: 'polar',
         r: (theta) => Math.sin(3 * theta),
         formula: 'r = sin(3θ)',
@@ -146,6 +146,136 @@ export const MATH_FUNCTIONS = {
         viewBox: { xMin: -1.5, xMax: 1.5, yMin: -1.5, yMax: 1.5 },
         audioScale: 340,
         baseFreq: 380
+    },
+    rose32: {
+        category: 'curves',
+        name: 'Sunflower',
+        type: 'polar',
+        r: (theta) => -8 * Math.sin(32 * theta),
+        formula: 'r = -8sin(32θ)',
+        latex: 'r = -8\\sin(32\\theta)',
+        thetaRange: { min: 0, max: 2 * Math.PI },
+        viewBox: { xMin: -10, xMax: 10, yMin: -10, yMax: 10 },
+        audioScale: 350,
+        baseFreq: 440
+    },
+    limacon3: {
+        category: 'curves',
+        name: 'Limaçon (n=3)',
+        type: 'polar',
+        r: (theta) => 5 - 9 * Math.cos(3 * theta),
+        formula: 'r = 5 - 9cos(3θ)',
+        latex: 'r = 5 - 9\\cos(3\\theta)',
+        thetaRange: { min: 0, max: 2 * Math.PI },
+        viewBox: { xMin: -15, xMax: 15, yMin: -13, yMax: 13 },
+        audioScale: 280,
+        baseFreq: 330
+    },
+    limaconLoop: {
+        category: 'curves',
+        name: 'Limaçon Loop',
+        type: 'polar',
+        r: (theta) => 5 - 9 * Math.cos(theta),
+        formula: 'r = 5 - 9cos(θ)',
+        latex: 'r = 5 - 9\\cos(\\theta)',
+        thetaRange: { min: 0, max: 2 * Math.PI },
+        viewBox: { xMin: -16, xMax: 10, yMin: -10, yMax: 10 },
+        audioScale: 300,
+        baseFreq: 300
+    },
+    micPattern: {
+        category: 'curves',
+        name: 'Mic Pattern',
+        type: 'polar',
+        r: (theta) => 1 - Math.cos(theta) * Math.sin(3 * theta),
+        formula: 'r = 1 - cosθ sin3θ',
+        latex: 'r = 1 - \\cos\\theta \\sin(3\\theta)',
+        thetaRange: { min: 0, max: 2 * Math.PI },
+        viewBox: { xMin: -2.5, xMax: 2.5, yMin: -2.5, yMax: 2.5 },
+        audioScale: 320,
+        baseFreq: 360
+    },
+    lemniscate: {
+        category: 'curves',
+        name: 'Lemniscate (Infinity)',
+        type: 'polar',
+        r: (theta) => {
+            const cos2t = Math.cos(2 * theta);
+            return cos2t < 0 ? 0 : Math.sqrt(cos2t);
+        },
+        formula: 'r² = cos(2θ)',
+        latex: 'r^2 = \\cos(2\\theta)',
+        thetaRange: { min: 0, max: 2 * Math.PI },
+        viewBox: { xMin: -1.5, xMax: 1.5, yMin: -1, yMax: 1 },
+        audioScale: 300,
+        baseFreq: 320
+    },
+    star: {
+        category: 'curves',
+        name: 'Star Curve',
+        type: 'polar',
+        r: (theta) => Math.sin(2 * theta) - 6 * Math.pow(Math.cos(6 * theta), 3),
+        formula: 'r = sin2θ - 6(cos(6θ))³',
+        latex: 'r = \\sin(2\\theta) - 6(\\cos(6\\theta))^3',
+        thetaRange: { min: 0, max: 2 * Math.PI },
+        viewBox: { xMin: -8, xMax: 8, yMin: -8, yMax: 8 },
+        audioScale: 150,
+        baseFreq: 220
+    },
+    explosion: {
+        category: 'curves',
+        name: 'Explosion',
+        type: 'polar',
+        r: (theta) => 3 * Math.pow(Math.cos(14 * theta), 3),
+        formula: 'r = 3(cos(14θ))³',
+        latex: 'r = 3(\\cos(14\\theta))^3',
+        thetaRange: { min: 0, max: Math.PI },
+        viewBox: { xMin: -4, xMax: 4, yMin: -4, yMax: 4 },
+        audioScale: 200,
+        baseFreq: 440
+    },
+    fairy: {
+        category: 'curves',
+        name: 'Fairy',
+        type: 'polar',
+        r: (theta) => {
+            if (Math.abs(theta) < 0.001) return 2;
+            return (Math.sin(2 * theta) * Math.cos(2 * theta)) / theta;
+        },
+        formula: 'r = (sin2θ)(cos2θ) / θ',
+        latex: 'r = \\frac{\\sin(2\\theta)\\cos(2\\theta)}{\\theta}',
+        thetaRange: { min: 0, max: 6 * Math.PI },
+        viewBox: { xMin: -2, xMax: 2, yMin: -2, yMax: 2 },
+        audioScale: 300,
+        baseFreq: 330
+    },
+    trigChaos: {
+        category: 'curves',
+        name: 'Trig Chaos',
+        type: 'polar',
+        r: (theta) => -4 * Math.sin(Math.cos(Math.tan(theta))),
+        formula: 'r = -4sin(cos(tanθ))',
+        latex: 'r = -4\\sin(\\cos(\\tan\\theta))',
+        thetaRange: { min: 0, max: 2 * Math.PI },
+        viewBox: { xMin: -5, xMax: 5, yMin: -5, yMax: 5 },
+        audioScale: 250,
+        baseFreq: 380
+    },
+    splitPulse: {
+        category: 'curves',
+        name: 'Split Pulse',
+        type: 'polar',
+        r: (theta) => {
+            const denom = 2 * Math.cos(theta);
+            if (Math.abs(denom) < 0.01) return 0;
+            return -Math.sin(10 * theta) / denom;
+        },
+        formula: 'r = -sin(10θ)/2cosθ',
+        latex: 'r = -\\frac{\\sin(10\\theta)}{2\\cos\\theta}',
+        thetaRange: { min: 0, max: 2 * Math.PI },
+        viewBox: { xMin: -4, xMax: 4, yMin: -4, yMax: 4 },
+        audioScale: 280,
+        baseFreq: 300
     },
     lissajous2: { // Key renamed to avoid duplication if needed, keeping consistency with logic
         category: 'curves',
@@ -183,18 +313,6 @@ export const MATH_FUNCTIONS = {
         viewBox: { xMin: -3, xMax: 3, yMin: -3, yMax: 3 },
         audioScale: 250,
         baseFreq: 350
-    },
-    lemniscate: {
-        category: 'curves',
-        name: 'Lemniscate',
-        type: 'polar',
-        r: (theta) => Math.sqrt(Math.max(0, 2 * Math.cos(2 * theta))),
-        formula: 'r² = 2cos(2θ)',
-        latex: 'r^2 = 2\\cos(2\\theta)',
-        thetaRange: { min: -Math.PI/4, max: Math.PI/4 },
-        viewBox: { xMin: -2, xMax: 2, yMin: -1.5, yMax: 1.5 },
-        audioScale: 300,
-        baseFreq: 320
     },
 
     // ========== 🔊 SOUND (소리 합성 - Cartesian) ==========

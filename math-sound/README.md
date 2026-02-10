@@ -4,7 +4,7 @@
 
 > Inspired by [zackdmath](https://www.youtube.com/@zackdmath) "how math functions sound" series
 
-![Demo](https://img.shields.io/badge/Functions-49-blue) ![Tech](https://img.shields.io/badge/Vanilla-JS-yellow) ![Audio](https://img.shields.io/badge/Web-Audio%20API-green)
+![Demo](https://img.shields.io/badge/Functions-58-blue) ![Tech](https://img.shields.io/badge/Vanilla-JS-yellow) ![Audio](https://img.shields.io/badge/Web-Audio%20API-green)
 
 ## 🎯 Features
 
@@ -12,13 +12,13 @@
 - **함수 → 소리 변환**: Web Audio API를 사용해 함수를 청각적으로 표현
 - **파형 시각화**: 실시간 오디오 파형 표시
 - **수식 렌더링**: KaTeX로 LaTeX 수식 표시
-- **49개 프리셋 함수**: 5개 카테고리로 분류
+- **58개 프리셋 함수**: 5개 카테고리로 분류
 - **카테고리별 색상 구분**: 직관적인 UI
 - **키보드 단축키**: Space, ←, → 지원
 
 ---
 
-## 📐 Included Functions (49개)
+## 📐 Included Functions (58개)
 
 ### 🎵 Waves (기본 파형) - 10개
 
@@ -35,7 +35,7 @@
 | **Damped**      | `f(x) = e^(-0.5\|x\|)·sin(8x)`               | 감쇠 진동         |
 | **Chaos**       | `f(x) = sin(5x)cos(3x) + 0.5sin(11x)`        | 복합 카오스 함수  |
 
-### 🌸 Curves (유명한 곡선) - 11개
+### 🌸 Curves (유명한 곡선) - 20개
 
 | 함수            | 수식                           | 설명              |
 | --------------- | ------------------------------ | ----------------- |
@@ -44,12 +44,21 @@
 | **Heart**       | `r⃗(t) = ⟨16sin³t, ...⟩`       | 하트 곡선         |
 | **Cardioid**    | `r = 1 - cos(θ)`               | 심장형 곡선       |
 | **Rose 4**      | `r = cos(4θ)`                  | 4잎 장미          |
-| **Rose 3**      | `r = sin(3θ)`                  | 3잎 장미          |
+| **Rose 3**      | `r = sin(3θ)`                  | 3잎 장미 (n=3)    |
 | **Lissajous 2** | `r⃗(t) = ⟨sin(3t), sin(4t)⟩`   | 다른 비율 리사주  |
 | **Butterfly**   | `r = eˢⁱⁿᶿ - 2cos(4θ) + ...`   | 나비 곡선         |
 | **Spiral**      | `r = 0.1θ`                     | 아르키메데스 나선 |
-| **Lemniscate**  | `r² = 2cos(2θ)`                | 연접선            |
+| **Lemniscate**  | `r² = cos(2θ)`                 | 연접선 (Infinity) |
 | **Epicycloid**  | `x=3cost-cos3t, y=3sint-sin3t` | 에피사이클로이드  |
+| **Sunflower**   | `r = -8sin(32θ)`               | 64개 잎의 장미    |
+| **Limaçon 3**   | `r = 5 - 9cos(3θ)`             | 복합 리마송       |
+| **Limaçon L**   | `r = 5 - 9cos(θ)`              | 루프 리마송       |
+| **Mic Pattern** | `r = 1 - cosθ sin3θ`           | 마이크 지향성     |
+| **Star Curve**  | `r = sin2θ - 6(cos(6θ))³`      | 별 모양 곡선      |
+| **Explosion**   | `r = 3(cos(14θ))³`             | 폭발하는 고주파   |
+| **Fairy**       | `r = (sin2θ)(cos2θ) / θ`       | 요정 날개 모양    |
+| **Trig Chaos**  | `r = -4sin(cos(tanθ))`         | 복합 삼각함수     |
+| **Split Pulse** | `r = -sin(10θ)/2cosθ`          | 분할 파동         |
 
 ### 🔊 Sound (소리 합성) - 16개
 
