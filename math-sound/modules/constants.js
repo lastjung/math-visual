@@ -148,7 +148,7 @@ export const MATH_FUNCTIONS = {
         baseFreq: 380
     },
     rose32: {
-        category: 'curves',
+        category: 'art',
         name: 'Sunflower',
         type: 'polar',
         r: (theta) => -8 * Math.sin(32 * theta),
@@ -160,7 +160,7 @@ export const MATH_FUNCTIONS = {
         baseFreq: 440
     },
     limacon3: {
-        category: 'curves',
+        category: 'art',
         name: 'Limaçon (n=3)',
         type: 'polar',
         r: (theta) => 5 - 9 * Math.cos(3 * theta),
@@ -211,7 +211,7 @@ export const MATH_FUNCTIONS = {
         baseFreq: 320
     },
     star: {
-        category: 'curves',
+        category: 'art',
         name: 'Star Curve',
         type: 'polar',
         r: (theta) => Math.sin(2 * theta) - 6 * Math.pow(Math.cos(6 * theta), 3),
@@ -223,7 +223,7 @@ export const MATH_FUNCTIONS = {
         baseFreq: 220
     },
     explosion: {
-        category: 'curves',
+        category: 'art',
         name: 'Explosion',
         type: 'polar',
         r: (theta) => 3 * Math.pow(Math.cos(14 * theta), 3),
@@ -235,7 +235,7 @@ export const MATH_FUNCTIONS = {
         baseFreq: 440
     },
     fairy: {
-        category: 'curves',
+        category: 'art',
         name: 'Fairy',
         type: 'polar',
         r: (theta) => {
@@ -250,7 +250,7 @@ export const MATH_FUNCTIONS = {
         baseFreq: 330
     },
     trigChaos: {
-        category: 'curves',
+        category: 'art',
         name: 'Trig Chaos',
         type: 'polar',
         r: (theta) => -4 * Math.sin(Math.cos(Math.tan(theta))),
@@ -262,7 +262,7 @@ export const MATH_FUNCTIONS = {
         baseFreq: 380
     },
     splitPulse: {
-        category: 'curves',
+        category: 'art',
         name: 'Split Pulse',
         type: 'polar',
         r: (theta) => {
@@ -732,9 +732,10 @@ export const MATH_FUNCTIONS = {
 };
 
 export const CATEGORIES = {
-    waves: { name: '🎵 Waves', functions: [] },
+    waves: { name: '🎵 Basic', functions: [] },
     curves: { name: '🌸 Curves', functions: [] },
-    sound: { name: '🔊 Sound', functions: [] },
+    art: { name: '💠 Art', functions: [] },
+    sound: { name: '🔊 Synth', functions: [] },
     math: { name: '📐 Math', functions: [] },
     bytebeat: { name: '⚡ Byte', functions: [] }
 };

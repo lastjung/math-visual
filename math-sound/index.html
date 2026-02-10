@@ -58,7 +58,7 @@
             <button id="autoBtn" class="control-btn auto-btn" title="랜덤 재생 (4곡 x 3회)">
                 <span class="icon">🎲</span>
             </button>
-            <button id="layerBtn" class="control-btn layer-btn" title="레이어 추가 (Perform)">
+            <button id="layerBtn" class="control-btn layer-btn" title="레이어 믹서 토글">
                 <span class="icon">🎹</span>
             </button>
         </div>
@@ -75,12 +75,8 @@
         </div>
 
         <!-- Category Tabs -->
-        <div class="category-tabs">
-            <button class="category-tab active" data-category="waves">🎵 Waves</button>
-            <button class="category-tab" data-category="curves">🌸 Curves</button>
-            <button class="category-tab" data-category="sound">🔊 Sound</button>
-            <button class="category-tab" data-category="math">📐 Math</button>
-            <button class="category-tab" data-category="bytebeat">⚡ Byte</button>
+        <div class="category-tabs" id="categoryTabs">
+            <!-- Populated by JavaScript -->
         </div>
 
         <!-- Function Selector (changes based on category) -->

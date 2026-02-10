@@ -220,7 +220,7 @@ export function animate() {
         state.drawProgress = 0;
         if (state.isAutoPlaying) {
             state.autoLoopCount++;
-            if (state.autoLoopCount >= 3) {
+            if (state.autoLoopCount >= state.autoTargetCount) {
                 state.isPlaying = false;
                 stopSoundCallback();
                 cancelAnimationFrame(state.animationId);

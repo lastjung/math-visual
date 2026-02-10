@@ -35,6 +35,7 @@ body {
     /* Category Colors - Vivid Pastels */
     --waves-color: #8b5cf6;
     --curves-color: #ec4899;
+    --art-color: #6366f1;    /* Indigo for Complex/Art */
     --sound-color: #f59e0b;
     --math-color: #10b981;
     --bytebeat-color: #ef4444;
@@ -250,6 +251,12 @@ body {
     display: none;
 }
 
+.mixer-panel.drag-over {
+    border: 2px dashed var(--accent-color);
+    background: rgba(59, 130, 246, 0.1);
+    transform: scale(1.02);
+}
+
 .mixer-header {
     display: flex;
     justify-content: space-between;
@@ -351,6 +358,7 @@ body {
 }/* Category-specific active colors */
 .category-tab.active[data-category="waves"] { color: var(--waves-color); }
 .category-tab.active[data-category="curves"] { color: var(--curves-color); }
+.category-tab.active[data-category="art"] { color: var(--art-color); }
 .category-tab.active[data-category="sound"] { color: var(--sound-color); }
 .category-tab.active[data-category="math"] { color: var(--math-color); }
 .category-tab.active[data-category="bytebeat"] { color: var(--bytebeat-color); }
@@ -371,10 +379,14 @@ body {
     background: #ffffff;
     font-size: 0.9rem;
     font-weight: 500;
-    cursor: pointer;
+    cursor: grab;
     transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
     color: var(--text-muted);
     box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+}
+
+.func-btn:active {
+    cursor: grabbing;
 }
 
 .func-btn:hover {
@@ -394,6 +406,7 @@ body {
 }/* Category-specific button colors */
 [data-category="waves"] .func-btn.active { background: var(--waves-color); border-color: var(--waves-color); }
 [data-category="curves"] .func-btn.active { background: var(--curves-color); border-color: var(--curves-color); }
+[data-category="art"] .func-btn.active { background: var(--art-color); border-color: var(--art-color); }
 [data-category="sound"] .func-btn.active { background: var(--sound-color); border-color: var(--sound-color); }
 [data-category="math"] .func-btn.active { background: var(--math-color); border-color: var(--math-color); }
 [data-category="bytebeat"] .func-btn.active { background: var(--bytebeat-color); border-color: var(--bytebeat-color); }

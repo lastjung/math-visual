@@ -8,6 +8,7 @@ import { drawStaticGraph, animate, setRendererCallbacks } from './modules/render
 // ==========================================
 function init() {
     setupCanvas();
+    renderCategoryTabs();
     setupEventListeners();
     setRendererCallbacks(updateTimer, playNextAuto, stopSound);
     
@@ -59,13 +60,39 @@ function setupEventListeners() {
     if (elements.autoBtn) elements.autoBtn.addEventListener('click', toggleAutoPlay);
     
     const layerBtn = document.getElementById('layerBtn');
-    if (layerBtn) layerBtn.addEventListener('click', addLayer);
+    if (layerBtn) {
+        layerBtn.addEventListener('click', () => {
+            const mixerPanel = document.getElementById('mixerPanel');
+            if (mixerPanel) mixerPanel.classList.toggle('hidden');
+        });
+    }
 
     const clearAllBtn = document.getElementById('clearAllBtn');
     if (clearAllBtn) clearAllBtn.addEventListener('click', () => {
         stopAllSounds();
         renderMixer();
     });
+
+    // Drag & Drop for Mixer
+    const mixerPanel = document.getElementById('mixerPanel');
+    if (mixerPanel) {
+        mixerPanel.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            mixerPanel.classList.add('drag-over');
+        });
+        mixerPanel.addEventListener('dragleave', () => {
+            mixerPanel.classList.remove('drag-over');
+        });
+        mixerPanel.addEventListener('drop', (e) => {
+            e.preventDefault();
+            mixerPanel.classList.remove('drag-over');
+            const funcKey = e.dataTransfer.getData('text/plain');
+            if (funcKey && MATH_FUNCTIONS[funcKey]) {
+                addLayer(funcKey);
+                mixerPanel.classList.remove('hidden');
+            }
+        });
+    }
 
     elements.zoomSlider.addEventListener('input', (e) => {
         state.zoom = e.target.value / 100;
@@ -87,10 +114,6 @@ function setupEventListeners() {
         });
     });
 
-    elements.categoryTabs.forEach(tab => {
-        tab.addEventListener('click', () => selectCategory(tab.dataset.category));
-    });
-
     window.addEventListener('resize', () => {
         setupCanvas();
         if (!state.isPlaying) drawStaticGraph();
@@ -107,6 +130,25 @@ function setupEventListeners() {
 // ==========================================
 // 카테고리 & 함수 제어
 // ==========================================
+function renderCategoryTabs() {
+    const container = document.getElementById('categoryTabs');
+    if (!container) return;
+    
+    container.innerHTML = '';
+    Object.keys(CATEGORIES).forEach(key => {
+        const cat = CATEGORIES[key];
+        const btn = document.createElement('button');
+        btn.className = 'category-tab' + (key === state.currentCategory ? ' active' : '');
+        btn.dataset.category = key;
+        btn.textContent = cat.name;
+        btn.addEventListener('click', () => selectCategory(key));
+        container.appendChild(btn);
+    });
+    
+    // Update elements reference
+    elements.categoryTabs = document.querySelectorAll('.category-tab');
+}
+
 function selectCategory(category, autoSelectFirst = false) {
     state.currentCategory = category;
     elements.categoryTabs.forEach(tab => tab.classList.toggle('active', tab.dataset.category === category));
@@ -126,8 +168,55 @@ function renderFunctionButtons(category) {
         btn.className = 'func-btn' + (funcKey === state.currentFunction ? ' active' : '');
         btn.dataset.func = funcKey;
         btn.textContent = func.name;
-        btn.addEventListener('click', () => selectFunction(funcKey));
+        btn.title = 'Click: View Formula, Double Click: Select & Play, Drag: Add Layer';
+        
+        // Make draggable
+        btn.draggable = true;
+        btn.addEventListener('dragstart', (e) => {
+            e.dataTransfer.setData('text/plain', funcKey);
+            e.dataTransfer.effectAllowed = 'copy';
+        });
+
+        btn.addEventListener('click', () => {
+            if (state.isPlaying) {
+                // During playback, single click only previews formula/title
+                previewFunction(funcKey);
+            } else {
+                // When stopped, single click selects visually
+                selectFunction(funcKey);
+            }
+        });
+
+        btn.addEventListener('dblclick', (e) => {
+            e.preventDefault();
+            selectFunction(funcKey);
+            if (!state.isPlaying) play();
+        });
+        
         container.appendChild(btn);
+    });
+}
+
+/**
+ * Just update the UI text without changing the active state or playing audio
+ */
+function previewFunction(funcName) {
+    const funcData = MATH_FUNCTIONS[funcName];
+    // Hint that this is just a preview
+    elements.functionTitle.textContent = funcData.name + " (Viewing)";
+    
+    if (window.katex) {
+        try { katex.render(funcData.latex, elements.formulaText, { throwOnError: false }); } 
+        catch (e) { elements.formulaText.textContent = funcData.formula; }
+    } else {
+        elements.formulaText.textContent = funcData.formula;
+    }
+    
+    // Highlight the clicked button as "previewing" if desired
+    document.querySelectorAll('.func-btn').forEach(btn => {
+        btn.style.opacity = btn.dataset.func === funcName ? "1" : "0.7";
+        if (btn.dataset.func === funcName) btn.style.borderColor = "var(--accent-color)";
+        else btn.style.borderColor = "transparent";
     });
 }
 
@@ -198,8 +287,9 @@ function play() {
     animate();
 }
 
-function addLayer() {
-    playSound(state.currentFunction, true);
+function addLayer(funcName) {
+    const targetFunc = funcName || state.currentFunction;
+    playSound(targetFunc, true);
     renderMixer();
 }
 
@@ -279,15 +369,23 @@ function toggleAutoPlay() {
 
 function startAutoPlay() {
     stop();
-    const keys = Object.keys(MATH_FUNCTIONS);
-    for (let i = keys.length - 1; i > 0; i--) {
+    const currentFunc = state.currentFunction;
+    const allKeys = Object.keys(MATH_FUNCTIONS).filter(key => key !== currentFunc);
+    
+    // Shuffle others
+    for (let i = allKeys.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
-        [keys[i], keys[j]] = [keys[j], keys[i]];
+        [allKeys[i], allKeys[j]] = [allKeys[j], allKeys[i]];
     }
-    state.autoQueue = keys.slice(0, 4);
+    
+    // Current + 3 random
+    state.autoQueue = [currentFunc, ...allKeys.slice(0, 3)];
+    
     if (state.autoQueue.length === 0) return;
     state.isAutoPlaying = true;
     state.autoLoopCount = 0;
+    state.isFirstAutoFunc = true; // Identify for 3-count logic
+    
     if (elements.autoBtn) {
         elements.autoBtn.classList.add('playing');
     }
@@ -297,7 +395,13 @@ function startAutoPlay() {
 function playNextAuto() {
     if (!state.isAutoPlaying) return;
     if (state.autoQueue.length === 0) { stop(); return; }
+    
     const nextFunc = state.autoQueue.shift();
+    
+    // First function (current active) gets 3 loops, others get 2
+    state.autoTargetCount = state.isFirstAutoFunc ? 3 : 2;
+    state.isFirstAutoFunc = false;
+    
     selectFunction(nextFunc);
     state.autoLoopCount = 0;
     setTimeout(() => { if (state.isAutoPlaying) play(); }, 1000);

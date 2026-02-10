@@ -22,7 +22,8 @@ export const state = {
     // Auto Play State
     isAutoPlaying: false,
     autoQueue: [],
-    autoLoopCount: 0
+    autoLoopCount: 0,
+    autoTargetCount: 3 // Default
 };
 
 export const elements = {
