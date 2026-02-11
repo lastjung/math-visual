@@ -4,6 +4,77 @@
  */
 
 export const MATH_FUNCTIONS = {
+    // ========== 🌸 CURVES (유명한 곡선 & 하트 시리즈) ==========
+    loveHeart: {
+        category: 'curves',
+        name: 'Love Heart',
+        type: 'cartesian',
+        fn: (x) => {
+            const e2 = Math.exp(2);
+            const inside = (e2 - x * x) / 1;
+            if (inside < 0) return 0;
+            return 0.95 * (Math.sin(Math.pow(Math.PI, 3) * x) * Math.sqrt(inside) + Math.sqrt(Math.abs(x)));
+        },
+        formula: 'f(x) = 0.95·[sin(π³x)·√(e²-x²) + √|x|]',
+        latex: 'f(x) = 0.95 \\left( \\sin(\\pi^3 x) \\sqrt{e^2 - x^2} + \\sqrt{|x|} \\right)',
+        range: { xMin: -4, xMax: 4, yMin: -3, yMax: 5 },
+        audioScale: 150,
+        baseFreq: 440
+    },
+    crystalHeart: {
+        category: 'curves',
+        name: 'Crystal Heart',
+        type: 'parametric',
+        x: (t) => {
+            if (Math.abs(t) < 0.001) return 0;
+            return Math.sin(t) * Math.cos(t) * Math.log(Math.abs(t));
+        },
+        y: (t) => {
+            const cosT = Math.cos(t);
+            if (cosT < 0) return 0;
+            return Math.pow(Math.abs(t), 0.3) * Math.sqrt(cosT);
+        },
+        formula: 'x = sin(t)cos(t)ln|t|, y = |t|^0.3·√cos(t)',
+        latex: '\\begin{cases} x = \\sin t \\cos t \\ln|t| \\\\ y = |t|^{0.3} \\sqrt{\\cos t} \\end{cases}',
+        tRange: { min: -1, max: 1 },
+        viewBox: { xMin: -0.5, xMax: 0.5, yMin: -0.1, yMax: 1.2 },
+        audioScale: 400,
+        baseFreq: 220
+    },
+    brokenHeart: {
+        category: 'curves',
+        name: 'Broken Heart',
+        type: 'parametric',
+        x: (t) => {
+            let x = 16 * Math.pow(Math.sin(t), 3);
+            const offset = 2.5;
+            const crack = 0.8 * Math.sin(t * 10);
+            return (t < Math.PI) ? x - offset + crack : x + offset + crack;
+        },
+        y: (t) => {
+            return 13 * Math.cos(t) - 5 * Math.cos(2*t) - 2 * Math.cos(3*t) - Math.cos(4*t);
+        },
+        formula: 'Broken Heart (Split with Crack)',
+        latex: '\\vec{r}(t) = \\langle 16\\sin^3 t \\pm 2.5 + \\text{crack}, \\text{heart}_y \\rangle',
+        tRange: { min: 0, max: 2 * Math.PI },
+        viewBox: { xMin: -25, xMax: 25, yMin: -20, yMax: 18 },
+        audioScale: 200,
+        baseFreq: 110
+    },
+    heart: {
+        category: 'curves',
+        name: 'Classic Heart',
+        type: 'parametric',
+        x: (t) => 16 * Math.pow(Math.sin(t), 3),
+        y: (t) => 13 * Math.cos(t) - 5 * Math.cos(2*t) - 2 * Math.cos(3*t) - Math.cos(4*t),
+        formula: 'r⃗(t) = ⟨16sin³t, 13cost - 5cos2t - ...⟩',
+        latex: '\\vec{r}(t) = \\langle 16\\sin^3 t, 13\\cos t - 5\\cos 2t - 2\\cos 3t - \\cos 4t \\rangle',
+        tRange: { min: 0, max: 2 * Math.PI },
+        viewBox: { xMin: -20, xMax: 20, yMin: -20, yMax: 18 },
+        audioScale: 200,
+        baseFreq: 220
+    },
+
     // ========== 🎵 WAVES (기본 파형 - Cartesian) ==========
     sine: {
         category: 'waves',
@@ -98,19 +169,7 @@ export const MATH_FUNCTIONS = {
         audioScale: 400,
         baseFreq: 440
     },
-    heart: {
-        category: 'curves',
-        name: 'Heart',
-        type: 'parametric',
-        x: (t) => 16 * Math.pow(Math.sin(t), 3),
-        y: (t) => 13 * Math.cos(t) - 5 * Math.cos(2*t) - 2 * Math.cos(3*t) - Math.cos(4*t),
-        formula: 'r⃗(t) = ⟨16sin³t, 13cost - 5cos2t - ...⟩',
-        latex: '\\vec{r}(t) = \\langle 16\\sin^3 t, 13\\cos t - 5\\cos 2t - 2\\cos 3t - \\cos 4t \\rangle',
-        tRange: { min: 0, max: 2 * Math.PI },
-        viewBox: { xMin: -20, xMax: 20, yMin: -20, yMax: 18 },
-        audioScale: 200,
-        baseFreq: 220
-    },
+
     cardioid: {
         category: 'curves',
         name: 'Cardioid',
@@ -261,25 +320,24 @@ export const MATH_FUNCTIONS = {
         audioScale: 250,
         baseFreq: 380
     },
-    loveHeart: {
+
+
+    shiningStar: {
         category: 'art',
-        name: 'Love Heart',
-        type: 'cartesian',
-        fn: (x) => {
-            const e2 = Math.exp(2);
-            // 1.05 -> 1.0으로 최대 확장 (가장 날카롭고 긴 형태)
-            const inside = (e2 - x * x) / 1;
-            if (inside < 0) return 0;
-            // 크기를 0.8에서 0.95로 키움 (조금 더 꽉 차게)
-            return 0.95 * (Math.sin(Math.pow(Math.PI, 3) * x) * Math.sqrt(inside) + Math.sqrt(Math.abs(x)));
+        name: 'Shining Star',
+        type: 'polar',
+        r: (theta) => {
+            const p = 5; // 5각 별
+            return 2 * (Math.cos(Math.asin(0.9 * Math.sin(p * theta / 2))) + 0.5);
         },
-        formula: 'f(x) = 0.95·[sin(π³x)·√(e²-x²) + √|x|]',
-        latex: 'f(x) = 0.95 \\left( \\sin(\\pi^3 x) \\sqrt{e^2 - x^2} + \\sqrt{|x|} \\right)',
-        // 전체를 아래로 내리기 위해 y 범위를 상향 조정 (화면상에서는 내려감)
-        range: { xMin: -4, xMax: 4, yMin: -3, yMax: 5 },
-        audioScale: 150,
-        baseFreq: 440
+        formula: 'r = 2(cos(asin(0.9sin(2.5θ))) + 0.5)',
+        latex: 'r = 2(\\cos(\\arcsin(0.9\\sin(2.5\\theta))) + 0.5)',
+        thetaRange: { min: 0, max: 4 * Math.PI },
+        viewBox: { xMin: -5, xMax: 5, yMin: -5, yMax: 5 },
+        audioScale: 300,
+        baseFreq: 220
     },
+
     splitPulse: {
         category: 'art',
         name: 'Split Pulse',
