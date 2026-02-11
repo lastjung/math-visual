@@ -236,12 +236,13 @@ export const MATH_FUNCTIONS = {
             } else {
                 const tA = (t - aStart) / (2 * Math.PI - aStart);
                 if (tA < 0.8) {
-                    return scale * (2.2 - 4.0 * (tA / 0.8));
+                    // Ends at -1.5 (1.8 - 4.125 * 0.8)
+                    return scale * (1.8 - 4.125 * tA); 
                 } else {
                     const s = (tA - 0.8) / 0.2;
-                    // Triangle vertices: [Left-Bottom, Top(Center), Right-Bottom, Back-to-Start]
-                    const pts = [-1.8, -1.8, -1.6, -1.8]; 
-                    const i = Math.min(2, Math.floor(s * 3)); 
+                    // Start: -1.5, DeltaX: +0.1, +0.4
+                    const pts = [-1.5, -1.4, -1.1, -1.5]; 
+                    const i = Math.min(pts.length - 2, Math.floor(s * 3));
                     const f = (s * 3) % 1;
                     return scale * (pts[i] + (pts[i+1] - pts[i]) * f);
                 }
@@ -259,21 +260,21 @@ export const MATH_FUNCTIONS = {
             } else {
                 const tA = (t - aStart) / (2 * Math.PI - aStart);
                 if (tA < 0.8) {
-                    return scale * (1.8 - 2.8 * (tA / 0.8));
+                    return scale * (1.8 - 4.125 * tA); 
                 } else {
                     const s = (tA - 0.8) / 0.2;
-                    // Triangle vertices: [Left-Bottom, Top(Center), Right-Bottom, Back-to-Start]
-                    const pts = [-1.0, -0.8, -1.0, -1.0];
-                    const i = Math.min(2, Math.floor(s * 3)); 
+                    // Start: -1.5, DeltaY: +0.4, +0.1
+                    const pts = [-1.5, -1.1, -1.4, -1.5]; 
+                    const i = Math.min(pts.length - 2, Math.floor(s * 3));
                     const f = (s * 3) % 1;
                     return scale * (pts[i] + (pts[i+1] - pts[i]) * f);
                 }
             }
         },
-        formula: 'Cupid Stroke (Complete)',
-        latex: '\\text{Cupid Heart: } \\vec{H}(t) \\cup \\vec{A}(t)',
+        formula: 'Cupid Heart (45° Arrow Piercing)',
+        latex: '\\vec{H}(t) \\cup \\vec{A}_{45^\\circ}(t)',
         tRange: { min: 0, max: 2 * Math.PI },
-        viewBox: { xMin: -2.5, xMax: 2.5, yMin: -2.0, yMax: 2.5 },
+        viewBox: { xMin: -2.5, xMax: 2.5, yMin: -2.5, yMax: 2.5 },
         audioScale: 150,
         baseFreq: 200
     },
@@ -282,37 +283,37 @@ export const MATH_FUNCTIONS = {
         name: 'Cupid Arrow',
         type: 'parametric',
         x: (t) => {
-            const scale = 1.0;
+            const scale = 1.1;
             const tA = t / (2 * Math.PI);
             if (tA < 0.8) {
-                return scale * (1.8 - 3.6 * (tA / 0.8));
+                return scale * (1.8 - 4.125 * tA);
             } else {
                 const s = (tA - 0.8) / 0.2;
-                const pts = [-1.8, -1.8, -1.6, -1.8];
-                const i = Math.min(2, Math.floor(s * 3));
+                const pts = [-1.5, -1.4, -1.1, -1.5];
+                const i = Math.min(pts.length - 2, Math.floor(s * 3));
                 const f = (s * 3) % 1;
                 return scale * (pts[i] + (pts[i+1] - pts[i]) * f);
             }
         },
         y: (t) => {
-            const scale = 1.0;
+            const scale = 1.1;
             const tA = t / (2 * Math.PI);
             if (tA < 0.8) {
-                return scale * (1.4 - 2.4 * (tA / 0.8));
+                return scale * (1.8 - 4.125 * tA);
             } else {
                 const s = (tA - 0.8) / 0.2;
-                const yPts = [-1.0, -0.8, -1.0, -1.0];
-                const i = Math.min(2, Math.floor(s * 3));
+                const yPts = [-1.5, -1.1, -1.4, -1.5];
+                const i = Math.min(yPts.length - 2, Math.floor(s * 3));
                 const f = (s * 3) % 1;
                 return scale * (yPts[i] + (yPts[i+1] - yPts[i]) * f);
             }
         },
-        formula: 'Cupid Arrow (Independent)',
-        latex: '\\vec{A}(t) = \\text{Shaft} + \\text{Head}',
+        formula: 'Independent Cupid Arrow (45°)',
+        latex: '\\vec{A}_{45^\\circ}(t) = \\langle 1.8-4.125t, 1.8-4.125t \\rangle',
         tRange: { min: 0, max: 2 * Math.PI },
         viewBox: { xMin: -2.5, xMax: 2.5, yMin: -2.5, yMax: 2.5 },
         audioScale: 150,
-        baseFreq: 180
+        baseFreq: 200
     },
     loveHeart: {
         category: 'curves',
