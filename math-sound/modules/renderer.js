@@ -36,6 +36,9 @@ export function drawStaticGraph() {
 
     // 3. Draw Main Active Curve
     drawLayer(state.currentFunction, width, height, 1.0);
+
+    // 4. Draw Point & Info (Text)
+    drawLayerPoint(funcData, width, height, 1.0);
 }
 
 function getBounds(funcData) {
@@ -110,7 +113,7 @@ function drawCartesianCurveInternal(funcData, width, height, progress) {
     const { xMin, xMax, yMin, yMax } = funcData.range;
     const graphCtx = ctx.graph;
 
-    const steps = Math.floor(500 * progress);
+    const steps = Math.floor(2000 * progress);
     const xRange = xMax - xMin;
     const yRange = yMax - yMin;
     
@@ -118,9 +121,9 @@ function drawCartesianCurveInternal(funcData, width, height, progress) {
     graphCtx.beginPath();
 
     for (let i = 0; i <= steps; i++) {
-        const x = xMin + (xRange * i) / 500;
+        const x = xMin + (xRange * i) / 2000;
         let y;
-        try { y = funcData.fn(x); } catch (e) { continue; }
+        try { y = funcData.fn(x, state.autoLoopCount); } catch (e) { continue; }
 
         if (!isFinite(y) || isNaN(y)) continue;
 
@@ -155,7 +158,7 @@ function drawPolarCurveInternal(funcData, width, height, progress) {
     for (let i = 0; i <= steps; i++) {
         const theta = thetaMin + (thetaRange * i) / 1000;
         let r;
-        try { r = funcData.r(theta); } catch (e) { continue; }
+        try { r = funcData.r(theta, state.autoLoopCount); } catch (e) { continue; }
         if (!isFinite(r) || isNaN(r)) continue;
 
         const x = r * Math.cos(theta);
@@ -195,8 +198,8 @@ function drawParametricCurveInternal(funcData, width, height, progress) {
         const t = tMin + (tRange * i) / 1000;
         let x, y;
         try {
-            x = funcData.x(t);
-            y = funcData.y(t);
+            x = funcData.x(t, state.autoLoopCount);
+            y = funcData.y(t, state.autoLoopCount);
         } catch (e) { continue; }
 
         if (!isFinite(x) || isNaN(x) || !isFinite(y) || isNaN(y)) continue;
@@ -295,21 +298,48 @@ export function animate() {
     const height = elements.graphCanvas.offsetHeight;
     const graphCtx = ctx.graph;
 
-    state.drawProgress += 0.004 * state.speed;
+    // 오디오 시간을 기준으로 진행률 계산 (완벽한 싱크)
+    const audioContext = state.audioContext;
+    if (!audioContext || state.audioStartTime === null) return;
+
+    const isAni = funcData.category === 'ani';
+    const drawDuration = 4.0; // 실제 선을 긋는 시간
+    const loopDuration = 4.5; // 4초 드로잉 + 0.5초 여운
     
-    if (state.drawProgress > 1) {
-        state.drawProgress = 0;
-        if (state.isAutoPlaying) {
-            state.autoLoopCount++;
-            if (state.autoLoopCount >= state.autoTargetCount) {
-                state.isPlaying = false;
-                stopSoundCallback();
+    const elapsed = audioContext.currentTime - state.audioStartTime;
+    // 4초가 넘어가면 드로잉은 1.0(완성)에서 멈춤
+    const newProgress = Math.min(1.0, (elapsed % (loopDuration / state.speed)) / (drawDuration / state.speed));
+    const currentTotalLoop = Math.floor(elapsed / (loopDuration / state.speed));
+
+    // Ani 카테고리는 기본적으로 5단계를 모두 보여주도록 설정
+    if (isAni && !state.isAutoPlaying) {
+        state.autoTargetCount = 5;
+    }
+
+    // 루프가 넘어갔을 때
+    if (currentTotalLoop > state.autoLoopCount) {
+        state.autoLoopCount = currentTotalLoop;
+        
+        // 지정된 루프 횟수(Ani는 5회, 일반은 1회 이상) 도달 시 정지
+        const target = (isAni && !state.isAutoPlaying) ? 5 : state.autoTargetCount;
+        if (state.autoLoopCount >= target) {
+            state.isPlaying = false;
+            stopSoundCallback(); // 오디오 즉시 중단
+            
+            if (isAni && !state.isAutoPlaying) {
+                // 🎨 Ani: 화면은 완성 상태(1.0)로 마지막 모습 유지
+                state.drawProgress = 1.0;
                 cancelAnimationFrame(state.animationId);
-                setTimeout(() => { playNextAutoCallback(); }, 1000);
                 return;
             }
+
+            cancelAnimationFrame(state.animationId);
+            setTimeout(() => { playNextAutoCallback(); }, 1000); // 다음 곡 전 1초 휴식
+            return;
         }
     }
+
+    state.drawProgress = newProgress;
 
     graphCtx.clearRect(0, 0, width, height);
     graphCtx.fillStyle = '#ffffff';
@@ -328,6 +358,41 @@ export function animate() {
     // 4. Draw Point for main curve
     drawLayerPoint(funcData, width, height, state.drawProgress, false);
 
+    // 5. Draw Love Phase Text (for stepsOfLove)
+    if (state.currentFunction === 'stepsOfLove') {
+        const phases = [
+            "4 Steps of Love",
+            "Interest",
+            "Flutter",
+            "Passion",
+            "Conviction"
+        ];
+        // 재생 완료 후에도 마지막 텍스트 유지를 위해 루프 인덱스 계산
+        const loopIdx = (state.drawProgress >= 1.0 && !state.isPlaying) ? 4 : Math.min(state.autoLoopCount, 4);
+        const text = phases[loopIdx];
+        
+        graphCtx.save();
+        // 인트로는 더 크게 강조
+        graphCtx.font = loopIdx === 0 ? "bold 32px 'Inter', sans-serif" : "bold 24px 'Inter', sans-serif";
+        graphCtx.textAlign = "center";
+        graphCtx.textBaseline = "middle";
+        
+        // 가독성 개선: 연두색 텍스트 + 화이트 외곽선
+        graphCtx.shadowBlur = 4;
+        graphCtx.shadowColor = "rgba(0, 0, 0, 0.1)";
+        graphCtx.fillStyle = '#84cc16'; // 연두색
+        graphCtx.strokeStyle = "rgba(255, 255, 255, 0.9)";
+        graphCtx.lineWidth = 4;
+        
+        const centerX = width / 2;
+        // 하트 중앙 y좌표 계산
+        const centerY = ((yMax - 1.0) / (yMax - yMin)) * height;
+        
+        graphCtx.strokeText(text, centerX, centerY);
+        graphCtx.fillText(text, centerX, centerY);
+        graphCtx.restore();
+    }
+
     drawWaveform();
     updateTimerCallback();
     state.animationId = requestAnimationFrame(animate);
@@ -337,7 +402,7 @@ export function drawCartesianPoint(funcData, width, height, progress, isBackgrou
     const { xMin, xMax, yMin, yMax } = funcData.range;
     const currentX = xMin + (xMax - xMin) * progress;
     let currentY;
-    try { currentY = funcData.fn(currentX); } catch (e) { return; }
+    try { currentY = funcData.fn(currentX, state.autoLoopCount); } catch (e) { return; }
     if (!isFinite(currentY) || isNaN(currentY)) return;
     
     const canvasX = progress * width;
@@ -350,7 +415,7 @@ export function drawPolarPoint(funcData, width, height, progress, isBackground =
     const { min: thetaMin, max: thetaMax } = funcData.thetaRange;
     const theta = thetaMin + (thetaMax - thetaMin) * progress;
     let r;
-    try { r = funcData.r(theta); } catch (e) { return; }
+    try { r = funcData.r(theta, state.autoLoopCount); } catch (e) { return; }
     if (!isFinite(r) || isNaN(r)) return;
     
     const x = r * Math.cos(theta);
@@ -366,8 +431,8 @@ export function drawParametricPoint(funcData, width, height, progress, isBackgro
     const t = tMin + (tMax - tMin) * progress;
     let x, y;
     try {
-        x = funcData.x(t);
-        y = funcData.y(t);
+        x = funcData.x(t, state.autoLoopCount);
+        y = funcData.y(t, state.autoLoopCount);
     } catch (e) { return; }
     if (!isFinite(x) || isNaN(x) || !isFinite(y) || isNaN(y)) return;
     
@@ -393,6 +458,7 @@ export function getCategoryColor(category) {
         waves: '#10b981',    // Green
         curves: '#ec4899',   // Pink
         art: '#8b5cf6',      // Purple
+        ani: '#f43f5e',      // Rose Pink
         sound: '#6366f1',    // Indigo (Synth)
         math: '#dc2626',     // Pure Red
         bytebeat: '#4b5563'  // Dark Gray

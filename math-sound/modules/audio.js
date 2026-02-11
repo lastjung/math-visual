@@ -23,7 +23,12 @@ export function initAudio() {
 export function createSoundFromFunction(functionId = state.currentFunction) {
     const funcData = MATH_FUNCTIONS[functionId];
     const sampleRate = state.audioContext.sampleRate;
-    const duration = 4;
+    
+    // Ani 카테고리는 5단계(22.5초 = 4.5s * 5), 나머지는 1단계(4.5초)
+    const isAni = funcData.category === 'ani';
+    const loopDuration = isAni ? 4.5 : 4.5; // 일관된 4.5초 루프
+    const drawDuration = 4.0; // 드로잉 실질 시간
+    const duration = isAni ? (loopDuration * 5) : 4.5;
     const numSamples = sampleRate * duration;
     
     const buffer = state.audioContext.createBuffer(1, numSamples, sampleRate);
@@ -31,25 +36,29 @@ export function createSoundFromFunction(functionId = state.currentFunction) {
 
     for (let i = 0; i < numSamples; i++) {
         const t = i / sampleRate;
-        const progress = t / duration;
+        const loopIndex = Math.floor(t / loopDuration);
+        const progressInLoop = Math.min(1.0, (t % loopDuration) / drawDuration);
+        
         let y = 0;
-
         try {
             switch (funcData.type) {
                 case 'parametric': {
-                    const tParam = funcData.tRange.min + (funcData.tRange.max - funcData.tRange.min) * progress;
-                    y = funcData.y(tParam);
+                    const tRange = funcData.tRange;
+                    const tParam = tRange.min + (tRange.max - tRange.min) * progressInLoop;
+                    y = funcData.x ? funcData.y(tParam, loopIndex) : 0;
                     break;
                 }
                 case 'polar': {
-                    const theta = funcData.thetaRange.min + (funcData.thetaRange.max - funcData.thetaRange.min) * progress;
-                    y = funcData.r(theta);
+                    const thetaRange = funcData.thetaRange;
+                    const theta = thetaRange.min + (thetaRange.max - thetaRange.min) * progressInLoop;
+                    y = funcData.r(theta, loopIndex);
                     break;
                 }
                 case 'cartesian':
                 default: {
-                    const x = funcData.range.xMin + (funcData.range.xMax - funcData.range.xMin) * progress;
-                    y = funcData.fn(x);
+                    const range = funcData.range;
+                    const x = range.xMin + (range.xMax - range.xMin) * progressInLoop;
+                    y = funcData.fn(x, loopIndex);
                     break;
                 }
             }
@@ -58,10 +67,13 @@ export function createSoundFromFunction(functionId = state.currentFunction) {
         }
 
         if (!isFinite(y) || isNaN(y)) y = 0;
+        const rawY = y; // 원본 값 저장
         y = Math.max(-1, Math.min(1, y / 10));
 
         const freq = funcData.baseFreq + y * funcData.audioScale;
-        channelData[i] = Math.sin(2 * Math.PI * freq * t) * 0.5;
+        // 수학적으로 0인 구간은 무음 처리 (0.5는 마스터 최대 볼륨 비율)
+        const amplitude = Math.min(0.5, Math.abs(rawY) * 2); 
+        channelData[i] = Math.sin(2 * Math.PI * freq * t) * amplitude;
     }
 
     return buffer;
@@ -109,6 +121,8 @@ export function playSound(functionId = state.currentFunction, forceLayer = false
         
         source.connect(previewGain);
         previewGain.connect(state.analyser);
+        
+        state.audioStartTime = state.audioContext.currentTime;
         source.start();
         
         state.activeNodes.set('__preview__', { source, gain: previewGain });

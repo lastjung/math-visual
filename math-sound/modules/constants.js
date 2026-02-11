@@ -4,6 +4,41 @@
  */
 
 export const MATH_FUNCTIONS = {
+    // ========== 🎨 ANI (진화하는 애니메이션 수식) ==========
+    stepsOfLove: {
+        category: 'ani',
+        name: '4 Steps of Love',
+        type: 'parametric',
+        x: (t, loopIndex = 0) => {
+            if (loopIndex === 0) {
+                // 0단계: 인트로 - 클래식 하트 외곽선
+                return 16 * Math.pow(Math.sin(t), 3) / 10;
+            } else {
+                // 1~4단계: 일렁이는 하트 (Cartesian을 Parametric으로 변환)
+                const x = -1.732 + (3.464 * t) / (2 * Math.PI);
+                return x;
+            }
+        },
+        y: (t, loopIndex = 0) => {
+            if (loopIndex === 0) {
+                // 0단계: 인트로 - 클래식 하트 외곽선
+                return (13 * Math.cos(t) - 5 * Math.cos(2*t) - 2 * Math.cos(3*t) - Math.cos(4*t)) / 10;
+            } else {
+                const x = -1.732 + (3.464 * t) / (2 * Math.PI);
+                const kValues = [30, 55, 110, 240];
+                const k = kValues[Math.min(loopIndex - 1, 3)];
+                const x2 = x * x;
+                if (x2 >= 3) return Math.pow(Math.abs(x), 2/3);
+                return Math.pow(Math.abs(x), 2/3) + 0.9 * Math.sin(k * x) * Math.sqrt(3 - x2);
+            }
+        },
+        formula: 'Interest → Flutter → Passion → Conviction',
+        latex: '\\text{Interest } \\to \\text{Flutter } \\to \\text{Passion } \\to \\text{Conviction}',
+        tRange: { min: 0, max: 2 * Math.PI },
+        viewBox: { xMin: -2.3, xMax: 2.3, yMin: -1.7, yMax: 2.5 }, // 90% 크기 유지
+        audioScale: 200,
+        baseFreq: 220
+    },
     // ========== 🌸 CURVES (유명한 곡선 & 하트 시리즈) ==========
     loveHeart: {
         category: 'curves',
@@ -46,18 +81,30 @@ export const MATH_FUNCTIONS = {
         name: 'Broken Heart',
         type: 'parametric',
         x: (t) => {
-            let x = 16 * Math.pow(Math.sin(t), 3);
-            const offset = 2.5;
-            const crack = 0.8 * Math.sin(t * 10);
-            return (t < Math.PI) ? x - offset + crack : x + offset + crack;
+            if (t <= 2 * Math.PI) {
+                // 1단계: 하트 외곽선 (상단에서 시작)
+                return 16 * Math.pow(Math.sin(t), 3);
+            } else {
+                // 2단계: 번개 균열 (지그재그)
+                const p = (t - 2 * Math.PI) / (1.5 * Math.PI); // 0 to 1
+                // abs((p * freq + phase) % 2 - 1) 형태로 번개 모양 구현
+                return 4 * (Math.abs(((p + 0.05) * 10) % 2 - 1) - 0.5);
+            }
         },
         y: (t) => {
-            return 13 * Math.cos(t) - 5 * Math.cos(2*t) - 2 * Math.cos(3*t) - Math.cos(4*t);
+            if (t <= 2 * Math.PI) {
+                // 1단계: 하트 외곽선
+                return 13 * Math.cos(t) - 5 * Math.cos(2*t) - 2 * Math.cos(3*t) - Math.cos(4*t);
+            } else {
+                // 2단계: 위에서 아래로 내려가는 균열 (y=5 -> y=-17)
+                const p = (t - 2 * Math.PI) / (1.5 * Math.PI);
+                return 5 - 22 * p;
+            }
         },
-        formula: 'Broken Heart (Split with Crack)',
-        latex: '\\vec{r}(t) = \\langle 16\\sin^3 t \\pm 2.5 + \\text{crack}, \\text{heart}_y \\rangle',
-        tRange: { min: 0, max: 2 * Math.PI },
-        viewBox: { xMin: -25, xMax: 25, yMin: -20, yMax: 18 },
+        formula: 'Heart Outline then Broken Crack',
+        latex: '\\vec{r}(t) = \\begin{cases} \\text{heart}(t) & t \\le 2\\pi \\\\ \\langle \\text{lightning}(t), 5-22p \\rangle & t > 2\\pi \\end{cases}',
+        tRange: { min: 0, max: 3.5 * Math.PI },
+        viewBox: { xMin: -20, xMax: 20, yMin: -20, yMax: 18 },
         audioScale: 200,
         baseFreq: 110
     },
@@ -73,6 +120,22 @@ export const MATH_FUNCTIONS = {
         viewBox: { xMin: -20, xMax: 20, yMin: -20, yMax: 18 },
         audioScale: 200,
         baseFreq: 220
+    },
+    oscillatingHeart: {
+        category: 'curves',
+        name: 'Oscillating Heart',
+        type: 'cartesian',
+        fn: (x) => {
+            const k = 100; // 파동의 밀도 (영상 속 k값)
+            const x2 = x * x;
+            if (x2 > 3) return 0;
+            return Math.pow(Math.abs(x), 2/3) + 0.9 * Math.sin(k * x) * Math.sqrt(3 - x2);
+        },
+        formula: 'f(x) = x^(2/3) + 0.9·sin(kx)·√(3-x²)',
+        latex: 'f(x) = x^{2/3} + 0.9 \\sin(kx) \\sqrt{3 - x^2}',
+        range: { xMin: -1.8, xMax: 1.8, yMin: -1.2, yMax: 2.2 },
+        audioScale: 200,
+        baseFreq: 330
     },
 
     // ========== 🎵 WAVES (기본 파형 - Cartesian) ==========
@@ -809,12 +872,13 @@ export const MATH_FUNCTIONS = {
 };
 
 export const CATEGORIES = {
-    waves: { name: '🎵 Basic', functions: [] },
+    waves: { name: '🌊 Waves', functions: [] },
     curves: { name: '🌸 Curves', functions: [] },
     art: { name: '💠 Art', functions: [] },
+    ani: { name: '🎨 Ani', functions: [] },
     math: { name: '📐 Math', functions: [] },
-    sound: { name: '🔊 Synth', functions: [] },
-    bytebeat: { name: '⚡ Byte', functions: [] }
+    sound: { name: '🎵 Sound', functions: [] },
+    bytebeat: { name: '💻 Byte', functions: [] }
 };
 
 // Initialize categories

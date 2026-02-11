@@ -14,11 +14,12 @@ export const state = {
     bufferSource: null,
     activeNodes: new Map(), // To manage multiple layers
     volume: 0.5,
-    speed: 1,
+    speed: 0.8,
     zoom: 1,
     drawProgress: 0,
     functionIndex: 1,
     timerStartTime: null,
+    audioStartTime: null,
     // Auto Play State
     isAutoPlaying: false,
     autoQueue: [],

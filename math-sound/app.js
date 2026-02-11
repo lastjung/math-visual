@@ -10,7 +10,7 @@ function init() {
     setupCanvas();
     renderCategoryTabs();
     setupEventListeners();
-    setRendererCallbacks(updateTimer, playNextAuto, stopSound);
+    setRendererCallbacks(updateTimer, playNextAuto, stopPreview);
     
     elements.totalCount.textContent = Object.keys(MATH_FUNCTIONS).length;
     selectCategory('waves');
@@ -177,7 +177,7 @@ function renderFunctionButtons(category) {
         btn.className = 'func-btn' + (funcKey === state.currentFunction ? ' active' : '');
         btn.dataset.func = funcKey;
         btn.textContent = func.name;
-        btn.title = 'Click: View Formula, Double Click: Select & Play, Drag: Add Layer';
+        btn.title = 'Click: Select & Play, Drag: Add Layer';
         
         // Make draggable
         btn.draggable = true;
@@ -187,17 +187,6 @@ function renderFunctionButtons(category) {
         });
 
         btn.addEventListener('click', () => {
-            if (state.isPlaying) {
-                // During playback, single click only previews formula/title
-                previewFunction(funcKey);
-            } else {
-                // When stopped, single click selects visually
-                selectFunction(funcKey);
-            }
-        });
-
-        btn.addEventListener('dblclick', (e) => {
-            e.preventDefault();
             selectFunction(funcKey);
             if (!state.isPlaying) play();
         });
@@ -249,12 +238,8 @@ function selectFunction(funcName) {
 
     if (funcData.category !== state.currentCategory) selectCategory(funcData.category);
 
-    if (state.isPlaying) {
-        playSound(funcName); 
-        if (state.animationId) cancelAnimationFrame(state.animationId);
-    }
-
     state.timerStartTime = null;
+    elements.currentIndex.textContent = state.functionIndex;
     elements.canvasClock.textContent = '00:00.00';
     state.drawProgress = 0;
     
@@ -263,12 +248,11 @@ function selectFunction(funcName) {
     elements.canvasWrapper.classList.add('zoom-in-effect');
     
     drawStaticGraph();
-    setTimeout(() => {
-        if (state.isPlaying) {
-            playSound(state.currentFunction);
-            animate();
-        }
-    }, 500);
+    
+    if (state.isPlaying) {
+        playSound(state.currentFunction);
+        animate();
+    }
 }
 
 function navigateFunction(direction) {
@@ -292,6 +276,7 @@ function play() {
     elements.playBtn.classList.add('playing');
     elements.playBtn.querySelector('.icon').textContent = '❚❚';
     document.body.classList.add('drawing');
+    state.autoLoopCount = 0; // 루프 카운트 초기화 (항상 1단계부터 시작)
     
     // Ensure audio context is running (resume if suspended by browser)
     if (state.audioContext && state.audioContext.state === 'suspended') {
@@ -372,7 +357,7 @@ function stop() {
 }
 
 function reset() {
-    state.drawProgress = 0;
+    state.drawProgress = 0; // Reset drawProgress to 0
     stopAllSounds();
     renderMixer();
     drawStaticGraph();
@@ -394,7 +379,10 @@ function toggleAutoPlay() {
 function startAutoPlay() {
     stop();
     const currentFunc = state.currentFunction;
-    const allKeys = Object.keys(MATH_FUNCTIONS).filter(key => key !== currentFunc);
+    // Ani 카테고리는 랜덤 재생 대상에서 제외
+    const allKeys = Object.keys(MATH_FUNCTIONS).filter(key => 
+        key !== currentFunc && MATH_FUNCTIONS[key].category !== 'ani'
+    );
     
     // Shuffle others
     for (let i = allKeys.length - 1; i > 0; i--) {
@@ -422,8 +410,8 @@ function playNextAuto() {
     
     const nextFunc = state.autoQueue.shift();
     
-    // First function (current active) gets 3 loops, others get 2
-    state.autoTargetCount = state.isFirstAutoFunc ? 3 : 2;
+    // Every function gets 2 loops in auto-play
+    state.autoTargetCount = 2;
     state.isFirstAutoFunc = false;
     
     selectFunction(nextFunc);
