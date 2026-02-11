@@ -236,8 +236,10 @@ export const MATH_FUNCTIONS = {
             } else {
                 const tA = (t - aStart) / (2 * Math.PI - aStart);
                 if (tA < 0.8) {
-                    // Ends at -1.5 (1.8 - 4.125 * 0.8)
-                    return scale * (1.8 - 4.125 * tA); 
+                    const raw = 1.8 - 4.125 * tA;
+                    // (1.1, 1.1) ~ (0, 0) 무색 처리 (Invisible)
+                    if (raw >= 0 && raw <= 1.1) return NaN;
+                    return scale * raw; 
                 } else {
                     const s = (tA - 0.8) / 0.2;
                     // Start: -1.5, DeltaX: +0.1, +0.4
@@ -260,7 +262,9 @@ export const MATH_FUNCTIONS = {
             } else {
                 const tA = (t - aStart) / (2 * Math.PI - aStart);
                 if (tA < 0.8) {
-                    return scale * (1.8 - 4.125 * tA); 
+                    const raw = 1.8 - 4.125 * tA;
+                    if (raw >= 0 && raw <= 1.1) return NaN;
+                    return scale * raw; 
                 } else {
                     const s = (tA - 0.8) / 0.2;
                     // Start: -1.5, DeltaY: +0.4, +0.1
@@ -286,7 +290,9 @@ export const MATH_FUNCTIONS = {
             const scale = 1.1;
             const tA = t / (2 * Math.PI);
             if (tA < 0.8) {
-                return scale * (1.8 - 4.125 * tA);
+                const raw = 1.8 - 4.125 * tA;
+                if (raw >= 0 && raw <= 1.1) return NaN;
+                return scale * raw;
             } else {
                 const s = (tA - 0.8) / 0.2;
                 const pts = [-1.5, -1.4, -1.1, -1.5];
@@ -299,7 +305,9 @@ export const MATH_FUNCTIONS = {
             const scale = 1.1;
             const tA = t / (2 * Math.PI);
             if (tA < 0.8) {
-                return scale * (1.8 - 4.125 * tA);
+                const raw = 1.8 - 4.125 * tA;
+                if (raw >= 0 && raw <= 1.1) return NaN;
+                return scale * raw;
             } else {
                 const s = (tA - 0.8) / 0.2;
                 const yPts = [-1.5, -1.1, -1.4, -1.5];
