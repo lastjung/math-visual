@@ -261,6 +261,25 @@ export const MATH_FUNCTIONS = {
         audioScale: 250,
         baseFreq: 380
     },
+    loveHeart: {
+        category: 'art',
+        name: 'Love Heart',
+        type: 'cartesian',
+        fn: (x) => {
+            const e2 = Math.exp(2);
+            // 1.05 -> 1.0으로 최대 확장 (가장 날카롭고 긴 형태)
+            const inside = (e2 - x * x) / 1;
+            if (inside < 0) return 0;
+            // 크기를 0.8에서 0.95로 키움 (조금 더 꽉 차게)
+            return 0.95 * (Math.sin(Math.pow(Math.PI, 3) * x) * Math.sqrt(inside) + Math.sqrt(Math.abs(x)));
+        },
+        formula: 'f(x) = 0.95·[sin(π³x)·√(e²-x²) + √|x|]',
+        latex: 'f(x) = 0.95 \\left( \\sin(\\pi^3 x) \\sqrt{e^2 - x^2} + \\sqrt{|x|} \\right)',
+        // 전체를 아래로 내리기 위해 y 범위를 상향 조정 (화면상에서는 내려감)
+        range: { xMin: -4, xMax: 4, yMin: -3, yMax: 5 },
+        audioScale: 150,
+        baseFreq: 440
+    },
     splitPulse: {
         category: 'art',
         name: 'Split Pulse',
@@ -387,7 +406,7 @@ export const MATH_FUNCTIONS = {
         baseFreq: 220
     },
     vibration: {
-        category: 'sound',
+        category: 'art',
         name: 'Vibration',
         type: 'cartesian',
         fn: (x) => x * Math.sin(x * 10),
@@ -398,7 +417,7 @@ export const MATH_FUNCTIONS = {
         baseFreq: 330
     },
     diamond: {
-        category: 'sound',
+        category: 'art',
         name: 'Diamond',
         type: 'cartesian',
         fn: (x) => (2 - Math.abs(x)) * Math.sin(x * 60),
@@ -420,7 +439,7 @@ export const MATH_FUNCTIONS = {
         baseFreq: 220
     },
     monsterWave: {
-        category: 'sound',
+        category: 'art',
         name: 'Monster Wave',
         type: 'cartesian',
         fn: (x) => {
@@ -735,8 +754,8 @@ export const CATEGORIES = {
     waves: { name: '🎵 Basic', functions: [] },
     curves: { name: '🌸 Curves', functions: [] },
     art: { name: '💠 Art', functions: [] },
-    sound: { name: '🔊 Synth', functions: [] },
     math: { name: '📐 Math', functions: [] },
+    sound: { name: '🔊 Synth', functions: [] },
     bytebeat: { name: '⚡ Byte', functions: [] }
 };
 

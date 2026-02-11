@@ -60,7 +60,8 @@ export function createSoundFromFunction(functionId = state.currentFunction) {
         if (!isFinite(y) || isNaN(y)) y = 0;
         y = Math.max(-1, Math.min(1, y / 10));
 
-        const freq = funcData.baseFreq + y * funcData.audioScale;
+        // 전체 음역대를 한 옥타브 낮추기 위해 주파수에 0.5를 곱함 (시스템 전체 저음화)
+        const freq = (funcData.baseFreq + y * funcData.audioScale) * 0.5;
         channelData[i] = Math.sin(2 * Math.PI * freq * t) * 0.5;
     }
 

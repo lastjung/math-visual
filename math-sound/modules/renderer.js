@@ -390,11 +390,12 @@ export function drawPoint(canvasX, canvasY, category, height, isBackground = fal
 
 export function getCategoryColor(category) {
     const colors = {
-        waves: '#8b5cf6',
-        curves: '#ec4899',
-        sound: '#f59e0b',
-        math: '#10b981',
-        bytebeat: '#ef4444'
+        waves: '#10b981',    // Green
+        curves: '#ec4899',   // Pink
+        art: '#8b5cf6',      // Purple
+        sound: '#6366f1',    // Indigo (Synth)
+        math: '#dc2626',     // Pure Red
+        bytebeat: '#4b5563'  // Dark Gray
     };
     return colors[category] || '#3b82f6';
 }

@@ -32,13 +32,13 @@ body {
     --radius: 24px;
     --radius-sm: 16px;
     
-    /* Category Colors - Vivid Pastels */
-    --waves-color: #8b5cf6;
+    /* Category Colors - User Defined */
+    --waves-color: #10b981;    /* Green for Basic */
     --curves-color: #ec4899;
-    --art-color: #6366f1;    /* Indigo for Complex/Art */
-    --sound-color: #f59e0b;
-    --math-color: #10b981;
-    --bytebeat-color: #ef4444;
+    --art-color: #8b5cf6;      /* Purple for Art */
+    --sound-color: #6366f1;    /* Adjusting synth to indigo */
+    --math-color: #dc2626;     /* Pure Red for Math */
+    --bytebeat-color: #4b5563; /* Dark Gray for Byte */
 }
 
 body {
@@ -345,23 +345,30 @@ body {
     color: var(--text-muted);
 }
 
+/* Category-specific colors for all states */
+.category-tab[data-category="waves"] { color: var(--waves-color); }
+.category-tab[data-category="curves"] { color: var(--curves-color); }
+.category-tab[data-category="art"] { color: var(--art-color); }
+.category-tab[data-category="sound"] { color: var(--sound-color); }
+.category-tab[data-category="math"] { color: var(--math-color); }
+.category-tab[data-category="bytebeat"] { color: var(--bytebeat-color); }
+
+/* Dim inactive tabs slightly */
+.category-tab:not(.active) {
+    opacity: 0.7;
+}
+
 .category-tab:hover {
-    background: rgba(0, 0, 0, 0.05);
-    color: var(--text-main);
+    opacity: 1;
+    background: rgba(0, 0, 0, 0.03);
 }
 
 .category-tab.active {
+    opacity: 1;
     background: #ffffff;
-    color: var(--text-main);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
     transform: scale(1.05);
-}/* Category-specific active colors */
-.category-tab.active[data-category="waves"] { color: var(--waves-color); }
-.category-tab.active[data-category="curves"] { color: var(--curves-color); }
-.category-tab.active[data-category="art"] { color: var(--art-color); }
-.category-tab.active[data-category="sound"] { color: var(--sound-color); }
-.category-tab.active[data-category="math"] { color: var(--math-color); }
-.category-tab.active[data-category="bytebeat"] { color: var(--bytebeat-color); }
+}
 
 /* Function Selector */
 .function-selector {
