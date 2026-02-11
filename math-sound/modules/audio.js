@@ -24,11 +24,17 @@ export function createSoundFromFunction(functionId = state.currentFunction) {
     const funcData = MATH_FUNCTIONS[functionId];
     const sampleRate = state.audioContext.sampleRate;
     
-    // Ani 카테고리는 5단계(22.5초 = 4.5s * 5), 나머지는 1단계(4.5초)
+    // Ani 카테고리는 인트로(1.5초) + 나머지(4.5초) 가변 루프 적용
     const isAni = funcData.category === 'ani';
-    const loopDuration = isAni ? 4.5 : 4.5; // 일관된 4.5초 루프
-    const drawDuration = 4.0; // 드로잉 실질 시간
-    const duration = isAni ? (loopDuration * 5) : 4.5;
+    const introDuration = 1.5;
+    const regularDuration = 4.5;
+    const introDraw = 1.0;
+    const regularDraw = 4.0;
+    
+    let duration = 4.5;
+    if (isAni && funcData.phases) {
+        duration = introDuration + (regularDuration * (funcData.phases.length - 1));
+    }
     const numSamples = sampleRate * duration;
     
     const buffer = state.audioContext.createBuffer(1, numSamples, sampleRate);
@@ -36,8 +42,19 @@ export function createSoundFromFunction(functionId = state.currentFunction) {
 
     for (let i = 0; i < numSamples; i++) {
         const t = i / sampleRate;
-        const loopIndex = Math.floor(t / loopDuration);
-        const progressInLoop = Math.min(1.0, (t % loopDuration) / drawDuration);
+        
+        let loopIndex, progressInLoop;
+        if (isAni && t < introDuration) {
+            loopIndex = 0;
+            progressInLoop = Math.min(1.0, t / introDraw);
+        } else if (isAni) {
+            const adjustedT = t - introDuration;
+            loopIndex = 1 + Math.floor(adjustedT / regularDuration);
+            progressInLoop = Math.min(1.0, (adjustedT % regularDuration) / regularDraw);
+        } else {
+            loopIndex = Math.floor(t / 4);
+            progressInLoop = (t % 4) / 4;
+        }
         
         let y = 0;
         try {
@@ -45,7 +62,14 @@ export function createSoundFromFunction(functionId = state.currentFunction) {
                 case 'parametric': {
                     const tRange = funcData.tRange;
                     const tParam = tRange.min + (tRange.max - tRange.min) * progressInLoop;
-                    y = funcData.x ? funcData.y(tParam, loopIndex) : 0;
+                    
+                    // 특정 시리즈 박동 연출 (Passion 단계)
+                    if (functionId === 'heartbeatChronicles' && loopIndex === 4) {
+                        const pulseScale = 1.0 + 0.2 * Math.sin(15 * t);
+                        y = funcData.y(tParam, loopIndex) * pulseScale;
+                    } else {
+                        y = funcData.x ? funcData.y(tParam, loopIndex) : 0;
+                    }
                     break;
                 }
                 case 'polar': {

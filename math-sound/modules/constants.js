@@ -34,12 +34,286 @@ export const MATH_FUNCTIONS = {
         },
         formula: 'Interest → Flutter → Passion → Conviction',
         latex: '\\text{Interest } \\to \\text{Flutter } \\to \\text{Passion } \\to \\text{Conviction}',
+        phases: [
+            "4 Steps of Love",
+            "Interest",
+            "Flutter",
+            "Passion",
+            "Conviction"
+        ],
         tRange: { min: 0, max: 2 * Math.PI },
         viewBox: { xMin: -2.3, xMax: 2.3, yMin: -1.7, yMax: 2.5 }, // 90% 크기 유지
         audioScale: 200,
         baseFreq: 220
     },
+    heartbeatChronicles: {
+        category: 'ani',
+        name: 'Heartbeat Chronicles',
+        type: 'parametric',
+        x: (t, loopIndex = 0) => {
+            const scale = 0.9;
+            const hX = 16 * Math.pow(Math.sin(t), 3) / 10;
+            const time = Date.now() / 1000;
+            switch(loopIndex) {
+                case 0: // 0: Title (Initial Circle)
+                    return scale * Math.cos(t);
+                case 1: // 1: Empty Mind (Static Circle)
+                    return scale * Math.cos(t);
+                case 2: // 2: Curiosity (Pulsing Circle)
+                    const p1 = 1.0 + 0.2 * Math.sin(8 * time);
+                    return scale * p1 * Math.cos(t);
+                case 3: // 3: The Spark (Wobbly Heart)
+                    return scale * (hX + 0.1 * Math.sin(20 * t));
+                case 4: // 4: Passion (Deep Love - Pulsing Sound 연동을 위해 t 사용 가능)
+                    const p2 = 1.0 + 0.15 * Math.sin(15 * t); 
+                    return scale * p2 * hX;
+                case 5: // 5: Broken (Dramatic Zigzag Crack)
+                    const offset = (t < Math.PI) ? 0.4 : -0.4; // 더 넓게 멀어짐
+                    const hY_local = (13 * Math.cos(t) - 5 * Math.cos(2*t) - 2 * Math.cos(3*t) - Math.cos(4*t)) / 10;
+                    // 그림과 같은 선명한 지그재그 크랙 (삼각형 파동 유도)
+                    const zigzag = 0.3 * (Math.abs(((hY_local + 1.7) * 8) % 2) - 1); // 주파수 2배 강화
+                    return scale * (hX + offset + zigzag);
+                default: return 0;
+            }
+        },
+        y: (t, loopIndex = 0) => {
+            const scale = 0.9;
+            const hY = (13 * Math.cos(t) - 5 * Math.cos(2*t) - 2 * Math.cos(3*t) - Math.cos(4*t)) / 10;
+            const time = Date.now() / 1000;
+            switch(loopIndex) {
+                case 0: // 0: Title
+                    return scale * Math.sin(t);
+                case 1: // 1: Empty Mind
+                    return scale * Math.sin(t);
+                case 2: // 2: Curiosity
+                    const p1 = 1.0 + 0.2 * Math.sin(8 * time);
+                    return scale * p1 * Math.sin(t);
+                case 3: // 3: The Spark
+                    return scale * (hY + 0.1 * Math.cos(20 * t));
+                case 4: // 4: Passion
+                    const p2 = 1.0 + 0.15 * Math.sin(15 * t);
+                    return scale * p2 * hY;
+                case 5: // 5: Broken (Zigzag detail)
+                case 5: // 5: Broken (Subtle)
+                    return scale * (hY + 0.02 * Math.sin(40 * t));
+                default: return 0;
+            }
+        },
+        formula: 'Empty → Curiosity → Spark → Passion → Broken',
+        latex: '\\text{Heartbeat Chronicles: } \\text{Circle} \\to \\text{Heart} \\to \\text{Split}',
+        phases: [
+            "Heartbeat Chronicles",
+            "Empty Mind",
+            "Curiosity",
+            "The Spark",
+            "Passion",
+            "Broken"
+        ],
+        tRange: { min: 0, max: 2 * Math.PI },
+        viewBox: { xMin: -2.3, xMax: 2.3, yMin: -2.3, yMax: 2.3 },
+        audioScale: 150,
+        baseFreq: 180
+    },
+    waveOfEmotions: {
+        category: 'ani',
+        name: 'Wave of Emotions',
+        type: 'cartesian',
+        fn: (x, loopIndex = 0) => {
+            switch(loopIndex) {
+                case 0: // 0: Title Screen (Sine Wave)
+                    return Math.sin(x);
+                case 1: // 1: Sine (Indifferent)
+                    return Math.sin(x);
+                case 2: // 2: Damped (Something)
+                    return Math.sin(5 * x) * Math.exp(-Math.abs(x) * 0.5) * 2;
+                case 3: // 3: Complex (Fluttering)
+                    return (Math.sin(3 * x) + Math.sin(7 * x)) * 0.8;
+                case 4: // 4: Square (Harsh Reality)
+                    return Math.sign(Math.sin(x * 2)) * 1.5;
+                case 5: // 5: Sawtooth (Shattered)
+                    return (x % 1) - 0.5 + Math.sin(20 * x) * 0.2;
+                default: return 0;
+            }
+        },
+        formula: 'Sine → Damped → Complex → Square → Sawtooth',
+        latex: '\\text{Waves: } \\sin(x) \\to e^{-x}\\sin(x) \\to \\text{sgn}(\\sin(x))',
+        phases: [
+            "Wave of Emotions",
+            "Indifferent (Sine)",
+            "Something (Damped)",
+            "Fluttering (Complex)",
+            "Harsh Reality (Square)",
+            "Shattered (Sawtooth)"
+        ],
+        range: { xMin: -6.28, xMax: 6.28, yMin: -3, yMax: 3 },
+        audioScale: 100,
+        baseFreq: 220
+    },
+    cupidArrow: {
+        category: 'ani',
+        name: "Cupid's Shot",
+        type: 'parametric',
+        x: (t, loopIndex = 0) => {
+            const scale = 0.9;
+            const heartEndT = 1.4 * Math.PI; 
+            const arrowStartT = 1.6 * Math.PI;
+            
+            if (t <= heartEndT) {
+                const tH = (t / heartEndT) * 2 * Math.PI;
+                return scale * (16 * Math.pow(Math.sin(tH), 3) / 10);
+            } else if (t < arrowStartT) {
+                return NaN;
+            } else {
+                if (loopIndex < 2) return NaN;
+                const tA = (t - arrowStartT) / (2 * Math.PI - arrowStartT);
+                if (tA < 0.8) {
+                    const s = tA / 0.8;
+                    return scale * (2.2 - 4.0 * s);
+                } else {
+                    if (loopIndex < 3) return NaN;
+                    const s = (tA - 0.8) / 0.2;
+                    const pts = [-1.8, -1.3, -1.7, -1.8];
+                    const i = Math.floor(s * 3);
+                    const f = (s * 3) % 1;
+                    return scale * (pts[i] + (pts[i+1] - pts[i]) * f);
+                }
+            }
+        },
+        y: (t, loopIndex = 0) => {
+            const scale = 0.9;
+            const heartEndT = 1.4 * Math.PI;
+            const arrowStartT = 1.6 * Math.PI;
+
+            if (t <= heartEndT) {
+                const tH = (t / heartEndT) * 2 * Math.PI;
+                return scale * (13 * Math.cos(tH) - 5 * Math.cos(2*tH) - 2 * Math.cos(3*tH) - Math.cos(4*tH)) / 10;
+            } else if (t < arrowStartT) {
+                return NaN;
+            } else {
+                if (loopIndex < 2) return NaN;
+                const tA = (t - arrowStartT) / (2 * Math.PI - arrowStartT);
+                if (tA < 0.8) {
+                    const s = tA / 0.8;
+                    return scale * (1.8 - 2.8 * s);
+                } else {
+                    if (loopIndex < 3) return NaN;
+                    const s = (tA - 0.8) / 0.2;
+                    const pts = [-1.0, -0.6, -1.5, -1.0];
+                    const i = Math.floor(s * 3);
+                    const f = (s * 3) % 1;
+                    return scale * (pts[i] + (pts[i+1] - pts[i]) * f);
+                }
+            }
+        },
+        formula: 'The Target → The Aim → The Hit → Eternal',
+        latex: '\\text{Cupid: } \\vec{H}(t) + \\vec{A}(s)',
+        phases: [
+            "Cupid's Shot",
+            "The Target",
+            "The Aim",
+            "The Hit",
+            "Eternal Love"
+        ],
+        tRange: { min: 0, max: 2 * Math.PI },
+        viewBox: { xMin: -2.5, xMax: 2.5, yMin: -2.0, yMax: 2.5 },
+        audioScale: 150,
+        baseFreq: 200
+    },
     // ========== 🌸 CURVES (유명한 곡선 & 하트 시리즈) ==========
+    cupidHeart: {
+        category: 'curves',
+        name: 'Cupid Heart',
+        type: 'parametric',
+        x: (t) => {
+            const scale = 0.9;
+            const hEnd = 1.4 * Math.PI; 
+            const aStart = 1.6 * Math.PI;
+            if (t <= hEnd) {
+                const tH = (t / hEnd) * 2 * Math.PI;
+                return scale * (16 * Math.pow(Math.sin(tH), 3) / 10);
+            } else if (t < aStart) {
+                return NaN;
+            } else {
+                const tA = (t - aStart) / (2 * Math.PI - aStart);
+                if (tA < 0.8) {
+                    return scale * (2.2 - 4.0 * (tA / 0.8));
+                } else {
+                    const s = (tA - 0.8) / 0.2;
+                    // Triangle vertices: [Left-Bottom, Top(Center), Right-Bottom, Back-to-Start]
+                    const pts = [-1.8, -1.8, -1.6, -1.8]; 
+                    const i = Math.min(2, Math.floor(s * 3)); 
+                    const f = (s * 3) % 1;
+                    return scale * (pts[i] + (pts[i+1] - pts[i]) * f);
+                }
+            }
+        },
+        y: (t) => {
+            const scale = 0.9;
+            const hEnd = 1.4 * Math.PI;
+            const aStart = 1.6 * Math.PI;
+            if (t <= hEnd) {
+                const tH = (t / hEnd) * 2 * Math.PI;
+                return scale * (13 * Math.cos(tH) - 5 * Math.cos(2*tH) - 2 * Math.cos(3*tH) - Math.cos(4*tH)) / 10;
+            } else if (t < aStart) {
+                return NaN;
+            } else {
+                const tA = (t - aStart) / (2 * Math.PI - aStart);
+                if (tA < 0.8) {
+                    return scale * (1.8 - 2.8 * (tA / 0.8));
+                } else {
+                    const s = (tA - 0.8) / 0.2;
+                    // Triangle vertices: [Left-Bottom, Top(Center), Right-Bottom, Back-to-Start]
+                    const pts = [-1.0, -0.8, -1.0, -1.0];
+                    const i = Math.min(2, Math.floor(s * 3)); 
+                    const f = (s * 3) % 1;
+                    return scale * (pts[i] + (pts[i+1] - pts[i]) * f);
+                }
+            }
+        },
+        formula: 'Cupid Stroke (Complete)',
+        latex: '\\text{Cupid Heart: } \\vec{H}(t) \\cup \\vec{A}(t)',
+        tRange: { min: 0, max: 2 * Math.PI },
+        viewBox: { xMin: -2.5, xMax: 2.5, yMin: -2.0, yMax: 2.5 },
+        audioScale: 150,
+        baseFreq: 200
+    },
+    cupidArrowOnly: {
+        category: 'curves',
+        name: 'Cupid Arrow',
+        type: 'parametric',
+        x: (t) => {
+            const scale = 1.0;
+            const tA = t / (2 * Math.PI);
+            if (tA < 0.8) {
+                return scale * (1.8 - 3.6 * (tA / 0.8));
+            } else {
+                const s = (tA - 0.8) / 0.2;
+                const pts = [-1.8, -1.8, -1.6, -1.8];
+                const i = Math.min(2, Math.floor(s * 3));
+                const f = (s * 3) % 1;
+                return scale * (pts[i] + (pts[i+1] - pts[i]) * f);
+            }
+        },
+        y: (t) => {
+            const scale = 1.0;
+            const tA = t / (2 * Math.PI);
+            if (tA < 0.8) {
+                return scale * (1.4 - 2.4 * (tA / 0.8));
+            } else {
+                const s = (tA - 0.8) / 0.2;
+                const yPts = [-1.0, -0.8, -1.0, -1.0];
+                const i = Math.min(2, Math.floor(s * 3));
+                const f = (s * 3) % 1;
+                return scale * (yPts[i] + (yPts[i+1] - yPts[i]) * f);
+            }
+        },
+        formula: 'Cupid Arrow (Independent)',
+        latex: '\\vec{A}(t) = \\text{Shaft} + \\text{Head}',
+        tRange: { min: 0, max: 2 * Math.PI },
+        viewBox: { xMin: -2.5, xMax: 2.5, yMin: -2.5, yMax: 2.5 },
+        audioScale: 150,
+        baseFreq: 180
+    },
     loveHeart: {
         category: 'curves',
         name: 'Love Heart',

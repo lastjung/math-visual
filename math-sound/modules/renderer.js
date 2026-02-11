@@ -202,7 +202,10 @@ function drawParametricCurveInternal(funcData, width, height, progress) {
             y = funcData.y(t, state.autoLoopCount);
         } catch (e) { continue; }
 
-        if (!isFinite(x) || isNaN(x) || !isFinite(y) || isNaN(y)) continue;
+        if (!isFinite(x) || isNaN(x) || !isFinite(y) || isNaN(y)) {
+            isFirst = true;
+            continue;
+        }
 
         const canvasX = ((x - xMin) / xRange) * width;
         const canvasY = ((yMax - y) / yRange) * height;
@@ -303,33 +306,57 @@ export function animate() {
     if (!audioContext || state.audioStartTime === null) return;
 
     const isAni = funcData.category === 'ani';
-    const drawDuration = 4.0; // 실제 선을 긋는 시간
-    const loopDuration = 4.5; // 4초 드로잉 + 0.5초 여운
+    const introDuration = 1.5;
+    const regularDuration = 4.5;
+    const introDraw = 1.0;
+    const regularDraw = 4.0;
     
     const elapsed = audioContext.currentTime - state.audioStartTime;
-    // 4초가 넘어가면 드로잉은 1.0(완성)에서 멈춤
-    const newProgress = Math.min(1.0, (elapsed % (loopDuration / state.speed)) / (drawDuration / state.speed));
-    const currentTotalLoop = Math.floor(elapsed / (loopDuration / state.speed));
+    const scaledElapsed = elapsed * state.speed;
 
-    // Ani 카테고리는 기본적으로 5단계를 모두 보여주도록 설정
-    if (isAni && !state.isAutoPlaying) {
-        state.autoTargetCount = 5;
+    let newProgress, currentTotalLoop;
+    if (isAni && funcData.phases) {
+        if (scaledElapsed < introDuration) {
+            currentTotalLoop = 0;
+            newProgress = Math.min(1.0, scaledElapsed / introDraw);
+        } else {
+            const adjT = scaledElapsed - introDuration;
+            currentTotalLoop = 1 + Math.floor(adjT / regularDuration);
+            newProgress = Math.min(1.0, (adjT % regularDuration) / regularDraw);
+        }
+    } else {
+        const loopDur = 4.0;
+        newProgress = (scaledElapsed % loopDur) / loopDur;
+        currentTotalLoop = Math.floor(scaledElapsed / loopDur);
+    }
+
+    // Ani 카테고리는 자동 재생 시에도 모든 단계(phases)를 다 보여준 후 넘어가도록 설정
+    const totalPhases = (isAni && funcData.phases) ? funcData.phases.length : 1;
+    const totalDuration = isAni ? (introDuration + regularDuration * (totalPhases - 1)) : 4.0;
+    
+    if (isAni) {
+        state.autoTargetCount = totalPhases;
     }
 
     // 루프가 넘어갔을 때
     if (currentTotalLoop > state.autoLoopCount) {
         state.autoLoopCount = currentTotalLoop;
         
-        // 지정된 루프 횟수(Ani는 5회, 일반은 1회 이상) 도달 시 정지
-        const target = (isAni && !state.isAutoPlaying) ? 5 : state.autoTargetCount;
-        if (state.autoLoopCount >= target) {
+        // 지정된 루프 횟수 도달 시 정지 (Ani는 항상 전체 단계를 보장)
+        const target = isAni ? totalPhases : state.autoTargetCount;
+        if (state.autoLoopCount >= target || (isAni && scaledElapsed >= totalDuration)) {
             state.isPlaying = false;
             stopSoundCallback(); // 오디오 즉시 중단
             
             if (isAni && !state.isAutoPlaying) {
                 // 🎨 Ani: 화면은 완성 상태(1.0)로 마지막 모습 유지
                 state.drawProgress = 1.0;
+                // 마지막 텍스트 인덱스 강제 (phases가 있는 경우)
+                if (funcData.phases) {
+                    state.autoLoopCount = funcData.phases.length - 1;
+                }
                 cancelAnimationFrame(state.animationId);
+                drawStaticGraph(); // 최종 고정 화면 렌더링
                 return;
             }
 
@@ -358,21 +385,16 @@ export function animate() {
     // 4. Draw Point for main curve
     drawLayerPoint(funcData, width, height, state.drawProgress, false);
 
-    // 5. Draw Love Phase Text (for stepsOfLove)
-    if (state.currentFunction === 'stepsOfLove') {
-        const phases = [
-            "4 Steps of Love",
-            "Interest",
-            "Flutter",
-            "Passion",
-            "Conviction"
-        ];
+    // 5. Draw Sequence Phase Text (for 'ani' category)
+    if (funcData.phases) {
+        const phases = funcData.phases;
         // 재생 완료 후에도 마지막 텍스트 유지를 위해 루프 인덱스 계산
-        const loopIdx = (state.drawProgress >= 1.0 && !state.isPlaying) ? 4 : Math.min(state.autoLoopCount, 4);
+        const maxIdx = phases.length - 1;
+        const loopIdx = (state.drawProgress >= 1.0 && !state.isPlaying) ? maxIdx : Math.min(state.autoLoopCount, maxIdx);
         const text = phases[loopIdx];
         
         graphCtx.save();
-        // 인트로는 더 크게 강조
+        // 0번 인덱스(타이틀)는 더 크게 강조
         graphCtx.font = loopIdx === 0 ? "bold 32px 'Inter', sans-serif" : "bold 24px 'Inter', sans-serif";
         graphCtx.textAlign = "center";
         graphCtx.textBaseline = "middle";
@@ -385,7 +407,7 @@ export function animate() {
         graphCtx.lineWidth = 4;
         
         const centerX = width / 2;
-        // 하트 중앙 y좌표 계산
+        // 하트 중앙 y좌표 계산 (90% 크기 기준 조정)
         const centerY = ((yMax - 1.0) / (yMax - yMin)) * height;
         
         graphCtx.strokeText(text, centerX, centerY);
