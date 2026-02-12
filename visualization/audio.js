@@ -43,6 +43,24 @@ class AudioManager {
         });
     }
 
+    pause() {
+        this.fadeOut(() => {
+            this.audio.pause();
+        });
+    }
+
+    resume() {
+        if (this.isMuted || !this.currentTrack) return;
+        this.audio.play().then(() => {
+            this.fadeIn();
+        }).catch(() => {});
+    }
+
+    syncWithPlaybackState(isRunning) {
+        if (isRunning) this.resume();
+        else this.pause();
+    }
+
     toggleMute() {
         this.isMuted = !this.isMuted;
         if (this.isMuted) {

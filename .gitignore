@@ -1,0 +1,22 @@
+# Node / package managers
+node_modules/
+
+# Build and cache
+.cache/
+node_modules/.cache/
+dist/
+build/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# OS / editor noise
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+

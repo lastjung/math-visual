@@ -6,6 +6,11 @@
  */
 
 const GoldenSpiralCase = {
+    PHI: (1 + Math.sqrt(5)) / 2,
+    DEFAULT_SPEED: 0.006,
+    MIN_CAMERA_SCALE: 0.00000005,
+    MAX_CAMERA_SCALE: 200,
+
     canvas: null,
     ctx: null,
     animationId: null,
@@ -16,8 +21,8 @@ const GoldenSpiralCase = {
     squares: [],
     
     // Config
-    maxSteps: 1000,     // Effectively Infinite
-    speed: 0.006, 
+    maxSteps: Number.POSITIVE_INFINITY,
+    speed: 0.006,
     musicTrack: 'assets/music/bgm/Math_09_Fibonacci_Golden_Ratio.mp3',
     
     // Expanded Pastel Palette (12 colors for variety)
@@ -43,6 +48,7 @@ const GoldenSpiralCase = {
     targetScale: 1,
     targetX: 0,
     targetY: 0,
+    lastTargetScale: 1,
 
     init() {
         this.canvas = document.getElementById('mathCanvas');
@@ -78,7 +84,9 @@ const GoldenSpiralCase = {
         this.step = 0;
         this.progress = 0;
         this.squares = [];
-        this.speed = 0.006; // Reset speed as well
+        if (typeof this.speed !== 'number' || Number.isNaN(this.speed)) {
+            this.speed = this.DEFAULT_SPEED;
+        }
         
         // Initial Square
         this.squares.push({
@@ -98,6 +106,7 @@ const GoldenSpiralCase = {
         this.targetScale = initialScale;
         this.targetX = -5;
         this.targetY = -5;
+        this.lastTargetScale = initialScale;
     },
 
     resize() {
@@ -213,8 +222,8 @@ const GoldenSpiralCase = {
             this.targetScale = (minDim * 0.45) / nextSize;
         }
         
-        // Start close - Don't zoom out for the first few steps
-        if (this.step < 4) {
+        // Start close - begin zooming out earlier (from step 3)
+        if (this.step < 3) {
              this.targetScale = minDim / 25.0; 
         }
     },
@@ -269,20 +278,42 @@ const GoldenSpiralCase = {
              const minDim = Math.min(width, height);
              const lastSq = this.squares[this.squares.length - 1];
              if (lastSq) {
-                 // Golden Ratio Growth Simulation: Size * 1.618^progress
-                 // This perfectly matches the next square's size when progress reaches 1.0
-                 const growth = Math.pow(1.618, this.progress);
+                 // Ease zoom-out after long runs so camera does not outrun square reveal.
+                 let zoomProgressScale = 1.0;
+                 let visibleRatio = 0.45;
+                 if (this.step > 600) {
+                     zoomProgressScale = 0.68;
+                     visibleRatio = 0.53;
+                 } else if (this.step > 300) {
+                     zoomProgressScale = 0.78;
+                     visibleRatio = 0.50;
+                 }
+
+                 const growth = Math.pow(this.PHI, this.progress * zoomProgressScale);
                  const smoothSize = lastSq.size * growth;
                  
                  // Target: Keep visual size constant
-                 this.targetScale = (minDim * 0.45) / smoothSize;
+                 const rawTargetScale = (minDim * visibleRatio) / smoothSize;
+
+                 // Stabilize late zoom:
+                 // 1) prevent zoom-in bounce (target increasing)
+                 // 2) cap zoom-out speed per frame
+                 let target = Math.min(rawTargetScale, this.lastTargetScale);
+                 if (this.step > 300) {
+                     const maxZoomOutPerFrame = this.step > 600 ? 0.9985 : 0.997;
+                     const floorTarget = this.lastTargetScale * maxZoomOutPerFrame;
+                     target = Math.max(target, floorTarget);
+                 }
+                 this.targetScale = target;
+                 this.lastTargetScale = target;
              }
-             lerp = 0.1; // Faster response
+             lerp = this.step > 600 ? 0.055 : (this.step > 300 ? 0.07 : 0.1);
         }
 
         this.cameraScale += (this.targetScale - this.cameraScale) * lerp;
         this.cameraX += (this.targetX - this.cameraX) * lerp;
         this.cameraY += (this.targetY - this.cameraY) * lerp;
+        this.cameraScale = Math.max(this.MIN_CAMERA_SCALE, Math.min(this.MAX_CAMERA_SCALE, this.cameraScale));
 
         ctx.save();
         ctx.translate(width/2, height/2);
@@ -290,8 +321,8 @@ const GoldenSpiralCase = {
         ctx.translate(this.cameraX, this.cameraY);
         
         // Adaptive Line Width
-        const baseLW = 2.0 / this.cameraScale;
-        const arcLW = 2.5 / this.cameraScale;
+        const baseLW = Math.max(0.25, Math.min(8, 2.0 / this.cameraScale));
+        const arcLW = Math.max(0.3, Math.min(10, 2.5 / this.cameraScale));
 
         // Draw Squares
         ctx.lineJoin = 'miter';

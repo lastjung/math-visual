@@ -10,7 +10,7 @@
   --deep-blue: #27455c;
 
   /* Fonts */
-  --font-heading: "Georgia", serif;
+  --font-heading: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
   --font-body: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
 
   /* Layout */
@@ -59,29 +59,71 @@ header {
 
 h1 {
   font-family: var(--font-heading);
-  font-size: 3rem;
+  font-size: 2.2rem;
+  font-weight: 700;
+  line-height: 1.2;
   margin-bottom: 12px;
   color: var(--deep-blue);
 }
 
 p.subtitle {
-  font-size: 1.2rem;
+  font-size: 1.05rem;
   color: var(--brilliant-text-muted);
 }
 
 /* Case Selection Tabs */
 .case-tabs {
+    width: 100%;
+    max-width: 980px;
     display: flex;
-    gap: 12px;
-    margin-bottom: 20px;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 12px;
+    position: sticky;
+    top: 10px;
+    z-index: 20;
+}
+
+.tab-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(255, 255, 255, 0.88);
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 8px 10px;
+    backdrop-filter: blur(8px);
+}
+
+.group-label {
+    min-width: 84px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--brilliant-text-muted);
+}
+
+.tab-row {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    scrollbar-width: thin;
+    padding-bottom: 2px;
 }
 
 .tab {
-    padding: 10px 20px;
+    padding: 10px 14px;
+    height: 36px;
+    display: inline-flex;
+    align-items: center;
     background: var(--white);
     border-radius: var(--radius-pill);
     cursor: pointer;
     font-weight: 600;
+    font-size: 0.82rem;
+    line-height: 1;
+    white-space: nowrap;
     color: var(--deep-blue);
     border: 1px solid #e2e8f0;
     transition: all 0.2s;
@@ -136,19 +178,35 @@ canvas {
   height: 100%;
 }
 
-/* Control Panel */
+/* Control Holders */
+.controls-shell {
+  display: none;
+}
+
 .controls {
-  display: none; /* Hidden by default (mobile) */
+  display: none;
   flex-direction: column;
   gap: 24px;
 }
 
+.controls.active {
+  display: flex;
+}
+
 @media (min-width: 1025px) {
-    .controls {
-        display: flex !important;
+    .controls-shell {
+        display: block;
         border-left: 1px solid #edf2f7;
         padding-left: 32px;
         min-width: 340px;
+    }
+
+    .controls {
+        display: none !important;
+    }
+
+    .controls.active {
+        display: flex !important;
     }
 }
 
@@ -267,12 +325,83 @@ body.recording-mode .canvas-container {
 
 /* Responsive for Shorts (Vertical View) */
 @media (max-width: 768px) {
+  body {
+    display: block;
+    min-height: auto;
+    height: auto;
+    overflow-y: auto;
+  }
+
+  .container {
+    max-width: 100vw;
+    width: 100%;
+    margin: 0;
+    padding: 12px 10px;
+    gap: 14px;
+    align-items: stretch;
+  }
+
+  .case-tabs {
+    position: static;
+    order: 3;
+    top: auto;
+    max-width: 100%;
+    gap: 8px;
+    margin-top: 10px;
+    margin-bottom: 0;
+  }
+
+  #header {
+    order: 1;
+  }
+
   .dashboard-card {
+    order: 2;
     grid-template-columns: 1fr;
+    padding: 12px;
+    gap: 12px;
+    border-radius: 14px;
+  }
+
+  .tab-group {
+    display: block;
+    padding: 8px;
+  }
+
+  .group-label {
+    display: block;
+    min-width: 0;
+    margin-bottom: 6px;
+    font-size: 0.72rem;
+  }
+
+  .tab-row {
+    gap: 6px;
+  }
+
+  .tab {
+    padding: 9px 12px;
+    height: 34px;
+    font-size: 0.78rem;
   }
 
   h1 {
-    font-size: 2rem;
+    font-size: 1.55rem;
+    line-height: 1.25;
+  }
+
+  p.subtitle {
+    font-size: 0.95rem;
+  }
+
+  .canvas-container {
+    height: auto;
+    aspect-ratio: 1 / 1;
+    max-height: 86vw;
+    border-width: 1px;
+    border-style: solid;
+    border-color: #e5e7eb;
+    border-radius: 10px;
   }
 }
 
@@ -348,6 +477,7 @@ body.hide-ui .canvas-container {
 
 /* Floating Toggle Button */
 #ui-toggle-btn {
+    display: none;
     position: fixed;
     bottom: 20px;
     right: 20px;
@@ -370,7 +500,8 @@ body.hide-ui .canvas-container {
 }
 
 body.hide-ui #ui-toggle-btn {
-    opacity: 0.2;
+    display: block;
+    opacity: 0.85;
 }
 body.hide-ui #ui-toggle-btn:hover {
     opacity: 1;

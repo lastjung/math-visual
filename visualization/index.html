@@ -14,19 +14,29 @@
     <div class="container">
         <!-- Tab Selection -->
         <nav class="case-tabs">
-            <div class="tab active" data-case="golden">Golden Spiral</div>
-            <div class="tab" data-case="rainbow">Rainbow Spiral</div>
-            <div class="tab" data-case="sine">Sine Wave</div>
-            <div class="tab" data-case="hexagon">Hex Grid</div>
-            <div class="tab" data-case="pathfinding">Pathfinding</div>
-            <div class="tab" data-case="damage">Damage Rolls</div>
-            <div class="tab" data-case="circular">Circular Obstacles</div>
-            <div class="tab" data-case="polygon-map">Polygon Map</div>
+            <div class="tab-group" data-group="visual">
+                <span class="group-label">Visual</span>
+                <div class="tab-row">
+                    <div class="tab active" data-case="golden">Golden Spiral</div>
+                    <div class="tab" data-case="rainbow">Rainbow Spiral</div>
+                    <div class="tab" data-case="sine">Sine Wave</div>
+                    <div class="tab" data-case="hexagon">Hex Grid</div>
+                    <div class="tab" data-case="damage">Damage Rolls</div>
+                </div>
+            </div>
+            <div class="tab-group" data-group="interactive">
+                <span class="group-label">Interactive</span>
+                <div class="tab-row">
+                    <div class="tab" data-case="pathfinding">Pathfinding</div>
+                    <div class="tab" data-case="circular">Circular Obstacles</div>
+                    <div class="tab" data-case="polygon-map">Polygon Map</div>
+                </div>
+            </div>
         </nav>
 
         <header id="header">
             <h1 id="main-title">Fibonacci Golden Spiral</h1>
-            <p class="subtitle" id="main-subtitle">The infinite beauty of nature's mathematical expansion.</p>
+            <p class="subtitle" id="main-subtitle">A spiral made from Fibonacci numbers.</p>
         </header>
 
         <main class="dashboard-card">
@@ -35,9 +45,14 @@
                 <canvas id="mathCanvas"></canvas>
             </div>
 
-            <!-- Controls (Dynamic) -->
-            <aside class="controls">
-                <!-- Dynamic Controls -->
+            <!-- Controls Holders (Dynamic) -->
+            <aside class="controls-shell">
+                <section id="display-controls" class="controls active" data-mode="display">
+                    <!-- Display mode controls -->
+                </section>
+                <section id="interactive-controls" class="controls" data-mode="interactive">
+                    <!-- Interactive mode controls -->
+                </section>
             </aside>
         </main>
     </div>
@@ -74,36 +89,36 @@
                 const caseName = tab.getAttribute('data-case');
                 if (caseName === 'sine') {
                     document.getElementById('main-title').textContent = 'The Geometry of Sine';
-                    document.getElementById('main-subtitle').textContent = 'How circular motion transforms into beautiful waves.';
-                    Core.loadCase(SineWaveCase);
+                    document.getElementById('main-subtitle').textContent = 'A circle turning into a wave.';
+                    Core.loadCase(SineWaveCase, { mode: 'display' });
                 } else if (caseName === 'rainbow') {
                     document.getElementById('main-title').textContent = 'Rainbow Spiral';
-                    document.getElementById('main-subtitle').textContent = 'A colorful feast blooming from the Golden Angle.';
-                    Core.loadCase(RainbowSpiralCase);
+                    document.getElementById('main-subtitle').textContent = 'A colorful spiral from a simple angle rule.';
+                    Core.loadCase(RainbowSpiralCase, { mode: 'display' });
                 } else if (caseName === 'golden') {
                     document.getElementById('main-title').textContent = 'Fibonacci Golden Spiral';
-                    document.getElementById('main-subtitle').textContent = "The infinite beauty of nature's mathematical expansion.";
-                    Core.loadCase(GoldenSpiralCase);
+                    document.getElementById('main-subtitle').textContent = 'A spiral made from Fibonacci numbers.';
+                    Core.loadCase(GoldenSpiralCase, { mode: 'display' });
                 } else if (caseName === 'hexagon') {
                     document.getElementById('main-title').textContent = 'Hexagonal Grid';
-                    document.getElementById('main-subtitle').textContent = 'Exploring the mathematical beauty of hexagonal tiling.';
-                    Core.loadCase(HexagonGridCase);
+                    document.getElementById('main-subtitle').textContent = 'A pattern made of repeating hexagons.';
+                    Core.loadCase(HexagonGridCase, { mode: 'display' });
                 } else if (caseName === 'pathfinding') {
                     document.getElementById('main-title').textContent = 'A* Pathfinding';
-                    document.getElementById('main-subtitle').textContent = 'Finding the shortest path in a hexagonal maze.';
-                    Core.loadCase(PathfindingCase);
+                    document.getElementById('main-subtitle').textContent = 'Find the shortest path in a hex maze.';
+                    Core.loadCase(PathfindingCase, { mode: 'interactive' });
                 } else if (caseName === 'damage') {
                     document.getElementById('main-title').textContent = 'Probability: Damage Rolls';
-                    document.getElementById('main-subtitle').textContent = 'Exploring dice probability distributions and variance.';
-                    Core.loadCase(DamageRollsCase);
+                    document.getElementById('main-subtitle').textContent = 'See how dice rolls spread over many tries.';
+                    Core.loadCase(DamageRollsCase, { mode: 'display' });
                 } else if (caseName === 'circular') {
                     document.getElementById('main-title').textContent = 'Circular Obstacle Pathfinding';
-                    document.getElementById('main-subtitle').textContent = 'Finding the shortest path around round obstacles.';
-                    Core.loadCase(CircularPathfindingCase);
+                    document.getElementById('main-subtitle').textContent = 'Find a path around round obstacles.';
+                    Core.loadCase(CircularPathfindingCase, { mode: 'interactive' });
                 } else if (caseName === 'polygon-map') {
                     document.getElementById('main-title').textContent = 'Polygonal Map Generation';
-                    document.getElementById('main-subtitle').textContent = 'Procedural island generation using Voronoi diagrams.';
-                    Core.loadCase(PolygonMapCase);
+                    document.getElementById('main-subtitle').textContent = 'Generate island maps with polygon cells.';
+                    Core.loadCase(PolygonMapCase, { mode: 'interactive' });
                 }
             });
         });
@@ -111,7 +126,7 @@
         // Load Default Case (Golden Spiral)
         window.onload = () => {
             if (typeof GoldenSpiralCase !== 'undefined') {
-                Core.loadCase(GoldenSpiralCase);
+                Core.loadCase(GoldenSpiralCase, { mode: 'display' });
             } else {
                 console.error("GoldenSpiralCase failed to load!");
             }

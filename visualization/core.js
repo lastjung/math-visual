@@ -10,6 +10,7 @@ const Core = {
     IDLE_TIMEOUT: 60 * 1000,
     isRecordingMode: false,
     isRunning: true,
+    currentCaseMode: 'display',
 
     init() {
         this.setupUI();
@@ -40,7 +41,7 @@ const Core = {
             dock.innerHTML = `
                 <button class="icon-btn" id="btn-settings" title="Settings">⚙️</button>
                 <button class="icon-btn" id="btn-bgm" title="Music On/Off">🎵</button>
-                <button class="icon-btn" id="btn-hide-ui" title="Cinematic Mode">👁️</button>
+                <button class="icon-btn" id="btn-hide-ui" title="Enter Full Screen">⤢</button>
                 <div class="dock-divider"></div>
                 <button class="icon-btn" id="btn-reset" title="Reset">↺</button>
                 <button class="play-btn" id="btn-play" title="Play/Pause">
@@ -59,19 +60,24 @@ const Core = {
 
         // 3. UI Toggle Button (for bringing UI back)
         if (!document.getElementById('ui-toggle-btn')) {
-             const existBtn = document.getElementById('ui-toggle-btn');
-             if(existBtn) existBtn.remove();
-             // Logic handled by CSS opacity mainly, but we can add a listener for ESC
+             const btn = document.createElement('button');
+             btn.id = 'ui-toggle-btn';
+             btn.textContent = 'Exit Full Screen';
+             btn.title = 'Exit Full Screen';
+             btn.onclick = () => this.toggleCinematicMode();
+             document.body.appendChild(btn);
         }
+        this.updateCinematicButton();
         
         // Auto-initialize audio on first interaction
         const initAudio = () => {
-             // Play current case's track if available
-             if (this.currentCase && this.currentCase.musicTrack && window.audioManager && window.audioManager.audio.paused) {
+             // Start audio only when the app is running to avoid pause-click race.
+             if (!this.isRunning) return;
+             if (this.currentCase && this.currentCase.musicTrack && window.audioManager && window.audioManager.audio.paused && !window.audioManager.isMuted) {
                  window.audioManager.play(this.currentCase.musicTrack);
+                 document.removeEventListener('click', initAudio);
+                 document.removeEventListener('keydown', initAudio);
              }
-             document.removeEventListener('click', initAudio);
-             document.removeEventListener('keydown', initAudio);
         };
         document.addEventListener('click', initAudio);
         document.addEventListener('keydown', initAudio);
@@ -85,13 +91,16 @@ const Core = {
                 btn.innerHTML = isMuted ? '🔇' : '🎵';
                 btn.style.opacity = isMuted ? '0.5' : '1';
             }
+            if (!isMuted && this.isRunning && this.currentCase && this.currentCase.musicTrack) {
+                window.audioManager.play(this.currentCase.musicTrack);
+            }
         }
     },
 
     updateControls() {
         // Find active container
         const isDesktop = window.innerWidth > 1024;
-        const panel = isDesktop ? document.querySelector('.controls') : document.getElementById('settings-panel');
+        const panel = isDesktop ? document.querySelector('.controls.active') : document.getElementById('settings-panel');
         if (!panel) return;
         
         panel.innerHTML = ''; // Clear existing content
@@ -106,12 +115,16 @@ const Core = {
             
             globalGroup.innerHTML = `
                 <div class="setting-header" style="margin-bottom:12px;">
-                    <label>Master Controls</label>
+                    <label>${this.currentCaseMode === 'interactive' ? 'Interactive Controls' : 'Master Controls'}</label>
                 </div>
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px;">
-                    <button class="btn-primary" id="sidebar-reset" style="padding:10px 0; font-size:0.8rem;">↺ Reset</button>
+                    <button class="btn-primary" id="sidebar-reset" style="padding:10px 0; font-size:0.8rem;">
+                        ${this.currentCaseMode === 'interactive' ? '↺ Rebuild' : '↺ Reset'}
+                    </button>
                     <button class="btn-primary" id="sidebar-play" style="padding:10px 0; font-size:0.8rem;">
-                        ${this.isRunning ? '❚❚ Pause' : '▶ Resume'}
+                        ${this.currentCaseMode === 'interactive'
+                            ? (this.isRunning ? '■ Stop' : '▶ Run')
+                            : (this.isRunning ? '❚❚ Pause' : '▶ Resume')}
                     </button>
                 </div>
                 <button class="btn-secondary" id="sidebar-bgm" style="width:100%; margin-top:8px; font-size:0.8rem;">
@@ -178,9 +191,26 @@ const Core = {
                     select.onchange = (e) => {
                         if (ctrl.onChange) ctrl.onChange(e.target.value);
                     };
+                } else if (ctrl.type === 'info') {
+                    row.innerHTML = `
+                        <div class="setting-header">
+                            <label>${ctrl.label || 'Info'}</label>
+                            <span class="setting-value">${ctrl.value || ''}</span>
+                        </div>
+                    `;
+                    panel.appendChild(row);
                 }
             });
         }
+    },
+
+    setCaseMode(mode = 'display') {
+        this.currentCaseMode = mode === 'interactive' ? 'interactive' : 'display';
+        const displayPanel = document.getElementById('display-controls');
+        const interactivePanel = document.getElementById('interactive-controls');
+        if (displayPanel) displayPanel.classList.toggle('active', this.currentCaseMode === 'display');
+        if (interactivePanel) interactivePanel.classList.toggle('active', this.currentCaseMode === 'interactive');
+        document.body.setAttribute('data-case-mode', this.currentCaseMode);
     },
 
     toggleSettings() {
@@ -190,8 +220,22 @@ const Core = {
 
     toggleCinematicMode() {
         document.body.classList.toggle('hide-ui');
+        this.updateCinematicButton();
         // Ensure dock is hidden/shown (handled by CSS, but resizing might be needed)
         if (this.currentCase && this.currentCase.resize) this.currentCase.resize();
+    },
+
+    updateCinematicButton() {
+        const isHidden = document.body.classList.contains('hide-ui');
+        const dockBtn = document.getElementById('btn-hide-ui');
+        const exitBtn = document.getElementById('ui-toggle-btn');
+        if (dockBtn) {
+            dockBtn.textContent = isHidden ? '⤡' : '⤢';
+            dockBtn.title = isHidden ? 'Exit Full Screen' : 'Enter Full Screen';
+        }
+        if (exitBtn) {
+            exitBtn.style.display = isHidden ? 'block' : 'none';
+        }
     },
 
     resetCase() {
@@ -200,6 +244,9 @@ const Core = {
             // Auto-play on reset unless case forbids it
             if (!this.isRunning && this.currentCase.autoPlayOnReset !== false) {
                  this.togglePlay(); 
+            }
+            if (window.audioManager) {
+                window.audioManager.syncWithPlaybackState(this.isRunning);
             }
         }
     },
@@ -217,6 +264,18 @@ const Core = {
             btn.classList.add('paused');
             if (this.currentCase && this.currentCase.stop) this.currentCase.stop();
         }
+        if (window.audioManager) {
+            if (this.isRunning) {
+                if (!window.audioManager.currentTrack && this.currentCase && this.currentCase.musicTrack && !window.audioManager.isMuted) {
+                    window.audioManager.play(this.currentCase.musicTrack);
+                } else {
+                    window.audioManager.syncWithPlaybackState(true);
+                }
+            } else {
+                window.audioManager.syncWithPlaybackState(false);
+            }
+        }
+        this.updateControls();
     },
 
     // --- Idle & Global ---
@@ -276,21 +335,12 @@ const Core = {
         window.dispatchEvent(new Event('mousedown')); 
     },
 
-    loadCase(caseInstance) {
+    loadCase(caseInstance, options = {}) {
         if (this.currentCase && this.currentCase.destroy) {
             this.currentCase.destroy();
         }
-        
-        // Desktop sidebar logic: Force layout update on load
-        const legacyControls = document.querySelector('.controls');
-        if (legacyControls) {
-            legacyControls.style.display = (window.innerWidth > 1024) ? 'flex' : 'none';
-        }
-        
-        const dashboardCard = document.querySelector('.dashboard-card');
-        if (dashboardCard) {
-            dashboardCard.style.gridTemplateColumns = (window.innerWidth > 1024) ? '1fr 320px' : '1fr';
-        }
+
+        this.setCaseMode(options.mode || 'display');
 
         this.currentCase = caseInstance;
         this.currentCase.init();
@@ -312,6 +362,9 @@ const Core = {
         }
 
         this.currentCase.start();
+        if (window.audioManager) {
+            window.audioManager.syncWithPlaybackState(this.isRunning);
+        }
     }
 };
 
