@@ -3,11 +3,15 @@ import { state, elements, ctx } from './modules/state.js';
 import { playSound, stopSound, stopAllSounds, stopPreview } from './modules/audio.js';
 import { drawStaticGraph, animate, setRendererCallbacks } from './modules/renderer.js';
 
+const FAVORITES_KEY = 'math-sound:favorites';
+let favoriteSet = new Set();
+
 // ==========================================
 // 초기화
 // ==========================================
 function init() {
     setupCanvas();
+    loadFavorites();
     renderCategoryTabs();
     setupEventListeners();
     setRendererCallbacks(updateTimer, playNextAuto, stopPreview);
@@ -16,6 +20,8 @@ function init() {
     selectCategory('waves');
     selectFunction('sine');
     drawStaticGraph();
+
+    if (elements.slidersPanel) elements.slidersPanel.classList.add('collapsed');
 }
 
 function updateTimer() {
@@ -56,6 +62,8 @@ function setupEventListeners() {
     elements.playBtn.addEventListener('click', togglePlay);
     elements.stopBtn.addEventListener('click', stop);
     elements.resetBtn.addEventListener('click', reset);
+    if (elements.prevBtn) elements.prevBtn.addEventListener('click', () => navigateFunction(-1));
+    if (elements.nextBtn) elements.nextBtn.addEventListener('click', () => navigateFunction(1));
     
     if (elements.autoBtn) elements.autoBtn.addEventListener('click', toggleAutoPlay);
     
@@ -123,6 +131,27 @@ function setupEventListeners() {
         });
     });
 
+    if (elements.functionSearch) {
+        elements.functionSearch.addEventListener('input', (e) => {
+            state.searchQuery = e.target.value.toLowerCase().trim();
+            renderFunctionButtons(state.currentCategory);
+        });
+    }
+
+    if (elements.favoritesToggle) {
+        elements.favoritesToggle.addEventListener('click', () => {
+            state.favoritesOnly = !state.favoritesOnly;
+            elements.favoritesToggle.classList.toggle('active', state.favoritesOnly);
+            renderFunctionButtons(state.currentCategory);
+        });
+    }
+
+    if (elements.slidersToggle && elements.slidersPanel) {
+        elements.slidersToggle.addEventListener('click', () => {
+            elements.slidersPanel.classList.toggle('collapsed');
+        });
+    }
+
     window.addEventListener('resize', () => {
         setupCanvas();
         if (!state.isPlaying) drawStaticGraph();
@@ -144,12 +173,13 @@ function renderCategoryTabs() {
     if (!container) return;
     
     container.innerHTML = '';
-    Object.keys(CATEGORIES).forEach(key => {
+    const ordered = [{ key: 'all', name: '✨ All' }, ...Object.keys(CATEGORIES).map(key => ({ key, name: CATEGORIES[key].name }))];
+    ordered.forEach(({ key, name }) => {
         const cat = CATEGORIES[key];
         const btn = document.createElement('button');
         btn.className = 'category-tab' + (key === state.currentCategory ? ' active' : '');
         btn.dataset.category = key;
-        btn.textContent = cat.name;
+        btn.textContent = name || cat?.name || key;
         btn.addEventListener('click', () => selectCategory(key));
         container.appendChild(btn);
     });
@@ -163,7 +193,7 @@ function selectCategory(category, autoSelectFirst = false) {
     elements.categoryTabs.forEach(tab => tab.classList.toggle('active', tab.dataset.category === category));
     renderFunctionButtons(category);
     if (autoSelectFirst) {
-        const funcs = CATEGORIES[category].functions;
+        const funcs = getCategoryFunctions(category);
         if (funcs.length > 0 && !funcs.includes(state.currentFunction)) selectFunction(funcs[0]);
     }
 }
@@ -171,28 +201,77 @@ function selectCategory(category, autoSelectFirst = false) {
 function renderFunctionButtons(category) {
     const container = elements.functionSelector;
     container.innerHTML = '';
-    CATEGORIES[category].functions.forEach(funcKey => {
+    if (!container) return;
+    container.dataset.category = category;
+
+    const funcKeys = getCategoryFunctions(category)
+        .filter(key => matchesSearch(key))
+        .filter(key => !state.favoritesOnly || favoriteSet.has(key));
+
+    if (funcKeys.length === 0) {
+        const empty = document.createElement('div');
+        empty.className = 'empty-state';
+        empty.textContent = 'No matches. Try another keyword or clear filters.';
+        container.appendChild(empty);
+        return;
+    }
+
+    const fragment = document.createDocumentFragment();
+    funcKeys.forEach(funcKey => {
         const func = MATH_FUNCTIONS[funcKey];
-        const btn = document.createElement('button');
-        btn.className = 'func-btn' + (funcKey === state.currentFunction ? ' active' : '');
-        btn.dataset.func = funcKey;
-        btn.textContent = func.name;
-        btn.title = 'Click: Select & Play, Drag: Add Layer';
-        
-        // Make draggable
-        btn.draggable = true;
-        btn.addEventListener('dragstart', (e) => {
+        const card = document.createElement('div');
+        card.className = 'func-card' + (funcKey === state.currentFunction ? ' active' : '');
+        card.dataset.func = funcKey;
+        card.dataset.category = func.category;
+        card.title = 'Click: Select & Play, Drag: Add Layer';
+        card.tabIndex = 0;
+        card.draggable = true;
+
+        const categoryLabel = CATEGORIES[func.category]?.name || func.category;
+        card.innerHTML = `
+            <div class="card-top">
+                <span class="card-title">${func.name}</span>
+                <button class="card-fav ${favoriteSet.has(funcKey) ? 'active' : ''}" title="즐겨찾기">★</button>
+            </div>
+            <div class="card-tags">
+                <span class="tag">${categoryLabel}</span>
+                <span class="tag">${func.type}</span>
+            </div>
+            <div class="card-formula">${func.formula}</div>
+        `;
+
+        card.addEventListener('click', (e) => {
+            const target = e.target;
+            if (target && target.classList.contains('card-fav')) return;
+            selectFunction(funcKey);
+            if (!state.isPlaying) play();
+        });
+
+        card.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                selectFunction(funcKey);
+                if (!state.isPlaying) play();
+            }
+        });
+
+        card.addEventListener('dragstart', (e) => {
             e.dataTransfer.setData('text/plain', funcKey);
             e.dataTransfer.effectAllowed = 'copy';
         });
 
-        btn.addEventListener('click', () => {
-            selectFunction(funcKey);
-            if (!state.isPlaying) play();
-        });
-        
-        container.appendChild(btn);
+        const favBtn = card.querySelector('.card-fav');
+        if (favBtn) {
+            favBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                toggleFavorite(funcKey, favBtn, card);
+            });
+        }
+
+        fragment.appendChild(card);
     });
+
+    container.appendChild(fragment);
 }
 
 /**
@@ -211,16 +290,16 @@ function previewFunction(funcName) {
     }
     
     // Highlight the clicked button as "previewing" if desired
-    document.querySelectorAll('.func-btn').forEach(btn => {
-        btn.style.opacity = btn.dataset.func === funcName ? "1" : "0.7";
-        if (btn.dataset.func === funcName) btn.style.borderColor = "var(--accent-color)";
-        else btn.style.borderColor = "transparent";
+    document.querySelectorAll('.func-card').forEach(card => {
+        card.style.opacity = card.dataset.func === funcName ? "1" : "0.7";
+        if (card.dataset.func === funcName) card.style.borderColor = "var(--accent-color)";
+        else card.style.borderColor = "transparent";
     });
 }
 
 function selectFunction(funcName) {
     state.currentFunction = funcName;
-    document.querySelectorAll('.func-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.func === funcName));
+    document.querySelectorAll('.func-card').forEach(card => card.classList.toggle('active', card.dataset.func === funcName));
     
     const allFuncs = Object.keys(MATH_FUNCTIONS);
     state.functionIndex = allFuncs.indexOf(funcName) + 1;
@@ -236,7 +315,7 @@ function selectFunction(funcName) {
         elements.formulaText.textContent = funcData.formula;
     }
 
-    if (funcData.category !== state.currentCategory) selectCategory(funcData.category);
+    if (funcData.category !== state.currentCategory && state.currentCategory !== 'all') selectCategory(funcData.category);
 
     state.timerStartTime = null;
     elements.currentIndex.textContent = state.functionIndex;
@@ -261,6 +340,47 @@ function navigateFunction(direction) {
     if (newIndex < 0) newIndex = allFuncs.length - 1;
     if (newIndex >= allFuncs.length) newIndex = 0;
     selectFunction(allFuncs[newIndex]);
+}
+
+function getCategoryFunctions(category) {
+    if (category === 'all') return Object.keys(MATH_FUNCTIONS);
+    return CATEGORIES[category]?.functions || [];
+}
+
+function matchesSearch(funcKey) {
+    if (!state.searchQuery) return true;
+    const func = MATH_FUNCTIONS[funcKey];
+    const hay = [
+        func.name,
+        func.formula,
+        func.latex,
+        func.type,
+        func.category
+    ].join(' ').toLowerCase();
+    return hay.includes(state.searchQuery);
+}
+
+function loadFavorites() {
+    try {
+        const raw = localStorage.getItem(FAVORITES_KEY);
+        const list = raw ? JSON.parse(raw) : [];
+        favoriteSet = new Set(Array.isArray(list) ? list : []);
+    } catch (e) {
+        favoriteSet = new Set();
+    }
+}
+
+function saveFavorites() {
+    localStorage.setItem(FAVORITES_KEY, JSON.stringify(Array.from(favoriteSet)));
+}
+
+function toggleFavorite(funcKey, btn, card) {
+    if (favoriteSet.has(funcKey)) favoriteSet.delete(funcKey);
+    else favoriteSet.add(funcKey);
+    saveFavorites();
+    if (btn) btn.classList.toggle('active', favoriteSet.has(funcKey));
+    if (card) card.classList.toggle('favorite', favoriteSet.has(funcKey));
+    if (state.favoritesOnly) renderFunctionButtons(state.currentCategory);
 }
 
 // ==========================================

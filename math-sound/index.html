@@ -24,93 +24,118 @@
             <p class="subtitle">#maths #sound #visualization</p>
         </header>
 
-        <!-- Main Canvas Area -->
-        <div class="canvas-wrapper">
-            <span class="function-title" id="functionTitle">Sine</span>
-            <span class="canvas-clock" id="canvasClock">00:00:00</span>
-            <canvas id="graphCanvas"></canvas>
-            <!-- Axis Labels -->
-            <span class="axis-label y-label">y</span>
-            <span class="axis-label x-label">x</span>
-        </div>
+        <div class="layout">
+            <div class="main-panel">
+                <!-- Main Canvas Area -->
+                <div class="canvas-wrapper">
+                    <span class="function-title" id="functionTitle">Sine</span>
+                    <span class="canvas-clock" id="canvasClock">00:00:00</span>
+                    <canvas id="graphCanvas"></canvas>
+                    <!-- Axis Labels -->
+                    <span class="axis-label y-label">y</span>
+                    <span class="axis-label x-label">x</span>
+                </div>
 
-        <!-- Formula Display -->
-        <div class="formula-display">
-            <span id="formulaText"></span>
-        </div>
+                <!-- Formula Display -->
+                <div class="formula-display">
+                    <span id="formulaText"></span>
+                </div>
 
-        <!-- Waveform Visualization -->
-        <div class="waveform-wrapper">
-            <canvas id="waveformCanvas"></canvas>
-        </div>
+                <!-- Waveform Visualization -->
+                <div class="waveform-wrapper">
+                    <canvas id="waveformCanvas"></canvas>
+                </div>
 
-        <!-- Controls -->
-        <div class="controls">
-            <button id="playBtn" class="control-btn play-btn" title="재생/일시정지">
-                <span class="icon">▶</span>
-            </button>
-            <button id="stopBtn" class="control-btn stop-btn" title="정지">
-                <span class="icon">■</span>
-            </button>
-            <button id="resetBtn" class="control-btn reset-btn" title="리셋">
-                <span class="icon">↺</span>
-            </button>
-            <button id="autoBtn" class="control-btn auto-btn" title="랜덤 재생 (4곡 x 2회)">
-                <span class="icon">🎲</span>
-            </button>
-            <button id="layerBtn" class="control-btn layer-btn" title="레이어 믹서 토글">
-                <span class="icon">🎹</span>
-            </button>
-        </div>
+                <!-- Controls -->
+                <div class="controls">
+                    <button id="prevBtn" class="control-btn prev-btn" title="이전">
+                        <span class="icon">⟨</span>
+                    </button>
+                    <button id="playBtn" class="control-btn play-btn" title="재생/일시정지">
+                        <span class="icon">▶</span>
+                    </button>
+                    <button id="stopBtn" class="control-btn stop-btn" title="정지">
+                        <span class="icon">■</span>
+                    </button>
+                    <button id="resetBtn" class="control-btn reset-btn" title="리셋">
+                        <span class="icon">↺</span>
+                    </button>
+                    <button id="nextBtn" class="control-btn next-btn" title="다음">
+                        <span class="icon">⟩</span>
+                    </button>
+                    <button id="autoBtn" class="control-btn auto-btn" title="랜덤 재생 (4곡 x 2회)">
+                        <span class="icon">🎲</span>
+                    </button>
+                    <button id="layerBtn" class="control-btn layer-btn" title="레이어 믹서 토글">
+                        <span class="icon">🎹</span>
+                    </button>
+                </div>
 
-        <!-- Live Layers (Performance Mixer) -->
-        <div id="mixerPanel" class="mixer-panel hidden">
-            <div class="mixer-header">
-                <h3>Live Mixer</h3>
-                <button id="clearAllBtn" class="clear-all-btn">Clear All</button>
-            </div>
-            <div id="activeLayers" class="active-layers">
-                <!-- Populated by JavaScript -->
-            </div>
-        </div>
+                <!-- Live Layers (Performance Mixer) -->
+                <div id="mixerPanel" class="mixer-panel hidden">
+                    <div class="mixer-header">
+                        <h3>Live Mixer</h3>
+                        <button id="clearAllBtn" class="clear-all-btn">Clear All</button>
+                    </div>
+                    <div id="activeLayers" class="active-layers">
+                        <!-- Populated by JavaScript -->
+                    </div>
+                </div>
 
-        <!-- Category Tabs -->
-        <div class="category-tabs" id="categoryTabs">
-            <!-- Populated by JavaScript -->
-        </div>
-
-        <!-- Function Selector (changes based on category) -->
-        <div class="function-selector" id="functionSelector">
-            <!-- Populated by JavaScript -->
-        </div>
-
-        <!-- Sliders -->
-        <div class="sliders-container">
-            <!-- Zoom Control -->
-            <div class="slider-control zoom-control">
-                <span class="slider-icon">🔍</span>
-                <input type="range" id="zoomSlider" min="50" max="200" value="100">
-                <span id="zoomValue" class="slider-value">100%</span>
             </div>
 
-            <!-- Volume Control -->
-            <div class="slider-control">
-                <span class="slider-icon">🔊</span>
-                <input type="range" id="volumeSlider" min="0" max="100" value="50">
-                <span id="volumeValue" class="slider-value">50%</span>
-            </div>
+            <aside class="menu-panel">
+                <!-- Category Tabs -->
+                <div class="category-tabs" id="categoryTabs">
+                    <!-- Populated by JavaScript -->
+                </div>
 
-            <!-- Speed Control -->
-            <div class="slider-control">
-                <span class="slider-icon">⏱</span>
-                <input type="range" id="speedSlider" min="1" max="10" value="4">
-                <span id="speedValue" class="slider-value">0.8x</span>
-            </div>
-        </div>
+                <!-- Browser Bar -->
+                <div class="browser-bar">
+                    <input id="functionSearch" class="search-input" type="text" placeholder="Search name, formula, tag...">
+                    <button id="favoritesToggle" class="toggle-btn" title="즐겨찾기만 보기">★</button>
+                </div>
 
-        <!-- Function Counter -->
-        <div class="function-counter">
-            <span id="currentIndex">1</span> / <span id="totalCount">26</span> functions
+                <!-- Function Selector (changes based on category) -->
+                <div class="function-selector" id="functionSelector">
+                    <!-- Populated by JavaScript -->
+                </div>
+
+                <!-- Function Counter -->
+                <div class="function-counter">
+                    <span id="currentIndex">1</span> / <span id="totalCount">26</span> functions
+                </div>
+
+                <!-- Sliders (Collapsible) -->
+                <div class="sliders-panel collapsed" id="slidersPanel">
+                    <button id="slidersToggle" class="panel-toggle" title="Toggle controls">
+                        <span>Sliders</span>
+                        <span class="chev">▾</span>
+                    </button>
+                    <div class="sliders-container">
+                        <!-- Zoom Control -->
+                        <div class="slider-control zoom-control">
+                            <span class="slider-icon">🔍</span>
+                            <input type="range" id="zoomSlider" min="50" max="200" value="100">
+                            <span id="zoomValue" class="slider-value">100%</span>
+                        </div>
+
+                        <!-- Volume Control -->
+                        <div class="slider-control">
+                            <span class="slider-icon">🔊</span>
+                            <input type="range" id="volumeSlider" min="0" max="100" value="50">
+                            <span id="volumeValue" class="slider-value">50%</span>
+                        </div>
+
+                        <!-- Speed Control -->
+                        <div class="slider-control">
+                            <span class="slider-icon">⏱</span>
+                            <input type="range" id="speedSlider" min="1" max="10" value="4">
+                            <span id="speedValue" class="slider-value">0.8x</span>
+                        </div>
+                    </div>
+                </div>
+            </aside>
         </div>
     </div>
 
