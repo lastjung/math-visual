@@ -15,8 +15,42 @@ export function initAudio() {
     state.gainNode.gain.setValueAtTime(state.volume, state.audioContext.currentTime);
     state.gainNode.connect(state.audioContext.destination);
 
+    // Tone shaping: boost lows + soften harsh highs + control peaks
+    state.lowShelfNode = state.audioContext.createBiquadFilter();
+    state.lowShelfNode.type = 'lowshelf';
+    state.lowShelfNode.frequency.setValueAtTime(200, state.audioContext.currentTime);
+    state.lowShelfNode.gain.setValueAtTime(4.5, state.audioContext.currentTime);
+
+    state.highShelfNode = state.audioContext.createBiquadFilter();
+    state.highShelfNode.type = 'highshelf';
+    state.highShelfNode.frequency.setValueAtTime(3500, state.audioContext.currentTime);
+    state.highShelfNode.gain.setValueAtTime(-4.5, state.audioContext.currentTime);
+
+    state.filterNode = state.audioContext.createBiquadFilter();
+    state.filterNode.type = 'lowpass';
+    state.filterNode.frequency.setValueAtTime(3500, state.audioContext.currentTime);
+    state.filterNode.Q.setValueAtTime(0.85, state.audioContext.currentTime);
+
+    state.compressorNode = state.audioContext.createDynamicsCompressor();
+    state.compressorNode.threshold.setValueAtTime(-26, state.audioContext.currentTime);
+    state.compressorNode.knee.setValueAtTime(20, state.audioContext.currentTime);
+    state.compressorNode.ratio.setValueAtTime(3.5, state.audioContext.currentTime);
+    state.compressorNode.attack.setValueAtTime(0.005, state.audioContext.currentTime);
+    state.compressorNode.release.setValueAtTime(0.18, state.audioContext.currentTime);
+
+    state.clipperNode = state.audioContext.createWaveShaper();
+    state.clipperNode.curve = createSoftClipCurve(600);
+    state.clipperNode.oversample = '4x';
+
     state.analyser = state.audioContext.createAnalyser();
     state.analyser.fftSize = 2048;
+
+    // Connect processing chain once
+    state.lowShelfNode.connect(state.highShelfNode);
+    state.highShelfNode.connect(state.filterNode);
+    state.filterNode.connect(state.compressorNode);
+    state.compressorNode.connect(state.clipperNode);
+    state.clipperNode.connect(state.analyser);
     state.analyser.connect(state.gainNode);
 }
 
@@ -96,8 +130,19 @@ export function createSoundFromFunction(functionId = state.currentFunction) {
 
         const freq = funcData.baseFreq + y * funcData.audioScale;
         // 수학적으로 0인 구간은 무음 처리 (0.5는 마스터 최대 볼륨 비율)
-        const amplitude = Math.min(0.5, Math.abs(rawY) * 2); 
-        channelData[i] = Math.sin(2 * Math.PI * freq * t) * amplitude;
+        const amplitude = Math.min(0.5, Math.abs(rawY) * 2);
+        const freqGain = frequencyGain(freq);
+        channelData[i] = Math.sin(2 * Math.PI * freq * t) * amplitude * freqGain;
+    }
+
+    // Fade in/out to reduce click at loop boundaries
+    const fadeTime = 0.008; // 8ms
+    const fadeSamples = Math.max(1, Math.floor(sampleRate * fadeTime));
+    for (let i = 0; i < fadeSamples; i++) {
+        const fadeIn = i / fadeSamples;
+        const fadeOut = (fadeSamples - i) / fadeSamples;
+        channelData[i] *= fadeIn;
+        channelData[numSamples - 1 - i] *= fadeOut;
     }
 
     return buffer;
@@ -120,7 +165,7 @@ export function playSound(functionId = state.currentFunction, forceLayer = false
         source.playbackRate.value = state.speed;
         
         source.connect(layerGain);
-        layerGain.connect(state.analyser);
+        layerGain.connect(state.lowShelfNode);
         source.start();
         
         const layerId = `${functionId}_${Date.now()}`;
@@ -144,7 +189,7 @@ export function playSound(functionId = state.currentFunction, forceLayer = false
         source.playbackRate.value = state.speed;
         
         source.connect(previewGain);
-        previewGain.connect(state.analyser);
+        previewGain.connect(state.lowShelfNode);
         
         state.audioStartTime = state.audioContext.currentTime;
         source.start();
@@ -152,6 +197,23 @@ export function playSound(functionId = state.currentFunction, forceLayer = false
         state.activeNodes.set('__preview__', { source, gain: previewGain });
         state.currentFunction = functionId;
     }
+}
+
+function createSoftClipCurve(samples = 400) {
+    const curve = new Float32Array(samples);
+    const k = 2.0;
+    for (let i = 0; i < samples; i++) {
+        const x = (i * 2) / (samples - 1) - 1;
+        curve[i] = Math.tanh(k * x);
+    }
+    return curve;
+}
+
+function frequencyGain(freq) {
+    const safeFreq = Math.max(0, freq);
+    const atten = 1 / (1 + Math.pow(safeFreq / 700, 1.3));
+    const gain = 0.9 * atten + 0.15;
+    return Math.min(1, Math.max(0.25, gain));
 }
 
 export function stopSound(layerId) {

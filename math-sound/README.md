@@ -208,6 +208,20 @@ math-sound/
 
 ---
 
+## 🔊 사운드 튜닝 (임의 조정 기록)
+
+사용자 청감상 거친 고역을 줄이기 위해 아래 설정을 기본값으로 적용했습니다.
+
+- 저역 보강: `lowshelf` +4.5dB @ 200Hz
+- 고역 감쇠: `highshelf` -4.5dB @ 3.5kHz
+- 로우패스: 3.5kHz, Q=0.85
+- 컴프레서: threshold -26dB, knee 20, ratio 3.5:1, attack 0.005s, release 0.18s
+- 소프트 클립: `WaveShaper` tanh 곡선 (oversample 4x)
+- 고주파 자동 감쇠: 주파수가 높을수록 gain 감소
+- 루프 클릭 감소: 버퍼 양끝 8ms 페이드 인/아웃
+
+---
+
 ## 📝 References
 
 - [zackdmath YouTube](https://www.youtube.com/@zackdmath) - "how math functions sound" 시리즈

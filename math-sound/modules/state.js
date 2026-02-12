@@ -10,6 +10,11 @@ export const state = {
     animationId: null,
     audioContext: null,
     gainNode: null,
+    lowShelfNode: null,
+    highShelfNode: null,
+    filterNode: null,
+    compressorNode: null,
+    clipperNode: null,
     analyser: null,
     bufferSource: null,
     activeNodes: new Map(), // To manage multiple layers
