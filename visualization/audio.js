@@ -10,7 +10,7 @@ class AudioManager {
         this.audio.volume = 0; // Start muted for fade-in
         this.targetVolume = 0.5;
         this.fadeInterval = null;
-        this.isMuted = false;
+        this.isMuted = true;
         this.currentTrack = null;
     }
 

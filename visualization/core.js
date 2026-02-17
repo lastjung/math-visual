@@ -40,7 +40,7 @@ const Core = {
             dock.id = 'floating-dock-container';
             dock.innerHTML = `
                 <button class="icon-btn" id="btn-settings" title="Settings">⚙️</button>
-                <button class="icon-btn" id="btn-bgm" title="Music On/Off">🎵</button>
+                <button class="icon-btn" id="btn-bgm" title="Music On/Off" style="opacity: 0.5">🔇</button>
                 <button class="icon-btn" id="btn-hide-ui" title="Enter Full Screen">⤢</button>
                 <div class="dock-divider"></div>
                 <button class="icon-btn" id="btn-reset" title="Reset">↺</button>

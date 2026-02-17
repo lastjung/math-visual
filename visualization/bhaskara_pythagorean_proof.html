@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>바스카라의 피타고라스 증명</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <style>
+        body {
+            font-family: "Pretendard", sans-serif;
+            background: #1a1a1a;
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .info { text-align: center; margin-bottom: 24px; }
+        #stage {
+            width: 400px;
+            height: 400px;
+            position: relative;
+            border: 1px solid #444;
+            background: #222;
+        }
+        .triangle {
+            position: absolute;
+            width: 0;
+            height: 0;
+            border-style: solid;
+        }
+        .hole {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px dashed #fff;
+            display: none;
+        }
+        .controls { margin-top: 24px; }
+        button {
+            padding: 12px 24px;
+            font-size: 1rem;
+            cursor: pointer;
+            border: none;
+            border-radius: 8px;
+            background: #00cec9;
+            color: #fff;
+            font-weight: bold;
+        }
+        .math {
+            font-family: "Times New Roman", serif;
+            font-style: italic;
+            font-size: 1.5rem;
+            margin-top: 18px;
+            color: #fab1a0;
+        }
+    </style>
+</head>
+<body>
+<div class="info">
+    <h2>바스카라의 증명: "보라! (Behold!)"</h2>
+    <p id="step-text">4개의 직각삼각형으로 큰 정사각형을 만듭니다.</p>
+</div>
+
+<div id="stage">
+    <div id="t1" class="triangle"></div>
+    <div id="t2" class="triangle"></div>
+    <div id="t3" class="triangle"></div>
+    <div id="t4" class="triangle"></div>
+    <div id="center-hole" class="hole"></div>
+</div>
+
+<div class="math" id="formula">c²</div>
+
+<div class="controls">
+    <button onclick="toggleProof()">조각 움직이기</button>
+</div>
+
+<script>
+    const a = 120;
+    const b = 160;
+    const diff = b - a;
+    let isRearranged = false;
+
+    function init() {
+        const triangles = [
+            { id: "#t1", bw: `0 ${a}px ${b}px 0`, bc: "transparent #0984e3 transparent transparent", x: 100, y: 100, r: 0 },
+            { id: "#t2", bw: `${a}px ${b}px 0 0`, bc: "#00b894 transparent transparent transparent", x: 100 + a, y: 100, r: 0 },
+            { id: "#t3", bw: `${b}px 0 0 ${a}px`, bc: "transparent transparent transparent #fdcb6e", x: 100 + b - a, y: 100 + a, r: 0 },
+            { id: "#t4", bw: `0 0 ${a}px ${b}px`, bc: "transparent transparent #e17055 transparent", x: 100, y: 100 + b, r: 0 }
+        ];
+
+        triangles.forEach((t) => {
+            const el = document.querySelector(t.id);
+            el.style.borderWidth = t.bw;
+            el.style.borderColor = t.bc;
+            gsap.set(el, { x: t.x, y: t.y, rotation: t.r });
+        });
+
+        gsap.set("#center-hole", {
+            width: diff,
+            height: diff,
+            x: 100 + a,
+            y: 100 + b - a,
+            display: "block",
+            opacity: 1
+        });
+    }
+
+    function toggleProof() {
+        const stepText = document.getElementById("step-text");
+        const formula = document.getElementById("formula");
+
+        if (!isRearranged) {
+            stepText.innerText = "조각을 재배열하면 a²과 b² 정사각형이 나타납니다.";
+            formula.innerText = "a² + b²";
+
+            gsap.to("#t1", { x: 50, y: 150, duration: 1.5, ease: "power2.inOut" });
+            gsap.to("#t2", { x: 50 + a, y: 150 - b + a, duration: 1.5, ease: "power2.inOut" });
+            gsap.to("#t3", { x: 50 + a, y: 150 + a, duration: 1.5, ease: "power2.inOut" });
+            gsap.to("#t4", { x: 50 + a + b, y: 150 + a, rotation: -90, duration: 1.5, ease: "power2.inOut" });
+            gsap.to("#center-hole", { opacity: 0, duration: 0.5 });
+        } else {
+            stepText.innerText = "4개의 직각삼각형으로 큰 정사각형을 만듭니다.";
+            formula.innerText = "c²";
+            init();
+        }
+
+        isRearranged = !isRearranged;
+    }
+
+    init();
+</script>
+</body>
+</html>

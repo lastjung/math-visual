@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Coding Math Visualizer | Brilliant Style</title>
     <link rel="stylesheet" href="style.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
     <link
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap"
       rel="stylesheet"
@@ -22,6 +23,9 @@
                     <div class="tab" data-case="sine">Sine Wave</div>
                     <div class="tab" data-case="hexagon">Hex Grid</div>
                     <div class="tab" data-case="damage">Damage Rolls</div>
+                    <div class="tab" data-case="pythagorean">Pythagorean</div>
+                    <div class="tab" data-case="bhaskara-proof">Bhaskara Proof</div>
+                    <div class="tab" data-case="euclid-proof">Euclid Proof</div>
                 </div>
             </div>
             <div class="tab-group" data-group="interactive">
@@ -75,6 +79,7 @@
     <script src="cases/hexagon_grid.js"></script>
     <script src="cases/pathfinding.js"></script>
     <script src="cases/damage_rolls.js"></script>
+    <script src="cases/pythagorean_theorem.js"></script>
     <script src="https://unpkg.com/delaunator@5.0.0/delaunator.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/simplex-noise/2.4.0/simplex-noise.min.js"></script>
     <script src="cases/circular_pathfinding.js"></script>
@@ -119,6 +124,14 @@
                     document.getElementById('main-title').textContent = 'Polygonal Map Generation';
                     document.getElementById('main-subtitle').textContent = 'Generate island maps with polygon cells.';
                     Core.loadCase(PolygonMapCase, { mode: 'interactive' });
+                } else if (caseName === 'pythagorean') {
+                    document.getElementById('main-title').textContent = 'Pythagorean Theorem';
+                    document.getElementById('main-subtitle').textContent = 'Visual proof of a² + b² = c².';
+                    Core.loadCase(PythagoreanTheoremCase, { mode: 'display' });
+                } else if (caseName === 'bhaskara-proof') {
+                    window.location.href = 'bhaskara_pythagorean_proof.html';
+                } else if (caseName === 'euclid-proof') {
+                    window.location.href = 'euclid_pythagorean_proof.html';
                 }
             });
         });

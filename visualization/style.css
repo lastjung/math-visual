@@ -153,12 +153,6 @@ p.subtitle {
   border: 1px solid rgba(0, 0, 0, 0.05);
 }
 
-@media (min-width: 1025px) {
-    .dashboard-card {
-        display: grid;
-        grid-template-columns: 1fr 340px; 
-    }
-}
 
 /* Visualization Canvas Area */
 .canvas-container {
@@ -193,22 +187,6 @@ canvas {
   display: flex;
 }
 
-@media (min-width: 1025px) {
-    .controls-shell {
-        display: block;
-        border-left: 1px solid #edf2f7;
-        padding-left: 32px;
-        min-width: 340px;
-    }
-
-    .controls {
-        display: none !important;
-    }
-
-    .controls.active {
-        display: flex !important;
-    }
-}
 
 .control-group {
   display: flex;
@@ -402,6 +380,92 @@ body.recording-mode .canvas-container {
     border-style: solid;
     border-color: #e5e7eb;
     border-radius: 10px;
+  }
+
+  .controls {
+    display: none !important;
+  }
+
+  #floating-dock-container {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+  }
+}
+
+@media (min-width: 769px) and (max-width: 1024px) {
+  body {
+    display: block;
+    min-height: 100vh;
+  }
+
+  .container {
+    max-width: 100%;
+    padding: 24px 18px;
+    gap: 20px;
+    align-items: stretch;
+  }
+
+  .case-tabs {
+    position: static;
+    max-width: 100%;
+    gap: 10px;
+    margin-bottom: 0;
+  }
+
+  .dashboard-card {
+    grid-template-columns: 1fr;
+    padding: 18px;
+    gap: 18px;
+    border-radius: 16px;
+  }
+
+  .canvas-container {
+    height: clamp(420px, 62vh, 620px);
+  }
+
+  .controls {
+    display: none !important;
+  }
+
+  #floating-dock-container {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+  }
+}
+
+@media (min-width: 1025px) {
+  .dashboard-card {
+    display: grid;
+    grid-template-columns: 1fr 340px;
+  }
+
+  .canvas-container {
+    height: clamp(460px, 64vh, 700px);
+  }
+
+  .controls-shell {
+    display: block;
+    border-left: 1px solid #edf2f7;
+    padding-left: 32px;
+    min-width: 340px;
+  }
+
+  .controls {
+    display: none !important;
+  }
+
+  .controls.active {
+    display: flex !important;
+  }
+
+  #floating-dock-container,
+  #settings-panel {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
   }
 }
 
@@ -653,26 +717,6 @@ body.hide-ui #ui-toggle-btn:hover {
 }
 
 /* Responsive Visibility for Universal Controls */
-@media (min-width: 1025px) {
-    #floating-dock-container,
-    #settings-panel {
-        display: none !important;
-        visibility: hidden !important;
-        opacity: 0 !important;
-        pointer-events: none !important;
-    }
-}
-
-@media (max-width: 1024px) {
-    .controls {
-        display: none !important;
-    }
-    #floating-dock-container {
-        display: flex !important;
-        visibility: visible !important;
-        opacity: 1 !important;
-    }
-}
 
 /* Hide UI Logic */
 body.hide-ui #floating-dock-container,
