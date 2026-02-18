@@ -40,7 +40,7 @@ const Core = {
             dock.id = 'floating-dock-container';
             dock.innerHTML = `
                 <button class="icon-btn" id="btn-settings" title="Settings">⚙️</button>
-                <button class="icon-btn" id="btn-bgm" title="Music On/Off" style="opacity: 0.5">🔇</button>
+                <button class="icon-btn" id="btn-bgm" title="Sound On/Off">🔇</button>
                 <button class="icon-btn" id="btn-hide-ui" title="Enter Full Screen">⤢</button>
                 <div class="dock-divider"></div>
                 <button class="icon-btn" id="btn-reset" title="Reset">↺</button>
@@ -57,6 +57,7 @@ const Core = {
             document.getElementById('btn-reset').onclick = () => this.resetCase();
             document.getElementById('btn-play').onclick = () => this.togglePlay();
         }
+        this.syncAudioButton();
 
         // 3. UI Toggle Button (for bringing UI back)
         if (!document.getElementById('ui-toggle-btn')) {
@@ -84,17 +85,34 @@ const Core = {
     },
 
     toggleAudio() {
+        if (this.currentCase && typeof this.currentCase.toggleCaseAudio === 'function') {
+            this.currentCase.toggleCaseAudio();
+            this.syncAudioButton();
+            this.updateControls();
+            return;
+        }
+
         if (window.audioManager) {
             const isMuted = window.audioManager.toggleMute();
-            const btn = document.getElementById('btn-bgm');
-            if (btn) {
-                btn.innerHTML = isMuted ? '🔇' : '🎵';
-                btn.style.opacity = isMuted ? '0.5' : '1';
-            }
+            this.syncAudioButton();
+            this.updateControls();
             if (!isMuted && this.isRunning && this.currentCase && this.currentCase.musicTrack) {
                 window.audioManager.play(this.currentCase.musicTrack);
             }
         }
+    },
+
+    syncAudioButton() {
+        const btn = document.getElementById('btn-bgm');
+        if (!btn) return;
+        let isMuted = true;
+        if (this.currentCase && typeof this.currentCase.isCaseAudioMuted === 'function') {
+            isMuted = this.currentCase.isCaseAudioMuted();
+        } else if (window.audioManager) {
+            isMuted = window.audioManager.isMuted;
+        }
+        btn.innerHTML = isMuted ? '🔇' : '🎵';
+        btn.style.opacity = isMuted ? '0.5' : '1';
     },
 
     updateControls() {
@@ -119,16 +137,16 @@ const Core = {
                 </div>
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px;">
                     <button class="btn-primary" id="sidebar-reset" style="padding:10px 0; font-size:0.8rem;">
-                        ${this.currentCaseMode === 'interactive' ? '↺ Rebuild' : '↺ Reset'}
+                        ${this.currentCaseMode === 'interactive' ? '↺ Reset Maze' : '↺ Reset'}
                     </button>
                     <button class="btn-primary" id="sidebar-play" style="padding:10px 0; font-size:0.8rem;">
                         ${this.currentCaseMode === 'interactive'
-                            ? (this.isRunning ? '■ Stop' : '▶ Run')
+                            ? (this.isRunning ? '■ Stop' : '▶ Go')
                             : (this.isRunning ? '❚❚ Pause' : '▶ Resume')}
                     </button>
                 </div>
                 <button class="btn-secondary" id="sidebar-bgm" style="width:100%; margin-top:8px; font-size:0.8rem;">
-                    BGM: ${window.audioManager && !window.audioManager.isMuted ? 'ON' : 'OFF'}
+                    ${(this.currentCase && typeof this.currentCase.caseAudioLabel === 'function') ? this.currentCase.caseAudioLabel() : 'BGM'}: ${(this.currentCase && typeof this.currentCase.isCaseAudioMuted === 'function') ? (this.currentCase.isCaseAudioMuted() ? 'OFF' : 'ON') : (window.audioManager && !window.audioManager.isMuted ? 'ON' : 'OFF')}
                 </button>
             `;
             panel.appendChild(globalGroup);
@@ -192,11 +210,10 @@ const Core = {
                         if (ctrl.onChange) ctrl.onChange(e.target.value);
                     };
                 } else if (ctrl.type === 'info') {
+                    row.classList.add('setting-item-info');
                     row.innerHTML = `
-                        <div class="setting-header">
-                            <label>${ctrl.label || 'Info'}</label>
-                            <span class="setting-value">${ctrl.value || ''}</span>
-                        </div>
+                        <div class="setting-info-label">${ctrl.label || 'Info'}</div>
+                        <div class="setting-info-value">${ctrl.value || ''}</div>
                     `;
                     panel.appendChild(row);
                 }
@@ -352,6 +369,7 @@ const Core = {
         if (this.currentCase.musicTrack && window.audioManager) {
              window.audioManager.play(this.currentCase.musicTrack);
         }
+        this.syncAudioButton();
         
         // Reset Play State to Running
         this.isRunning = true;

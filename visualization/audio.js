@@ -16,6 +16,16 @@ class AudioManager {
 
     play(trackUrl) {
         if (!trackUrl) return;
+        // Keep track selected, but do not autoplay while muted.
+        if (this.isMuted) {
+            if (this.currentTrack !== trackUrl) {
+                this.currentTrack = trackUrl;
+                this.audio.src = trackUrl;
+                this.audio.load();
+            }
+            return;
+        }
+
         if (this.currentTrack === trackUrl) {
             if (this.audio.paused) this.fadeIn();
             return;
@@ -64,9 +74,18 @@ class AudioManager {
     toggleMute() {
         this.isMuted = !this.isMuted;
         if (this.isMuted) {
+            if (!this.audio.paused) {
+                this.audio.pause();
+            }
             this.audio.volume = 0;
         } else {
-            this.audio.volume = this.targetVolume;
+            if (this.currentTrack && this.audio.paused) {
+                this.audio.play().then(() => {
+                    this.fadeIn();
+                }).catch(() => {});
+            } else {
+                this.audio.volume = this.targetVolume;
+            }
         }
         return this.isMuted;
     }

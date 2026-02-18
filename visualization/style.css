@@ -180,7 +180,9 @@ canvas {
 .controls {
   display: none;
   flex-direction: column;
-  gap: 24px;
+  gap: 14px;
+  overflow-y: auto;
+  padding-right: 6px;
 }
 
 .controls.active {
@@ -604,19 +606,64 @@ body.hide-ui #ui-toggle-btn:hover {
     display: flex;
     flex-direction: column;
     gap: 8px;
+    margin-bottom: 2px;
 }
 
 .setting-header {
     display: flex;
     justify-content: space-between;
+    align-items: center;
+    gap: 10px;
     font-size: 0.9rem;
     font-weight: 700;
     color: #333;
 }
 
+.setting-header label {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
 .setting-value {
-    font-family: monospace;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
     color: var(--brilliant-green);
+    font-weight: 700;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.setting-item-info {
+    border: 1px solid #e7edf4;
+    border-radius: 12px;
+    background: #fbfdff;
+    padding: 10px 12px;
+    gap: 2px;
+}
+
+.setting-info-label {
+    font-size: 0.86rem;
+    font-weight: 700;
+    color: #2f3640;
+    line-height: 1.25;
+}
+
+.setting-info-value {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 0.86rem;
+    font-weight: 700;
+    color: var(--brilliant-green);
+    letter-spacing: 0.01em;
+}
+
+.controls::-webkit-scrollbar {
+    width: 8px;
+}
+
+.controls::-webkit-scrollbar-thumb {
+    background: #d7e4d7;
+    border-radius: 999px;
 }
 
 .setting-select {
