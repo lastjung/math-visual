@@ -371,15 +371,24 @@ const Core = {
         }
         this.syncAudioButton();
         
-        // Reset Play State to Running
-        this.isRunning = true;
+        // Reset Play State (case can opt-in to paused start)
+        this.isRunning = this.currentCase.startPausedOnLoad === true ? false : true;
         const btn = document.getElementById('btn-play');
         if(btn) {
-             btn.innerHTML = '<span>❚❚</span> <span>Hold</span>';
-             btn.classList.remove('paused');
+             if (this.isRunning) {
+                 btn.innerHTML = '<span>❚❚</span> <span>Hold</span>';
+                 btn.classList.remove('paused');
+             } else {
+                 btn.innerHTML = '<span>▶</span> <span>Resume</span>';
+                 btn.classList.add('paused');
+             }
         }
 
-        this.currentCase.start();
+        if (this.isRunning && this.currentCase.start) {
+            this.currentCase.start();
+        } else if (this.currentCase.stop) {
+            this.currentCase.stop();
+        }
         if (window.audioManager) {
             window.audioManager.syncWithPlaybackState(this.isRunning);
         }

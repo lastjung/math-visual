@@ -898,6 +898,7 @@ const PathfindingCase = {
     },
 
     autoPlayOnReset: false,
+    startPausedOnLoad: true,
 
     start() {
         this.bindEvents();
