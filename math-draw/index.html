@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Math Draw | Code → Visual</title>
+    <meta name="description" content="Watch math code come alive - from formula to drawing">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- Header + Tab Selection -->
+    <header id="main-header">
+        <h1>Math Draw</h1>
+        <nav class="case-tabs">
+            <div class="tab active" data-case="circle">Circle</div>
+            <div class="tab" data-case="spiral">Spiral</div>
+        </nav>
+    </header>
+
+    <!-- Case Title -->
+    <div id="case-header">
+        <h2 id="case-title">Circle</h2>
+        <p id="case-subtitle">Drawing a circle using trigonometry</p>
+    </div>
+
+    <!-- Phase 1: Code Explanation -->
+    <div id="code-phase" class="phase active">
+        <div class="code-container">
+            <div class="code-header">
+                <span class="dot red"></span>
+                <span class="dot yellow"></span>
+                <span class="dot green"></span>
+                <span class="file-name">circle.js</span>
+            </div>
+            <pre class="code-block"><code id="code-display"></code></pre>
+        </div>
+        <div class="explanation" id="explanation"></div>
+    </div>
+
+    <!-- Phase 2: Drawing Visualization -->
+    <div id="draw-phase" class="phase">
+        <canvas id="canvas"></canvas>
+        <div class="draw-info" id="draw-info"></div>
+    </div>
+
+    <!-- Floating Dock Controller -->
+    <div id="floating-dock">
+        <button class="dock-btn" id="btn-reset" title="Reset">↺</button>
+        <button class="dock-btn play-btn" id="btn-play" title="Play">
+            <span>▶</span> <span>Start</span>
+        </button>
+    </div>
+
+    <!-- Scripts: Engine first, then cases -->
+    <script src="engine.js"></script>
+    <script src="cases/circle.js"></script>
+    <script src="cases/spiral.js"></script>
+</body>
+</html>
