@@ -125,7 +125,7 @@ const HexMazeCase = {
                 id: 'pf_speed',
                 label: 'Search Speed',
                 min: 1,
-                max: 40,
+                max: 50,
                 step: 1,
                 value: this.delayToSpeed(this.searchDelayMs),
                 onChange: (v) => {
@@ -148,7 +148,7 @@ const HexMazeCase = {
                 type: 'slider',
                 id: 'pf_hex_size',
                 label: 'Hex Size',
-                min: 8,
+                min: 4,
                 max: 28,
                 step: 1,
                 value: this.hexSize,
@@ -162,7 +162,7 @@ const HexMazeCase = {
                 id: 'pf_radius',
                 label: 'Grid Radius',
                 min: 8,
-                max: 24,
+                max: 50,
                 step: 1,
                 value: this.gridRadius,
                 onChange: (v) => {
@@ -251,7 +251,7 @@ const HexMazeCase = {
     },
 
     delayToSpeed(delayMs) {
-        return Math.max(1, Math.min(40, Math.round((205 - delayMs) / 5)));
+        return Math.max(1, Math.min(50, Math.round((205 - delayMs) / 5)));
     },
 
     ensureAudioContext() {
@@ -809,11 +809,26 @@ const HexMazeCase = {
         }
         ctx.closePath();
 
+        const isCurrent = k === (this.currentNode ? this.key(this.currentNode) : '');
+
         ctx.fillStyle = fill;
         ctx.fill();
-        ctx.strokeStyle = stroke;
-        ctx.lineWidth = (k === (this.currentNode ? this.key(this.currentNode) : '')) ? 2 : 1;
-        ctx.stroke();
+
+        if (isCurrent) {
+            ctx.save();
+            ctx.shadowColor = '#FFD700';
+            ctx.shadowBlur = 14;
+            ctx.fillStyle = '#FFD700';
+            ctx.fill();
+            ctx.strokeStyle = '#FFFFFF';
+            ctx.lineWidth = 3;
+            ctx.stroke();
+            ctx.restore();
+        } else {
+            ctx.strokeStyle = stroke;
+            ctx.lineWidth = 1;
+            ctx.stroke();
+        }
     },
 
     draw() {
@@ -877,15 +892,13 @@ const HexMazeCase = {
         const algorithmLabel = algorithmNames[this.searchMode] || this.searchMode;
 
         ctx.save();
-        ctx.fillStyle = 'rgba(38, 20, 6, 0.38)';
-        ctx.fillRect(14, 14, 150, 98);
 
-        ctx.fillStyle = '#ffb366';
+        ctx.fillStyle = '#FFFFFF';
         ctx.font = '600 13px Inter, system-ui, sans-serif';
         ctx.fillText(`Algorithm: ${algorithmLabel}`, 26, 36);
 
         ctx.font = '500 12px Inter, system-ui, sans-serif';
-        ctx.fillStyle = '#ffd8a8';
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
         ctx.fillText(`Time: ${timeLabel}`, 26, 58);
         ctx.fillText(`Hex Entered: ${enteredNow}`, 26, 78);
         ctx.fillText(`Last: ${this.lastEnteredHexCount}`, 26, 98);
