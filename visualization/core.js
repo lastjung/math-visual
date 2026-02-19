@@ -140,9 +140,7 @@ const Core = {
                         ${this.currentCaseMode === 'interactive' ? '↺ Reset Maze' : '↺ Reset'}
                     </button>
                     <button class="btn-primary" id="sidebar-play" style="padding:10px 0; font-size:0.8rem;">
-                        ${this.currentCaseMode === 'interactive'
-                            ? (this.isRunning ? '■ Stop' : '▶ Go')
-                            : (this.isRunning ? '❚❚ Pause' : '▶ Resume')}
+                        ${(() => { const s = this.getPlayLabel(); return s.icon + ' ' + s.text; })()}
                     </button>
                 </div>
                 <button class="btn-secondary" id="sidebar-bgm" style="width:100%; margin-top:8px; font-size:0.8rem;">
@@ -255,32 +253,56 @@ const Core = {
         }
     },
 
+    // --- Single source of truth for play button state ---
+    getPlayLabel() {
+        const c = this.currentCase;
+        if (this.currentCaseMode === 'interactive' && c) {
+            if (c.searchInProgress && !c.searchPaused) return { icon: '❚❚', text: 'Hold', running: true };
+            if (c.searchPaused) return { icon: '▶', text: 'Resume', running: false };
+            return { icon: '▶', text: 'Go', running: false };
+        }
+        return this.isRunning
+            ? { icon: '❚❚', text: 'Pause', running: true }
+            : { icon: '▶', text: 'Resume', running: false };
+    },
+
+    syncPlayButton() {
+        const state = this.getPlayLabel();
+        this.isRunning = state.running;
+        const btn = document.getElementById('btn-play');
+        if (btn) {
+            btn.innerHTML = `<span>${state.icon}</span> <span>${state.text}</span>`;
+            btn.classList.toggle('paused', !state.running);
+        }
+    },
+
     resetCase() {
         if (this.currentCase && this.currentCase.reset) {
             this.currentCase.reset();
             // Auto-play on reset unless case forbids it
             if (!this.isRunning && this.currentCase.autoPlayOnReset !== false) {
-                 this.togglePlay(); 
+                 this.togglePlay();
+            } else {
+                 this.syncPlayButton();
             }
             if (window.audioManager) {
                 window.audioManager.syncWithPlaybackState(this.isRunning);
             }
+            this.updateControls();
         }
     },
 
     togglePlay() {
         this.isRunning = !this.isRunning;
-        const btn = document.getElementById('btn-play');
-        
+
         if (this.isRunning) {
-            btn.innerHTML = '<span>❚❚</span> <span>Hold</span>';
-            btn.classList.remove('paused');
             if (this.currentCase && this.currentCase.start) this.currentCase.start();
         } else {
-            btn.innerHTML = '<span>▶</span> <span>Resume</span>';
-            btn.classList.add('paused');
             if (this.currentCase && this.currentCase.stop) this.currentCase.stop();
         }
+
+        this.syncPlayButton();
+
         if (window.audioManager) {
             if (this.isRunning) {
                 if (!window.audioManager.currentTrack && this.currentCase && this.currentCase.musicTrack && !window.audioManager.isMuted) {
@@ -373,22 +395,16 @@ const Core = {
         
         // Reset Play State (case can opt-in to paused start)
         this.isRunning = this.currentCase.startPausedOnLoad === true ? false : true;
-        const btn = document.getElementById('btn-play');
-        if(btn) {
-             if (this.isRunning) {
-                 btn.innerHTML = '<span>❚❚</span> <span>Hold</span>';
-                 btn.classList.remove('paused');
-             } else {
-                 btn.innerHTML = '<span>▶</span> <span>Resume</span>';
-                 btn.classList.add('paused');
-             }
-        }
 
         if (this.isRunning && this.currentCase.start) {
             this.currentCase.start();
         } else if (this.currentCase.stop) {
             this.currentCase.stop();
         }
+
+        this.syncPlayButton();
+        this.updateControls();
+
         if (window.audioManager) {
             window.audioManager.syncWithPlaybackState(this.isRunning);
         }

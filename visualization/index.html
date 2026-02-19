@@ -31,7 +31,7 @@
             <div class="tab-group" data-group="interactive">
                 <span class="group-label">Interactive</span>
                 <div class="tab-row">
-                    <div class="tab active" data-case="pathfinding">Pathfinding</div>
+                    <div class="tab active" data-case="hex-maze">Hexagon Maze</div>
                     <div class="tab" data-case="circular">Circular Obstacles</div>
                     <div class="tab" data-case="polygon-map">Polygon Map</div>
                 </div>
@@ -39,7 +39,7 @@
         </nav>
 
         <header id="header">
-            <h1 id="main-title">A* Pathfinding</h1>
+            <h1 id="main-title">Hexagon Maze</h1>
             <p class="subtitle" id="main-subtitle">Find the shortest path in a hex maze.</p>
         </header>
 
@@ -77,7 +77,7 @@
     <script src="cases/rainbow_spiral.js"></script>
     <script src="cases/golden_spiral.js"></script>
     <script src="cases/hexagon_grid.js"></script>
-    <script src="cases/pathfinding.js"></script>
+    <script src="cases/hex_maze.js"></script>
     <script src="cases/damage_rolls.js"></script>
     <script src="cases/pythagorean_theorem.js"></script>
     <script src="https://unpkg.com/delaunator@5.0.0/delaunator.min.js"></script>
@@ -108,10 +108,10 @@
                     document.getElementById('main-title').textContent = 'Hexagonal Grid';
                     document.getElementById('main-subtitle').textContent = 'A pattern made of repeating hexagons.';
                     Core.loadCase(HexagonGridCase, { mode: 'display' });
-                } else if (caseName === 'pathfinding') {
-                    document.getElementById('main-title').textContent = 'A* Pathfinding';
-                    document.getElementById('main-subtitle').textContent = 'Find the shortest path in a hex maze.';
-                    Core.loadCase(PathfindingCase, { mode: 'interactive' });
+                } else if (caseName === 'hex-maze') {
+                    document.getElementById('main-title').textContent = 'Hexagon Maze';
+                    document.getElementById('main-subtitle').textContent = 'Find the shortest path in a hex grid.';
+                    Core.loadCase(HexMazeCase, { mode: 'interactive' });
                 } else if (caseName === 'damage') {
                     document.getElementById('main-title').textContent = 'Probability: Damage Rolls';
                     document.getElementById('main-subtitle').textContent = 'See how dice rolls spread over many tries.';
@@ -138,10 +138,10 @@
 
         // Load Default Case (A* Pathfinding)
         window.onload = () => {
-            if (typeof PathfindingCase !== 'undefined') {
-                Core.loadCase(PathfindingCase, { mode: 'interactive' });
+            if (typeof HexMazeCase !== 'undefined') {
+                Core.loadCase(HexMazeCase, { mode: 'interactive' });
             } else {
-                console.error("PathfindingCase failed to load!");
+                console.error("HexMazeCase failed to load!");
             }
         };
     </script>

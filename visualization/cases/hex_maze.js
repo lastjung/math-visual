@@ -24,7 +24,7 @@ class PriorityQueue {
  * PathfindingCase
  * Hex maze + animated multi-algorithm pathfinding.
  */
-const PathfindingCase = {
+const HexMazeCase = {
     canvas: null,
     ctx: null,
 
@@ -57,6 +57,7 @@ const PathfindingCase = {
 
     searchTimer: null,
     searchInProgress: false,
+    searchPaused: false,
     searchStartedAtMs: 0,
     searchElapsedMs: 0,
     totalSearchCount: 0,
@@ -234,7 +235,7 @@ const PathfindingCase = {
     },
 
     caseAudioLabel() {
-        return 'SFX';
+        return 'SFX Status';
     },
 
     isCaseAudioMuted() {
@@ -318,6 +319,7 @@ const PathfindingCase = {
         this.exploredSet.clear();
         this.currentNode = null;
         this.searchInProgress = false;
+        this.searchPaused = false;
         this.stepSoundTick = 0;
         this.lastStepSoundAt = 0;
         this.searchElapsedMs = 0;
@@ -330,6 +332,21 @@ const PathfindingCase = {
             this.searchTimer = null;
         }
         this.searchInProgress = false;
+    },
+
+    pauseSearch() {
+        if (this.searchTimer) {
+            clearTimeout(this.searchTimer);
+            this.searchTimer = null;
+        }
+        this.searchPaused = true;
+    },
+
+    resumeSearch() {
+        if (!this.searchPaused || !this.hasFrontier()) return;
+        this.searchPaused = false;
+        this.searchInProgress = true;
+        this.searchTimer = setTimeout(() => this.stepSearch(), this.searchDelayMs);
     },
 
     findNearestWalkable(node) {
@@ -443,9 +460,10 @@ const PathfindingCase = {
         this.currentNode = null;
         this.draw();
 
-        // Keep Core play-state in sync: when search completes, return button to "Go".
-        if (typeof Core !== 'undefined' && Core.currentCase === this && Core.isRunning) {
-            Core.togglePlay();
+        // Sync button state: search is done → "Go"
+        if (typeof Core !== 'undefined' && Core.currentCase === this) {
+            Core.syncPlayButton();
+            Core.updateControls();
         }
     },
 
@@ -762,23 +780,23 @@ const PathfindingCase = {
         let stroke = 'rgba(255, 255, 255, 0.22)';
 
         if (this.walls.has(k)) {
-            fill = '#2a2a2a';
-            stroke = 'rgba(255, 255, 255, 0.05)';
+            fill = '#86efac';
+            stroke = 'rgba(134, 239, 172, 0.5)';
         } else if (k === this.key(this.startNode)) {
-            fill = '#4CAF50';
-            stroke = '#7CD37F';
+            fill = '#00CC00';
+            stroke = '#00AA00';
         } else if (k === this.key(this.goalNode)) {
-            fill = '#F44336';
-            stroke = '#FF7B70';
+            fill = '#FF0000';
+            stroke = '#CC0000';
         } else if (this.pathSet.has(k)) {
             fill = 'rgba(255, 215, 0, 0.30)';
         } else if (k === (this.currentNode ? this.key(this.currentNode) : '')) {
-            fill = 'rgba(255, 42, 170, 0.88)';
-            stroke = 'rgba(255, 170, 225, 0.95)';
+            fill = '#FFD700';
+            stroke = '#FFF176';
         } else if (this.frontierSet.has(k)) {
-            fill = 'rgba(80, 180, 255, 0.52)';
+            fill = '#f472b6';
         } else if (this.exploredSet.has(k)) {
-            fill = 'rgba(64, 196, 255, 0.42)';
+            fill = '#ec4899';
         }
 
         ctx.beginPath();
@@ -902,18 +920,23 @@ const PathfindingCase = {
 
     start() {
         this.bindEvents();
-        this.startSearchAnimation();
+        if (this.searchPaused) {
+            this.resumeSearch();
+        } else {
+            this.startSearchAnimation();
+        }
     },
 
     stop() {
-        this.stopSearchAnimation();
+        if (this.searchInProgress) {
+            this.pauseSearch();
+        } else {
+            this.stopSearchAnimation();
+        }
     },
 
     reset() {
         this.generateMaze({ solve: false });
-        if (this.isCoreRunning()) {
-            Core.togglePlay();
-        }
     },
 
     destroy() {
