@@ -322,19 +322,20 @@ const Core = {
     setupIdleSystem() {
         const stopAnimation = () => {
             this.isIdle = true;
+            this.isRunning = false; // Sync global state
             if (this.currentCase && this.currentCase.stop) {
                 this.currentCase.stop();
             }
             document.getElementById('sleep-overlay').style.display = 'flex';
+            this.syncPlayButton(); // Update UI button status
         };
 
         const resetIdleTimer = () => {
             if (this.isIdle) {
                 this.isIdle = false;
                 document.getElementById('sleep-overlay').style.display = 'none';
-                if (this.currentCase && this.currentCase.start) {
-                    this.currentCase.start();
-                }
+                // Removed: Automatic start() call. Now requires manual user action to resume.
+                this.syncPlayButton(); // Update UI to reflect it's currently stopped
             }
             clearTimeout(this.idleTimer);
             this.idleTimer = setTimeout(stopAnimation, this.IDLE_TIMEOUT);
