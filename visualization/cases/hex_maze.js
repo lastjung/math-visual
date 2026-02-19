@@ -58,6 +58,47 @@ const HexMazeCase = {
     searchTimer: null,
     searchInProgress: false,
     searchPaused: false,
+    colorTheme: 'basic',
+
+    themes: {
+        basic: {
+            wall: '#86efac',        // Green
+            explored: '#ec4899',    // Pink
+            frontier: '#f472b6',    // Light Pink
+            start: '#00CC00',       // Bright Green
+            goal: '#FF0000',        // Red
+            path: 'rgba(255, 215, 0, 0.30)', // Gold
+            current: '#FFD700'      // Yellow
+        },
+        ocean: {
+            wall: '#3b82f6',        // Blue
+            explored: '#22d3ee',    // Cyan
+            frontier: '#a5f3fc',    // Light Cyan
+            start: '#1d4ed8', 
+            goal: '#0891b2',
+            path: 'rgba(255, 255, 255, 0.4)',
+            current: '#ffffff'
+        },
+        sunset: {
+            wall: '#7c3aed',        // Purple
+            explored: '#fb923c',    // Orange
+            frontier: '#fdba74',    // Light Orange
+            start: '#5b21b6',
+            goal: '#ea580c',
+            path: 'rgba(255, 255, 255, 0.4)',
+            current: '#ffffff'
+        },
+        neon: {
+            wall: '#4b5563',        // Gray
+            explored: '#a3e635',    // Lime
+            frontier: '#d9f99d',    // Light Lime
+            start: '#1f2937', 
+            goal: '#4d7c0f',
+            path: 'rgba(255, 255, 255, 0.4)',
+            current: '#ffffff'
+        }
+    },
+
     searchStartedAtMs: 0,
     searchElapsedMs: 0,
     totalSearchCount: 0,
@@ -118,6 +159,22 @@ const HexMazeCase = {
                 onChange: (v) => {
                     this.searchMode = v;
                     this.triggerSearch();
+                }
+            },
+            {
+                type: 'select',
+                id: 'pf_theme',
+                label: 'Color Theme',
+                value: this.colorTheme,
+                options: [
+                    { value: 'basic', label: '1. basic (Green/Pink)' },
+                    { value: 'ocean', label: '2. Ocean (Blue/Cyan)' },
+                    { value: 'sunset', label: '3. Sunset (Purple/Orange)' },
+                    { value: 'neon', label: '4. Neon (Gray/Lime)' }
+                ],
+                onChange: (v) => {
+                    this.colorTheme = v;
+                    this.draw();
                 }
             },
             {
@@ -778,25 +835,26 @@ const HexMazeCase = {
         // Base walkable cell should look clearly different from walls.
         let fill = 'rgba(240, 248, 255, 0.16)';
         let stroke = 'rgba(255, 255, 255, 0.22)';
+        const theme = this.themes[this.colorTheme] || this.themes.basic;
 
         if (this.walls.has(k)) {
-            fill = '#86efac';
-            stroke = 'rgba(134, 239, 172, 0.5)';
+            fill = theme.wall;
+            stroke = theme.colorTheme === 'basic' ? 'rgba(134, 239, 172, 0.5)' : 'rgba(255, 255, 255, 0.1)';
         } else if (k === this.key(this.startNode)) {
-            fill = '#00CC00';
-            stroke = '#00AA00';
+            fill = theme.start;
+            stroke = theme.colorTheme === 'basic' ? '#00AA00' : 'rgba(255,255,255,0.4)';
         } else if (k === this.key(this.goalNode)) {
-            fill = '#FF0000';
-            stroke = '#CC0000';
+            fill = theme.goal;
+            stroke = theme.colorTheme === 'basic' ? '#CC0000' : 'rgba(255,255,255,0.4)';
         } else if (this.pathSet.has(k)) {
-            fill = 'rgba(255, 215, 0, 0.30)';
+            fill = theme.path;
         } else if (k === (this.currentNode ? this.key(this.currentNode) : '')) {
-            fill = '#FFD700';
-            stroke = '#FFF176';
+            fill = theme.current;
+            stroke = theme.colorTheme === 'basic' ? '#FFF176' : '#FFFFFF';
         } else if (this.frontierSet.has(k)) {
-            fill = '#f472b6';
+            fill = theme.frontier;
         } else if (this.exploredSet.has(k)) {
-            fill = '#ec4899';
+            fill = theme.explored;
         }
 
         ctx.beginPath();
@@ -846,8 +904,9 @@ const HexMazeCase = {
         this.forEachHex((h) => this.drawHex(h.q, h.r));
 
         if (this.path.length > 1) {
+            const theme = this.themes[this.colorTheme] || this.themes.basic;
             ctx.beginPath();
-            ctx.strokeStyle = '#FFD700';
+            ctx.strokeStyle = theme.current; // Use the theme's highlight color for the path line
             ctx.lineWidth = Math.max(2, this.hexSize * 0.28);
             ctx.lineJoin = 'round';
             ctx.lineCap = 'round';
