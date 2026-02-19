@@ -71,31 +71,31 @@ const HexMazeCase = {
             current: '#FFD700'      // Yellow
         },
         ocean: {
-            wall: '#3b82f6',        // Blue
-            explored: '#22d3ee',    // Cyan
-            frontier: '#a5f3fc',    // Light Cyan
-            start: '#1d4ed8', 
-            goal: '#0891b2',
-            path: 'rgba(255, 255, 255, 0.4)',
-            current: '#ffffff'
+            wall: '#22d3ee',        // Cyan (Sky Blue)
+            explored: '#3b82f6',    // Blue
+            frontier: '#93c5fd',    // Light Blue
+            start: '#0891b2',       // Dark Cyan
+            goal: '#FF0000',        // Universal Red Goal for visibility
+            path: 'rgba(255, 215, 0, 0.30)', // Gold
+            current: '#FFD700'      // Yellow
         },
         sunset: {
-            wall: '#7c3aed',        // Purple
-            explored: '#fb923c',    // Orange
-            frontier: '#fdba74',    // Light Orange
-            start: '#5b21b6',
-            goal: '#ea580c',
-            path: 'rgba(255, 255, 255, 0.4)',
-            current: '#ffffff'
+            wall: '#fdba74',        // Light Orange
+            explored: '#7c3aed',    // Purple
+            frontier: '#a78bfa',    // Light Purple
+            start: '#f97316',       // Orange
+            goal: '#FF0000',        // Red
+            path: 'rgba(255, 255, 255, 0.25)', // Subtle white fill for cells
+            current: '#39ff14'                 // Neon Green for the path LINE
         },
         neon: {
-            wall: '#4b5563',        // Gray
-            explored: '#a3e635',    // Lime
-            frontier: '#d9f99d',    // Light Lime
+            wall: '#f3f4f6',        // Light Gray wall
+            explored: '#4d7c0f',    // Dark Lime search
+            frontier: '#84cc16',    // Bright Lime frontier
             start: '#1f2937', 
-            goal: '#4d7c0f',
-            path: 'rgba(255, 255, 255, 0.4)',
-            current: '#ffffff'
+            goal: '#FF0000',        // Red
+            path: 'rgba(132, 204, 22, 0.2)', // Light lime tint for cells
+            current: '#FFD700'      // Yellow for the path LINE
         }
     },
 
@@ -168,8 +168,8 @@ const HexMazeCase = {
                 value: this.colorTheme,
                 options: [
                     { value: 'basic', label: '1. basic (Green/Pink)' },
-                    { value: 'ocean', label: '2. Ocean (Blue/Cyan)' },
-                    { value: 'sunset', label: '3. Sunset (Purple/Orange)' },
+                    { value: 'ocean', label: '2. Ocean (Cyan/Blue)' },
+                    { value: 'sunset', label: '3. Sunset (Orange/Purple)' },
                     { value: 'neon', label: '4. Neon (Gray/Lime)' }
                 ],
                 onChange: (v) => {
