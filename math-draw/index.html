@@ -16,46 +16,63 @@
         <nav class="case-tabs">
             <div class="tab active" data-case="circle">Circle</div>
             <div class="tab" data-case="spiral">Spiral</div>
+            <div class="tab" data-case="sine">Sine Wave</div>
+            <div class="tab" data-case="sunburst">Sunburst</div>
+            <div class="tab" data-case="square_sunburst">Square Burst</div>
+            <div class="tab" data-case="square_spiral">Square Spiral</div>
         </nav>
     </header>
 
-    <!-- Case Title -->
-    <div id="case-header">
-        <h2 id="case-title">Circle</h2>
-        <p id="case-subtitle">Drawing a circle using trigonometry</p>
-    </div>
+    <!-- Main Layout -->
+    <div class="main-layout">
 
-    <!-- Phase 1: Code Explanation -->
-    <div id="code-phase" class="phase active">
-        <div class="code-container">
-            <div class="code-header">
-                <span class="dot red"></span>
-                <span class="dot yellow"></span>
-                <span class="dot green"></span>
-                <span class="file-name">circle.js</span>
+        <!-- Left: Canvas Area -->
+        <div class="canvas-area">
+            <!-- Case Header -->
+            <div id="case-header">
+                <h2 id="case-title">Circle</h2>
+                <p id="case-subtitle">Drawing a circle using trigonometry</p>
             </div>
-            <pre class="code-block"><code id="code-display"></code></pre>
+
+            <!-- Phase 1: Code Explanation -->
+            <div id="code-phase" class="phase active">
+                <div class="code-container">
+                    <div class="code-header">
+                        <div class="dots">
+                            <span class="dot red"></span>
+                            <span class="dot yellow"></span>
+                            <span class="dot green"></span>
+                        </div>
+                        <span class="file-name">circle.js</span>
+                    </div>
+                    <pre class="code-block"><code id="code-display"></code></pre>
+                </div>
+                <div class="explanation" id="explanation"></div>
+            </div>
+
+            <!-- Phase 2: Drawing Visualization -->
+            <div id="draw-phase" class="phase">
+                <div class="canvas-wrapper">
+                    <canvas id="canvas"></canvas>
+                    <div class="draw-info" id="draw-info"></div>
+                </div>
+            </div>
         </div>
-        <div class="explanation" id="explanation"></div>
-    </div>
 
-    <!-- Phase 2: Drawing Visualization -->
-    <div id="draw-phase" class="phase">
-        <canvas id="canvas"></canvas>
-        <div class="draw-info" id="draw-info"></div>
-    </div>
+        <!-- Right: Controls Panel -->
+        <aside class="controls-panel">
+            <div id="controls-content" class="ctrl-item"></div>
+        </aside>
 
-    <!-- Floating Dock Controller -->
-    <div id="floating-dock">
-        <button class="dock-btn" id="btn-reset" title="Reset">↺</button>
-        <button class="dock-btn play-btn" id="btn-play" title="Play">
-            <span>▶</span> <span>Start</span>
-        </button>
     </div>
 
     <!-- Scripts: Engine first, then cases -->
     <script src="engine.js"></script>
     <script src="cases/circle.js"></script>
     <script src="cases/spiral.js"></script>
+    <script src="cases/sine_wave.js"></script>
+    <script src="cases/sunburst.js"></script>
+    <script src="cases/square_sunburst.js"></script>
+    <script src="cases/square_spiral.js"></script>
 </body>
 </html>

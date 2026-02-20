@@ -8,6 +8,20 @@ MathDrawCases['circle'] = {
     subtitle: 'Drawing a circle using trigonometry',
     fileName: 'circle.js',
 
+    // Case-specific settings
+    radius: 140, 
+
+    uiConfig() {
+        return [
+            { 
+                type: 'slider', label: 'Radius', 
+                min: 50, max: 200, step: 1, 
+                value: this.radius, 
+                onChange: (v) => { this.radius = v; } 
+            }
+        ];
+    },
+
     codeLines: [
         { delay: 0, html: `<span class="syn-comment">// Draw a circle using trigonometry</span>` },
         { delay: 400, html: `<span class="syn-keyword">const</span> <span class="syn-var">r</span> <span class="syn-op">=</span> <span class="syn-number">200</span>;  <span class="syn-comment">// radius</span>` },
@@ -34,7 +48,7 @@ MathDrawCases['circle'] = {
         const h = canvas.height;
         const cx = w / 2;
         const cy = h / 2;
-        const r = Math.min(w, h) * 0.35;
+        const r = this.radius; // Use setting
 
         ctx.clearRect(0, 0, w, h);
 
@@ -97,7 +111,7 @@ MathDrawCases['circle'] = {
             }
 
             step++;
-            await E.sleep(12);
+            await E.sleep(12 / Math.max(0.25, E.drawSpeed));
         }
 
         ctx.shadowBlur = 0;
