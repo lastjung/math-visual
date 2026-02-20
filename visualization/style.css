@@ -771,3 +771,28 @@ body.hide-ui #settings-panel {
     opacity: 0;
     pointer-events: none;
 }
+
+/* Formula Overlay for KaTeX */
+.formula-overlay {
+    position: absolute;
+    top: 40px;
+    left: 40px;
+    z-index: 10;
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(10px);
+    padding: 15px 25px;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    border: 1px solid rgba(0, 0, 0, 0.03);
+    pointer-events: none;
+    transition: all 0.3s ease;
+    display: none; /* Hidden by default, shown when case loads */
+}
+
+.formula-overlay.active {
+    display: block;
+}
+
+.katex {
+    font-size: 1.2em !important;
+}

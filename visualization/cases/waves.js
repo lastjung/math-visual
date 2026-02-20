@@ -1,6 +1,7 @@
 /**
  * Mathematical Waves & Curves Visualization Module
  * Dual View: Left (Geometric Generator) | Right (XY Plane/Waveform)
+ * Integration: KaTeX for high-quality mathematical formulas
  */
 
 const WavesCase = {
@@ -17,66 +18,69 @@ const WavesCase = {
     frequency: 0.03,
     musicTrack: 'assets/music/bgm/Math_01_Minimalist_Sine_Pulse.mp3',
 
-    // Formula Registry
+    // Formula Registry (LaTeX updated)
     formulaId: 'sine',
     formulas: {
         sine: {
             name: 'Sine Wave',
             type: 'cartesian',
             fn: (t) => Math.sin(t),
-            formula: 'f(t) = sin(t)'
+            formula: 'f(t) = \\sin(t)'
         },
         square: {
             name: 'Square Wave',
             type: 'cartesian',
             fn: (t) => Math.sign(Math.sin(t)),
-            formula: 'f(t) = sgn(sin(t))'
+            formula: 'f(t) = \\text{sgn}(\\sin(t))'
         },
         sawtooth: {
             name: 'Sawtooth Wave',
             type: 'cartesian',
             fn: (t) => 2 * ((t / (2 * Math.PI)) - Math.floor((t / (2 * Math.PI)) + 0.5)),
-            formula: 'f(t) = 2(t/2π - ⌊t/2π + 0.5⌋)'
+            formula: 'f(t) = 2 \\left( \\frac{t}{2\\pi} - \\lfloor \\frac{t}{2\\pi} + 0.5 \\rfloor \\right)'
         },
         triangle: {
             name: 'Triangle Wave',
             type: 'cartesian',
             fn: (t) => 2 * Math.abs(2 * ((t / (2 * Math.PI)) - Math.floor((t / (2 * Math.PI)) + 0.5))) - 1,
-            formula: 'f(t) = 2|2(t/2π - ⌊t/2π+0.5⌋)| - 1'
+            formula: 'f(t) = 2 \\left| 2 \\left( \\frac{t}{2\\pi} - \\lfloor \\frac{t}{2\\pi} + 0.5 \\rfloor \\right) \\right| - 1'
         },
         damped: {
             name: 'Damped Sine',
             type: 'cartesian',
             fn: (t) => 0.6 * Math.sin(t) * Math.exp(-0.07 * (Math.abs(t) % (10 * Math.PI))),
-            formula: 'f(t) = 0.6 · sin(t) · e^(-kt)'
+            formula: 'f(t) = e^{-0.7|t| \\pmod{10\\pi}} \\cdot \\sin(t)'
         },
         rose: {
             name: 'Rose Curve',
             type: 'polar',
             r: (theta) => Math.cos(4 * theta),
-            formula: 'r = cos(4θ)'
+            formula: 'r = \\cos(4\\theta)'
         },
         cardioid: {
             name: 'Cardioid',
             type: 'polar',
             r: (theta) => (1 - Math.cos(theta)),
-            formula: 'r = a(1 - cosθ)'
+            formula: 'r = a(1 - \\cos \\theta)'
         },
         lemniscate: {
             name: 'Lemniscate',
             type: 'polar',
-            stretchX: 1.8, // 사용자 요청: 훨씬 더 길게
+            stretchX: 1.8,
             r: (theta) => {
                 const c = Math.cos(2 * theta);
                 return c < 0 ? 0 : Math.sqrt(c);
             },
-            formula: 'r² = cos(2θ)'
+            formula: 'r^2 = a^2 \\cos(2\\theta)'
         }
     },
 
     init() {
         this.canvas = document.getElementById('mathCanvas');
         this.ctx = this.canvas.getContext('2d');
+        this.overlay = document.getElementById('formula-overlay');
+        if (this.overlay) this.overlay.classList.add('active');
+        this.updateFormulaUI();
         this.resize();
     },
 
@@ -94,6 +98,7 @@ const WavesCase = {
                 onChange: (val) => {
                     this.formulaId = val;
                     this.points = [];
+                    this.updateFormulaUI();
                     Core.updateControls();
                 }
             },
@@ -101,11 +106,6 @@ const WavesCase = {
                 type: 'info',
                 label: 'Selected Formula',
                 value: this.formulas[this.formulaId].name
-            },
-            {
-                type: 'info',
-                label: 'Math Definition',
-                value: this.formulas[this.formulaId].formula
             },
             {
                 type: 'slider',
@@ -128,6 +128,20 @@ const WavesCase = {
                 onChange: (val) => { this.amplitude = val; }
             }
         ];
+    },
+
+    updateFormulaUI() {
+        if (!this.overlay || !window.katex) return;
+        const f = this.formulas[this.formulaId];
+        const html = `
+            <div style="font-weight:700; color:#27455C; margin-bottom:5px; font-family:'Inter'">${f.name}</div>
+            <div id="katex-render"></div>
+        `;
+        this.overlay.innerHTML = html;
+        window.katex.render(f.formula, document.getElementById('katex-render'), {
+            throwOnError: false,
+            displayMode: true
+        });
     },
 
     reset() {
@@ -173,7 +187,6 @@ const WavesCase = {
         ctx.lineTo(canvas.width, centerY);
         ctx.stroke();
         
-        // Vertical Divider
         ctx.setLineDash([10, 10]);
         ctx.beginPath();
         ctx.moveTo(centerX * 2, canvas.height * 0.05);
@@ -267,24 +280,15 @@ const WavesCase = {
         ctx.stroke();
         ctx.restore();
 
-        // 4. On-Canvas Info
-        ctx.save();
-        const infoPadding = 40;
-        ctx.fillStyle = '#27455C';
-        ctx.font = '700 24px "Inter", sans-serif';
-        ctx.textAlign = 'left';
-        ctx.fillText(formula.name, infoPadding, 60);
-        
-        ctx.fillStyle = '#555555';
-        ctx.font = '500 16px "Inter", sans-serif';
-        ctx.fillText(formula.formula, infoPadding, 90);
-        ctx.restore();
-
         this.angle -= this.speed;
     },
 
     destroy() {
         this.stop();
+        if (this.overlay) {
+            this.overlay.classList.remove('active');
+            this.overlay.innerHTML = '';
+        }
         this.points = [];
     }
 };
