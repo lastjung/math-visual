@@ -47,8 +47,8 @@ const WavesCase = {
         damped: {
             name: 'Damped Sine',
             type: 'cartesian',
-            fn: (t) => 0.8 * Math.sin(t) * Math.exp(-0.06 * (t % (12 * Math.PI))),
-            formula: 'f(t) = 0.8 · sin(t) · e^(-kt)'
+            fn: (t) => 0.6 * Math.sin(t) * Math.exp(-0.07 * (Math.abs(t) % (10 * Math.PI))),
+            formula: 'f(t) = 0.6 · sin(t) · e^(-kt)'
         },
         rose: {
             name: 'Rose Curve',
