@@ -12,6 +12,7 @@ const WavesCase = {
     animationId: null,
     angle: 0,
     points: [],
+    generatorPath: [],
     maxPoints: 500,
 
     // Config State
@@ -130,7 +131,7 @@ const WavesCase = {
             category: 'curves',
             name: 'Butterfly',
             type: 'polar',
-            r: (t) => Math.exp(Math.sin(t)) - 2 * Math.cos(4 * t) + Math.pow(Math.sin((2 * t - Math.PI) / 24), 5),
+            r: (t) => (Math.exp(Math.sin(t)) - 2 * Math.cos(4 * t) + Math.pow(Math.sin((2 * t - Math.PI) / 24), 5)) * 0.3,
             formula: 'r = e^{\\sin\\theta} - 2\\cos(4\\theta) + \\sin^5(...)'
         },
 
@@ -139,21 +140,21 @@ const WavesCase = {
             category: 'art',
             name: 'Star Curve',
             type: 'polar',
-            r: (t) => Math.sin(2 * t) - 6 * Math.pow(Math.cos(6 * t), 3),
+            r: (t) => (Math.sin(2 * t) - 6 * Math.pow(Math.cos(6 * t), 3)) * 0.15,
             formula: 'r = \\sin(2\\theta) - 6(\\cos(6\\theta))^3'
         },
         explosion: {
             category: 'art',
             name: 'Explosion',
             type: 'polar',
-            r: (t) => 3 * Math.pow(Math.cos(14 * t), 3),
+            r: (t) => 3 * Math.pow(Math.cos(14 * t), 3) * 0.5,
             formula: 'r = 3(\\cos(14\\theta))^3'
         },
         trigChaos: {
             category: 'art',
             name: 'Trig Chaos',
             type: 'polar',
-            r: (t) => -4 * Math.sin(Math.cos(Math.tan(t))),
+            r: (t) => -4 * Math.sin(Math.cos(Math.tan(t))) * 0.4,
             formula: 'r = -4\\sin(\\cos(\\tan\\theta))'
         },
         monster: {
@@ -451,6 +452,23 @@ const WavesCase = {
         ctx.fill();
         ctx.restore();
 
+        // 2.5. Polar/Generator Trail (New: Pink & Thin)
+        this.generatorPath.unshift({ x: vecX, y: vecY });
+        if (this.generatorPath.length > 200) this.generatorPath.pop();
+
+        ctx.save();
+        ctx.strokeStyle = '#FF69B4'; // Hot Pink
+        ctx.lineWidth = 1.2;
+        ctx.lineJoin = 'round';
+        ctx.beginPath();
+        for (let i = 0; i < this.generatorPath.length; i++) {
+            const p = this.generatorPath[i];
+            if (i === 0) ctx.moveTo(p.x, p.y);
+            else ctx.lineTo(p.x, p.y);
+        }
+        ctx.stroke();
+        ctx.restore();
+
         // 3. Waveform (Right)
         this.points.unshift(vecY);
         if (this.points.length > this.maxPoints) this.points.pop();
@@ -483,5 +501,6 @@ const WavesCase = {
             this.overlay.innerHTML = '';
         }
         this.points = [];
+        this.generatorPath = [];
     }
 };
