@@ -1,5 +1,6 @@
 /**
- * Sine Wave Visualization Module
+ * Sine Wave & Mathematical Formulas Visualization Module
+ * Dual View: Left (Geometric Generator) | Right (XY Plane/Waveform)
  */
 
 const SineWaveCase = {
@@ -9,29 +10,108 @@ const SineWaveCase = {
     angle: 0,
     points: [],
     maxPoints: 500,
-    
+
     // Config State
     speed: 0.02,
     amplitude: 80,
     frequency: 0.03,
     musicTrack: 'assets/music/bgm/Math_01_Minimalist_Sine_Pulse.mp3',
 
+    // Formula Registry
+    formulaId: 'sine',
+    formulas: {
+        sine: {
+            name: 'Sine Wave',
+            type: 'cartesian',
+            fn: (t) => Math.sin(t),
+            formula: 'f(t) = sin(t)'
+        },
+        square: {
+            name: 'Square Wave',
+            type: 'cartesian',
+            fn: (t) => Math.sign(Math.sin(t)),
+            formula: 'f(t) = sgn(sin(t))'
+        },
+        sawtooth: {
+            name: 'Sawtooth Wave',
+            type: 'cartesian',
+            fn: (t) => 2 * ((t / (2 * Math.PI)) - Math.floor((t / (2 * Math.PI)) + 0.5)),
+            formula: 'f(t) = 2(t/2π - ⌊t/2π + 0.5⌋)'
+        },
+        triangle: {
+            name: 'Triangle Wave',
+            type: 'cartesian',
+            fn: (t) => 2 * Math.abs(2 * ((t / (2 * Math.PI)) - Math.floor((t / (2 * Math.PI)) + 0.5))) - 1,
+            formula: 'f(t) = 2|2(t/2π - ⌊t/2π+0.5⌋)| - 1'
+        },
+        damped: {
+            name: 'Damped Sine',
+            type: 'cartesian',
+            fn: (t) => 0.8 * Math.sin(t) * Math.exp(-0.06 * (t % (12 * Math.PI))),
+            formula: 'f(t) = 0.8 · sin(t) · e^(-kt)'
+        },
+        rose: {
+            name: 'Rose Curve',
+            type: 'polar',
+            r: (theta) => Math.cos(4 * theta),
+            formula: 'r = cos(4θ)'
+        },
+        cardioid: {
+            name: 'Cardioid',
+            type: 'polar',
+            r: (theta) => (1 - Math.cos(theta)),
+            formula: 'r = a(1 - cosθ)'
+        },
+        lemniscate: {
+            name: 'Lemniscate',
+            type: 'polar',
+            stretchX: 1.4, // 사용자 요청: 가로로 더 길게
+            r: (theta) => {
+                const c = Math.cos(2 * theta);
+                return c < 0 ? 0 : Math.sqrt(c);
+            },
+            formula: 'r² = cos(2θ)'
+        }
+    },
+
     init() {
         this.canvas = document.getElementById('mathCanvas');
         this.ctx = this.canvas.getContext('2d');
-        // Legacy setupControls removed
         this.resize();
-        // this.reset(); // Core calls reset on load if needed, or we can init defaults
     },
-    
-    // Universal UI Configuration
+
     get uiConfig() {
         return [
             {
+                type: 'select',
+                id: 'formula-select',
+                label: 'Formula Selection',
+                value: this.formulaId,
+                options: Object.keys(this.formulas).map(id => ({
+                    value: id,
+                    label: this.formulas[id].name
+                })),
+                onChange: (val) => {
+                    this.formulaId = val;
+                    this.points = [];
+                    Core.updateControls();
+                }
+            },
+            {
+                type: 'info',
+                label: 'Selected Formula',
+                value: this.formulas[this.formulaId].name
+            },
+            {
+                type: 'info',
+                label: 'Math Definition',
+                value: this.formulas[this.formulaId].formula
+            },
+            {
                 type: 'slider',
                 id: 'speed',
-                label: 'Speed',
-                min: 0.01,
+                label: 'Simulation Speed',
+                min: 0.005,
                 max: 0.1,
                 step: 0.005,
                 value: this.speed,
@@ -40,22 +120,12 @@ const SineWaveCase = {
             {
                 type: 'slider',
                 id: 'amplitude',
-                label: 'Amplitude',
+                label: 'Intensity (Amp)',
                 min: 20,
                 max: 150,
                 step: 5,
                 value: this.amplitude,
                 onChange: (val) => { this.amplitude = val; }
-            },
-            {
-                type: 'slider',
-                id: 'frequency',
-                label: 'Frequency',
-                min: 0.01,
-                max: 0.1,
-                step: 0.005,
-                value: this.frequency,
-                onChange: (val) => { this.frequency = val; }
             }
         ];
     },
@@ -63,10 +133,6 @@ const SineWaveCase = {
     reset() {
         this.angle = 0;
         this.points = [];
-        // Optional: Reset config values if desired
-        // this.speed = 0.02;
-        // this.amplitude = 80;
-        // this.frequency = 0.03;
     },
 
     resize() {
@@ -93,81 +159,142 @@ const SineWaveCase = {
         const ctx = this.ctx;
         const canvas = this.canvas;
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-        
-        // Use internal state
-        const speed = this.speed;
-        const radius = this.amplitude;
-        const freq = this.frequency; // Note: frequency variable seems unused in original draw logic or was implicit? 
-        // Checking original code: "const freq = parseFloat(document.getElementById('frequency').value);" was defined but NOT USED in draw?
-        // Wait, looking at original code:
-        // const x = centerX + Math.cos(this.angle) * radius;
-        // const y = centerY + Math.sin(this.angle) * radius;
-        // It seems frequency might be related to 'speed' (angle increment) or it was just a dummy control?
-        // Ah, typically frequency affects the wave period.
-        // In the original code: "this.angle -= speed;" -> Speed controls frequency of oscillation.
-        // The "Frequency" slider in original HTML might have been intended for something else or redundant.
-        // However, I will keep it available in state. 
-        // Actually, let's double check if I missed where freq is used.
-        // Original code:
-        // 73: const freq = parseFloat(document.getElementById('frequency').value);
-        // ... (not used)
-        // 123: this.angle -= speed;
-        
-        // It seems 'Frequency' slider was indeed not used in the drawing logic logic provided! 
-        // But 'speed' controls how fast angle changes, which IS frequency in time domain.
-        // Let's stick to the visual behavior of the original code which relied on 'speed' for rotation.
-        
+
         const centerX = canvas.width / 4;
         const centerY = canvas.height / 2;
+        const radius = this.amplitude;
+        const formula = this.formulas[this.formulaId];
 
-        // Axis
-        ctx.strokeStyle = '#e2e8f0';
+        // 1. Grid & Background Elements
+        ctx.save();
+        ctx.strokeStyle = '#f1f5f9';
         ctx.beginPath();
         ctx.moveTo(0, centerY);
         ctx.lineTo(canvas.width, centerY);
         ctx.stroke();
-
-        const x = centerX + Math.cos(this.angle) * radius;
-        const y = centerY + Math.sin(this.angle) * radius;
-
-        // Reference Circle
-        ctx.strokeStyle = '#27455C';
-        ctx.setLineDash([5, 5]);
+        
+        // Vertical Divider
+        ctx.setLineDash([10, 10]);
         ctx.beginPath();
-        ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+        ctx.moveTo(centerX * 2, canvas.height * 0.05);
+        ctx.lineTo(centerX * 2, canvas.height * 0.95);
         ctx.stroke();
-        ctx.setLineDash([]);
+        ctx.restore();
 
-        // Point & Line
-        ctx.fillStyle = '#29CC57';
-        ctx.beginPath();
-        ctx.arc(x, y, 6, 0, Math.PI * 2);
-        ctx.fill();
+        // 2. Left: Generator Area (Expressed like Polar)
+        let vecX = 0;
+        let vecY = 0;
+
+        ctx.save();
+        if (formula.type === 'cartesian') {
+            // "Like Polar": x = cos(t), y = f(t)
+            // Show reference generator shape
+            ctx.strokeStyle = 'rgba(39, 69, 92, 0.08)';
+            ctx.beginPath();
+            for (let a = 0; a < Math.PI * 2; a += 0.02) {
+                const px = centerX + Math.cos(a) * radius;
+                const py = centerY + formula.fn(a) * radius;
+                if (a === 0) ctx.moveTo(px, py);
+                else ctx.lineTo(px, py);
+            }
+            ctx.stroke();
+
+            // Dash Circle for reference
+            ctx.setLineDash([2, 2]);
+            ctx.strokeStyle = 'rgba(0,0,0,0.05)';
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            // Current State Point
+            vecX = centerX + Math.cos(this.angle) * radius;
+            vecY = centerY + formula.fn(this.angle) * radius;
+
+        } else if (formula.type === 'polar') {
+            // True Polar Generator with optional stretch
+            const sX = formula.stretchX || 1;
+            ctx.strokeStyle = 'rgba(39, 69, 92, 0.08)';
+            ctx.beginPath();
+            for (let a = 0; a < Math.PI * 2; a += 0.02) {
+                const r = formula.r(a) * radius;
+                const px = centerX + Math.cos(a) * r * sX;
+                const py = centerY + Math.sin(a) * r;
+                if (a === 0) ctx.moveTo(px, py);
+                else ctx.lineTo(px, py);
+            }
+            ctx.stroke();
+
+            const currentR = formula.r(this.angle) * radius;
+            vecX = centerX + Math.cos(this.angle) * currentR * sX;
+            vecY = centerY + Math.sin(this.angle) * currentR;
+        }
+
+        // Target Vector
         ctx.strokeStyle = '#29CC57';
-        ctx.lineWidth = 2;
+        ctx.lineWidth = 2.5;
         ctx.beginPath();
         ctx.moveTo(centerX, centerY);
-        ctx.lineTo(x, y);
+        ctx.lineTo(vecX, vecY);
         ctx.stroke();
 
-        // Wave
-        this.points.unshift(y);
+        ctx.fillStyle = '#29CC57';
+        ctx.shadowBlur = 10;
+        ctx.shadowColor = 'rgba(41, 204, 87, 0.5)';
+        ctx.beginPath();
+        ctx.arc(vecX, vecY, 7, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+
+        // 3. Right: Waveform Area (XY Plane)
+        this.points.unshift(vecY);
         if (this.points.length > this.maxPoints) this.points.pop();
 
+        ctx.save();
         ctx.strokeStyle = '#29CC57';
         ctx.lineWidth = 4;
+        ctx.lineJoin = 'round';
         ctx.beginPath();
         for (let i = 0; i < this.points.length; i++) {
-            // The spread of the wave depends on how fast we move 'i'. 
-            // Original: const px = centerX + 150 + i * (canvas.width / this.maxPoints * 0.8);
-            const px = centerX + 150 + i * (canvas.width / this.maxPoints * 0.8);
+            const px = centerX * 2 + 60 + i * ((canvas.width - centerX * 2 - 120) / this.maxPoints);
             const py = this.points[i];
             if (i === 0) ctx.moveTo(px, py);
             else ctx.lineTo(px, py);
         }
         ctx.stroke();
+        ctx.restore();
 
-        this.angle -= speed;
+        // Horizontal Sync Line
+        ctx.save();
+        ctx.strokeStyle = 'rgba(41, 204, 87, 0.2)';
+        ctx.setLineDash([4, 4]);
+        ctx.beginPath();
+        ctx.moveTo(vecX, vecY);
+        ctx.lineTo(centerX * 2 + 60, vecY);
+        ctx.stroke();
+        ctx.restore();
+
+        // 4. On-Canvas Info (Top: Name, Bottom: Formula)
+        ctx.save();
+        const infoPadding = 40;
+        // Formula Name
+        ctx.fillStyle = '#27455C';
+        ctx.font = '700 24px "Inter", sans-serif';
+        ctx.textAlign = 'left';
+        ctx.fillText(formula.name, infoPadding, 60);
+        
+        // Formula Equation
+        ctx.fillStyle = '#555555';
+        ctx.font = '500 16px "Inter", sans-serif';
+        ctx.fillText(formula.formula, infoPadding, 90);
+        ctx.restore();
+
+        this.angle -= this.speed;
+        
+        // Dynamic SFX Blip (Conceptual)
+        if (Math.floor(this.angle * 20) % 10 === 0) {
+            // Frequency would be derived from vecY
+        }
     },
 
     destroy() {
