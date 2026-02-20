@@ -1,9 +1,9 @@
 /**
- * Sine Wave & Mathematical Formulas Visualization Module
+ * Mathematical Waves & Curves Visualization Module
  * Dual View: Left (Geometric Generator) | Right (XY Plane/Waveform)
  */
 
-const SineWaveCase = {
+const WavesCase = {
     canvas: null,
     ctx: null,
     animationId: null,
@@ -65,7 +65,7 @@ const SineWaveCase = {
         lemniscate: {
             name: 'Lemniscate',
             type: 'polar',
-            stretchX: 1.4, // 사용자 요청: 가로로 더 길게
+            stretchX: 1.4, // 가로로 더 길게
             r: (theta) => {
                 const c = Math.cos(2 * theta);
                 return c < 0 ? 0 : Math.sqrt(c);
@@ -181,14 +181,12 @@ const SineWaveCase = {
         ctx.stroke();
         ctx.restore();
 
-        // 2. Left: Generator Area (Expressed like Polar)
+        // 2. Left: Generator Area
         let vecX = 0;
         let vecY = 0;
 
         ctx.save();
         if (formula.type === 'cartesian') {
-            // "Like Polar": x = cos(t), y = f(t)
-            // Show reference generator shape
             ctx.strokeStyle = 'rgba(39, 69, 92, 0.08)';
             ctx.beginPath();
             for (let a = 0; a < Math.PI * 2; a += 0.02) {
@@ -199,7 +197,6 @@ const SineWaveCase = {
             }
             ctx.stroke();
 
-            // Dash Circle for reference
             ctx.setLineDash([2, 2]);
             ctx.strokeStyle = 'rgba(0,0,0,0.05)';
             ctx.beginPath();
@@ -207,12 +204,10 @@ const SineWaveCase = {
             ctx.stroke();
             ctx.setLineDash([]);
 
-            // Current State Point
             vecX = centerX + Math.cos(this.angle) * radius;
             vecY = centerY + formula.fn(this.angle) * radius;
 
         } else if (formula.type === 'polar') {
-            // True Polar Generator with optional stretch
             const sX = formula.stretchX || 1;
             ctx.strokeStyle = 'rgba(39, 69, 92, 0.08)';
             ctx.beginPath();
@@ -230,7 +225,6 @@ const SineWaveCase = {
             vecY = centerY + Math.sin(this.angle) * currentR;
         }
 
-        // Target Vector
         ctx.strokeStyle = '#29CC57';
         ctx.lineWidth = 2.5;
         ctx.beginPath();
@@ -246,7 +240,7 @@ const SineWaveCase = {
         ctx.fill();
         ctx.restore();
 
-        // 3. Right: Waveform Area (XY Plane)
+        // 3. Right: Waveform Area
         this.points.unshift(vecY);
         if (this.points.length > this.maxPoints) this.points.pop();
 
@@ -264,7 +258,6 @@ const SineWaveCase = {
         ctx.stroke();
         ctx.restore();
 
-        // Horizontal Sync Line
         ctx.save();
         ctx.strokeStyle = 'rgba(41, 204, 87, 0.2)';
         ctx.setLineDash([4, 4]);
@@ -274,27 +267,20 @@ const SineWaveCase = {
         ctx.stroke();
         ctx.restore();
 
-        // 4. On-Canvas Info (Top: Name, Bottom: Formula)
+        // 4. On-Canvas Info
         ctx.save();
         const infoPadding = 40;
-        // Formula Name
         ctx.fillStyle = '#27455C';
         ctx.font = '700 24px "Inter", sans-serif';
         ctx.textAlign = 'left';
         ctx.fillText(formula.name, infoPadding, 60);
         
-        // Formula Equation
         ctx.fillStyle = '#555555';
         ctx.font = '500 16px "Inter", sans-serif';
         ctx.fillText(formula.formula, infoPadding, 90);
         ctx.restore();
 
         this.angle -= this.speed;
-        
-        // Dynamic SFX Blip (Conceptual)
-        if (Math.floor(this.angle * 20) % 10 === 0) {
-            // Frequency would be derived from vecY
-        }
     },
 
     destroy() {

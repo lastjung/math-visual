@@ -20,7 +20,7 @@
                 <div class="tab-row">
                     <div class="tab" data-case="golden">Golden Spiral</div>
                     <div class="tab" data-case="rainbow">Rainbow Spiral</div>
-                    <div class="tab" data-case="sine">Sine Wave</div>
+                    <div class="tab" data-case="waves">Waves</div>
                     <div class="tab" data-case="hexagon">Hex Grid</div>
                     <div class="tab" data-case="damage">Damage Rolls</div>
                     <div class="tab" data-case="pythagorean">Pythagorean</div>
@@ -74,7 +74,7 @@
     <!-- Scripts -->
     <script src="audio.js"></script>
     <script src="core.js"></script>
-    <script src="cases/sine_wave.js"></script>
+    <script src="cases/waves.js"></script>
     <script src="cases/rainbow_spiral.js"></script>
     <script src="cases/golden_spiral.js"></script>
     <script src="cases/hexagon_grid.js"></script>
@@ -95,10 +95,10 @@
                 tab.classList.add('active');
                 
                 const caseName = tab.getAttribute('data-case');
-                if (caseName === 'sine') {
-                    document.getElementById('main-title').textContent = 'The Geometry of Sine';
-                    document.getElementById('main-subtitle').textContent = 'A circle turning into a wave.';
-                    Core.loadCase(SineWaveCase, { mode: 'display' });
+                if (caseName === 'waves') {
+                    document.getElementById('main-title').textContent = 'The Geometry of Waves';
+                    document.getElementById('main-subtitle').textContent = 'Mathematical waves turning into geometric patterns.';
+                    Core.loadCase(WavesCase, { mode: 'display' });
                 } else if (caseName === 'rainbow') {
                     document.getElementById('main-title').textContent = 'Rainbow Spiral';
                     document.getElementById('main-subtitle').textContent = 'A colorful spiral from a simple angle rule.';
