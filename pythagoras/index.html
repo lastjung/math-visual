@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>피타고라스의 정리 증명</title>
+    <link rel="stylesheet" href="style.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div class="container">
+        <!-- Tab Selection -->
+        <nav class="case-tabs">
+            <div class="tab-group" data-group="display">
+                <span class="group-label">증명 방식 (Proofs)</span>
+                <div class="tab-row" id="proof-tabs">
+                    <div class="tab active" data-case="grid_345">1. 3-4-5 격자</div>
+                    <div class="tab" data-case="grid_51213">2. 5-12-13 격자</div>
+                    <div class="tab" data-case="rearrangement">3. 재배열 증명</div>
+                    <div class="tab" data-case="perigal">4. Perigal의 절단</div>
+                    <div class="tab" data-case="bhaskara">5. 바스카라 증명</div>
+                    <div class="tab" data-case="euclid">6. 유클리드 증명</div>
+                    <div class="tab" data-case="garfield">7. 가필드 증명</div>
+                    <div class="tab" data-case="einstein">8. 아인슈타인 증명</div>
+                    <div class="tab" data-case="similarity">9. 삼각형 닮음</div>
+                    <div class="tab" data-case="davinci">10. 다빈치 증명</div>
+                </div>
+            </div>
+        </nav>
+
+        <header id="header">
+            <h1 id="main-title">방법론 1: 3-4-5 격자 (Grid Migration)</h1>
+            <p class="subtitle" id="main-subtitle">가장 직관적인 3-4-5 삼각형입니다.</p>
+        </header>
+
+        <main class="dashboard-card">
+            <!-- Visualization Canvas -->
+            <div class="canvas-container" id="capture-zone">
+                <canvas id="mathCanvas"></canvas>
+            </div>
+
+            <!-- Controls Holders (Dynamic) -->
+            <aside class="controls-shell">
+                <section id="display-controls" class="controls active" data-mode="display">
+                    <!-- Display mode controls -->
+                </section>
+                <section id="interactive-controls" class="controls" data-mode="interactive">
+                    <!-- Interactive mode controls -->
+                </section>
+            </aside>
+        </main>
+    </div>
+
+    <!-- Sleep Mode Overlay -->
+    <div id="sleep-overlay">
+        <div class="sleep-content">
+            <h2>Deep Sleep Mode</h2>
+            <p>System paused due to inactivity.<br>Move mouse or click to resume.</p>
+            <div class="btn-primary" onclick="Core.resetIdleTimer()">Resume Activity</div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="audio.js"></script>
+    <script src="core.js"></script>
+    
+    <!-- Proof Cases -->
+    <script src="cases/1_grid_345.js"></script>
+    <script src="cases/2_grid_51213.js"></script>
+    <script src="cases/3_rearrangement.js"></script>
+    <script src="cases/4_perigal.js"></script>
+    <script src="cases/5_bhaskara.js"></script>
+    <script src="cases/6_euclid.js"></script>
+    <script src="cases/7_garfield.js"></script>
+    <script src="cases/8_einstein.js"></script>
+    <script src="cases/9_similarity.js"></script>
+    <script src="cases/10_davinci.js"></script>
+    
+    <script>
+        // Tab Management
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                
+                const caseName = tab.getAttribute('data-case');
+                let targetCaseObj = null;
+
+                if (caseName === 'grid_345') targetCaseObj = typeof Grid345Case !== 'undefined' ? Grid345Case : null;
+                else if (caseName === 'grid_51213') targetCaseObj = typeof Grid51213Case !== 'undefined' ? Grid51213Case : null;
+                else if (caseName === 'rearrangement') targetCaseObj = typeof RearrangementCase !== 'undefined' ? RearrangementCase : null;
+                else if (caseName === 'perigal') targetCaseObj = typeof PerigalCase !== 'undefined' ? PerigalCase : null;
+                else if (caseName === 'bhaskara') targetCaseObj = typeof BhaskaraCase !== 'undefined' ? BhaskaraCase : null;
+                else if (caseName === 'euclid') targetCaseObj = typeof EuclidCase !== 'undefined' ? EuclidCase : null;
+                else if (caseName === 'garfield') targetCaseObj = typeof GarfieldCase !== 'undefined' ? GarfieldCase : null;
+                else if (caseName === 'einstein') targetCaseObj = typeof EinsteinCase !== 'undefined' ? EinsteinCase : null;
+                else if (caseName === 'similarity') targetCaseObj = typeof SimilarityCase !== 'undefined' ? SimilarityCase : null;
+                else if (caseName === 'davinci') targetCaseObj = typeof DavinciCase !== 'undefined' ? DavinciCase : null;
+                
+                if (targetCaseObj) {
+                    Core.loadCase(targetCaseObj, { mode: 'display' });
+                } else {
+                    document.getElementById('main-title').textContent = '준비 중';
+                    document.getElementById('main-subtitle').textContent = '해당 증명은 아직 구현 중입니다.';
+                    const canvas = document.getElementById('mathCanvas');
+                    const ctx = canvas.getContext('2d');
+                    ctx.clearRect(0,0,canvas.width,canvas.height);
+                    if(Core.currentCase && Core.currentCase.destroy) Core.currentCase.destroy();
+                    Core.currentCase = null;
+                }
+            });
+        });
+
+        // Load Default Case
+        window.onload = () => {
+            if (typeof Grid345Case !== 'undefined') {
+                Core.loadCase(Grid345Case, { mode: 'display' });
+            }
+        };
+    </script>
+  </body>
+</html>
