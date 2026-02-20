@@ -32,6 +32,7 @@
                 <span class="group-label">Interactive</span>
                 <div class="tab-row">
                     <div class="tab active" data-case="hex-maze">Hexagon Maze</div>
+                    <div class="tab" data-case="fibonacci-maze">Fibonacci Maze</div>
                     <div class="tab" data-case="circular">Circular Obstacles</div>
                     <div class="tab" data-case="polygon-map">Polygon Map</div>
                 </div>
@@ -77,7 +78,9 @@
     <script src="cases/rainbow_spiral.js"></script>
     <script src="cases/golden_spiral.js"></script>
     <script src="cases/hexagon_grid.js"></script>
+    <script src="cases/maze_engine.js"></script>
     <script src="cases/hex_maze.js"></script>
+    <script src="cases/fibonacci_maze.js"></script>
     <script src="cases/damage_rolls.js"></script>
     <script src="cases/pythagorean_theorem.js"></script>
     <script src="https://unpkg.com/delaunator@5.0.0/delaunator.min.js"></script>
@@ -112,6 +115,10 @@
                     document.getElementById('main-title').textContent = 'Hexagon Maze';
                     document.getElementById('main-subtitle').textContent = 'Find the shortest path in a hex grid.';
                     Core.loadCase(HexMazeCase, { mode: 'interactive' });
+                } else if (caseName === 'fibonacci-maze') {
+                    document.getElementById('main-title').textContent = 'Fibonacci Hex Maze';
+                    document.getElementById('main-subtitle').textContent = 'Pathfinding through golden angle seeds.';
+                    Core.loadCase(FibonacciMazeCase, { mode: 'interactive' });
                 } else if (caseName === 'damage') {
                     document.getElementById('main-title').textContent = 'Probability: Damage Rolls';
                     document.getElementById('main-subtitle').textContent = 'See how dice rolls spread over many tries.';

@@ -1,28 +1,7 @@
 /**
- * Priority Queue used by weighted/best-first searches.
- */
-class PriorityQueue {
-    constructor() {
-        this.elements = [];
-    }
-
-    put(item, priority) {
-        this.elements.push({ item, priority });
-        this.elements.sort((a, b) => a.priority - b.priority);
-    }
-
-    get() {
-        return this.elements.shift().item;
-    }
-
-    empty() {
-        return this.elements.length === 0;
-    }
-}
-
-/**
  * PathfindingCase
  * Hex maze + animated multi-algorithm pathfinding.
+ * Now utilizing the decoupled MazeEngine for core logic.
  */
 const HexMazeCase = {
     canvas: null,
@@ -116,17 +95,6 @@ const HexMazeCase = {
     isErasingWall: false,
     eventsBound: false,
 
-    // Constants
-    sqrt3: Math.sqrt(3),
-    directions: [
-        { q: 1, r: 0 }, { q: 1, r: -1 }, { q: 0, r: -1 },
-        { q: -1, r: 0 }, { q: -1, r: 1 }, { q: 0, r: 1 }
-    ],
-    mazeStepDirections: [
-        { q: 2, r: 0 }, { q: 2, r: -2 }, { q: 0, r: -2 },
-        { q: -2, r: 0 }, { q: -2, r: 2 }, { q: 0, r: 2 }
-    ],
-
     init() {
         this.canvas = document.getElementById('mathCanvas');
         if (!this.canvas) return;
@@ -184,7 +152,8 @@ const HexMazeCase = {
                 label: 'Color Theme',
                 value: this.colorTheme,
                 options: [
-                    { value: 'basic', label: '1. basic (Green/Pink)' },
+                    { value: 'rainbow', label: '0. Default (Rainbow)' },
+                    { value: 'basic', label: '1. Basic (Green/Pink)' },
                     { value: 'ocean', label: '2. Ocean (Cyan/Blue)' },
                     { value: 'sunset', label: '3. Sunset (Orange/Purple)' },
                     { value: 'neon', label: '4. Neon (Gray/Lime)' }
@@ -201,9 +170,9 @@ const HexMazeCase = {
                 min: 1,
                 max: 50,
                 step: 1,
-                value: this.delayToSpeed(this.searchDelayMs),
+                value: MazeEngine.delayToSpeed(this.searchDelayMs),
                 onChange: (v) => {
-                    this.searchDelayMs = this.speedToDelay(v);
+                    this.searchDelayMs = MazeEngine.speedToDelay(v);
                 }
             },
             {
@@ -252,60 +221,19 @@ const HexMazeCase = {
     },
 
     key(h) {
-        return `${h.q},${h.r}`;
-    },
-
-    hexDistance(a, b = { q: 0, r: 0 }) {
-        return (Math.abs(a.q - b.q) + Math.abs((a.q + a.r) - (b.q + b.r)) + Math.abs(a.r - b.r)) / 2;
-    },
-
-    isInside(node) {
-        return this.hexDistance(node) <= this.gridRadius;
-    },
-
-    heuristic(a, b) {
-        return this.hexDistance(a, b);
+        return MazeEngine.key(h);
     },
 
     isWalkable(node) {
-        return this.isInside(node) && !this.walls.has(this.key(node));
+        return MazeEngine.isWalkable(node, this.gridRadius, this.walls);
+    },
+
+    isInside(node) {
+        return MazeEngine.isInside(node, this.gridRadius);
     },
 
     isCoreRunning() {
         return typeof Core !== 'undefined' ? !!Core.isRunning : true;
-    },
-
-    forEachHex(callback) {
-        const N = this.gridRadius;
-        for (let q = -N; q <= N; q++) {
-            const r1 = Math.max(-N, -q - N);
-            const r2 = Math.min(N, -q + N);
-            for (let r = r1; r <= r2; r++) {
-                callback({ q, r });
-            }
-        }
-    },
-
-    getNeighbors(node) {
-        const results = [];
-        for (const dir of this.directions) {
-            const next = { q: node.q + dir.q, r: node.r + dir.r };
-            if (this.isWalkable(next)) results.push(next);
-        }
-        return results;
-    },
-
-    getNeighborsIgnoringWalls(node) {
-        const results = [];
-        for (const dir of this.directions) {
-            const next = { q: node.q + dir.q, r: node.r + dir.r };
-            if (this.isInside(next)) results.push(next);
-        }
-        return results;
-    },
-
-    randomChoice(arr) {
-        return arr[Math.floor(Math.random() * arr.length)];
     },
 
     caseAudioLabel() {
@@ -320,48 +248,6 @@ const HexMazeCase = {
         this.sfxEnabled = !this.sfxEnabled;
     },
 
-    speedToDelay(speed) {
-        return 205 - speed * 5;
-    },
-
-    delayToSpeed(delayMs) {
-        return Math.max(1, Math.min(50, Math.round((205 - delayMs) / 5)));
-    },
-
-    ensureAudioContext() {
-        if (!this.sfxEnabled) return null;
-        if (!this.audioCtx) {
-            const Ctx = window.AudioContext || window.webkitAudioContext;
-            if (!Ctx) return null;
-            this.audioCtx = new Ctx();
-        }
-        if (this.audioCtx.state === 'suspended') {
-            this.audioCtx.resume().catch(() => {});
-        }
-        return this.audioCtx;
-    },
-
-    playTone(freq, durationSec, type = 'sine', volumeMul = 1, attackSec = 0.003) {
-        const ctx = this.ensureAudioContext();
-        if (!ctx || !this.sfxEnabled || this.sfxVolume <= 0) return;
-
-        const now = ctx.currentTime;
-        const gain = ctx.createGain();
-        const osc = ctx.createOscillator();
-        osc.type = type;
-        osc.frequency.value = freq;
-
-        const peak = Math.max(0, Math.min(1, this.sfxVolume * volumeMul));
-        gain.gain.setValueAtTime(0.0001, now);
-        gain.gain.linearRampToValueAtTime(peak, now + attackSec);
-        gain.gain.exponentialRampToValueAtTime(0.0001, now + durationSec);
-
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.start(now);
-        osc.stop(now + durationSec + 0.01);
-    },
-
     playStepSound() {
         const now = performance.now();
         if (now - this.lastStepSoundAt < 40) return;
@@ -370,17 +256,7 @@ const HexMazeCase = {
 
         if (this.stepSoundTick % 2 !== 0) return;
         const pitch = 240 + (this.stepSoundTick % 10) * 18;
-        this.playTone(pitch, 0.05, 'triangle', 0.45);
-    },
-
-    playResultSound(found) {
-        if (found) {
-            this.playTone(523.25, 0.12, 'sine', 0.9);
-            setTimeout(() => this.playTone(659.25, 0.12, 'sine', 0.8), 90);
-            setTimeout(() => this.playTone(783.99, 0.18, 'sine', 0.75), 180);
-            return;
-        }
-        this.playTone(180, 0.16, 'sawtooth', 0.7);
+        MazeEngine.playTone(pitch, 0.05, 'triangle', 0.45, 0.003, this);
     },
 
     clearSearchState() {
@@ -423,34 +299,12 @@ const HexMazeCase = {
         this.searchTimer = setTimeout(() => this.stepSearch(), this.searchDelayMs);
     },
 
-    findNearestWalkable(node) {
-        if (this.isWalkable(node)) return node;
-        if (!this.isInside(node)) return null;
-
-        const queue = [node];
-        let head = 0;
-        const seen = new Set([this.key(node)]);
-
-        while (head < queue.length) {
-            const current = queue[head++];
-            if (this.isWalkable(current)) return current;
-
-            for (const next of this.getNeighborsIgnoringWalls(current)) {
-                const nk = this.key(next);
-                if (seen.has(nk)) continue;
-                seen.add(nk);
-                queue.push(next);
-            }
-        }
-        return null;
-    },
-
     normalizeEndpoints() {
         if (!this.isWalkable(this.startNode)) {
-            this.startNode = this.findNearestWalkable(this.startNode) || { q: 0, r: 0 };
+            this.startNode = MazeEngine.findNearestWalkable(this.startNode, this.gridRadius, this.walls) || { q: 0, r: 0 };
         }
         if (!this.isWalkable(this.goalNode)) {
-            this.goalNode = this.findNearestWalkable(this.goalNode) || this.startNode;
+            this.goalNode = MazeEngine.findNearestWalkable(this.goalNode, this.gridRadius, this.walls) || this.startNode;
         }
     },
 
@@ -460,7 +314,7 @@ const HexMazeCase = {
         this.totalSearchCount += 1;
         this.searchStartedAtMs = performance.now();
 
-        const startKey = this.key(this.startNode);
+        const startKey = MazeEngine.key(this.startNode);
         this.cameFrom[startKey] = null;
         this.costSoFar[startKey] = 0;
 
@@ -497,7 +351,7 @@ const HexMazeCase = {
     },
 
     pushFrontier(node, priority = 0) {
-        const nk = this.key(node);
+        const nk = MazeEngine.key(node);
         if (this.searchMode === 'bfs') this.frontierQueue.push(node);
         else if (this.searchMode === 'dfs') this.frontierStack.push(node);
         else this.frontierPQ.put(node, priority);
@@ -508,14 +362,14 @@ const HexMazeCase = {
         this.path = [];
         this.pathSet.clear();
 
-        const goalKey = this.key(this.goalNode);
+        const goalKey = MazeEngine.key(this.goalNode);
         if (!(goalKey in this.cameFrom)) return;
 
         let current = this.goalNode;
         while (current) {
             this.path.push(current);
-            this.pathSet.add(this.key(current));
-            current = this.cameFrom[this.key(current)];
+            this.pathSet.add(MazeEngine.key(current));
+            current = this.cameFrom[MazeEngine.key(current)];
         }
         this.path.reverse();
     },
@@ -530,7 +384,7 @@ const HexMazeCase = {
         if (found) this.reconstructPath();
         if (found) this.totalFindCount += 1;
         this.lastEnteredHexCount = this.exploredSet.size;
-        this.playResultSound(found);
+        MazeEngine.playResultSound(found, this);
         this.currentNode = null;
         this.draw();
 
@@ -544,7 +398,7 @@ const HexMazeCase = {
     stepSearch() {
         while (this.hasFrontier()) {
             const current = this.popFrontier();
-            const currentKey = this.key(current);
+            const currentKey = MazeEngine.key(current);
 
             this.frontierSet.delete(currentKey);
             if (this.exploredSet.has(currentKey)) {
@@ -563,8 +417,8 @@ const HexMazeCase = {
                 return;
             }
 
-            for (const next of this.getNeighbors(current)) {
-                const nextKey = this.key(next);
+            for (const next of MazeEngine.getNeighbors(current, this.gridRadius, this.walls)) {
+                const nextKey = MazeEngine.key(next);
                 const newCost = this.costSoFar[currentKey] + 1;
 
                 if (this.searchMode === 'bfs' || this.searchMode === 'dfs') {
@@ -579,7 +433,7 @@ const HexMazeCase = {
                     if (nextKey in this.cameFrom) continue;
                     this.cameFrom[nextKey] = current;
                     this.costSoFar[nextKey] = newCost;
-                    this.pushFrontier(next, this.heuristic(this.goalNode, next));
+                    this.pushFrontier(next, MazeEngine.heuristic(this.goalNode, next));
                     continue;
                 }
 
@@ -588,7 +442,7 @@ const HexMazeCase = {
                     this.cameFrom[nextKey] = current;
                     const priority = this.searchMode === 'dijkstra'
                         ? newCost
-                        : newCost + this.heuristic(this.goalNode, next);
+                        : newCost + MazeEngine.heuristic(this.goalNode, next);
                     this.pushFrontier(next, priority);
                 }
             }
@@ -618,44 +472,18 @@ const HexMazeCase = {
     },
 
     pickAnyOpenNode() {
-        let found = null;
-        this.forEachHex((h) => {
-            if (!found && !this.walls.has(this.key(h))) {
-                found = h;
-            }
-        });
-        return found;
+        return MazeEngine.pickAnyOpenNode(this.gridRadius, this.walls);
     },
 
     farthestReachableFrom(source) {
-        const queue = [source];
-        let head = 0;
-        const dist = { [this.key(source)]: 0 };
-        let farthest = source;
-
-        while (head < queue.length) {
-            const current = queue[head++];
-            const currentKey = this.key(current);
-            const currentDist = dist[currentKey];
-            const farKey = this.key(farthest);
-            if (currentDist > dist[farKey]) farthest = current;
-
-            for (const next of this.getNeighbors(current)) {
-                const nk = this.key(next);
-                if (nk in dist) continue;
-                dist[nk] = currentDist + 1;
-                queue.push(next);
-            }
-        }
-
-        return farthest;
+        return MazeEngine.farthestReachableFrom(source, this.gridRadius, this.walls);
     },
 
     generateMaze({ solve = false } = {}) {
         this.stopSearchAnimation();
 
         this.walls.clear();
-        this.forEachHex((h) => this.walls.add(this.key(h)));
+        MazeEngine.forEachHex(this.gridRadius, (h) => this.walls.add(MazeEngine.key(h)));
 
         if (this.mazeShape === 'heart' || this.mazeShape === 'star' || this.mazeShape === 'infinity' || this.mazeShape === 'spiral') {
             const waypoints = [];
@@ -668,7 +496,7 @@ const HexMazeCase = {
                     x *= 1.8 * this.hexSize;
                     y *= -1.8 * this.hexSize;
                     y += 4 * this.hexSize;
-                    waypoints.push(this.pixelToHex(x, y));
+                    waypoints.push(MazeEngine.pixelToHex(x, y, this.hexSize));
                 }
             } else if (this.mazeShape === 'star') {
                 const numPoints = 10;
@@ -680,19 +508,13 @@ const HexMazeCase = {
                     let y = r_dist * Math.sin(angle);
                     if (i === 0) x += 3.5 * this.hexSize;
                     else if (i === numPoints) x -= 3.5 * this.hexSize;
-                    waypoints.push(this.pixelToHex(x, y));
+                    waypoints.push(MazeEngine.pixelToHex(x, y, this.hexSize));
                 }
             } else if (this.mazeShape === 'infinity') {
-                // To create a perfect, non-intersecting, WIDE infinity (peanut) shape,
-                // we use explicit hard-coded node positions scaled by gridRadius.
-                // We draw lines between these nodes to ensure a continuous track
-                // that avoids the linear/zigzag "squished" look.
-                
                 waypoints.length = 0;
                 let s = Math.floor(this.gridRadius * 0.40); // 10
                 let h = Math.floor(this.gridRadius * 0.25); // 6 (Vertical height offset)
                 
-                // Define the key turning points of a wide, pinched-O peanut shape
                 let nodes = [
                     {q: -s*2, r: -h},     // Far Left Top
                     {q: -s,   r: -h*2},   // Left Upper Curve
@@ -706,48 +528,39 @@ const HexMazeCase = {
                     {q: -s*2, r: h}       // Far Left Bottom
                 ];
 
-                // Connect the nodes beautifully
                 for (let i = 0; i < nodes.length; i++) {
                     let a = nodes[i];
                     let b = nodes[(i + 1) % nodes.length];
                     
-                    // Stop 4 hexes short on the very last connecting segment 
-                    // so the start and end of the drawing don't merge back together!
-                    const N = this.hexDistance(a, b);
+                    const N = MazeEngine.hexDistance(a, b);
                     const steps = Math.max(1, N);
                     let endStep = (i === nodes.length - 1) ? Math.max(1, steps - 4) : steps;
                     
                     for (let j = 0; j < endStep; j++) {
-                        waypoints.push(this.hexRoundFractional(this.hexLerp(a, b, j / steps)));
+                        waypoints.push(MazeEngine.hexRoundFractional(MazeEngine.hexLerp(a, b, j / steps)));
                     }
                 }
 
             } else if (this.mazeShape === 'spiral') {
-                // To prevent the same diagonal "loop skipping" bypass we saw with infinity,
-                // we drastically increase the gap between each spiral arm so there's always
-                // a thick wall of hexes separating the inner loops from the outer loops.
-                
-                const loops = 5.0; // Increased loops to fill the screen as requested
-                const numPoints = 800; // Increased resolution so the curve is perfectly smooth
+                const loops = 5.0; 
+                const numPoints = 800; 
                 
                 for (let i = 0; i <= numPoints; i++) {
                     let t = (i / numPoints) * (Math.PI * 2 * loops);
-                    // Radius increases by 5.5 hexSizes every 360 degrees.
-                    // This provides enough barrier to prevent bypasses, but allows 5 full loops to fit inside the grid.
                     let r = 2.0 * this.hexSize + 5.5 * this.hexSize * (t / (Math.PI * 2));
                     let x = r * Math.cos(t);
                     let y = r * Math.sin(t);
-                    waypoints.push(this.pixelToHex(x, y));
+                    waypoints.push(MazeEngine.pixelToHex(x, y, this.hexSize));
                 }
             }
             
             const pathList = [];
             const pathKeys = new Set();
             for (let i = 0; i < waypoints.length - 1; i++) {
-                const line = this.getHexLine(waypoints[i], waypoints[i+1]);
+                const line = MazeEngine.getHexLine(waypoints[i], waypoints[i+1]);
                 for (const h of line) {
                     if (!this.isInside(h)) continue;
-                    const k = this.key(h);
+                    const k = MazeEngine.key(h);
                     if (!pathKeys.has(k)) {
                         pathKeys.add(k);
                         pathList.push(h);
@@ -764,10 +577,9 @@ const HexMazeCase = {
                 this.startNode = pathList[0];
                 this.goalNode = pathList[pathList.length - 1];
 
-                // VERY IMPORTANT: Populate W with all path hexes
                 const W = new Set();
                 for (const h of pathList) {
-                    const k = this.key(h);
+                    const k = MazeEngine.key(h);
                     this.walls.delete(k);
                     W.add(k);
                 }
@@ -775,11 +587,11 @@ const HexMazeCase = {
                 const pathSetKeys = new Set(W); 
                 const eligible = [];
 
-                this.forEachHex(h => {
-                    if (this.walls.has(this.key(h))) {
+                MazeEngine.forEachHex(this.gridRadius, h => {
+                    if (this.walls.has(MazeEngine.key(h))) {
                         let wNeighbors = 0;
-                        for (const n of this.getNeighborsIgnoringWalls(h)) {
-                            if (W.has(this.key(n))) wNeighbors++;
+                        for (const n of MazeEngine.getNeighborsIgnoringWalls(h, this.gridRadius)) {
+                            if (W.has(MazeEngine.key(n))) wNeighbors++;
                         }
                         if (wNeighbors === 1) eligible.push(h);
                     }
@@ -795,14 +607,14 @@ const HexMazeCase = {
                     }
                     
                     const curr = eligible.pop();
-                    const k = this.key(curr);
+                    const k = MazeEngine.key(curr);
                     if (!this.walls.has(k)) continue;
 
                     let wNeighbors = 0;
                     let touchesOriginalPath = 0;
 
-                    for (const n of this.getNeighborsIgnoringWalls(curr)) {
-                        const nk = this.key(n);
+                    for (const n of MazeEngine.getNeighborsIgnoringWalls(curr, this.gridRadius)) {
+                        const nk = MazeEngine.key(n);
                         if (W.has(nk)) {
                             wNeighbors++;
                             if (pathSetKeys.has(nk)) {
@@ -814,12 +626,12 @@ const HexMazeCase = {
                     if (wNeighbors === 1 && touchesOriginalPath <= 1) {
                         this.walls.delete(k);
                         W.add(k);
-                        for (const n of this.getNeighborsIgnoringWalls(curr)) {
-                            if (this.walls.has(this.key(n))) {
+                        for (const n of MazeEngine.getNeighborsIgnoringWalls(curr, this.gridRadius)) {
+                            if (this.walls.has(MazeEngine.key(n))) {
                                 let wn = 0;
                                 let origTouches = 0;
-                                for (const nn of this.getNeighborsIgnoringWalls(n)) {
-                                    const nnk = this.key(nn);
+                                for (const nn of MazeEngine.getNeighborsIgnoringWalls(n, this.gridRadius)) {
+                                    const nnk = MazeEngine.key(nn);
                                     if (W.has(nnk)) {
                                         wn++;
                                         if (pathSetKeys.has(nnk)) origTouches++;
@@ -842,9 +654,9 @@ const HexMazeCase = {
 
         const cellSet = new Set();
         const cells = [];
-        this.forEachHex((h) => {
+        MazeEngine.forEachHex(this.gridRadius, (h) => {
             if (h.q % 2 === 0 && h.r % 2 === 0) {
-                const k = this.key(h);
+                const k = MazeEngine.key(h);
                 cellSet.add(k);
                 cells.push(h);
             }
@@ -855,19 +667,20 @@ const HexMazeCase = {
             return;
         }
 
-        const startCell = this.randomChoice(cells);
+        const startCell = MazeEngine.randomChoice(cells);
         const stack = [startCell];
-        const visited = new Set([this.key(startCell)]);
-        this.walls.delete(this.key(startCell));
+        const visited = new Set([MazeEngine.key(startCell)]);
+        this.walls.delete(MazeEngine.key(startCell));
 
         while (stack.length) {
             const current = stack[stack.length - 1];
             const options = [];
 
-            for (const dir of this.mazeStepDirections) {
+            // Still need mazeStepDirections, it's specific to this generator
+            for (const dir of MazeEngine.mazeStepDirections) {
                 const next = { q: current.q + dir.q, r: current.r + dir.r };
-                const nextKey = this.key(next);
-                if (!this.isInside(next)) continue;
+                const nextKey = MazeEngine.key(next);
+                if (!MazeEngine.isInside(next, this.gridRadius)) continue;
                 if (!cellSet.has(nextKey)) continue;
                 if (visited.has(nextKey)) continue;
                 options.push(next);
@@ -878,12 +691,12 @@ const HexMazeCase = {
                 continue;
             }
 
-            const next = this.randomChoice(options);
+            const next = MazeEngine.randomChoice(options);
             const bridge = { q: (current.q + next.q) / 2, r: (current.r + next.r) / 2 };
 
-            this.walls.delete(this.key(bridge));
-            this.walls.delete(this.key(next));
-            visited.add(this.key(next));
+            this.walls.delete(MazeEngine.key(bridge));
+            this.walls.delete(MazeEngine.key(next));
+            visited.add(MazeEngine.key(next));
             stack.push(next);
         }
 
@@ -898,8 +711,8 @@ const HexMazeCase = {
         this.startNode = a;
         this.goalNode = b;
 
-        this.walls.delete(this.key(this.startNode));
-        this.walls.delete(this.key(this.goalNode));
+        this.walls.delete(MazeEngine.key(this.startNode));
+        this.walls.delete(MazeEngine.key(this.goalNode));
 
         if (solve) this.startSearchAnimation();
         else {
@@ -921,77 +734,20 @@ const HexMazeCase = {
         }
     },
 
-    pixelToHex(x, y) {
-        const size = this.hexSize;
-        const q = (this.sqrt3 / 3 * x - 1 / 3 * y) / size;
-        const r = (2 / 3 * y) / size;
-        return this.hexRound(q, r);
-    },
-
-    hexRound(q, r) {
-        const s = -q - r;
-        let rq = Math.round(q);
-        let rr = Math.round(r);
-        let rs = Math.round(s);
-
-        const qDiff = Math.abs(rq - q);
-        const rDiff = Math.abs(rr - r);
-        const sDiff = Math.abs(rs - s);
-
-        if (qDiff > rDiff && qDiff > sDiff) rq = -rr - rs;
-        else if (rDiff > sDiff) rr = -rq - rs;
-        else rs = -rq - rr;
-
-        return { q: rq, r: rr };
-    },
-
-    hexLerp(a, b, t) {
-        return {
-            q: a.q + (b.q - a.q) * t,
-            r: a.r + (b.r - a.r) * t,
-            s: (-a.q - a.r) + ((-b.q - b.r) - (-a.q - a.r)) * t
-        };
-    },
-
-    hexRoundFractional(h) {
-        let rq = Math.round(h.q);
-        let rr = Math.round(h.r);
-        let rs = Math.round(h.s);
-
-        const qDiff = Math.abs(rq - h.q);
-        const rDiff = Math.abs(rr - h.r);
-        const sDiff = Math.abs(rs - h.s);
-
-        if (qDiff > rDiff && qDiff > sDiff) rq = -rr - rs;
-        else if (rDiff > sDiff) rr = -rq - rs;
-
-        return { q: rq, r: rr };
-    },
-
-    getHexLine(a, b) {
-        const N = this.hexDistance(a, b);
-        const results = [];
-        const steps = Math.max(1, N);
-        for (let i = 0; i <= steps; i++) {
-            results.push(this.hexRoundFractional(this.hexLerp(a, b, 1.0 / steps * i)));
-        }
-        return results;
-    },
-
     getHexFromEvent(e) {
         const rect = this.canvas.getBoundingClientRect();
         const x = e.clientX - rect.left - this.canvas.width / 2;
         const y = e.clientY - rect.top - this.canvas.height / 2;
-        return this.pixelToHex(x, y);
+        return MazeEngine.pixelToHex(x, y, this.hexSize);
     },
 
     onMouseDown(e) {
         const hex = this.getHexFromEvent(e);
-        if (!this.isInside(hex)) return;
+        if (!MazeEngine.isInside(hex, this.gridRadius)) return;
 
-        const k = this.key(hex);
-        const startK = this.key(this.startNode);
-        const goalK = this.key(this.goalNode);
+        const k = MazeEngine.key(hex);
+        const startK = MazeEngine.key(this.startNode);
+        const goalK = MazeEngine.key(this.goalNode);
 
         if (k === startK) {
             this.isDraggingStart = true;
@@ -1018,11 +774,11 @@ const HexMazeCase = {
         }
 
         const hex = this.getHexFromEvent(e);
-        if (!this.isInside(hex)) return;
+        if (!MazeEngine.isInside(hex, this.gridRadius)) return;
 
-        const k = this.key(hex);
-        const startK = this.key(this.startNode);
-        const goalK = this.key(this.goalNode);
+        const k = MazeEngine.key(hex);
+        const startK = MazeEngine.key(this.startNode);
+        const goalK = MazeEngine.key(this.goalNode);
 
         if (this.isDraggingStart) {
             if (k !== goalK && !this.walls.has(k)) {
@@ -1052,38 +808,38 @@ const HexMazeCase = {
         this.isErasingWall = false;
     },
 
-    hexToPixel(q, r) {
-        const size = this.hexSize;
-        const x = size * (this.sqrt3 * q + this.sqrt3 / 2 * r);
-        const y = size * (3 / 2 * r);
-        return { x, y };
-    },
-
     drawHex(q, r) {
-        const k = this.key({ q, r });
-        const center = this.hexToPixel(q, r);
+        const k = MazeEngine.key({ q, r });
+        const center = MazeEngine.hexToPixel(q, r, this.hexSize);
         const drawSize = this.hexSize * 0.92;
         const ctx = this.ctx;
 
-        // Base walkable cell should look clearly different from walls.
         let fill = 'rgba(240, 248, 255, 0.16)';
         let stroke = 'rgba(255, 255, 255, 0.22)';
-        const theme = this.themes[this.colorTheme] || this.themes.basic;
+        const theme = MazeEngine.themes[this.colorTheme] || MazeEngine.themes.basic;
 
         if (this.walls.has(k)) {
-            fill = theme.wall;
-            stroke = theme.colorTheme === 'basic' ? 'rgba(134, 239, 172, 0.5)' : 'rgba(255, 255, 255, 0.1)';
-        } else if (k === this.key(this.startNode)) {
+            if (this.colorTheme === 'rainbow') {
+                const dist = Math.sqrt(center.x * center.x + center.y * center.y);
+                const angle = Math.atan2(center.y, center.x);
+                const pct = (angle + Math.PI) / (Math.PI * 2);
+                fill = `hsl(${(pct * 360 + dist * 0.5 - (this.time || 0) * 50) % 360}, 70%, 60%)`;
+                stroke = 'rgba(255, 255, 255, 0.1)';
+            } else {
+                fill = theme.wall;
+                stroke = theme.colorTheme === 'basic' ? 'rgba(134, 239, 172, 0.5)' : 'rgba(255, 255, 255, 0.1)';
+            }
+        } else if (k === MazeEngine.key(this.startNode)) {
             fill = theme.start;
             stroke = theme.colorTheme === 'basic' ? '#00AA00' : 'rgba(255,255,255,0.4)';
-        } else if (k === this.key(this.goalNode)) {
+        } else if (k === MazeEngine.key(this.goalNode)) {
             fill = theme.goal;
             stroke = theme.colorTheme === 'basic' ? '#CC0000' : 'rgba(255,255,255,0.4)';
         } else if (this.pathSet.has(k)) {
             fill = theme.path;
-        } else if (k === (this.currentNode ? this.key(this.currentNode) : '')) {
+        } else if (k === (this.currentNode ? MazeEngine.key(this.currentNode) : '')) {
             fill = theme.current;
-            stroke = theme.colorTheme === 'basic' ? '#FFF176' : '#FFFFFF';
+            stroke = theme.current;
         } else if (this.frontierSet.has(k)) {
             fill = theme.frontier;
         } else if (this.exploredSet.has(k)) {
@@ -1100,18 +856,18 @@ const HexMazeCase = {
         }
         ctx.closePath();
 
-        const isCurrent = k === (this.currentNode ? this.key(this.currentNode) : '');
+        const isCurrent = k === (this.currentNode ? MazeEngine.key(this.currentNode) : '');
 
         ctx.fillStyle = fill;
         ctx.fill();
 
         if (isCurrent) {
             ctx.save();
-            ctx.shadowColor = '#FFD700';
+            ctx.shadowColor = theme.current;
             ctx.shadowBlur = 14;
-            ctx.fillStyle = '#FFD700';
+            ctx.fillStyle = theme.current;
             ctx.fill();
-            ctx.strokeStyle = '#FFFFFF';
+            ctx.strokeStyle = theme.current === '#FF0000' ? '#FFD700' : '#FFFFFF';
             ctx.lineWidth = 3;
             ctx.stroke();
             ctx.restore();
@@ -1134,18 +890,18 @@ const HexMazeCase = {
         ctx.save();
         ctx.translate(width / 2, height / 2);
 
-        this.forEachHex((h) => this.drawHex(h.q, h.r));
+        MazeEngine.forEachHex(this.gridRadius, (h) => this.drawHex(h.q, h.r));
 
         if (this.path.length > 1) {
-            const theme = this.themes[this.colorTheme] || this.themes.basic;
+            const theme = MazeEngine.themes[this.colorTheme] || MazeEngine.themes.basic;
             ctx.beginPath();
-            ctx.strokeStyle = theme.current; // Use the theme's highlight color for the path line
+            ctx.strokeStyle = theme.current; 
             ctx.lineWidth = Math.max(2, this.hexSize * 0.28);
             ctx.lineJoin = 'round';
             ctx.lineCap = 'round';
 
             this.path.forEach((node, i) => {
-                const p = this.hexToPixel(node.q, node.r);
+                const p = MazeEngine.hexToPixel(node.q, node.r, this.hexSize);
                 if (i === 0) ctx.moveTo(p.x, p.y);
                 else ctx.lineTo(p.x, p.y);
             });
@@ -1247,9 +1003,6 @@ const HexMazeCase = {
     destroy() {
         this.stopSearchAnimation();
         this.unbindEvents();
-        if (this.audioCtx) {
-            this.audioCtx.close().catch(() => {});
-            this.audioCtx = null;
-        }
+        MazeEngine.destroyAudio();
     }
 };
