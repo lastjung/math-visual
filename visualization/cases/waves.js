@@ -65,7 +65,7 @@ const WavesCase = {
         lemniscate: {
             name: 'Lemniscate',
             type: 'polar',
-            stretchX: 1.4, // 가로로 더 길게
+            stretchX: 1.8, // 사용자 요청: 훨씬 더 길게
             r: (theta) => {
                 const c = Math.cos(2 * theta);
                 return c < 0 ? 0 : Math.sqrt(c);
