@@ -103,11 +103,6 @@ const WavesCase = {
                 }
             },
             {
-                type: 'info',
-                label: 'Selected Formula',
-                value: this.formulas[this.formulaId].name
-            },
-            {
                 type: 'slider',
                 id: 'speed',
                 label: 'Simulation Speed',
