@@ -29,8 +29,8 @@ const HexMazeCase = {
     ctx: null,
 
     // Config
-    hexSize: 13,
-    gridRadius: 15,
+    hexSize: 8,
+    gridRadius: 25,
     searchMode: 'astar', // astar | dijkstra | greedy | bfs | dfs
     searchDelayMs: 35,
     sfxEnabled: true,
@@ -76,8 +76,8 @@ const HexMazeCase = {
             frontier: '#93c5fd',    // Light Blue
             start: '#0891b2',       // Dark Cyan
             goal: '#FF0000',        // Universal Red Goal for visibility
-            path: 'rgba(255, 215, 0, 0.30)', // Gold
-            current: '#FFD700'      // Yellow
+            path: 'rgba(255, 0, 0, 0.45)', // Red tinted path cells
+            current: '#FF0000'      // Red path LINE
         },
         sunset: {
             wall: '#fdba74',        // Light Orange
@@ -144,6 +144,23 @@ const HexMazeCase = {
 
     get uiConfig() {
         return [
+            {
+                type: 'select',
+                id: 'pf_shape',
+                label: 'Maze Shape',
+                value: this.mazeShape || 'random',
+                options: [
+                    { value: 'random', label: 'Random (Default)' },
+                    { value: 'heart', label: 'Heart Path' },
+                    { value: 'star', label: 'Star Path' },
+                    { value: 'infinity', label: 'Infinity (∞) Path' },
+                    { value: 'spiral', label: 'Spiral Path' }
+                ],
+                onChange: (v) => {
+                    this.mazeShape = v;
+                    this.generateMaze({ solve: this.isCoreRunning() });
+                }
+            },
             {
                 type: 'select',
                 id: 'pf_algorithm',
@@ -640,6 +657,189 @@ const HexMazeCase = {
         this.walls.clear();
         this.forEachHex((h) => this.walls.add(this.key(h)));
 
+        if (this.mazeShape === 'heart' || this.mazeShape === 'star' || this.mazeShape === 'infinity' || this.mazeShape === 'spiral') {
+            const waypoints = [];
+            if (this.mazeShape === 'heart') {
+                const numPoints = 80;
+                for (let i = 6; i <= numPoints - 6; i++) {
+                    let t = (i / numPoints) * (Math.PI * 2);
+                    let x = 16 * Math.pow(Math.sin(t), 3);
+                    let y = 13 * Math.cos(t) - 5 * Math.cos(2*t) - 2 * Math.cos(3*t) - Math.cos(4*t);
+                    x *= 1.8 * this.hexSize;
+                    y *= -1.8 * this.hexSize;
+                    y += 4 * this.hexSize;
+                    waypoints.push(this.pixelToHex(x, y));
+                }
+            } else if (this.mazeShape === 'star') {
+                const numPoints = 10;
+                for (let i = 0; i <= numPoints; i++) {
+                    const angle = -Math.PI/2 + (i / numPoints) * Math.PI * 2;
+                    const isOuter = i % 2 === 0;
+                    const r_dist = (isOuter ? 30 : 18) * this.hexSize;
+                    let x = r_dist * Math.cos(angle);
+                    let y = r_dist * Math.sin(angle);
+                    if (i === 0) x += 3.5 * this.hexSize;
+                    else if (i === numPoints) x -= 3.5 * this.hexSize;
+                    waypoints.push(this.pixelToHex(x, y));
+                }
+            } else if (this.mazeShape === 'infinity') {
+                // To create a perfect, non-intersecting, WIDE infinity (peanut) shape,
+                // we use explicit hard-coded node positions scaled by gridRadius.
+                // We draw lines between these nodes to ensure a continuous track
+                // that avoids the linear/zigzag "squished" look.
+                
+                waypoints.length = 0;
+                let s = Math.floor(this.gridRadius * 0.40); // 10
+                let h = Math.floor(this.gridRadius * 0.25); // 6 (Vertical height offset)
+                
+                // Define the key turning points of a wide, pinched-O peanut shape
+                let nodes = [
+                    {q: -s*2, r: -h},     // Far Left Top
+                    {q: -s,   r: -h*2},   // Left Upper Curve
+                    {q: -1,   r: -1},     // Center Pinch Top (Left side)
+                    {q: s,    r: -h*2},   // Right Upper Curve
+                    {q: s*2,  r: -h},     // Far Right Top
+                    {q: s*2,  r: h},      // Far Right Bottom
+                    {q: s,    r: h*2},    // Right Lower Curve
+                    {q: 1,    r: 1},      // Center Pinch Bottom (Right side)
+                    {q: -s,   r: h*2},    // Left Lower Curve
+                    {q: -s*2, r: h}       // Far Left Bottom
+                ];
+
+                // Connect the nodes beautifully
+                for (let i = 0; i < nodes.length; i++) {
+                    let a = nodes[i];
+                    let b = nodes[(i + 1) % nodes.length];
+                    
+                    // Stop 4 hexes short on the very last connecting segment 
+                    // so the start and end of the drawing don't merge back together!
+                    const N = this.hexDistance(a, b);
+                    const steps = Math.max(1, N);
+                    let endStep = (i === nodes.length - 1) ? Math.max(1, steps - 4) : steps;
+                    
+                    for (let j = 0; j < endStep; j++) {
+                        waypoints.push(this.hexRoundFractional(this.hexLerp(a, b, j / steps)));
+                    }
+                }
+
+            } else if (this.mazeShape === 'spiral') {
+                // To prevent the same diagonal "loop skipping" bypass we saw with infinity,
+                // we drastically increase the gap between each spiral arm so there's always
+                // a thick wall of hexes separating the inner loops from the outer loops.
+                
+                const loops = 5.0; // Increased loops to fill the screen as requested
+                const numPoints = 800; // Increased resolution so the curve is perfectly smooth
+                
+                for (let i = 0; i <= numPoints; i++) {
+                    let t = (i / numPoints) * (Math.PI * 2 * loops);
+                    // Radius increases by 5.5 hexSizes every 360 degrees.
+                    // This provides enough barrier to prevent bypasses, but allows 5 full loops to fit inside the grid.
+                    let r = 2.0 * this.hexSize + 5.5 * this.hexSize * (t / (Math.PI * 2));
+                    let x = r * Math.cos(t);
+                    let y = r * Math.sin(t);
+                    waypoints.push(this.pixelToHex(x, y));
+                }
+            }
+            
+            const pathList = [];
+            const pathKeys = new Set();
+            for (let i = 0; i < waypoints.length - 1; i++) {
+                const line = this.getHexLine(waypoints[i], waypoints[i+1]);
+                for (const h of line) {
+                    if (!this.isInside(h)) continue;
+                    const k = this.key(h);
+                    if (!pathKeys.has(k)) {
+                        pathKeys.add(k);
+                        pathList.push(h);
+                    }
+                }
+            }
+
+            if (pathList.length > 2) {
+                // By default, Start is at the very beginning of the array,
+                // Goal is at the very end.
+                // For infinity, this places Start and Goal right next to each other
+                // physically, but separated by a 4-hex solid wall. 
+                // This PERFECTLY forces the algorithm to travel the ENTIRE loop!
+                this.startNode = pathList[0];
+                this.goalNode = pathList[pathList.length - 1];
+
+                // VERY IMPORTANT: Populate W with all path hexes
+                const W = new Set();
+                for (const h of pathList) {
+                    const k = this.key(h);
+                    this.walls.delete(k);
+                    W.add(k);
+                }
+
+                const pathSetKeys = new Set(W); 
+                const eligible = [];
+
+                this.forEachHex(h => {
+                    if (this.walls.has(this.key(h))) {
+                        let wNeighbors = 0;
+                        for (const n of this.getNeighborsIgnoringWalls(h)) {
+                            if (W.has(this.key(n))) wNeighbors++;
+                        }
+                        if (wNeighbors === 1) eligible.push(h);
+                    }
+                });
+                eligible.sort(() => Math.random() - 0.5);
+
+                while (eligible.length > 0) {
+                    if (Math.random() < 0.2) {
+                        const swapIdx = Math.floor(Math.random() * eligible.length);
+                        const temp = eligible[eligible.length - 1];
+                        eligible[eligible.length - 1] = eligible[swapIdx];
+                        eligible[swapIdx] = temp;
+                    }
+                    
+                    const curr = eligible.pop();
+                    const k = this.key(curr);
+                    if (!this.walls.has(k)) continue;
+
+                    let wNeighbors = 0;
+                    let touchesOriginalPath = 0;
+
+                    for (const n of this.getNeighborsIgnoringWalls(curr)) {
+                        const nk = this.key(n);
+                        if (W.has(nk)) {
+                            wNeighbors++;
+                            if (pathSetKeys.has(nk)) {
+                                touchesOriginalPath++;
+                            }
+                        }
+                    }
+
+                    if (wNeighbors === 1 && touchesOriginalPath <= 1) {
+                        this.walls.delete(k);
+                        W.add(k);
+                        for (const n of this.getNeighborsIgnoringWalls(curr)) {
+                            if (this.walls.has(this.key(n))) {
+                                let wn = 0;
+                                let origTouches = 0;
+                                for (const nn of this.getNeighborsIgnoringWalls(n)) {
+                                    const nnk = this.key(nn);
+                                    if (W.has(nnk)) {
+                                        wn++;
+                                        if (pathSetKeys.has(nnk)) origTouches++;
+                                    }
+                                }
+                                if (wn === 1 && origTouches <= 1) eligible.push(n);
+                            }
+                        }
+                    }
+                }
+
+                if (solve) this.startSearchAnimation();
+                else {
+                    this.clearSearchState();
+                    this.draw();
+                }
+                return;
+            }
+        }
+
         const cellSet = new Set();
         const cells = [];
         this.forEachHex((h) => {
@@ -743,6 +943,39 @@ const HexMazeCase = {
         else rs = -rq - rr;
 
         return { q: rq, r: rr };
+    },
+
+    hexLerp(a, b, t) {
+        return {
+            q: a.q + (b.q - a.q) * t,
+            r: a.r + (b.r - a.r) * t,
+            s: (-a.q - a.r) + ((-b.q - b.r) - (-a.q - a.r)) * t
+        };
+    },
+
+    hexRoundFractional(h) {
+        let rq = Math.round(h.q);
+        let rr = Math.round(h.r);
+        let rs = Math.round(h.s);
+
+        const qDiff = Math.abs(rq - h.q);
+        const rDiff = Math.abs(rr - h.r);
+        const sDiff = Math.abs(rs - h.s);
+
+        if (qDiff > rDiff && qDiff > sDiff) rq = -rr - rs;
+        else if (rDiff > sDiff) rr = -rq - rs;
+
+        return { q: rq, r: rr };
+    },
+
+    getHexLine(a, b) {
+        const N = this.hexDistance(a, b);
+        const results = [];
+        const steps = Math.max(1, N);
+        for (let i = 0; i <= steps; i++) {
+            results.push(this.hexRoundFractional(this.hexLerp(a, b, 1.0 / steps * i)));
+        }
+        return results;
     },
 
     getHexFromEvent(e) {
