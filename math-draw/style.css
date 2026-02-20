@@ -212,11 +212,40 @@ body {
 }
 
 .code-block {
-    padding: 32px;
+    padding: 24px 0; /* Remove horizontal padding, we'll use gutter */
     font-family: var(--font-code);
     font-size: 0.95rem;
     line-height: 1.7;
     overflow-x: auto;
+    background: #0f172a;
+    display: flex;
+    flex-direction: column;
+}
+
+.code-line {
+    display: flex;
+    opacity: 0;
+    transform: translateX(-10px);
+    animation: slideIn 0.3s forwards;
+    white-space: pre; /* Use strict pre for indentation */
+    min-height: 1.7em;
+}
+
+.line-num {
+    width: 50px;
+    min-width: 50px;
+    text-align: right;
+    padding-right: 20px;
+    margin-right: 16px;
+    color: rgba(255, 255, 255, 0.2);
+    user-select: none;
+    border-right: 1px solid rgba(255, 255, 255, 0.05);
+    font-size: 0.8rem;
+}
+
+.code-content {
+    flex: 1;
+    text-align: left;
 }
 
 /* Syntax Highlighting */
@@ -226,13 +255,6 @@ body {
 .syn-string { color: var(--syn-str); }
 .syn-comment { color: var(--syn-comment); font-style: italic; }
 .syn-var { color: var(--accent-secondary); }
-
-.code-line {
-    opacity: 0;
-    transform: translateX(-10px);
-    animation: slideIn 0.3s forwards;
-    white-space: pre-wrap;
-}
 
 @keyframes slideIn {
     to { opacity: 1; transform: translateX(0); }

@@ -141,7 +141,10 @@ const MathDrawEngine = {
 
             const lineEl = document.createElement('div');
             lineEl.className = 'code-line';
-            lineEl.innerHTML = line.html || '&nbsp;';
+            lineEl.innerHTML = `
+                <span class="line-num">${lineIndex + 1}</span>
+                <span class="code-content">${line.html || '&nbsp;'}</span>
+            `;
             codeEl.appendChild(lineEl);
 
             this.playTone(800 + Math.random() * 400, 0.03, 0.04);

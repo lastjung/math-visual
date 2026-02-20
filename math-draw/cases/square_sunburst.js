@@ -40,11 +40,11 @@ MathDrawCases['square_sunburst'] = {
     codeLines: [
         { delay: 0, html: `<span class="syn-comment">// Define square based on pivot (0,0 or -S, -S)</span>` },
         { delay: 400, html: `<span class="syn-keyword">for</span> (<span class="syn-keyword">let</span> <span class="syn-var">i</span> <span class="syn-op">=</span> <span class="syn-number">0</span>; <span class="syn-var">i</span> <span class="syn-op">&lt;</span> <span class="syn-var">count</span>; <span class="syn-var">i</span><span class="syn-op">++</span>) {` },
-        { delay: 400, html: `  <span class="syn-keyword">let</span> <span class="syn-var">S</span> <span class="syn-op">=</span> <span class="syn-var">size</span>, <span class="syn-var">startX</span> <span class="syn-op">=</span> <span class="syn-var">pivot</span><span class="syn-op">===</span><span class="syn-str">'vertex'</span> <span class="syn-op">?</span> <span class="syn-number">0</span> <span class="syn-op">:</span> <span class="syn-op">-</span><span class="syn-var">S</span><span class="syn-op">/</span><span class="syn-number">2</span>;` },
-        { delay: 400, html: `  <span class="syn-keyword">let</span> <span class="syn-var">startY</span> <span class="syn-op">=</span> <span class="syn-var">startX</span>;` },
-        { delay: 400, html: `  <span class="syn-keyword">while</span> (<span class="syn-var">dist</span> <span class="syn-op">&lt;</span> <span class="syn-var">S</span> <span class="syn-op">*</span> <span class="syn-number">4</span>) {` },
-        { delay: 200, html: `    <span class="syn-func">line</span>(<span class="syn-var">x</span>, <span class="syn-var">y</span>); <span class="syn-comment">// Vertex (0,0) is the fixed anchor</span>` },
-        { delay: 300, html: `  }` },
+        { delay: 400, html: `    <span class="syn-keyword">let</span> <span class="syn-var">S</span> <span class="syn-op">=</span> <span class="syn-var">size</span>, <span class="syn-var">startX</span> <span class="syn-op">=</span> <span class="syn-var">pivot</span><span class="syn-op">===</span><span class="syn-str">'vertex'</span> <span class="syn-op">?</span> <span class="syn-number">0</span> <span class="syn-op">:</span> <span class="syn-op">-</span><span class="syn-var">S</span><span class="syn-op">/</span><span class="syn-number">2</span>;` },
+        { delay: 400, html: `    <span class="syn-keyword">let</span> <span class="syn-var">startY</span> <span class="syn-op">=</span> <span class="syn-var">startX</span>;` },
+        { delay: 400, html: `    <span class="syn-keyword">while</span> (<span class="syn-var">dist</span> <span class="syn-op">&lt;</span> <span class="syn-var">S</span> <span class="syn-op">*</span> <span class="syn-number">4</span>) {` },
+        { delay: 200, html: `        <span class="syn-func">line</span>(<span class="syn-var">x</span>, <span class="syn-var">y</span>); <span class="syn-comment">// Vertex (0,0) is fixed anchor</span>` },
+        { delay: 300, html: `    }` },
         { delay: 300, html: `}` },
     ],
 
