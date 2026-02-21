@@ -13,6 +13,7 @@ const WavesCase = {
     angle: 0,
     points: [],
     generatorPath: [],
+    formulaMetricsCache: {},
     maxPoints: 500,
 
     // Config State
@@ -60,7 +61,11 @@ const WavesCase = {
             category: 'waves',
             name: 'Pulse Wave',
             type: 'cartesian',
-            fn: (t) => ((t % (2 * Math.PI)) < (2 * Math.PI * 0.3)) ? 1 : -1,
+            fn: (t) => {
+                const period = 2 * Math.PI;
+                const phase = ((t % period) + period) % period;
+                return phase < period * 0.3 ? 1 : -1;
+            },
             formula: 'f(t) = \\text{pulse}(t, 30\\%)'
         },
         damped: {
@@ -270,6 +275,7 @@ const WavesCase = {
                         this.formulaId = Object.keys(this.formulas).find(id => this.formulas[id].category === val);
                     }
                     this.points = [];
+                    this.generatorPath = [];
                     this.updateFormulaUI();
                     Core.updateControls();
                 }
@@ -286,6 +292,7 @@ const WavesCase = {
                 onChange: (val) => {
                     this.formulaId = val;
                     this.points = [];
+                    this.generatorPath = [];
                     this.updateFormulaUI();
                     Core.updateControls();
                 }
@@ -331,12 +338,52 @@ const WavesCase = {
     reset() {
         this.angle = 0;
         this.points = [];
+        this.generatorPath = [];
     },
 
     resize() {
         if (!this.canvas) return;
         this.canvas.width = this.canvas.parentElement.clientWidth;
         this.canvas.height = this.canvas.parentElement.clientHeight;
+    },
+
+    getFormulaPoint(formula, t) {
+        if (formula.type === 'cartesian') {
+            return { x: Math.cos(t), y: formula.fn(t) };
+        }
+        if (formula.type === 'polar') {
+            const r = formula.r(t);
+            const sX = formula.stretchX || 1;
+            return { x: Math.cos(t) * r * sX, y: Math.sin(t) * r };
+        }
+        if (formula.type === 'parametric') {
+            return { x: formula.x(t), y: formula.y(t) };
+        }
+        return { x: 0, y: 0 };
+    },
+
+    getFormulaMetrics(formulaId) {
+        if (this.formulaMetricsCache[formulaId]) return this.formulaMetricsCache[formulaId];
+        const formula = this.formulas[formulaId];
+        const samples = 720;
+        const span = Math.PI * 2;
+        let maxAbsX = 0;
+        let maxAbsY = 0;
+
+        for (let i = 0; i <= samples; i++) {
+            const t = (i / samples) * span;
+            const point = this.getFormulaPoint(formula, t);
+            if (Number.isFinite(point.x)) maxAbsX = Math.max(maxAbsX, Math.abs(point.x));
+            if (Number.isFinite(point.y)) maxAbsY = Math.max(maxAbsY, Math.abs(point.y));
+        }
+
+        const metrics = {
+            maxAbsX: Math.max(maxAbsX, 0.001),
+            maxAbsY: Math.max(maxAbsY, 0.001),
+            extent: Math.max(maxAbsX, maxAbsY, 0.001)
+        };
+        this.formulaMetricsCache[formulaId] = metrics;
+        return metrics;
     },
 
     start() {
@@ -360,8 +407,15 @@ const WavesCase = {
 
         const centerX = canvas.width / 4;
         const centerY = canvas.height / 2;
-        const radius = this.amplitude;
+        const maxRadius = Math.min(centerX - 24, canvas.height * 0.42);
+        const baseRadius = Math.min(this.amplitude, maxRadius);
         const formula = this.formulas[this.formulaId];
+        const metrics = this.getFormulaMetrics(this.formulaId);
+        const targetNormalizedY = 1.05;
+        const gainForMinY = targetNormalizedY / metrics.maxAbsY;
+        const gainForFit = maxRadius / (baseRadius * metrics.extent);
+        const formulaGain = Math.min(Math.max(1, gainForMinY), Math.max(1, gainForFit));
+        const radius = baseRadius * formulaGain;
 
         // 1. Grid
         ctx.save();
@@ -436,17 +490,41 @@ const WavesCase = {
         ctx.stroke();
         ctx.restore();
 
+        const isPolar = (formula.type || '').toLowerCase() === 'polar';
+        const showHeightGuide = isPolar || this.formulaId === 'sine';
+        if (showHeightGuide) {
+            // Show y-height component and projection for polar interpretation.
+            ctx.save();
+            ctx.strokeStyle = '#16A34A';
+            ctx.lineWidth = 2.8;
+            ctx.setLineDash([]);
+            ctx.beginPath();
+            // Height (sin component) at the current x-position.
+            ctx.moveTo(vecX, centerY);
+            ctx.lineTo(vecX, vecY);
+            // Horizontal projection from origin axis to the current point.
+            ctx.moveTo(centerX, vecY);
+            ctx.lineTo(vecX, vecY);
+            ctx.stroke();
+            ctx.fillStyle = '#16A34A';
+            ctx.beginPath();
+            ctx.arc(vecX, vecY, 3, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+        }
+
         // Vector
         ctx.save();
-        ctx.strokeStyle = '#29CC57';
-        ctx.lineWidth = 2.5;
+        const vectorColor = showHeightGuide ? '#F59E0B' : '#29CC57';
+        ctx.strokeStyle = vectorColor;
+        ctx.lineWidth = showHeightGuide ? 3.2 : 2.5;
         ctx.beginPath();
         ctx.moveTo(centerX, centerY);
         ctx.lineTo(vecX, vecY);
         ctx.stroke();
-        ctx.fillStyle = '#29CC57';
+        ctx.fillStyle = vectorColor;
         ctx.shadowBlur = 15;
-        ctx.shadowColor = 'rgba(41, 204, 87, 0.5)';
+        ctx.shadowColor = showHeightGuide ? 'rgba(245, 158, 11, 0.45)' : 'rgba(41, 204, 87, 0.5)';
         ctx.beginPath();
         ctx.arc(vecX, vecY, 8, 0, Math.PI * 2);
         ctx.fill();
@@ -454,7 +532,8 @@ const WavesCase = {
 
         // 2.5. Polar/Generator Trail (New: Pink & Thin)
         this.generatorPath.unshift({ x: vecX, y: vecY });
-        if (this.generatorPath.length > 200) this.generatorPath.pop();
+        const trailLength = Math.max(Math.ceil((Math.PI * 2 / Math.max(this.speed, 0.001)) * 3), 1200);
+        if (this.generatorPath.length > trailLength) this.generatorPath.pop();
 
         ctx.save();
         ctx.strokeStyle = '#FF69B4'; // Hot Pink
@@ -502,5 +581,6 @@ const WavesCase = {
         }
         this.points = [];
         this.generatorPath = [];
+        this.formulaMetricsCache = {};
     }
 };
