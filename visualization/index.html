@@ -31,6 +31,7 @@
                     <div class="tab" data-case="damage">Damage Rolls</div>
                     <div class="tab" data-case="modulo-circle">Modulo Circle</div>
                     <div class="tab" data-case="orbit-spirograph">Orbit Spirograph</div>
+                    <div class="tab" data-case="sphere-voronoi">Sphere Voronoi</div>
                 </div>
             </div>
         </nav>
@@ -78,6 +79,7 @@
     <script src="cases/damage_rolls.js"></script>
     <script src="cases/modulo_circle.js"></script>
     <script src="cases/orbit_spirograph.js"></script>
+    <script src="cases/sphere_voronoi.js"></script>
     <script>
         // Tab Management
         document.querySelectorAll('.tab').forEach(tab => {
@@ -115,6 +117,10 @@
                     document.getElementById('main-title').textContent = 'Orbit Spirograph';
                     document.getElementById('main-subtitle').textContent = 'Center Body vs Orbiting Body trajectory in orbital time.';
                     Core.loadCase(OrbitSpirographCase, { mode: 'display' });
+                } else if (caseName === 'sphere-voronoi') {
+                    document.getElementById('main-title').textContent = 'Spherical Voronoi / Delaunay';
+                    document.getElementById('main-subtitle').textContent = 'Approximate Voronoi cells and dual graph on a rotating sphere.';
+                    Core.loadCase(SphereVoronoiCase, { mode: 'display' });
                 }
             });
         });
