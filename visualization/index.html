@@ -24,28 +24,16 @@
                 <div class="tab-row">
                     <div class="tab" data-case="golden">Golden Spiral</div>
                     <div class="tab" data-case="rainbow">Rainbow Spiral</div>
-                    <div class="tab" data-case="waves">Waves</div>
+                    <div class="tab active" data-case="waves">Waves</div>
                     <div class="tab" data-case="hexagon">Hex Grid</div>
                     <div class="tab" data-case="damage">Damage Rolls</div>
-                    <div class="tab" data-case="pythagorean">Pythagorean</div>
-                    <div class="tab" data-case="bhaskara-proof">Bhaskara Proof</div>
-                    <div class="tab" data-case="euclid-proof">Euclid Proof</div>
-                </div>
-            </div>
-            <div class="tab-group" data-group="interactive">
-                <span class="group-label">Interactive</span>
-                <div class="tab-row">
-                    <div class="tab active" data-case="hex-maze">Hexagon Maze</div>
-                    <div class="tab" data-case="fibonacci-maze">Fibonacci Maze</div>
-                    <div class="tab" data-case="circular">Circular Obstacles</div>
-                    <div class="tab" data-case="polygon-map">Polygon Map</div>
                 </div>
             </div>
         </nav>
 
         <header id="header">
-            <h1 id="main-title">Hexagon Maze</h1>
-            <p class="subtitle" id="main-subtitle">Find the shortest path in a hex maze.</p>
+            <h1 id="main-title">The Geometry of Waves</h1>
+            <p class="subtitle" id="main-subtitle">Mathematical waves turning into geometric patterns.</p>
         </header>
 
         <main class="dashboard-card">
@@ -83,15 +71,7 @@
     <script src="cases/rainbow_spiral.js"></script>
     <script src="cases/golden_spiral.js"></script>
     <script src="cases/hexagon_grid.js"></script>
-    <script src="cases/maze_engine.js"></script>
-    <script src="cases/hex_maze.js"></script>
-    <script src="cases/fibonacci_maze.js"></script>
     <script src="cases/damage_rolls.js"></script>
-    <script src="cases/pythagorean_theorem.js"></script>
-    <script src="https://unpkg.com/delaunator@5.0.0/delaunator.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/simplex-noise/2.4.0/simplex-noise.min.js"></script>
-    <script src="cases/circular_pathfinding.js"></script>
-    <script src="cases/polygon_map.js"></script>
     <script>
         // Tab Management
         document.querySelectorAll('.tab').forEach(tab => {
@@ -116,44 +96,20 @@
                     document.getElementById('main-title').textContent = 'Hexagonal Grid';
                     document.getElementById('main-subtitle').textContent = 'A pattern made of repeating hexagons.';
                     Core.loadCase(HexagonGridCase, { mode: 'display' });
-                } else if (caseName === 'hex-maze') {
-                    document.getElementById('main-title').textContent = 'Hexagon Maze';
-                    document.getElementById('main-subtitle').textContent = 'Find the shortest path in a hex grid.';
-                    Core.loadCase(HexMazeCase, { mode: 'interactive' });
-                } else if (caseName === 'fibonacci-maze') {
-                    document.getElementById('main-title').textContent = 'Fibonacci Hex Maze';
-                    document.getElementById('main-subtitle').textContent = 'Pathfinding through golden angle seeds.';
-                    Core.loadCase(FibonacciMazeCase, { mode: 'interactive' });
                 } else if (caseName === 'damage') {
                     document.getElementById('main-title').textContent = 'Probability: Damage Rolls';
                     document.getElementById('main-subtitle').textContent = 'See how dice rolls spread over many tries.';
                     Core.loadCase(DamageRollsCase, { mode: 'display' });
-                } else if (caseName === 'circular') {
-                    document.getElementById('main-title').textContent = 'Circular Obstacle Pathfinding';
-                    document.getElementById('main-subtitle').textContent = 'Find a path around round obstacles.';
-                    Core.loadCase(CircularPathfindingCase, { mode: 'interactive' });
-                } else if (caseName === 'polygon-map') {
-                    document.getElementById('main-title').textContent = 'Polygonal Map Generation';
-                    document.getElementById('main-subtitle').textContent = 'Generate island maps with polygon cells.';
-                    Core.loadCase(PolygonMapCase, { mode: 'interactive' });
-                } else if (caseName === 'pythagorean') {
-                    document.getElementById('main-title').textContent = 'Pythagorean Theorem';
-                    document.getElementById('main-subtitle').textContent = 'Visual proof of a² + b² = c².';
-                    Core.loadCase(PythagoreanTheoremCase, { mode: 'display' });
-                } else if (caseName === 'bhaskara-proof') {
-                    window.location.href = 'bhaskara_pythagorean_proof.html';
-                } else if (caseName === 'euclid-proof') {
-                    window.location.href = 'euclid_pythagorean_proof.html';
                 }
             });
         });
 
-        // Load Default Case (A* Pathfinding)
+        // Load Default Case
         window.onload = () => {
-            if (typeof HexMazeCase !== 'undefined') {
-                Core.loadCase(HexMazeCase, { mode: 'interactive' });
+            if (typeof WavesCase !== 'undefined') {
+                Core.loadCase(WavesCase, { mode: 'display' });
             } else {
-                console.error("HexMazeCase failed to load!");
+                console.error("WavesCase failed to load!");
             }
         };
     </script>
