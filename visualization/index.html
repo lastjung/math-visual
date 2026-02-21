@@ -16,6 +16,8 @@
     <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
   </head>
   <body>
+    <button id="mobile-tabs-btn" aria-label="Toggle cases">☰ Cases</button>
+    <div id="mobile-tabs-backdrop"></div>
     <div class="container">
         <!-- Tab Selection -->
         <nav class="case-tabs">
@@ -80,6 +82,7 @@
             tab.addEventListener('click', () => {
                 document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
                 tab.classList.add('active');
+                document.body.classList.remove('mobile-tabs-open');
                 
                 const caseName = tab.getAttribute('data-case');
                 if (caseName === 'waves') {
@@ -118,6 +121,20 @@
                 console.error("WavesCase failed to load!");
             }
         };
+
+        // Mobile case menu toggle
+        (() => {
+            const btn = document.getElementById('mobile-tabs-btn');
+            const backdrop = document.getElementById('mobile-tabs-backdrop');
+            if (!btn || !backdrop) return;
+
+            btn.addEventListener('click', () => {
+                document.body.classList.toggle('mobile-tabs-open');
+            });
+            backdrop.addEventListener('click', () => {
+                document.body.classList.remove('mobile-tabs-open');
+            });
+        })();
     </script>
   </body>
 </html>

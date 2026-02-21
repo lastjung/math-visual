@@ -18,6 +18,10 @@ const Core = {
         this.setupGlobalEvents();
         
         window.addEventListener('resize', () => {
+            const settingsPanel = document.getElementById('settings-panel');
+            if (settingsPanel && window.innerWidth <= 1024) {
+                settingsPanel.classList.add('visible');
+            }
             if (this.currentCase && this.currentCase.resize) {
                 this.currentCase.resize();
             }
@@ -32,6 +36,12 @@ const Core = {
             const panel = document.createElement('div');
             panel.id = 'settings-panel';
             document.body.appendChild(panel);
+        }
+
+        // Keep controls visible by default on mobile/tablet for live tweaking.
+        const settingsPanel = document.getElementById('settings-panel');
+        if (settingsPanel && window.innerWidth <= 1024) {
+            settingsPanel.classList.add('visible');
         }
 
         // 2. Create Floating Dock
@@ -217,6 +227,11 @@ const Core = {
                 }
             });
         }
+
+        // On mobile, always start from top so the first controls are visible.
+        if (!isDesktop) {
+            panel.scrollTop = 0;
+        }
     },
 
     setCaseMode(mode = 'display') {
@@ -231,6 +246,9 @@ const Core = {
     toggleSettings() {
         const panel = document.getElementById('settings-panel');
         panel.classList.toggle('visible');
+        if (panel.classList.contains('visible') && window.innerWidth <= 1024) {
+            panel.scrollTop = 0;
+        }
     },
 
     toggleCinematicMode() {
