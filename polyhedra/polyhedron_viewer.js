@@ -8,6 +8,7 @@ const ctx2d = c2d.getContext("2d");
 const solidEl = document.getElementById("solid");
 const speedEl = document.getElementById("speed");
 const baseFaceEl = document.getElementById("base-face");
+const colorSchemeEl = document.getElementById("color-scheme");
 const timelineEl = document.getElementById("timeline");
 const playEl = document.getElementById("play");
 const resetEl = document.getElementById("reset");
@@ -100,6 +101,107 @@ const runtime = {
   cutEdgeLines: []
 };
 
+const COLOR_SCHEMES = {
+  classic: {
+    face: [0x2f6fbf, 0x3f86dd, 0x2f7fc7, 0x4a9ae7, 0x3aa3df, 0x3684c9],
+    baseFace: 0xeab308,
+    edge: 0xcce1ff,
+    cut3d: 0xff2b2b,
+    cut2d: [255, 40, 40],
+    netFace: [83, 166, 255],
+    baseNetFace: [234, 179, 8],
+    baseNetStroke: [255, 225, 130],
+    baseLabel: [255, 236, 170],
+    hudText: [255, 255, 255],
+    hudKey: [159, 176, 210]
+  },
+  basic: {
+    face: ["#86efac", "#ec4899", "#f472b6", "#00cc00", "#ff7fb8", "#9ef4be"],
+    baseFace: "#00cc00",
+    edge: "#ffffff",
+    cut3d: "#ff0000",
+    cut2d: [255, 0, 0],
+    netFace: [244, 114, 182],
+    baseNetFace: [134, 239, 172],
+    baseNetStroke: [220, 252, 231],
+    baseLabel: [236, 253, 245],
+    hudText: [255, 255, 255],
+    hudKey: [194, 252, 223]
+  },
+  ocean: {
+    face: ["#22d3ee", "#3b82f6", "#93c5fd", "#0891b2", "#60a5fa", "#38bdf8"],
+    baseFace: "#0891b2",
+    edge: "#dbeafe",
+    cut3d: "#ff0000",
+    cut2d: [255, 0, 0],
+    netFace: [59, 130, 246],
+    baseNetFace: [8, 145, 178],
+    baseNetStroke: [147, 197, 253],
+    baseLabel: [224, 242, 254],
+    hudText: [255, 255, 255],
+    hudKey: [147, 197, 253]
+  },
+  sunset: {
+    face: ["#fdba74", "#7c3aed", "#a78bfa", "#f97316", "#fb923c", "#c4b5fd"],
+    baseFace: "#f97316",
+    edge: "#ffe7cf",
+    cut3d: "#ff0000",
+    cut2d: [255, 0, 0],
+    netFace: [167, 139, 250],
+    baseNetFace: [249, 115, 22],
+    baseNetStroke: [253, 186, 116],
+    baseLabel: [255, 237, 213],
+    hudText: [255, 255, 255],
+    hudKey: [221, 214, 254]
+  },
+  neon: {
+    face: ["#f3f4f6", "#4d7c0f", "#84cc16", "#1f2937", "#d9f99d", "#a3e635"],
+    baseFace: "#84cc16",
+    edge: "#ecfccb",
+    cut3d: "#ffd700",
+    cut2d: [255, 215, 0],
+    netFace: [132, 204, 22],
+    baseNetFace: [77, 124, 15],
+    baseNetStroke: [217, 249, 157],
+    baseLabel: [248, 255, 230],
+    hudText: [255, 255, 255],
+    hudKey: [217, 249, 157]
+  },
+  rainbow: {
+    face: ["#ff4d6d", "#ffd166", "#06d6a0", "#4cc9f0", "#7209b7", "#f72585"],
+    baseFace: "#ffffff",
+    edge: "#ffffff",
+    cut3d: "#ff0000",
+    cut2d: [255, 0, 0],
+    netFace: [120, 180, 255],
+    baseNetFace: [255, 255, 255],
+    baseNetStroke: [255, 255, 255],
+    baseLabel: [255, 255, 255],
+    hudText: [255, 255, 255],
+    hudKey: [220, 220, 220]
+  }
+};
+
+function activeScheme() {
+  return COLOR_SCHEMES[colorSchemeEl.value] || COLOR_SCHEMES.classic;
+}
+
+function colorToRgbArray(color) {
+  const c = new THREE.Color(color);
+  return [
+    Math.round(c.r * 255),
+    Math.round(c.g * 255),
+    Math.round(c.b * 255)
+  ];
+}
+
+function faceColorRgb(scheme, fi, isBase) {
+  const color = isBase
+    ? scheme.baseFace
+    : scheme.face[fi % scheme.face.length];
+  return colorToRgbArray(color);
+}
+
 function getViewportMode() {
   const w = window.innerWidth || c3d.clientWidth || 1200;
   if (w <= 768) return "mobile";
@@ -191,7 +293,7 @@ function signedAngleAroundAxis(from, to, axis) {
   return Math.atan2(u.dot(cross), f.dot(t));
 }
 
-function createFaceMesh(faceIndices, color) {
+function createFaceMesh(faceIndices, color, edgeColor) {
   const positions = [];
   for (let i = 1; i < faceIndices.length - 1; i++) {
     const a = state.mesh.vertices[faceIndices[0]];
@@ -216,7 +318,7 @@ function createFaceMesh(faceIndices, color) {
 
   const edge = new THREE.LineSegments(
     new THREE.EdgesGeometry(g),
-    new THREE.LineBasicMaterial({ color: 0xcce1ff, transparent: true, opacity: 0.45 })
+    new THREE.LineBasicMaterial({ color: edgeColor, transparent: true, opacity: 0.45 })
   );
   mesh.add(edge);
 
@@ -232,6 +334,7 @@ function clearModel() {
 }
 
 function buildCutEdgeLines() {
+  const scheme = activeScheme();
   for (const key of state.unfolded.cutEdges) {
     const [a, b] = key.split("_").map(Number);
     const va = state.mesh.vertices[a];
@@ -242,7 +345,7 @@ function buildCutEdgeLines() {
     ]);
     const line = new THREE.Line(
       g,
-      new THREE.LineBasicMaterial({ color: 0xff2b2b, transparent: true, opacity: 0 })
+      new THREE.LineBasicMaterial({ color: scheme.cut3d, transparent: true, opacity: 0 })
     );
     modelGroup.add(line);
     runtime.cutEdgeLines.push(line);
@@ -300,12 +403,15 @@ function setupMesh() {
     };
   }
 
-  const faceColors = [0x2f6fbf, 0x3f86dd, 0x2f7fc7, 0x4a9ae7, 0x3aa3df, 0x3684c9];
-  const baseFaceColor = 0xeab308;
+  const scheme = activeScheme();
+  const faceColors = scheme.face;
+  const baseFaceColor = scheme.baseFace;
   for (let fi = 0; fi < state.mesh.faces.length; fi++) {
     const mesh = createFaceMesh(
       state.mesh.faces[fi],
       fi === runtime.rootFace ? baseFaceColor : faceColors[fi % faceColors.length]
+      ,
+      scheme.edge
     );
     modelGroup.add(mesh);
     runtime.faceNodes.push({ fi, mesh });
@@ -409,6 +515,8 @@ function draw2DNet(pipelineState) {
       ? 1
       : 0.4;
   const alpha = Math.max(0.03, pipelineState.netMix * stageBoost);
+  const scheme = activeScheme();
+  const edgeRgb = colorToRgbArray(scheme.edge);
 
   state.mesh.faces.forEach((face, fi) => {
     const fmap = state.unfolded.face2D[fi];
@@ -421,20 +529,21 @@ function draw2DNet(pipelineState) {
     }
     ctx2d.closePath();
     const isBase = fi === runtime.rootFace;
+    const fillRgb = faceColorRgb(scheme, fi, isBase);
     ctx2d.fillStyle = isBase
-      ? `rgba(234,179,8,${(0.35 + 0.45 * alpha).toFixed(3)})`
-      : `rgba(83,166,255,${(0.18 + 0.5 * alpha).toFixed(3)})`;
+      ? `rgba(${fillRgb[0]},${fillRgb[1]},${fillRgb[2]},${(0.35 + 0.45 * alpha).toFixed(3)})`
+      : `rgba(${fillRgb[0]},${fillRgb[1]},${fillRgb[2]},${(0.18 + 0.5 * alpha).toFixed(3)})`;
     ctx2d.fill();
     ctx2d.strokeStyle = isBase
-      ? `rgba(255,225,130,${(0.6 + 0.4 * alpha).toFixed(3)})`
-      : `rgba(220,234,255,${(0.15 + 0.85 * alpha).toFixed(3)})`;
+      ? `rgba(${scheme.baseNetStroke[0]},${scheme.baseNetStroke[1]},${scheme.baseNetStroke[2]},${(0.6 + 0.4 * alpha).toFixed(3)})`
+      : `rgba(${edgeRgb[0]},${edgeRgb[1]},${edgeRgb[2]},${(0.22 + 0.78 * alpha).toFixed(3)})`;
     ctx2d.lineWidth = isBase ? 2.8 : 1.35;
     ctx2d.stroke();
 
     if (isBase) {
       const cx = face.reduce((sum, vi) => sum + fmap.get(vi).x, 0) / face.length;
       const cy = face.reduce((sum, vi) => sum + fmap.get(vi).y, 0) / face.length;
-      ctx2d.fillStyle = `rgba(255,236,170,${(0.75 + 0.25 * alpha).toFixed(3)})`;
+      ctx2d.fillStyle = `rgba(${scheme.baseLabel[0]},${scheme.baseLabel[1]},${scheme.baseLabel[2]},${(0.75 + 0.25 * alpha).toFixed(3)})`;
       ctx2d.font = "700 13px Inter, system-ui, sans-serif";
       ctx2d.textAlign = "center";
       ctx2d.textBaseline = "middle";
@@ -449,7 +558,7 @@ function draw2DNet(pipelineState) {
       if (!fmap.has(a) || !fmap.has(bIdx)) continue;
       const pa = fmap.get(a);
       const pb = fmap.get(bIdx);
-      ctx2d.strokeStyle = `rgba(255,40,40,${(0.32 + 0.68 * alpha).toFixed(3)})`;
+      ctx2d.strokeStyle = `rgba(${scheme.cut2d[0]},${scheme.cut2d[1]},${scheme.cut2d[2]},${(0.32 + 0.68 * alpha).toFixed(3)})`;
       ctx2d.lineWidth = 2.4;
       ctx2d.beginPath();
       ctx2d.moveTo(ox + pa.x * scale, oy + pa.y * scale);
@@ -507,17 +616,21 @@ function tick(ts) {
   const p = window.PolyhedronPipeline.buildState(state.timeline);
   phaseEl.textContent = `Phase: ${p.label}`;
   setActivePhaseButton(p.phase.id);
+  const scheme = activeScheme();
   const now = new Date();
   const hh = String(now.getHours()).padStart(2, "0");
   const mm = String(now.getMinutes()).padStart(2, "0");
   const ss = String(now.getSeconds()).padStart(2, "0");
+  hud3dEl.style.color = `rgb(${scheme.hudText[0]},${scheme.hudText[1]},${scheme.hudText[2]})`;
+  hud3dEl.style.borderColor = `rgba(${scheme.hudKey[0]},${scheme.hudKey[1]},${scheme.hudKey[2]},0.35)`;
   hud3dEl.innerHTML = [
     ["Time", `${hh}:${mm}:${ss}`],
     ["Solid", state.mesh ? state.mesh.name : "-"],
     ["Phase", p.label],
-    ["Timeline", `${Math.round(state.timeline * 100)}%`]
+    ["Timeline", `${Math.round(state.timeline * 100)}%`],
+    ["Scheme", colorSchemeEl.options[colorSchemeEl.selectedIndex]?.text || colorSchemeEl.value]
   ]
-    .map(([k, v]) => `<div class="hud-line"><span class="hud-key">${k}</span><span class="hud-value">${v}</span></div>`)
+    .map(([k, v]) => `<div class="hud-line"><span class="hud-key" style="color: rgb(${scheme.hudKey[0]},${scheme.hudKey[1]},${scheme.hudKey[2]})">${k}</span><span class="hud-value">${v}</span></div>`)
     .join("");
 
   update3D(p);
@@ -540,6 +653,10 @@ function bindEvents() {
     state.timeline = 0;
     state.targetTimeline = null;
     timelineEl.value = "0";
+  });
+
+  colorSchemeEl.addEventListener("change", () => {
+    setupMesh();
   });
 
   timelineEl.addEventListener("input", () => {
@@ -608,6 +725,7 @@ function bindEvents() {
 
 function init() {
   solidEl.value = "icosahedron";
+  colorSchemeEl.value = "classic";
   setTrack(pickRandomTrack(), { force: true });
   syncBgmButton();
   syncVolumeText();
