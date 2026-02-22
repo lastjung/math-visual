@@ -80,6 +80,68 @@
     return withDerived({ name: "Regular icosahedron", vertices, faces });
   }
 
+  function makeCube() {
+    const vertices = normalize([
+      v(-1, -1, -1), v(1, -1, -1), v(1, 1, -1), v(-1, 1, -1),
+      v(-1, -1, 1), v(1, -1, 1), v(1, 1, 1), v(-1, 1, 1)
+    ]);
+
+    const faces = [
+      [0, 1, 2, 3],
+      [4, 7, 6, 5],
+      [0, 4, 5, 1],
+      [1, 5, 6, 2],
+      [2, 6, 7, 3],
+      [3, 7, 4, 0]
+    ];
+
+    return withDerived({ name: "Cube", vertices, faces });
+  }
+
+  function makeDual(mesh) {
+    const centers = mesh.faces.map((f) => {
+      let sx = 0, sy = 0, sz = 0;
+      for (const vi of f) {
+        sx += mesh.vertices[vi].x;
+        sy += mesh.vertices[vi].y;
+        sz += mesh.vertices[vi].z;
+      }
+      const inv = 1 / f.length;
+      return { x: sx * inv, y: sy * inv, z: sz * inv };
+    });
+
+    const incident = Array.from({ length: mesh.vertices.length }, () => []);
+    mesh.faces.forEach((f, fi) => {
+      for (const vi of f) incident[vi].push(fi);
+    });
+
+    const faces = incident.map((faceIds, vi) => {
+      const c = vnorm(mesh.vertices[vi]);
+      const ref = Math.abs(c.x) < 0.8 ? v(1, 0, 0) : v(0, 1, 0);
+      const u = vnorm(vcross(ref, c));
+      const w = vcross(c, u);
+      return faceIds
+        .map((fi) => {
+          const d = vsub(centers[fi], mesh.vertices[vi]);
+          const tx = vdot(d, u);
+          const ty = vdot(d, w);
+          return { fi, a: Math.atan2(ty, tx) };
+        })
+        .sort((a, b) => a.a - b.a)
+        .map((x) => x.fi);
+    });
+
+    return withDerived({
+      name: "Regular dodecahedron",
+      vertices: normalize(centers),
+      faces
+    });
+  }
+
+  function makeDodecahedron() {
+    return makeDual(makeIcosahedron());
+  }
+
   function withDerived(mesh) {
     const faceNormals = mesh.faces.map((f) => {
       const a = mesh.vertices[f[0]];
@@ -127,7 +189,9 @@
   window.PolyhedronFactory = {
     create(kind) {
       if (kind === "tetrahedron") return makeTetrahedron();
+      if (kind === "cube") return makeCube();
       if (kind === "octahedron") return makeOctahedron();
+      if (kind === "dodecahedron") return makeDodecahedron();
       if (kind === "icosahedron") return makeIcosahedron();
       return makeTetrahedron();
     }

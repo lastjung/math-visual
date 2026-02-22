@@ -1,7 +1,16 @@
 (function () {
   const vsub = (a, b) => ({ x: a.x - b.x, y: a.y - b.y, z: a.z - b.z });
   const vdot = (a, b) => a.x * b.x + a.y * b.y + a.z * b.z;
+  const vcross = (a, b) => ({
+    x: a.y * b.z - a.z * b.y,
+    y: a.z * b.x - a.x * b.z,
+    z: a.x * b.y - a.y * b.x
+  });
   const vlen = (p) => Math.hypot(p.x, p.y, p.z) || 1;
+  const vnorm = (p) => {
+    const m = vlen(p);
+    return { x: p.x / m, y: p.y / m, z: p.z / m };
+  };
 
   function dist3(a, b) {
     return vlen(vsub(a, b));
@@ -31,25 +40,55 @@
     return { rootFace, parent, viaEdge, order };
   }
 
-  function unfoldTriangles(mesh, tree) {
+  function faceNormal(mesh, face) {
+    if (face.length < 3) return { x: 0, y: 0, z: 1 };
+    const a = mesh.vertices[face[0]];
+    const b = mesh.vertices[face[1]];
+    const c = mesh.vertices[face[2]];
+    return vnorm(vcross(vsub(b, a), vsub(c, a)));
+  }
+
+  function projectFace2D(mesh, face, aIdx, bIdx, pa, pb, sign) {
+    const va = mesh.vertices[aIdx];
+    const vb = mesh.vertices[bIdx];
+    const ex3 = vnorm(vsub(vb, va));
+    const n3 = faceNormal(mesh, face);
+    const ey3 = vnorm(vcross(n3, ex3));
+    const dab = dist3(va, vb);
+    const ex2 = { x: (pb.x - pa.x) / dab, y: (pb.y - pa.y) / dab };
+    const ey2 = { x: -ex2.y, y: ex2.x };
+
+    const out = new Map();
+    for (const vi of face) {
+      const d = vsub(mesh.vertices[vi], va);
+      const x = vdot(d, ex3);
+      const y = vdot(d, ey3);
+      out.set(vi, {
+        x: pa.x + ex2.x * x + ey2.x * (y * sign),
+        y: pa.y + ex2.y * x + ey2.y * (y * sign)
+      });
+    }
+    return out;
+  }
+
+  function unfoldMesh(mesh, tree) {
     const face2D = new Array(mesh.faces.length);
     const root = tree.rootFace;
     const rf = mesh.faces[root];
-    const a = mesh.vertices[rf[0]];
-    const b = mesh.vertices[rf[1]];
-    const c = mesh.vertices[rf[2]];
-
-    const ab = dist3(a, b);
-    const ac = dist3(a, c);
-    const bc = dist3(b, c);
-    const x = (ac * ac - bc * bc + ab * ab) / (2 * ab);
-    const y = Math.sqrt(Math.max(0, ac * ac - x * x));
-
-    face2D[root] = new Map([
-      [rf[0], { x: 0, y: 0 }],
-      [rf[1], { x: ab, y: 0 }],
-      [rf[2], { x, y }]
-    ]);
+    const a0 = rf[0];
+    const b0 = rf[1];
+    const va0 = mesh.vertices[a0];
+    const vb0 = mesh.vertices[b0];
+    const dab0 = dist3(va0, vb0);
+    face2D[root] = projectFace2D(
+      mesh,
+      rf,
+      a0,
+      b0,
+      { x: 0, y: 0 },
+      { x: dab0, y: 0 },
+      1
+    );
 
     const queue = [root];
     const visited = new Set([root]);
@@ -66,36 +105,20 @@
 
         const [ea, eb] = tree.viaEdge[child];
         const childFace = mesh.faces[child];
-        const ec = childFace.find((vi) => vi !== ea && vi !== eb);
 
         const pa = parentMap.get(ea);
         const pb = parentMap.get(eb);
         if (!pa || !pb) continue;
 
-        const dac = dist3(mesh.vertices[ea], mesh.vertices[ec]);
-        const dbc = dist3(mesh.vertices[eb], mesh.vertices[ec]);
-        const dab = dist3(mesh.vertices[ea], mesh.vertices[eb]);
-
-        const ex = { x: (pb.x - pa.x) / dab, y: (pb.y - pa.y) / dab };
-        const ey = { x: -ex.y, y: ex.x };
-
-        const ux = (dac * dac - dbc * dbc + dab * dab) / (2 * dab);
-        const uy = Math.sqrt(Math.max(0, dac * dac - ux * ux));
-
-        const c1 = { x: pa.x + ex.x * ux + ey.x * uy, y: pa.y + ex.y * ux + ey.y * uy };
-        const c2 = { x: pa.x + ex.x * ux - ey.x * uy, y: pa.y + ex.y * ux - ey.y * uy };
-
         const parentThird = pf.find((vi) => vi !== ea && vi !== eb);
         const parentThirdPoint = parentMap.get(parentThird);
         const parentSide = Math.sign(signedArea2(pa, pb, parentThirdPoint));
-        const side1 = Math.sign(signedArea2(pa, pb, c1));
 
-        const chosen = side1 === -parentSide ? c1 : c2;
-        const childMap = new Map();
-        childMap.set(ea, pa);
-        childMap.set(eb, pb);
-        childMap.set(ec, chosen);
-        face2D[child] = childMap;
+        const mapPos = projectFace2D(mesh, childFace, ea, eb, pa, pb, 1);
+        const mapNeg = projectFace2D(mesh, childFace, ea, eb, pa, pb, -1);
+        const childProbe = childFace.find((vi) => vi !== ea && vi !== eb) ?? childFace[0];
+        const sidePos = Math.sign(signedArea2(pa, pb, mapPos.get(childProbe)));
+        face2D[child] = sidePos === -parentSide ? mapPos : mapNeg;
 
         visited.add(child);
         queue.push(child);
@@ -138,6 +161,7 @@
 
   window.PolyhedronUnfold = {
     buildSpanningTree,
-    unfoldTriangles
+    unfoldMesh,
+    unfoldTriangles: unfoldMesh
   };
 })();

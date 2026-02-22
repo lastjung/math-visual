@@ -143,7 +143,7 @@ function setupMesh() {
   baseFaceEl.max = String(Math.max(0, state.mesh.faces.length - 1));
   baseFaceEl.value = String(runtime.rootFace);
   state.tree = window.PolyhedronUnfold.buildSpanningTree(state.mesh, runtime.rootFace);
-  state.unfolded = window.PolyhedronUnfold.unfoldTriangles(state.mesh, state.tree);
+  state.unfolded = window.PolyhedronUnfold.unfoldMesh(state.mesh, state.tree);
 
   clearModel();
 
@@ -335,9 +335,8 @@ function tick(ts) {
   if (state.playing) {
     state.timeline += dt * 0.24;
     if (state.timeline >= 1) {
-      state.timeline = 1;
-      state.playing = false;
-      playEl.textContent = "Play";
+      // Loop playback so Play works from any phase, including phase 5.
+      state.timeline = 0;
     }
     timelineEl.value = String(Math.round(state.timeline * 1000));
   }
@@ -390,6 +389,11 @@ function bindEvents() {
   });
 
   playEl.addEventListener("click", () => {
+    if (!state.playing && state.timeline >= 0.999) {
+      // Restart from the beginning when pressing play at the final phase.
+      state.timeline = 0;
+      timelineEl.value = "0";
+    }
     state.playing = !state.playing;
     if (state.playing) state.targetTimeline = null;
     playEl.textContent = state.playing ? "Pause" : "Play";
@@ -435,6 +439,7 @@ function bindEvents() {
 }
 
 function init() {
+  solidEl.value = "icosahedron";
   resize();
   setupMesh();
   bindEvents();
