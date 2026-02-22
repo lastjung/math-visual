@@ -1,6 +1,8 @@
 (function () {
   const PHI = (1 + Math.sqrt(5)) / 2;
   const v = (x, y, z) => ({ x, y, z });
+  const vadd = (a, b) => ({ x: a.x + b.x, y: a.y + b.y, z: a.z + b.z });
+  const vmul = (a, s) => ({ x: a.x * s, y: a.y * s, z: a.z * s });
   const vsub = (a, b) => ({ x: a.x - b.x, y: a.y - b.y, z: a.z - b.z });
   const vcross = (a, b) => ({
     x: a.y * b.z - a.z * b.y,
@@ -13,6 +15,8 @@
     return { x: p.x / m, y: p.y / m, z: p.z / m };
   };
   const vdot = (a, b) => a.x * b.x + a.y * b.y + a.z * b.z;
+
+  const edgeKey = (a, b) => `${Math.min(a, b)}_${Math.max(a, b)}`;
 
   function normalize(vertices, target = 1) {
     let maxR = 0;
@@ -98,7 +102,7 @@
     return withDerived({ name: "Cube", vertices, faces });
   }
 
-  function makeDual(mesh) {
+  function makeDual(mesh, name = "Dual polyhedron") {
     const centers = mesh.faces.map((f) => {
       let sx = 0, sy = 0, sz = 0;
       for (const vi of f) {
@@ -132,14 +136,122 @@
     });
 
     return withDerived({
-      name: "Regular dodecahedron",
+      name,
       vertices: normalize(centers),
       faces
     });
   }
 
   function makeDodecahedron() {
-    return makeDual(makeIcosahedron());
+    return makeDual(makeIcosahedron(), "Regular dodecahedron");
+  }
+
+  function orderAroundVertex(center, points) {
+    const n = vnorm(center);
+    const ref = Math.abs(n.x) < 0.85 ? v(1, 0, 0) : v(0, 1, 0);
+    const u = vnorm(vcross(ref, n));
+    const w = vcross(n, u);
+    return points
+      .map((p, i) => {
+        const d = vsub(p, center);
+        const tx = vdot(d, u);
+        const ty = vdot(d, w);
+        return { i, a: Math.atan2(ty, tx) };
+      })
+      .sort((a, b) => a.a - b.a)
+      .map((x) => x.i);
+  }
+
+  function buildEdgeData(mesh) {
+    const edges = new Map();
+    const perVertex = Array.from({ length: mesh.vertices.length }, () => []);
+    for (const f of mesh.faces) {
+      for (let i = 0; i < f.length; i++) {
+        const a = f[i];
+        const b = f[(i + 1) % f.length];
+        const k = edgeKey(a, b);
+        if (edges.has(k)) continue;
+        const id = edges.size;
+        edges.set(k, { id, a: Math.min(a, b), b: Math.max(a, b) });
+      }
+    }
+    for (const e of edges.values()) {
+      perVertex[e.a].push(e.id);
+      perVertex[e.b].push(e.id);
+    }
+    return { edges, perVertex };
+  }
+
+  function makeRectified(mesh, name) {
+    const { edges, perVertex } = buildEdgeData(mesh);
+    const mids = new Array(edges.size);
+    const edgeId = new Map();
+
+    for (const [k, e] of edges.entries()) {
+      edgeId.set(k, e.id);
+      mids[e.id] = vmul(vadd(mesh.vertices[e.a], mesh.vertices[e.b]), 0.5);
+    }
+
+    const facesFromOldFaces = mesh.faces.map((f) =>
+      f.map((a, i) => edgeId.get(edgeKey(a, f[(i + 1) % f.length])))
+    );
+
+    const facesFromOldVerts = mesh.vertices.map((center, vi) => {
+      const ids = perVertex[vi];
+      const pts = ids.map((id) => mids[id]);
+      const ord = orderAroundVertex(center, pts);
+      return ord.map((k) => ids[k]);
+    });
+
+    return withDerived({
+      name,
+      vertices: normalize(mids),
+      faces: facesFromOldFaces.concat(facesFromOldVerts)
+    });
+  }
+
+  function makeTruncated(mesh, name, t = 1 / 3) {
+    const { edges } = buildEdgeData(mesh);
+    const neighbors = Array.from({ length: mesh.vertices.length }, () => new Set());
+    for (const e of edges.values()) {
+      neighbors[e.a].add(e.b);
+      neighbors[e.b].add(e.a);
+    }
+
+    const dirVerts = [];
+    const dirMap = new Map();
+    const dirKey = (a, b) => `${a}->${b}`;
+    const getDir = (a, b) => {
+      const k = dirKey(a, b);
+      if (dirMap.has(k)) return dirMap.get(k);
+      const p = vadd(vmul(mesh.vertices[a], 1 - t), vmul(mesh.vertices[b], t));
+      const id = dirVerts.length;
+      dirVerts.push(p);
+      dirMap.set(k, id);
+      return id;
+    };
+
+    const facesFromOldFaces = mesh.faces.map((f) => {
+      const out = [];
+      for (let i = 0; i < f.length; i++) {
+        const a = f[i];
+        const b = f[(i + 1) % f.length];
+        out.push(getDir(a, b), getDir(b, a));
+      }
+      return out;
+    });
+
+    const facesFromOldVerts = mesh.vertices.map((center, vi) => {
+      const nbr = Array.from(neighbors[vi]);
+      const ord = orderAroundVertex(center, nbr.map((j) => mesh.vertices[j]));
+      return ord.map((k) => getDir(vi, nbr[k]));
+    });
+
+    return withDerived({
+      name,
+      vertices: normalize(dirVerts),
+      faces: facesFromOldFaces.concat(facesFromOldVerts)
+    });
   }
 
   function withDerived(mesh) {
@@ -148,11 +260,14 @@
       const b = mesh.vertices[f[1]];
       const c = mesh.vertices[f[2]];
       const n = vnorm(vcross(vsub(b, a), vsub(c, a)));
-      const centroid = {
-        x: (a.x + b.x + c.x) / 3,
-        y: (a.y + b.y + c.y) / 3,
-        z: (a.z + b.z + c.z) / 3
-      };
+      let sx = 0, sy = 0, sz = 0;
+      for (const vi of f) {
+        sx += mesh.vertices[vi].x;
+        sy += mesh.vertices[vi].y;
+        sz += mesh.vertices[vi].z;
+      }
+      const inv = 1 / f.length;
+      const centroid = { x: sx * inv, y: sy * inv, z: sz * inv };
       return vdot(n, centroid) < 0 ? { x: -n.x, y: -n.y, z: -n.z } : n;
     });
 
@@ -193,6 +308,21 @@
       if (kind === "octahedron") return makeOctahedron();
       if (kind === "dodecahedron") return makeDodecahedron();
       if (kind === "icosahedron") return makeIcosahedron();
+      if (kind === "truncated_octahedron") {
+        return makeTruncated(makeOctahedron(), "Truncated octahedron");
+      }
+      if (kind === "truncated_icosahedron") {
+        return makeTruncated(makeIcosahedron(), "Truncated icosahedron");
+      }
+      if (kind === "cuboctahedron") {
+        return makeRectified(makeCube(), "Cuboctahedron");
+      }
+      if (kind === "icosidodecahedron") {
+        return makeRectified(makeIcosahedron(), "Icosidodecahedron");
+      }
+      if (kind === "rhombic_dodecahedron") {
+        return makeDual(makeRectified(makeCube(), "Cuboctahedron"), "Rhombic dodecahedron");
+      }
       return makeTetrahedron();
     }
   };
