@@ -29,7 +29,7 @@
                     <div class="tab active" data-case="waves">Waves</div>
                     <div class="tab" data-case="hexagon">Hex Grid</div>
                     <div class="tab" data-case="damage">Damage Rolls</div>
-                    <div class="tab" data-case="modulo-circle">Modulo Circle</div>
+                    <div class="tab" data-case="modulo-circle">Cardioid Circle</div>
                     <div class="tab" data-case="orbit-spirograph">Orbit Spirograph</div>
                     <div class="tab" data-case="sphere-voronoi">Sphere Voronoi</div>
                     <div class="tab" data-case="face-generator">Face Generator</div>
@@ -78,7 +78,7 @@
     <script src="cases/golden_spiral.js"></script>
     <script src="cases/hexagon_grid.js"></script>
     <script src="cases/damage_rolls.js"></script>
-    <script src="cases/modulo_circle.js"></script>
+    <script src="cases/cardioid_circle.js"></script>
     <script src="cases/orbit_spirograph.js"></script>
     <script src="cases/sphere_voronoi.js"></script>
     <script src="cases/face_generator.js"></script>
@@ -112,9 +112,9 @@
                     document.getElementById('main-subtitle').textContent = 'See how dice rolls spread over many tries.';
                     Core.loadCase(DamageRollsCase, { mode: 'display' });
                 } else if (caseName === 'modulo-circle') {
-                    document.getElementById('main-title').textContent = 'Modulo Circle Patterns';
+                    document.getElementById('main-title').textContent = 'Cardioid Circle';
                     document.getElementById('main-subtitle').textContent = 'Animated times-table modulo patterns on a circle.';
-                    Core.loadCase(ModuloCircleCase, { mode: 'display' });
+                    Core.loadCase(CardioidCircleCase, { mode: 'display' });
                 } else if (caseName === 'orbit-spirograph') {
                     document.getElementById('main-title').textContent = 'Orbit Spirograph';
                     document.getElementById('main-subtitle').textContent = 'Center Body vs Orbiting Body trajectory in orbital time.';

@@ -8,17 +8,18 @@ class AudioManager {
         this.audio = new Audio();
         this.audio.loop = true;
         this.audio.volume = 0; // Start muted for fade-in
-        this.targetVolume = 0.5;
+        this.targetVolume = 0.15;
         this.fadeInterval = null;
         this.isMuted = true;
         this.currentTrack = null;
     }
 
-    play(trackUrl) {
+    play(trackUrl, options = {}) {
         if (!trackUrl) return;
+        const forceSwitch = options.forceSwitch === true;
         // Keep track selected, but do not autoplay while muted.
         if (this.isMuted) {
-            if (this.currentTrack !== trackUrl) {
+            if (forceSwitch || this.currentTrack !== trackUrl) {
                 this.currentTrack = trackUrl;
                 this.audio.src = trackUrl;
                 this.audio.load();
@@ -26,7 +27,7 @@ class AudioManager {
             return;
         }
 
-        if (this.currentTrack === trackUrl) {
+        if (!forceSwitch && this.currentTrack === trackUrl) {
             if (this.audio.paused) this.fadeIn();
             return;
         }
@@ -37,6 +38,7 @@ class AudioManager {
         this.fadeOut(() => {
             this.audio.src = trackUrl;
             this.audio.load(); // Reload
+            this.audio.currentTime = 0;
             
             this.audio.play().then(() => {
                 this.fadeIn();
@@ -88,6 +90,21 @@ class AudioManager {
             }
         }
         return this.isMuted;
+    }
+
+    setTargetVolume(volume) {
+        const parsed = Number(volume);
+        if (Number.isNaN(parsed)) return this.targetVolume;
+        const clamped = Math.max(0, Math.min(1, parsed));
+        this.targetVolume = clamped;
+        if (!this.isMuted) {
+            this.audio.volume = clamped;
+        }
+        return this.targetVolume;
+    }
+
+    getTargetVolume() {
+        return this.targetVolume;
     }
 
     fadeIn() {

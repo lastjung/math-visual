@@ -8,9 +8,75 @@ const Core = {
     isIdle: false,
     idleTimer: null,
     IDLE_TIMEOUT: 60 * 1000,
-    isRecordingMode: false,
+    recordingStartMs: 0,
     isRunning: true,
     currentCaseMode: 'display',
+    lastSelectedTrack: null,
+    randomBgmTracks: [
+        'assets/music/bgm/Math_01_Minimalist_Sine_Pulse.mp3',
+        'assets/music/bgm/Math_02_Fractal_Recursive_Ambient.mp3',
+        'assets/music/bgm/Math_03_Euclidean_Polyrhythm.mp3',
+        'assets/music/bgm/Math_04_Cybernetic_Grid_Logic.mp3',
+        'assets/music/bgm/Math_05_Infinite_Series_Flow.mp3',
+        'assets/music/bgm/Math_06_Binary_Symphony.mp3',
+        'assets/music/bgm/Math_07_Quantum_Resonance.mp3',
+        'assets/music/bgm/Math_08_Geometric_Vector_Motion.mp3',
+        'assets/music/bgm/Math_09_Fibonacci_Golden_Ratio.mp3',
+        'assets/music/bgm/Math_10_Bitwise_Glitch_Architecture.mp3',
+        'assets/music/bgm/Math_11_Calculus_Flow.mp3',
+        'assets/music/bgm/Math_12_Neural_Network_Synapse.mp3',
+        'assets/music/bgm/Math_13_Retro_8-bit_Math.mp3',
+        'assets/music/bgm/Math_14_Primality_Test_Beat.mp3',
+        'assets/music/bgm/Math_15_Deep_Space_Topology.mp3',
+        'assets/music/bgm/Math_16_Coordinate_Plane_Ambient.mp3',
+        'assets/music/bgm/Math_17_Mathematical_Induction.mp3',
+        'assets/music/bgm/Math_18_Lo-fi_Coding_Marathon.mp3',
+        'assets/music/bgm/Math_19_Abstract_Set_Theory.mp3',
+        'assets/music/bgm/Math_20_Theorem_Q.E.D..mp3',
+        'assets/music/bgm/piano-shorts/Piano_Short_01_Nocturne_Full_HQ.mp3',
+        'assets/music/bgm/piano-shorts/Piano_Short_02_Moonlight_Full_HQ.mp3',
+        'assets/music/bgm/piano-shorts/Piano_Short_03_Claire_Full_HQ.mp3',
+        'assets/music/bgm/piano-shorts/Piano_Short_04_Liebestraum_Full_HQ.mp3',
+        'assets/music/bgm/piano-shorts/Piano_Short_05_Gymnopedie_Full_HQ.mp3',
+        'assets/music/bgm/piano-shorts/Piano_Short_06_Classical_Sonata_Full_HQ.mp3',
+        'assets/music/bgm/piano-shorts/Piano_Short_07_Rach_Grand_Full_HQ.mp3',
+        'assets/music/bgm/piano-shorts/Piano_Short_08_River_Flows_Full_HQ.mp3',
+        'assets/music/bgm/piano-shorts/Piano_Short_09_Hisaishi_Fantasy_Full_HQ.mp3',
+        'assets/music/bgm/piano-shorts/Piano_Short_10_Jazz_Mood_Full_HQ.mp3',
+        'assets/music/bgm/piano-shorts/Piano_Short_11_Ragtime_Fun_Full_HQ.mp3',
+        'assets/music/bgm/piano-shorts/Piano_Short_12_Minimal_Cycle_Full_HQ.mp3',
+        'assets/music/bgm/piano-shorts/Piano_Short_13_Cinematic_Tear_Full_HQ.mp3',
+        'assets/music/bgm/piano-shorts/Piano_Short_14_Pop_Vibe_Full_HQ.mp3',
+        'assets/music/bgm/piano-shorts/Piano_Short_15_Mystery_Night_Full_HQ.mp3',
+        'assets/music/bgm/piano-shorts/Piano_Short_16_Morning_Dew_Full_HQ.mp3',
+        'assets/music/bgm/piano-shorts/Piano_Short_17_Rainy_Window_Full_HQ.mp3',
+        'assets/music/bgm/piano-shorts/Piano_Short_18_Soulful_Touch_Full_HQ.mp3',
+        'assets/music/bgm/piano-shorts/Piano_Short_19_Wedding_Grace_Full_HQ.mp3',
+        'assets/music/bgm/piano-shorts/Piano_Short_20_Grand_Power_Full_HQ.mp3'
+    ],
+
+    getCurrentTrack() {
+        if (!this.currentCase) return null;
+        return this.currentCase._selectedMusicTrack || this.currentCase.musicTrack || null;
+    },
+
+    pickRandomTrack(previousTrack = null) {
+        if (!this.randomBgmTracks.length) return null;
+        if (this.randomBgmTracks.length === 1) return this.randomBgmTracks[0];
+
+        const candidates = previousTrack
+            ? this.randomBgmTracks.filter((track) => track !== previousTrack)
+            : this.randomBgmTracks;
+        const pool = candidates.length ? candidates : this.randomBgmTracks;
+        return pool[Math.floor(Math.random() * pool.length)];
+    },
+
+    selectCaseTrack() {
+        const previousTrack = this.lastSelectedTrack || (window.audioManager ? window.audioManager.currentTrack : null);
+        const randomTrack = this.pickRandomTrack(previousTrack);
+        this.currentCase._selectedMusicTrack = randomTrack || this.currentCase.musicTrack || null;
+        this.lastSelectedTrack = this.currentCase._selectedMusicTrack;
+    },
 
     init() {
         this.setupUI();
@@ -51,6 +117,7 @@ const Core = {
             dock.innerHTML = `
                 <button class="icon-btn" id="btn-settings" title="Settings">⚙️</button>
                 <button class="icon-btn" id="btn-bgm" title="Sound On/Off">🔇</button>
+                <button class="icon-btn" id="btn-next-track" title="Change Music">⏭</button>
                 <button class="icon-btn" id="btn-hide-ui" title="Enter Full Screen">⤢</button>
                 <div class="dock-divider"></div>
                 <button class="icon-btn" id="btn-reset" title="Reset">↺</button>
@@ -63,6 +130,7 @@ const Core = {
             // Bind Dock Events
             document.getElementById('btn-settings').onclick = () => this.toggleSettings();
             document.getElementById('btn-bgm').onclick = () => this.toggleAudio();
+            document.getElementById('btn-next-track').onclick = () => this.changeMusicTrack();
             document.getElementById('btn-hide-ui').onclick = () => this.toggleCinematicMode();
             document.getElementById('btn-reset').onclick = () => this.resetCase();
             document.getElementById('btn-play').onclick = () => this.togglePlay();
@@ -79,13 +147,16 @@ const Core = {
              document.body.appendChild(btn);
         }
         this.updateCinematicButton();
+
+        this.recordingStartMs = Date.now();
         
         // Auto-initialize audio on first interaction
         const initAudio = () => {
              // Start audio only when the app is running to avoid pause-click race.
              if (!this.isRunning) return;
-             if (this.currentCase && this.currentCase.musicTrack && window.audioManager && window.audioManager.audio.paused && !window.audioManager.isMuted) {
-                 window.audioManager.play(this.currentCase.musicTrack);
+             const track = this.getCurrentTrack();
+             if (track && window.audioManager && window.audioManager.audio.paused && !window.audioManager.isMuted) {
+                 window.audioManager.play(track);
                  document.removeEventListener('click', initAudio);
                  document.removeEventListener('keydown', initAudio);
              }
@@ -106,10 +177,37 @@ const Core = {
             const isMuted = window.audioManager.toggleMute();
             this.syncAudioButton();
             this.updateControls();
-            if (!isMuted && this.isRunning && this.currentCase && this.currentCase.musicTrack) {
-                window.audioManager.play(this.currentCase.musicTrack);
+            const track = this.getCurrentTrack();
+            if (!isMuted && this.isRunning && track) {
+                window.audioManager.play(track);
             }
         }
+    },
+
+    changeMusicTrack() {
+        if (!this.currentCase || !window.audioManager) return;
+        const previousTrack = this.getCurrentTrack() || this.lastSelectedTrack;
+        const nextTrack = this.pickRandomTrack(previousTrack);
+        if (!nextTrack) return;
+
+        this.currentCase._selectedMusicTrack = nextTrack;
+        this.lastSelectedTrack = nextTrack;
+        this.recordingStartMs = Date.now();
+        window.audioManager.play(nextTrack, { forceSwitch: true });
+        if (!this.isRunning) {
+            window.audioManager.syncWithPlaybackState(false);
+        }
+    },
+
+    getRecordingElapsedMs() {
+        return Math.max(0, Date.now() - this.recordingStartMs);
+    },
+
+    formatRecordingTimeMMSS(ms) {
+        const totalSec = Math.max(0, Math.floor(ms / 1000));
+        const mm = Math.floor(totalSec / 60);
+        const ss = totalSec % 60;
+        return `${String(mm).padStart(2, '0')}:${String(ss).padStart(2, '0')}`;
     },
 
     syncAudioButton() {
@@ -133,37 +231,75 @@ const Core = {
         
         panel.innerHTML = ''; // Clear existing content
 
-        // Add Global Controls for Desktop Sidebar
-        if (isDesktop) {
-            const globalGroup = document.createElement('div');
-            globalGroup.className = 'setting-item';
-            globalGroup.style.marginBottom = '16px';
-            globalGroup.style.paddingBottom = '16px';
-            globalGroup.style.borderBottom = '1px solid #eee';
-            
-            globalGroup.innerHTML = `
-                <div class="setting-header" style="margin-bottom:12px;">
-                    <label>${this.currentCaseMode === 'interactive' ? 'Interactive Controls' : 'Master Controls'}</label>
-                </div>
-                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px;">
-                    <button class="btn-primary" id="sidebar-reset" style="padding:10px 0; font-size:0.8rem;">
-                        ${this.currentCaseMode === 'interactive' ? '↺ Reset Maze' : '↺ Reset'}
-                    </button>
-                    <button class="btn-primary" id="sidebar-play" style="padding:10px 0; font-size:0.8rem;">
-                        ${(() => { const s = this.getPlayLabel(); return s.icon + ' ' + s.text; })()}
-                    </button>
-                </div>
-                <button class="btn-secondary" id="sidebar-bgm" style="width:100%; margin-top:8px; font-size:0.8rem;">
-                    ${(this.currentCase && typeof this.currentCase.caseAudioLabel === 'function') ? this.currentCase.caseAudioLabel() : 'BGM'}: ${(this.currentCase && typeof this.currentCase.isCaseAudioMuted === 'function') ? (this.currentCase.isCaseAudioMuted() ? 'OFF' : 'ON') : (window.audioManager && !window.audioManager.isMuted ? 'ON' : 'OFF')}
-                </button>
-            `;
-            panel.appendChild(globalGroup);
+        const globalGroup = document.createElement('div');
+        globalGroup.className = 'setting-item';
+        globalGroup.style.marginBottom = '16px';
+        globalGroup.style.paddingBottom = '16px';
+        globalGroup.style.borderBottom = '1px solid #eee';
 
-            panel.querySelector('#sidebar-reset').onclick = () => this.resetCase();
-            panel.querySelector('#sidebar-play').onclick = () => this.togglePlay();
-            panel.querySelector('#sidebar-bgm').onclick = () => {
+        const bgmLabel = (this.currentCase && typeof this.currentCase.caseAudioLabel === 'function') ? this.currentCase.caseAudioLabel() : 'BGM';
+        const bgmState = (this.currentCase && typeof this.currentCase.isCaseAudioMuted === 'function')
+            ? (this.currentCase.isCaseAudioMuted() ? 'OFF' : 'ON')
+            : (window.audioManager && !window.audioManager.isMuted ? 'ON' : 'OFF');
+        const volumeValue = window.audioManager && typeof window.audioManager.getTargetVolume === 'function'
+            ? window.audioManager.getTargetVolume()
+            : (window.audioManager ? window.audioManager.targetVolume : 0.5);
+        const volumePercent = Math.round((volumeValue || 0) * 100);
+
+        globalGroup.innerHTML = `
+            <div class="setting-header" style="margin-bottom:12px;">
+                <label>${this.currentCaseMode === 'interactive' ? 'Interactive Controls' : 'Master Controls'}</label>
+            </div>
+            ${isDesktop ? `
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px;">
+                <button class="btn-primary" id="sidebar-reset" style="padding:10px 0; font-size:0.8rem;">
+                    ${this.currentCaseMode === 'interactive' ? '↺ Reset Maze' : '↺ Reset'}
+                </button>
+                <button class="btn-primary" id="sidebar-play" style="padding:10px 0; font-size:0.8rem;">
+                    ${(() => { const s = this.getPlayLabel(); return s.icon + ' ' + s.text; })()}
+                </button>
+            </div>
+            ` : ''}
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px; margin-top:8px;">
+                <button class="btn-secondary" id="sidebar-bgm" style="width:100%; font-size:0.8rem;">
+                    ${bgmLabel}: ${bgmState}
+                </button>
+                <button class="btn-secondary" id="sidebar-next-track" style="width:100%; font-size:0.8rem;">
+                    Next Track
+                </button>
+            </div>
+            <div class="setting-header" style="margin-top:10px;">
+                <label>Music Volume</label>
+                <span class="setting-value" id="val-master-volume">${volumePercent}%</span>
+            </div>
+            <input type="range" id="master-volume" min="0" max="100" step="1" value="${volumePercent}">
+        `;
+        panel.appendChild(globalGroup);
+
+        const resetBtn = panel.querySelector('#sidebar-reset');
+        if (resetBtn) resetBtn.onclick = () => this.resetCase();
+        const playBtn = panel.querySelector('#sidebar-play');
+        if (playBtn) playBtn.onclick = () => this.togglePlay();
+        const bgmBtn = panel.querySelector('#sidebar-bgm');
+        if (bgmBtn) {
+            bgmBtn.onclick = () => {
                 this.toggleAudio();
-                this.updateControls(); // Refresh button text
+                this.updateControls();
+            };
+        }
+        const nextTrackBtn = panel.querySelector('#sidebar-next-track');
+        if (nextTrackBtn) {
+            nextTrackBtn.onclick = () => this.changeMusicTrack();
+        }
+        const volumeInput = panel.querySelector('#master-volume');
+        const volumeLabel = panel.querySelector('#val-master-volume');
+        if (volumeInput && volumeLabel) {
+            volumeInput.oninput = (e) => {
+                const volume = parseInt(e.target.value, 10);
+                volumeLabel.textContent = `${volume}%`;
+                if (window.audioManager && typeof window.audioManager.setTargetVolume === 'function') {
+                    window.audioManager.setTargetVolume(volume / 100);
+                }
             };
         }
 
@@ -297,6 +433,7 @@ const Core = {
     resetCase() {
         if (this.currentCase && this.currentCase.reset) {
             this.currentCase.reset();
+            this.recordingStartMs = Date.now();
             // Auto-play on reset unless case forbids it
             if (!this.isRunning && this.currentCase.autoPlayOnReset !== false) {
                  this.togglePlay();
@@ -323,8 +460,9 @@ const Core = {
 
         if (window.audioManager) {
             if (this.isRunning) {
-                if (!window.audioManager.currentTrack && this.currentCase && this.currentCase.musicTrack && !window.audioManager.isMuted) {
-                    window.audioManager.play(this.currentCase.musicTrack);
+                const track = this.getCurrentTrack();
+                if (!window.audioManager.currentTrack && track && !window.audioManager.isMuted) {
+                    window.audioManager.play(track);
                 } else {
                     window.audioManager.syncWithPlaybackState(true);
                 }
@@ -380,15 +518,6 @@ const Core = {
         });
     },
     
-    // Kept for backward compatibility or future use
-    toggleRecording() {
-        this.isRecordingMode = !this.isRecordingMode;
-        document.body.classList.toggle('recording-mode');
-        if (this.currentCase && this.currentCase.resize) {
-            this.currentCase.resize();
-        }
-    },
-
     resetIdleTimer() {
         window.dispatchEvent(new Event('mousedown')); 
     },
@@ -402,13 +531,16 @@ const Core = {
 
         this.currentCase = caseInstance;
         this.currentCase.init();
+        this.selectCaseTrack();
         
         // Generate UI for this case
         this.updateControls();
         
         // Switch Music if defined
-        if (this.currentCase.musicTrack && window.audioManager) {
-             window.audioManager.play(this.currentCase.musicTrack);
+        const track = this.getCurrentTrack();
+        if (track && window.audioManager) {
+             this.recordingStartMs = Date.now();
+             window.audioManager.play(track, { forceSwitch: true });
         }
         this.syncAudioButton();
         
