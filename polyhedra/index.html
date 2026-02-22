@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Polyhedra Lab</title>
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+  <div class="app">
+    <header class="header">
+      <h1>Polyhedra Lab</h1>
+      <p>3D rotation, cut edges, unfolding net, and assembly timeline (triangular solids: tetrahedron, octahedron, icosahedron).</p>
+    </header>
+
+    <section class="layout">
+      <aside class="controls">
+        <label>
+          Solid
+          <select id="solid">
+            <option value="tetrahedron">Regular tetrahedron (4 triangles)</option>
+            <option value="octahedron">Regular octahedron (8 triangles)</option>
+            <option value="icosahedron">Regular icosahedron (20 triangles)</option>
+          </select>
+        </label>
+
+        <label>
+          Rotation Speed
+          <input id="speed" type="range" min="-1.2" max="1.2" step="0.01" value="0.45" />
+        </label>
+
+        <label>
+          Timeline
+          <input id="timeline" type="range" min="0" max="1000" step="1" value="0" />
+        </label>
+
+        <div class="row">
+          <button id="play" type="button">Play</button>
+          <button id="reset" type="button">Reset</button>
+        </div>
+
+        <div class="row">
+          <button id="prev-step" type="button">Prev Step</button>
+          <button id="next-step" type="button">Next Step</button>
+        </div>
+
+        <div class="phase-buttons">
+          <button class="phase-btn" data-phase="rotate" type="button">1 Rotate</button>
+          <button class="phase-btn" data-phase="cut" type="button">2 Cut</button>
+          <button class="phase-btn" data-phase="unfold" type="button">3 Unfold</button>
+          <button class="phase-btn" data-phase="assemble" type="button">4 Assemble</button>
+          <button class="phase-btn" data-phase="complete" type="button">5 Complete</button>
+        </div>
+
+        <p id="phase">Phase: Rotate 3D</p>
+        <p id="status"></p>
+      </aside>
+
+      <div class="view-grid">
+        <section class="panel">
+          <h2>3D Model</h2>
+          <canvas id="view3d"></canvas>
+        </section>
+        <section class="panel">
+          <h2>2D Net</h2>
+          <canvas id="view2d"></canvas>
+        </section>
+      </div>
+    </section>
+  </div>
+
+  <script src="./polyhedron_factory.js"></script>
+  <script src="./polyhedron_unfold.js"></script>
+  <script src="./polyhedron_pipeline.js"></script>
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.161.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.161.0/examples/jsm/"
+      }
+    }
+  </script>
+  <script type="module" src="./polyhedron_viewer.js"></script>
+</body>
+</html>
