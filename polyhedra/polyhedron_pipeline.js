@@ -1,9 +1,10 @@
 (function () {
   const PHASES = [
-    { id: "rotate", label: "Rotate 3D", start: 0.0, end: 0.22 },
-    { id: "cut", label: "Mark Cut Edges", start: 0.22, end: 0.36 },
-    { id: "unfold", label: "Flatten Net", start: 0.36, end: 0.66 },
-    { id: "assemble", label: "Assemble Back", start: 0.66, end: 0.88 },
+    { id: "rotate", label: "Rotate 3D", start: 0.0, end: 0.16 },
+    { id: "cut", label: "Mark Cut Edges", start: 0.16, end: 0.28 },
+    { id: "disassemble", label: "Disassemble (Pre-open)", start: 0.28, end: 0.44 },
+    { id: "unfold", label: "Flatten Net", start: 0.44, end: 0.68 },
+    { id: "assemble", label: "Assemble Back", start: 0.68, end: 0.88 },
     { id: "complete", label: "Complete 3D", start: 0.88, end: 1.0 }
   ];
 
@@ -12,9 +13,10 @@
     // Especially for "unfold", we jump to the fully opened state.
     const snaps = {
       rotate: 0.08,
-      cut: 0.34,
+      cut: 0.24,
+      disassemble: 0.38,
       unfold: 0.66,
-      assemble: 0.78,
+      assemble: 0.80,
       complete: 0.96
     };
     return snaps[id] ?? 0.08;
@@ -38,16 +40,18 @@
   function buildState(t) {
     const phase = PHASES.find((p) => t >= p.start && t <= p.end) || PHASES[PHASES.length - 1];
 
-    const u = smooth(localT(t, 0.36, 0.66));
-    const a = smooth(localT(t, 0.66, 0.88));
+    const d = smooth(localT(t, 0.28, 0.44)); // disassemble pre-open
+    const u = smooth(localT(t, 0.44, 0.68)); // full unfold
+    const a = smooth(localT(t, 0.68, 0.88)); // assemble
 
     let netMix = 0;
-    if (t < 0.36) netMix = 0;
-    else if (t <= 0.66) netMix = u;
+    if (t < 0.28) netMix = 0;
+    else if (t <= 0.44) netMix = d * 0.72;
+    else if (t <= 0.68) netMix = 0.72 + u * 0.28;
     else if (t <= 0.88) netMix = 1 - a;
     else netMix = 0;
 
-    const cutStrength = t < 0.22 ? 0 : t <= 0.36 ? smooth(localT(t, 0.22, 0.36)) : 1;
+    const cutStrength = t < 0.16 ? 0 : t <= 0.28 ? smooth(localT(t, 0.16, 0.28)) : 1;
 
     return {
       phase,

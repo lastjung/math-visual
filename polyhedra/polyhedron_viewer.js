@@ -13,9 +13,14 @@ const playEl = document.getElementById("play");
 const resetEl = document.getElementById("reset");
 const prevStepEl = document.getElementById("prev-step");
 const nextStepEl = document.getElementById("next-step");
+const bgmToggleEl = document.getElementById("bgm-toggle");
+const bgmNextEl = document.getElementById("bgm-next");
+const bgmVolumeEl = document.getElementById("bgm-volume");
+const bgmVolumeTextEl = document.getElementById("bgm-volume-text");
 const phaseButtons = Array.from(document.querySelectorAll(".phase-btn"));
 const phaseEl = document.getElementById("phase");
 const statusEl = document.getElementById("status");
+const hud3dEl = document.getElementById("hud-3d");
 
 const vsub = (a, b) => ({ x: a.x - b.x, y: a.y - b.y, z: a.z - b.z });
 const vdot = (a, b) => a.x * b.x + a.y * b.y + a.z * b.z;
@@ -29,6 +34,8 @@ const state = {
   mesh: null,
   tree: null,
   unfolded: null,
+  faceDepth: [],
+  maxDepth: 0,
   timeline: 0,
   targetTimeline: null,
   playing: false,
@@ -36,6 +43,22 @@ const state = {
   autoYaw: 0,
   hingeByFace: []
 };
+
+const audioState = {
+  audio: new Audio(),
+  tracks: [
+    "../visualization/assets/music/bgm/Math_01_Minimalist_Sine_Pulse.mp3",
+    "../visualization/assets/music/bgm/Math_03_Euclidean_Polyrhythm.mp3",
+    "../visualization/assets/music/bgm/Math_08_Geometric_Vector_Motion.mp3",
+    "../visualization/assets/music/bgm/Math_09_Fibonacci_Golden_Ratio.mp3",
+    "../visualization/assets/music/bgm/Math_15_Deep_Space_Topology.mp3",
+    "../visualization/assets/music/bgm/Math_16_Coordinate_Plane_Ambient.mp3"
+  ],
+  currentTrack: null,
+  muted: true
+};
+audioState.audio.loop = true;
+audioState.audio.volume = 0.15;
 
 const renderer = new THREE.WebGLRenderer({ canvas: c3d, antialias: true, alpha: false });
 renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
@@ -70,6 +93,53 @@ const runtime = {
   faceNodes: [],
   cutEdgeLines: []
 };
+
+function pickRandomTrack(previousTrack = null) {
+  if (!audioState.tracks.length) return null;
+  if (audioState.tracks.length === 1) return audioState.tracks[0];
+  const pool = previousTrack
+    ? audioState.tracks.filter((t) => t !== previousTrack)
+    : audioState.tracks;
+  return pool[Math.floor(Math.random() * pool.length)];
+}
+
+function setTrack(track, { force = false } = {}) {
+  if (!track) return;
+  if (!force && audioState.currentTrack === track) return;
+  audioState.currentTrack = track;
+  audioState.audio.src = track;
+  audioState.audio.load();
+}
+
+function syncBgmButton() {
+  bgmToggleEl.textContent = audioState.muted ? "BGM: OFF" : "BGM: ON";
+}
+
+function syncVolumeText() {
+  bgmVolumeTextEl.textContent = `${bgmVolumeEl.value}%`;
+}
+
+function toggleBgm() {
+  audioState.muted = !audioState.muted;
+  syncBgmButton();
+  if (audioState.muted) {
+    audioState.audio.pause();
+    return;
+  }
+  if (!audioState.currentTrack) setTrack(pickRandomTrack(), { force: true });
+  audioState.audio.volume = Number(bgmVolumeEl.value) / 100;
+  audioState.audio.play().catch(() => {});
+}
+
+function nextTrack() {
+  const next = pickRandomTrack(audioState.currentTrack);
+  if (!next) return;
+  setTrack(next, { force: true });
+  if (!audioState.muted) {
+    audioState.audio.currentTime = 0;
+    audioState.audio.play().catch(() => {});
+  }
+}
 
 function signedAngleAroundAxis(from, to, axis) {
   const f = new THREE.Vector3(from.x, from.y, from.z).normalize();
@@ -144,6 +214,19 @@ function setupMesh() {
   baseFaceEl.value = String(runtime.rootFace);
   state.tree = window.PolyhedronUnfold.buildSpanningTree(state.mesh, runtime.rootFace);
   state.unfolded = window.PolyhedronUnfold.unfoldMesh(state.mesh, state.tree);
+  state.faceDepth = new Array(state.mesh.faces.length).fill(0);
+  state.maxDepth = 0;
+  for (let fi = 0; fi < state.mesh.faces.length; fi++) {
+    if (fi === runtime.rootFace) continue;
+    let d = 0;
+    let p = fi;
+    while (p !== runtime.rootFace && d < state.mesh.faces.length + 2) {
+      p = state.tree.parent[p];
+      d += 1;
+    }
+    state.faceDepth[fi] = d;
+    if (d > state.maxDepth) state.maxDepth = d;
+  }
 
   clearModel();
 
@@ -190,7 +273,7 @@ function setupMesh() {
   statusEl.textContent = `${state.mesh.name} | faces: ${state.mesh.faces.length} | base: ${runtime.rootFace} | cuts: ${state.unfolded.cutEdges.length}`;
 }
 
-function transformForFace(fi, angleMix, cache) {
+function transformForFace(fi, mixByFace, cache) {
   if (cache[fi]) return cache[fi];
   if (fi === runtime.rootFace) {
     const id = new THREE.Matrix4().identity();
@@ -199,11 +282,11 @@ function transformForFace(fi, angleMix, cache) {
   }
 
   const hinge = state.hingeByFace[fi];
-  const parentM = transformForFace(hinge.parent, angleMix, cache);
+  const parentM = transformForFace(hinge.parent, mixByFace, cache);
 
   const pivot = new THREE.Vector3(hinge.pivot.x, hinge.pivot.y, hinge.pivot.z);
   const axis = new THREE.Vector3(hinge.axis.x, hinge.axis.y, hinge.axis.z).normalize();
-  const angle = hinge.fullAngle * angleMix;
+  const angle = hinge.fullAngle * mixByFace[fi];
 
   const t1 = new THREE.Matrix4().makeTranslation(pivot.x, pivot.y, pivot.z);
   const r = new THREE.Matrix4().makeRotationAxis(axis, angle);
@@ -217,10 +300,24 @@ function transformForFace(fi, angleMix, cache) {
 
 function update3D(pipelineState) {
   const angleMix = pipelineState.netMix;
+  const mixByFace = new Array(state.mesh.faces.length).fill(angleMix);
+  const cascade = 0.45; // depth-based stagger for natural unfold/assemble motion
+  const ease = (t) => {
+    const x = Math.max(0, Math.min(1, t));
+    return x * x * (3 - 2 * x);
+  };
+  if (state.maxDepth > 0) {
+    for (let fi = 0; fi < mixByFace.length; fi++) {
+      const depthNorm = state.faceDepth[fi] / state.maxDepth;
+      const delayed = (angleMix - depthNorm * cascade) / (1 - cascade);
+      mixByFace[fi] = ease(delayed);
+    }
+    mixByFace[runtime.rootFace] = 0;
+  }
   const cache = new Array(state.mesh.faces.length).fill(null);
 
   for (const node of runtime.faceNodes) {
-    const m = transformForFace(node.fi, angleMix, cache);
+    const m = transformForFace(node.fi, mixByFace, cache);
     node.mesh.matrix.copy(m);
   }
 
@@ -259,7 +356,12 @@ function draw2DNet(pipelineState) {
   const scale = Math.min((w * 0.78) / netW, (h * 0.78) / netH);
   const ox = w * 0.5 - ((b.minX + b.maxX) * 0.5) * scale;
   const oy = h * 0.5 - ((b.minY + b.maxY) * 0.5) * scale;
-  const stageBoost = pipelineState.phase.id === "unfold" || pipelineState.phase.id === "assemble" ? 1 : 0.4;
+  const stageBoost =
+    pipelineState.phase.id === "disassemble" ||
+    pipelineState.phase.id === "unfold" ||
+    pipelineState.phase.id === "assemble"
+      ? 1
+      : 0.4;
   const alpha = Math.max(0.03, pipelineState.netMix * stageBoost);
 
   state.mesh.faces.forEach((face, fi) => {
@@ -335,8 +437,9 @@ function tick(ts) {
   if (state.playing) {
     state.timeline += dt * 0.24;
     if (state.timeline >= 1) {
-      // Loop playback so Play works from any phase, including phase 5.
-      state.timeline = 0;
+      state.timeline = 1;
+      state.playing = false;
+      playEl.textContent = "Play";
     }
     timelineEl.value = String(Math.round(state.timeline * 1000));
   }
@@ -358,6 +461,18 @@ function tick(ts) {
   const p = window.PolyhedronPipeline.buildState(state.timeline);
   phaseEl.textContent = `Phase: ${p.label}`;
   setActivePhaseButton(p.phase.id);
+  const now = new Date();
+  const hh = String(now.getHours()).padStart(2, "0");
+  const mm = String(now.getMinutes()).padStart(2, "0");
+  const ss = String(now.getSeconds()).padStart(2, "0");
+  hud3dEl.innerHTML = [
+    ["Time", `${hh}:${mm}:${ss}`],
+    ["Solid", state.mesh ? state.mesh.name : "-"],
+    ["Phase", p.label],
+    ["Timeline", `${Math.round(state.timeline * 100)}%`]
+  ]
+    .map(([k, v]) => `<div class="hud-line"><span class="hud-key">${k}</span><span class="hud-value">${v}</span></div>`)
+    .join("");
 
   update3D(p);
   draw2DNet(p);
@@ -435,11 +550,21 @@ function bindEvents() {
   });
 
   phaseButtons.forEach((btn) => btn.addEventListener("click", () => jumpToPhase(btn.dataset.phase)));
+  bgmToggleEl.addEventListener("click", toggleBgm);
+  bgmNextEl.addEventListener("click", nextTrack);
+  bgmVolumeEl.addEventListener("input", () => {
+    const vol = Number(bgmVolumeEl.value) / 100;
+    audioState.audio.volume = vol;
+    syncVolumeText();
+  });
   window.addEventListener("resize", resize);
 }
 
 function init() {
   solidEl.value = "icosahedron";
+  setTrack(pickRandomTrack(), { force: true });
+  syncBgmButton();
+  syncVolumeText();
   resize();
   setupMesh();
   bindEvents();

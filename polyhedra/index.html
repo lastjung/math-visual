@@ -56,12 +56,24 @@
           <button id="next-step" type="button">Next Step</button>
         </div>
 
+        <div class="row">
+          <button id="bgm-toggle" type="button">BGM: OFF</button>
+          <button id="bgm-next" type="button">Next Track</button>
+        </div>
+
+        <label>
+          Music Volume
+          <input id="bgm-volume" type="range" min="0" max="100" step="1" value="15" />
+        </label>
+        <p id="bgm-volume-text">15%</p>
+
         <div class="phase-buttons">
           <button class="phase-btn" data-phase="rotate" type="button">1 Rotate</button>
           <button class="phase-btn" data-phase="cut" type="button">2 Cut</button>
-          <button class="phase-btn" data-phase="unfold" type="button">3 Unfold</button>
-          <button class="phase-btn" data-phase="assemble" type="button">4 Assemble</button>
-          <button class="phase-btn" data-phase="complete" type="button">5 Complete</button>
+          <button class="phase-btn" data-phase="disassemble" type="button">3 Disassemble</button>
+          <button class="phase-btn" data-phase="unfold" type="button">4 Unfold</button>
+          <button class="phase-btn" data-phase="assemble" type="button">5 Assemble</button>
+          <button class="phase-btn" data-phase="complete" type="button">6 Complete</button>
         </div>
 
         <p id="phase">Phase: Rotate 3D</p>
@@ -71,7 +83,10 @@
       <div class="view-grid">
         <section class="panel">
           <h2>3D Model</h2>
-          <canvas id="view3d"></canvas>
+          <div class="canvas-shell">
+            <canvas id="view3d"></canvas>
+            <div id="hud-3d" class="hud"></div>
+          </div>
         </section>
         <section class="panel">
           <h2>2D Net</h2>
