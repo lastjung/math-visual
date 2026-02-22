@@ -7,6 +7,7 @@ const ctx2d = c2d.getContext("2d");
 
 const solidEl = document.getElementById("solid");
 const speedEl = document.getElementById("speed");
+const baseFaceEl = document.getElementById("base-face");
 const timelineEl = document.getElementById("timeline");
 const playEl = document.getElementById("play");
 const resetEl = document.getElementById("reset");
@@ -138,6 +139,9 @@ function buildCutEdgeLines() {
 
 function setupMesh() {
   state.mesh = window.PolyhedronFactory.create(solidEl.value);
+  runtime.rootFace = Math.max(0, Math.min(state.mesh.faces.length - 1, parseInt(baseFaceEl.value, 10) || 0));
+  baseFaceEl.max = String(Math.max(0, state.mesh.faces.length - 1));
+  baseFaceEl.value = String(runtime.rootFace);
   state.tree = window.PolyhedronUnfold.buildSpanningTree(state.mesh, runtime.rootFace);
   state.unfolded = window.PolyhedronUnfold.unfoldTriangles(state.mesh, state.tree);
 
@@ -183,7 +187,7 @@ function setupMesh() {
   }
 
   buildCutEdgeLines();
-  statusEl.textContent = `${state.mesh.name} | faces: ${state.mesh.faces.length} | cuts: ${state.unfolded.cutEdges.length}`;
+  statusEl.textContent = `${state.mesh.name} | faces: ${state.mesh.faces.length} | base: ${runtime.rootFace} | cuts: ${state.unfolded.cutEdges.length}`;
 }
 
 function transformForFace(fi, angleMix, cache) {
@@ -365,6 +369,13 @@ function tick(ts) {
 
 function bindEvents() {
   solidEl.addEventListener("change", () => {
+    setupMesh();
+    state.timeline = 0;
+    state.targetTimeline = null;
+    timelineEl.value = "0";
+  });
+
+  baseFaceEl.addEventListener("input", () => {
     setupMesh();
     state.timeline = 0;
     state.targetTimeline = null;
