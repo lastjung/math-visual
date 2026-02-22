@@ -41,8 +41,14 @@ const state = {
   playing: false,
   lastTs: performance.now(),
   autoYaw: 0,
-  hingeByFace: []
+  hingeByFace: [],
+  viewportMode: null
 };
+
+const TIMELINE_PLAY_RATE = 0.12; // 2x slower than 0.24
+const TIMELINE_TRANSITION_RATE = 0.475; // 2x slower than 0.95
+
+let resizeObserver = null;
 
 const audioState = {
   audio: new Audio(),
@@ -93,6 +99,42 @@ const runtime = {
   faceNodes: [],
   cutEdgeLines: []
 };
+
+function getViewportMode() {
+  const w = window.innerWidth || c3d.clientWidth || 1200;
+  if (w <= 768) return "mobile";
+  if (w <= 1040) return "tablet";
+  return "desktop";
+}
+
+function responsiveModelScale() {
+  const mode = getViewportMode();
+  if (mode === "mobile") return 1.2; // Mobile: larger than desktop but not clipped
+  if (mode === "tablet") return 1.0;
+  return 1.0;
+}
+
+function fitCameraToModel(mode) {
+  const box = new THREE.Box3().setFromObject(modelGroup);
+  const sphere = box.getBoundingSphere(new THREE.Sphere());
+  if (!Number.isFinite(sphere.radius) || sphere.radius <= 0) return;
+
+  const fov = (camera.fov * Math.PI) / 180;
+  const baseDistance = sphere.radius / Math.sin(fov / 2);
+  const factor = mode === "mobile" ? 1.18 : mode === "tablet" ? 1.26 : 1.34;
+  const distance = baseDistance * factor;
+
+  camera.position.set(sphere.center.x, sphere.center.y + sphere.radius * 0.15, sphere.center.z + distance);
+  controls.target.set(sphere.center.x, sphere.center.y, sphere.center.z);
+  controls.update();
+}
+
+function applyViewportCameraPreset(force = false) {
+  const mode = getViewportMode();
+  if (!force && state.viewportMode === mode) return;
+  state.viewportMode = mode;
+  fitCameraToModel(mode);
+}
 
 function pickRandomTrack(previousTrack = null) {
   if (!audioState.tracks.length) return null;
@@ -270,6 +312,7 @@ function setupMesh() {
   }
 
   buildCutEdgeLines();
+  fitCameraToModel(getViewportMode());
   statusEl.textContent = `${state.mesh.name} | faces: ${state.mesh.faces.length} | base: ${runtime.rootFace} | cuts: ${state.unfolded.cutEdges.length}`;
 }
 
@@ -340,6 +383,9 @@ function resize() {
   renderer.setSize(rect.width, rect.height, false);
   camera.aspect = rect.width / Math.max(1, rect.height);
   camera.updateProjectionMatrix();
+  applyViewportCameraPreset(false);
+  const s = responsiveModelScale();
+  modelGroup.scale.setScalar(s);
   resize2D();
 }
 
@@ -435,7 +481,7 @@ function tick(ts) {
   state.lastTs = ts;
 
   if (state.playing) {
-    state.timeline += dt * 0.24;
+    state.timeline += dt * TIMELINE_PLAY_RATE;
     if (state.timeline >= 1) {
       state.timeline = 1;
       state.playing = false;
@@ -446,7 +492,7 @@ function tick(ts) {
 
   if (state.targetTimeline !== null) {
     const d = state.targetTimeline - state.timeline;
-    const step = Math.sign(d) * Math.min(Math.abs(d), dt * 0.95);
+    const step = Math.sign(d) * Math.min(Math.abs(d), dt * TIMELINE_TRANSITION_RATE);
     state.timeline += step;
     if (Math.abs(state.targetTimeline - state.timeline) < 0.002) {
       state.timeline = state.targetTimeline;
@@ -521,7 +567,7 @@ function bindEvents() {
     state.playing = false;
     playEl.textContent = "Play";
     controls.reset();
-    camera.position.set(0, 0.45, 4.6);
+    applyViewportCameraPreset(true);
     state.autoYaw = 0;
   });
 
@@ -565,9 +611,15 @@ function init() {
   setTrack(pickRandomTrack(), { force: true });
   syncBgmButton();
   syncVolumeText();
+  applyViewportCameraPreset(true);
   resize();
   setupMesh();
   bindEvents();
+  if (typeof ResizeObserver !== "undefined") {
+    resizeObserver = new ResizeObserver(() => resize());
+    const viewGrid = document.querySelector(".view-grid");
+    if (viewGrid) resizeObserver.observe(viewGrid);
+  }
   requestAnimationFrame(tick);
 }
 

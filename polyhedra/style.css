@@ -236,12 +236,21 @@ canvas {
   }
 
   .view-grid {
-    gap: 8px;
+    grid-template-columns: 1fr;
+    gap: 6px;
   }
 
   .panel {
-    min-height: 32vh;
-    padding: 6px;
+    min-height: 26vh;
+    padding: 5px;
+  }
+
+  .view-grid .panel:last-child {
+    display: none;
+  }
+
+  .view-grid .panel:first-child {
+    min-height: 56vh;
   }
 
   .panel h2 {
