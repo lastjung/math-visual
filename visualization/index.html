@@ -20,19 +20,19 @@
     <div id="mobile-tabs-backdrop"></div>
     <div class="container">
         <!-- Tab Selection -->
-        <nav class="case-tabs">
-            <div class="tab-group" data-group="visual">
-                <span class="group-label">Visual</span>
-                <div class="tab-row">
-                    <div class="tab" data-case="golden">Golden Spiral</div>
-                    <div class="tab" data-case="rainbow">Rainbow Spiral</div>
-                    <div class="tab active" data-case="waves">Waves</div>
-                    <div class="tab" data-case="hexagon">Hex Grid</div>
-                    <div class="tab" data-case="damage">Damage Rolls</div>
-                    <div class="tab" data-case="modulo-circle">Cardioid Circle</div>
-                    <div class="tab" data-case="orbit-spirograph">Orbit Spirograph</div>
-                    <div class="tab" data-case="sphere-voronoi">Sphere Voronoi</div>
-                    <div class="tab" data-case="face-generator">Face Generator</div>
+        <nav class="top-tabs" aria-label="Visualization cases">
+            <div class="top-tabs-group">
+                <span class="top-tabs-label">Visual</span>
+                <div class="top-tabs-row">
+                    <button class="top-tab" data-case="golden" type="button" onclick="switchCase('golden', this)">Golden Spiral</button>
+                    <button class="top-tab" data-case="rainbow" type="button" onclick="switchCase('rainbow', this)">Rainbow Spiral</button>
+                    <button class="top-tab active" data-case="waves" type="button" onclick="switchCase('waves', this)">Waves</button>
+                    <button class="top-tab" data-case="hexagon" type="button" onclick="switchCase('hexagon', this)">Hex Grid</button>
+                    <button class="top-tab" data-case="damage" type="button" onclick="switchCase('damage', this)">Damage Rolls</button>
+                    <button class="top-tab" data-case="modulo-circle" type="button" onclick="switchCase('modulo-circle', this)">Cardioid Circle</button>
+                    <button class="top-tab" data-case="orbit-spirograph" type="button" onclick="switchCase('orbit-spirograph', this)">Orbit Spirograph</button>
+                    <button class="top-tab" data-case="sphere-voronoi" type="button" onclick="switchCase('sphere-voronoi', this)">Sphere Voronoi</button>
+                    <button class="top-tab" data-case="face-generator" type="button" onclick="switchCase('face-generator', this)">Face Generator</button>
                 </div>
             </div>
         </nav>
@@ -44,9 +44,11 @@
 
         <main class="dashboard-card">
             <!-- Visualization Canvas -->
-            <div class="canvas-container" id="capture-zone">
-                <div id="formula-overlay" class="formula-overlay"></div>
-                <canvas id="mathCanvas"></canvas>
+            <div class="visual-stage">
+                <div class="canvas-container" id="capture-zone">
+                    <div id="formula-overlay" class="formula-overlay"></div>
+                    <canvas id="mathCanvas"></canvas>
+                </div>
             </div>
 
             <!-- Controls Holders (Dynamic) -->
@@ -83,69 +85,65 @@
     <script src="cases/sphere_voronoi.js"></script>
     <script src="cases/face_generator.js"></script>
     <script>
-        // Tab Management
-        document.querySelectorAll('.tab').forEach(tab => {
-            tab.addEventListener('click', () => {
-                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-                tab.classList.add('active');
-                document.body.classList.remove('mobile-tabs-open');
-                
-                const caseName = tab.getAttribute('data-case');
-                if (caseName === 'waves') {
-                    document.getElementById('main-title').textContent = 'The Geometry of Waves';
-                    document.getElementById('main-subtitle').textContent = 'Mathematical waves turning into geometric patterns.';
-                    Core.loadCase(WavesCase, { mode: 'display' });
-                } else if (caseName === 'rainbow') {
-                    document.getElementById('main-title').textContent = 'Rainbow Spiral';
-                    document.getElementById('main-subtitle').textContent = 'A colorful spiral from a simple angle rule.';
-                    Core.loadCase(RainbowSpiralCase, { mode: 'display' });
-                } else if (caseName === 'golden') {
-                    document.getElementById('main-title').textContent = 'Fibonacci Golden Spiral';
-                    document.getElementById('main-subtitle').textContent = 'A spiral made from Fibonacci numbers.';
-                    Core.loadCase(GoldenSpiralCase, { mode: 'display' });
-                } else if (caseName === 'hexagon') {
-                    document.getElementById('main-title').textContent = 'Hexagonal Grid';
-                    document.getElementById('main-subtitle').textContent = 'A pattern made of repeating hexagons.';
-                    Core.loadCase(HexagonGridCase, { mode: 'display' });
-                } else if (caseName === 'damage') {
-                    document.getElementById('main-title').textContent = 'Probability: Damage Rolls';
-                    document.getElementById('main-subtitle').textContent = 'See how dice rolls spread over many tries.';
-                    Core.loadCase(DamageRollsCase, { mode: 'display' });
-                } else if (caseName === 'modulo-circle') {
-                    document.getElementById('main-title').textContent = 'Cardioid Circle';
-                    document.getElementById('main-subtitle').textContent = 'Animated times-table modulo patterns on a circle.';
-                    Core.loadCase(CardioidCircleCase, { mode: 'display' });
-                } else if (caseName === 'orbit-spirograph') {
-                    document.getElementById('main-title').textContent = 'Orbit Spirograph';
-                    document.getElementById('main-subtitle').textContent = 'Center Body vs Orbiting Body trajectory in orbital time.';
-                    Core.loadCase(OrbitSpirographCase, { mode: 'display' });
-                } else if (caseName === 'sphere-voronoi') {
-                    document.getElementById('main-title').textContent = 'Spherical Voronoi / Delaunay';
-                    document.getElementById('main-subtitle').textContent = 'Approximate Voronoi cells and dual graph on a rotating sphere.';
-                    Core.loadCase(SphereVoronoiCase, { mode: 'display' });
-                } else if (caseName === 'face-generator') {
-                    document.getElementById('main-title').textContent = 'Face Generator';
-                    document.getElementById('main-subtitle').textContent = 'Parametric base face + expression layer for scalable character generation.';
-                    Core.loadCase(FaceGeneratorCase, { mode: 'display' });
-                }
-            });
-        });
+        // Tab Management (delegated for robustness)
+        window.switchCase = (caseName, el) => {
+            if (caseName === 'waves') {
+                document.getElementById('main-title').textContent = 'The Geometry of Waves';
+                document.getElementById('main-subtitle').textContent = 'Mathematical waves turning into geometric patterns.';
+                Core.loadCase(WavesCase, { mode: 'display' });
+            } else if (caseName === 'rainbow') {
+                document.getElementById('main-title').textContent = 'Rainbow Spiral';
+                document.getElementById('main-subtitle').textContent = 'A colorful spiral from a simple angle rule.';
+                Core.loadCase(RainbowSpiralCase, { mode: 'display' });
+            } else if (caseName === 'golden') {
+                document.getElementById('main-title').textContent = 'Fibonacci Golden Spiral';
+                document.getElementById('main-subtitle').textContent = 'A spiral made from Fibonacci numbers.';
+                Core.loadCase(GoldenSpiralCase, { mode: 'display' });
+            } else if (caseName === 'hexagon') {
+                document.getElementById('main-title').textContent = 'Hexagonal Grid';
+                document.getElementById('main-subtitle').textContent = 'A pattern made of repeating hexagons.';
+                Core.loadCase(HexagonGridCase, { mode: 'display' });
+            } else if (caseName === 'damage') {
+                document.getElementById('main-title').textContent = 'Probability: Damage Rolls';
+                document.getElementById('main-subtitle').textContent = 'See how dice rolls spread over many tries.';
+                Core.loadCase(DamageRollsCase, { mode: 'display' });
+            } else if (caseName === 'modulo-circle') {
+                document.getElementById('main-title').textContent = 'Cardioid Circle';
+                document.getElementById('main-subtitle').textContent = 'Animated times-table modulo patterns on a circle.';
+                Core.loadCase(CardioidCircleCase, { mode: 'display' });
+            } else if (caseName === 'orbit-spirograph') {
+                document.getElementById('main-title').textContent = 'Orbit Spirograph';
+                document.getElementById('main-subtitle').textContent = 'Center Body vs Orbiting Body trajectory in orbital time.';
+                Core.loadCase(OrbitSpirographCase, { mode: 'display' });
+            } else if (caseName === 'sphere-voronoi') {
+                document.getElementById('main-title').textContent = 'Spherical Voronoi / Delaunay';
+                document.getElementById('main-subtitle').textContent = 'Approximate Voronoi cells and dual graph on a rotating sphere.';
+                Core.loadCase(SphereVoronoiCase, { mode: 'display' });
+            } else if (caseName === 'face-generator') {
+                document.getElementById('main-title').textContent = 'Face Generator';
+                document.getElementById('main-subtitle').textContent = 'Red Blob style m,p,q,r,s mouth controls with brow/eye interpolation and shareable URL state.';
+                Core.loadCase(FaceGeneratorCase, { mode: 'display' });
+            }
+            document.querySelectorAll('.top-tab').forEach(t => t.classList.remove('active'));
+            if (el) el.classList.add('active');
+            document.body.classList.remove('mobile-tabs-open');
+        };
 
         // Load Default Case
         window.onload = () => {
             if (typeof WavesCase !== 'undefined') {
-                Core.loadCase(WavesCase, { mode: 'display' });
+                const defaultTab = document.querySelector('.top-tab[data-case="waves"]');
+                window.switchCase('waves', defaultTab);
             } else {
                 console.error("WavesCase failed to load!");
             }
         };
 
-        // Mobile case menu toggle
+        // Mobile top-tabs toggle
         (() => {
             const btn = document.getElementById('mobile-tabs-btn');
             const backdrop = document.getElementById('mobile-tabs-backdrop');
             if (!btn || !backdrop) return;
-
             btn.addEventListener('click', () => {
                 document.body.classList.toggle('mobile-tabs-open');
             });
@@ -153,6 +151,7 @@
                 document.body.classList.remove('mobile-tabs-open');
             });
         })();
+
     </script>
   </body>
 </html>
