@@ -397,6 +397,7 @@ body {
 }
 
 input[type="range"] {
+    appearance: none;
     flex: 1;
     height: 4px;
     -webkit-appearance: none;
@@ -405,6 +406,7 @@ input[type="range"] {
 }
 
 input[type="range"]::-webkit-slider-thumb {
+    appearance: none;
     -webkit-appearance: none;
     width: 16px;
     height: 16px;
