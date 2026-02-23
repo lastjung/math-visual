@@ -270,9 +270,9 @@ input[type=range]::-webkit-slider-thumb {
 }
 
 #settings-panel input[type=range]::-webkit-slider-thumb {
-  background: rgba(30, 30, 40, 0.85);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.5);
+  background: #94a3b8;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border: 2px solid transparent;
 }
 
 input[type=range]::-webkit-slider-thumb:hover {
@@ -816,11 +816,12 @@ body.hide-ui #ui-toggle-btn:hover {
     font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
     font-size: 0.86rem;
     font-weight: 700;
-    color: var(--deep-blue);
+    color: var(--brilliant-green);
     letter-spacing: 0.01em;
 }
 
-#settings-panel .setting-info-value {
+#settings-panel .setting-info-value, 
+#settings-panel .setting-value {
     color: #475569;
 }
 
@@ -1085,6 +1086,16 @@ body.hide-ui #ui-toggle-btn:hover {
 
     #settings-panel .setting-item {
         min-width: 0;
+    }
+
+    #settings-panel .setting-value {
+        color: #475569;
+    }
+
+    #settings-panel input[type=range]::-webkit-slider-thumb {
+        background: #94a3b8;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        border: 2px solid transparent;
     }
 
     #floating-dock-container {
