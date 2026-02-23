@@ -129,14 +129,26 @@ export function updateStorySequence(delta) {
     if(audioEl.ended || (audioEl.duration > 0 && t >= audioEl.duration)) {
         silenceTimer += delta;
         if (silenceTimer > 1.0) { // Add 1 second dramatic pause before switching
-            let nextIndex = (state.soloIndex + 1) % STORY_SCENES.length;
-            state.soloIndex = nextIndex;
-            
-            // Sync dropdown UI
-            const selectEl = document.getElementById('polygonSelect');
-            if (selectEl) selectEl.value = state.soloIndex.toString();
-            
-            loadStorySequence(nextIndex);
+            if (state.isLooping) {
+                let nextIndex = (state.soloIndex + 1) % STORY_SCENES.length;
+                state.soloIndex = nextIndex;
+                
+                // Sync dropdown UI
+                const selectEl = document.getElementById('polygonSelect');
+                if (selectEl) selectEl.value = state.soloIndex.toString();
+                
+                loadStorySequence(nextIndex);
+            } else {
+                // Stop playback
+                state.isPlaying = false;
+                toggleAudioPlayback(false);
+                const playBtn = document.getElementById('playBtn');
+                if (playBtn) {
+                    playBtn.innerHTML = '<i data-lucide="play"></i> PLAY';
+                    playBtn.classList.remove('playing');
+                    if (window.lucide) window.lucide.createIcons();
+                }
+            }
         }
     }
 }

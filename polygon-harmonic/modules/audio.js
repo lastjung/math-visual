@@ -16,7 +16,7 @@ export async function initAudio() {
     
     // Master Chain
     masterGain = audioCtx.createGain();
-    masterGain.gain.value = 0.4; // Lowered default volume to let TTS voice stand out
+    masterGain.gain.value = 0.4 * 0.3; // Scale down by 0.3 to let TTS voice stand out naturally
 
     // Simple Limiter to prevent harsh clipping, but keeping dynamic range open
     const limiter = audioCtx.createDynamicsCompressor();
@@ -30,15 +30,22 @@ export async function initAudio() {
     reverbNode = await createReverb(1.5, 1.5); // Shorter duration, faster decay
 
     masterGain.connect(limiter);
-    limiter.connect(reverbNode);
-    reverbNode.connect(audioCtx.destination);
+    
+    // Create Dry/Wet balance for Reverb to stop the massive echo
+    const wetGain = audioCtx.createGain();
+    wetGain.gain.value = 0.15; // Only 15% reverb
+    
+    limiter.connect(audioCtx.destination); // Direct Clean (Dry) signal
+    limiter.connect(reverbNode);           // Send to Reverb
+    reverbNode.connect(wetGain);           // Control Reverb Volume
+    wetGain.connect(audioCtx.destination); // Mix Reverb into master
     
     isAudioInitialized = true;
 }
 
 export function setMasterVolume(val) {
     if (masterGain) {
-        masterGain.gain.value = val;
+        masterGain.gain.value = val * 0.3; // Limit maximum piano output natively
     }
 }
 

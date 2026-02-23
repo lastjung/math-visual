@@ -10,8 +10,9 @@ export function updateGeometry(delta) {
     if (!state.isPlaying) return;
 
     const prevRot = state.globalRotation;
-    // Apply speed and direction
-    state.globalRotation = (state.globalRotation + state.speed * state.direction + 360) % 360;
+    // Apply speed and direction (1.0x = 120 degrees per second)
+    const rotationAmount = 120 * state.speed * state.direction * delta;
+    state.globalRotation = (state.globalRotation + rotationAmount + 3600) % 360; // 3600 handles large negative deltas safely
 
     // Decay visual active states
     for (let i = 0; i < 12; i++) {
@@ -78,11 +79,16 @@ function triggerHit(noteIndex, sides, noteAngle, currentAngle, prevAngle, nextAn
     // Hard collision on low polygons triggers shake
     if (sides < 6) state.sceneShake = Math.max(state.sceneShake, 0.4);
 
-    // Queue Visual FX
     state.hitQueue = state.hitQueue || [];
     state.hitQueue.push({
         noteIndex, sides, noteAngle, currentAngle, prevAngle, nextAngle, noteName
     });
+}
+
+export function triggerDrawHit(sides, vertexIndex, rotation) {
+    const vertexAngle = (rotation + (vertexIndex * 360) / sides + 3600) % 360;
+    const noteIndex = Math.round(vertexAngle / 30) % 12;
+    triggerHit(noteIndex, sides, vertexAngle, vertexAngle, vertexAngle, vertexAngle);
 }
 
 function updateParticles() {

@@ -31,23 +31,72 @@ body {
 .overlay-text {
     position: absolute; left: 50%; transform: translateX(-50%);
     text-align: center; color: #fff; pointer-events: none;
-    transition: opacity 0.5s, transform 0.5s; opacity: 0; width: 100%;
+    transition: opacity 0.5s, transform 0.5s; opacity: 1; width: 100%;
 }
 .overlay-text.top {
     top: 0%; font-size: 2.2rem; font-weight: 800; color: #fff;
     text-shadow: 0 0 20px rgba(0, 170, 255, 0.9), 2px 4px 6px rgba(0,0,0,0.8);
     letter-spacing: 1px;
 }
-.overlay-text.bottom {
-    bottom: 0%; transform: translate(-50%, 50px);
-    font-size: 1.4rem; color: #eee; font-weight: 500;
-    text-shadow: 0 0 10px rgba(0,0,0,0.9), 1px 2px 4px #000;
-    line-height: 1.4; padding: 10px 20px;
-    background: rgba(0,0,0,0.5); border-radius: 8px;
-    width: max-content; max-width: 90%;
+
+.global-timer {
+    position: fixed;
+    top: 20px;
+    right: 30px;
+    font-size: 1.2rem;
+    font-family: monospace;
+    font-weight: bold;
+    color: #00ffcc;
+    text-shadow: 0 0 10px rgba(0, 255, 204, 0.8);
+    z-index: 100;
 }
 
-/* Authentic Piano styles */
+#annotationsLayer {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    pointer-events: none;
+    z-index: 50;
+    display: none;
+}
+
+.anno-main {
+    position: absolute;
+    top: 20%; right: -20%; /* Outside the circle, right side */
+    font-size: 1.8rem; font-weight: bold;
+    color: #fff;
+    text-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
+    white-space: nowrap;
+}
+
+.anno-note {
+    position: absolute;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    transform: translate(-50%, -50%);
+}
+.anno-label { font-size: 0.9rem; color: #bbb; margin-bottom: 2px; text-shadow: 0 0 5px #000; }
+.anno-pitch { font-size: 1.2rem; font-weight: bold; }
+
+.overlay-text.bottom {
+    display: none; /* Replaced by piano-desc */
+}
+
+/* Piano & Desc Wrapper */
+#pianoWrapper {
+    display: flex; flex-direction: column; align-items: center; gap: 20px;
+    width: 400px;
+    flex-shrink: 0;
+}
+.piano-desc {
+    font-size: 1.1rem; color: #eee; font-weight: 500;
+    text-shadow: 0 0 10px rgba(0,0,0,0.9), 1px 2px 4px #000;
+    line-height: 1.5; padding: 15px 20px;
+    background: rgba(10, 10, 15, 0.7); border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.1);
+    text-align: center;
+    transition: opacity 0.5s; opacity: 1;
+    min-height: 100px; width: 100%;
+    display: flex; align-items: center; justify-content: center;
+}
 #pianoContainer { display: flex; align-items: center; justify-content: center; }
 #piano {
     position: relative; width: 340px; height: 150px;
@@ -74,18 +123,20 @@ body {
 /* Modern Bottom Bar (Glassmorphism) */
 .glass-bar {
     position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
-    width: 90%; max-width: 900px; height: 70px;
+    width: 95%; max-width: 1200px; min-height: 70px; height: auto;
     background: rgba(30, 30, 35, 0.6);
     backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 35px;
     display: flex; justify-content: space-between; align-items: center;
-    padding: 0 30px; box-shadow: 0 10px 40px rgba(0,0,0,0.5);
-    z-index: 50;
+    padding: 10px 30px; box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+    z-index: 50; flex-wrap: wrap; gap: 15px;
 }
 
-.control-group { display: flex; align-items: center; gap: 15px; }
-.control-group.center { position: absolute; left: 50%; transform: translateX(-50%); }
+.control-group { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: center; }
+.play-group { flex: 1; min-width: 130px; display: flex; justify-content: center; }
+.sliders-group { justify-content: flex-end; }
+
 
 .btn {
     background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255,255,255,0.1); color: #fff;
@@ -111,25 +162,29 @@ select.modern-select option { background: #222; color: #fff; }
 
 .btn-icon { background: none; border: none; color: #aaa; cursor: pointer; transition: 0.2s; padding: 4px; }
 .btn-icon:hover { color: #fff; transform: rotate(180deg); } /* Rotation effect */
-.slider-group { display: flex; align-items: center; gap: 10px; color: #ddd; font-weight: 500; font-size: 13px; }
-input[type=range] { width: 100px; accent-color: #00aaff; cursor: pointer; }
+
+.slider-wrapper { display: flex; align-items: center; gap: 8px; color: #ddd; font-weight: 500; font-size: 13px; }
+.slider-wrapper i { color: #aaa; width: 16px; }
+input[type=range] { width: 90px; accent-color: #00aaff; cursor: pointer; }
 
 /* Mobile responsive (Vertical Stack) */
 @media (max-width: 850px) {
+    body { overflow-y: auto; overflow-x: hidden; }
     #main-content {
-        flex-direction: column; gap: 40px; justify-content: flex-start;
-        padding-top: 50px; padding-bottom: 150px;
+        flex-direction: column; gap: 20px; justify-content: flex-start;
+        padding-top: 60px; padding-bottom: 250px;
     }
-    #visualContainer { width: 85vw; height: 85vw; max-width: 400px; max-height: 400px; }
-    .overlay-text.top { font-size: 1.6rem; top: -15%; }
+    #visualContainer { width: 85vw; height: 85vw; max-width: 380px; max-height: 380px; }
+    .overlay-text.top { font-size: 1.6rem; top: -35px; }
     .overlay-text.bottom { font-size: 1.1rem; bottom: -15%; }
+    .global-timer { top: 10px; right: 10px; font-size: 1rem; }
     
     .glass-bar {
         width: 95%; height: auto; flex-direction: column; gap: 15px; padding: 15px;
         border-radius: 20px;
     }
-    .control-group.center { position: relative; left: auto; transform: none; width: 100%; justify-content: center; }
-    .control-group { width: 100%; justify-content: space-between; }
+    .play-group { width: 100%; order: -1; margin-bottom: 5px; } /* Play button on top for mobile */
+    .control-group { width: 100%; justify-content: center; flex-wrap: wrap; gap: 8px; }
 }
 
 #loadingOverlay {

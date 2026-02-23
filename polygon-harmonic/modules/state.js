@@ -12,9 +12,21 @@ export const state = {
     width: 0,
     height: 0,
     
+    // Audio
+    activeNotes: Array(12).fill(0),
+    hitQueue: [],
+    
+    // Annotations
+    annotationHighlights: {},
+    showSubtitles: true, // Toggle for all text
+
     // Playback
+    globalTime: 15.0, // Start at 0:15 (Triangle) for now
+    polygonStartTime: 15.0,
     isPlaying: false,
-    speed: 2.0,      // User base speed
+    isLooping: false, // Default: OFF (Auto play next polygon)
+    isVerificationMode: false,
+    speed: 1.0,      // User base speed (1.0x = 120deg/sec)
     storySpeedMultiplier: 1.0, // Narrative dynamic speed factor
     direction: -1,   // -1 CCW, 1 CW
     lastFrameTime: 0,

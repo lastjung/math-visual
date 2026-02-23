@@ -23,6 +23,11 @@ export const NOTE_COLORS = {
     'F': '#94A3B8'    // Slate
 };
 
+export function getPolygonColor(sides) {
+    const hue = ((sides - 3) * 35) % 360; // Spread colors across the spectrum
+    return `hsl(${hue}, 80%, 60%)`;
+}
+
 export const FREQUENCIES = {
     'C': 261.63, 'Db': 277.18, 'D': 293.66, 'Eb': 311.13,
     'E': 329.63, 'F': 349.23, 'Gb': 369.99, 'G': 392.00,
