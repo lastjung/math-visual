@@ -656,7 +656,6 @@ body.recording-mode .canvas-container {
 /* UI Toggle & Fullscreen Mode */
 body.hide-ui .top-tabs,
 body.hide-ui #header,
-body.hide-ui #mobile-tabs-btn,
 body.hide-ui .controls {
     display: none !important;
 }
