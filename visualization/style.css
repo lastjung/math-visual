@@ -261,10 +261,10 @@ input[type=range]::-webkit-slider-thumb {
   height: 18px;
   width: 18px;
   border-radius: 50%;
-  background: #29cc57;
+  background: var(--deep-blue);
   cursor: pointer;
   margin-top: -7px;
-  box-shadow: 0 2px 6px rgba(41, 204, 87, 0.4);
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.4);
   border: 2px solid #fff;
   transition: transform 0.1s;
 }
@@ -810,7 +810,7 @@ body.hide-ui #ui-toggle-btn:hover {
     font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
     font-size: 0.86rem;
     font-weight: 700;
-    color: var(--brilliant-green);
+    color: var(--deep-blue);
     letter-spacing: 0.01em;
 }
 
@@ -838,7 +838,7 @@ body.hide-ui #ui-toggle-btn:hover {
 }
 
 .setting-select:focus {
-    border-color: var(--brilliant-green);
+    border-color: var(--deep-blue);
 }
 
 /* Face Parameter Selector */
