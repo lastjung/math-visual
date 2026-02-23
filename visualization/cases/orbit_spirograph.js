@@ -374,17 +374,20 @@ const OrbitSpirographCase = {
             return;
         }
 
+        const cBody = this.centerBody;
+        const oBody = this.orbitingBody;
+
         const title = phase === 0
-            ? 'Step 1: Relative View (From Earth)'
+            ? `Step 1: Relative View (From ${cBody})`
             : phase === 1
                 ? 'Step 2: Heliocentric View (Around the Sun)'
                 : 'Step 3: Back to Relative View';
 
         const body = phase === 0
-            ? 'This pattern traces how Mars appears when observed from Earth. Because Earth is also moving, Mars can seem to loop and reverse its path in our sky.'
+            ? `This pattern traces how ${oBody} appears when observed from ${cBody}. Because ${cBody} is also moving, ${oBody} can seem to loop and reverse its path in our sky.`
             : phase === 1
-                ? 'In heliocentric view, Earth and Mars both orbit the Sun with smooth motion. Their different orbital periods continuously change the Earth-Mars geometry.'
-                : 'Switching back to the Earth-centered frame transforms that smooth motion into looping relative curves. Enjoy watching the orbital pattern unfold.';
+                ? `In heliocentric view, ${cBody} and ${oBody} both orbit the Sun with smooth motion. Their different orbital periods continuously change the ${cBody}-${oBody} geometry.`
+                : `Switching back to the ${cBody}-centered frame transforms that smooth motion into looping relative curves. Enjoy watching the orbital pattern unfold.`;
 
         const progressStart = phase * this.introSegmentMs;
         const elapsed = performance.now() - this.introStartMs;
