@@ -41,7 +41,15 @@ const state = {
   targetTimeline: null,
   playing: false,
   lastTs: performance.now(),
+  runStartTs: null,
   autoYaw: 0,
+  baseSpin: 0,
+  rotateBaseYaw: null,
+  rotateBaseVel: 0,
+  rotateBaseSettled: false,
+  rotateBaseSpinStart: null,
+  rotateBaseSpinDone: false,
+  resumeAutoYawArmed: false,
   hingeByFace: [],
   viewportMode: null
 };
@@ -447,6 +455,31 @@ function transformForFace(fi, mixByFace, cache) {
   return out;
 }
 
+function baseFaceSpinMatrix(angle) {
+  const face = state.mesh.faces[runtime.rootFace];
+  const center = face.reduce(
+    (acc, vi) => {
+      const v = state.mesh.vertices[vi];
+      acc.x += v.x;
+      acc.y += v.y;
+      acc.z += v.z;
+      return acc;
+    },
+    { x: 0, y: 0, z: 0 }
+  );
+  center.x /= face.length;
+  center.y /= face.length;
+  center.z /= face.length;
+
+  const n = vnorm(state.mesh.faceNormals[runtime.rootFace]);
+  const pivot = new THREE.Vector3(center.x, center.y, center.z);
+  const axis = new THREE.Vector3(n.x, n.y, n.z).normalize();
+  const t1 = new THREE.Matrix4().makeTranslation(pivot.x, pivot.y, pivot.z);
+  const r = new THREE.Matrix4().makeRotationAxis(axis, angle);
+  const t2 = new THREE.Matrix4().makeTranslation(-pivot.x, -pivot.y, -pivot.z);
+  return new THREE.Matrix4().multiplyMatrices(t1, r).multiply(t2);
+}
+
 function update3D(pipelineState) {
   const angleMix = pipelineState.netMix;
   const mixByFace = new Array(state.mesh.faces.length).fill(angleMix);
@@ -464,15 +497,27 @@ function update3D(pipelineState) {
     mixByFace[runtime.rootFace] = 0;
   }
   const cache = new Array(state.mesh.faces.length).fill(null);
+  const rotateBaseIdx = phaseIndexById("rotate_base");
+  const phaseIdx = phaseIndexById(pipelineState.phase.id);
+  const spinMatrix = phaseIdx >= rotateBaseIdx ? baseFaceSpinMatrix(state.baseSpin) : null;
+  const composed = spinMatrix ? new THREE.Matrix4() : null;
 
   for (const node of runtime.faceNodes) {
-    const m = transformForFace(node.fi, mixByFace, cache);
-    node.mesh.matrix.copy(m);
+    const local = transformForFace(node.fi, mixByFace, cache);
+    if (spinMatrix) {
+      composed.multiplyMatrices(spinMatrix, local);
+      node.mesh.matrix.copy(composed);
+    } else {
+      node.mesh.matrix.copy(local);
+    }
   }
 
   const lineOpacity = pipelineState.cutStrength > 0 ? 0.2 + 0.8 * pipelineState.cutStrength : 0;
   for (const line of runtime.cutEdgeLines) {
     line.material.opacity = lineOpacity;
+    line.matrixAutoUpdate = false;
+    if (spinMatrix) line.matrix.copy(spinMatrix);
+    else line.matrix.identity();
   }
 }
 
@@ -511,6 +556,7 @@ function draw2DNet(pipelineState) {
   const stageBoost =
     pipelineState.phase.id === "disassemble" ||
     pipelineState.phase.id === "unfold" ||
+    pipelineState.phase.id === "rotate_base" ||
     pipelineState.phase.id === "assemble"
       ? 1
       : 0.4;
@@ -573,6 +619,74 @@ function phaseIndexById(id) {
   return window.PolyhedronPipeline.PHASES.findIndex((p) => p.id === id);
 }
 
+function isBaseFacingCamera() {
+  if (!state.mesh || !state.mesh.faces?.length) return false;
+  const face = state.mesh.faces[runtime.rootFace];
+  if (!face || !face.length) return false;
+
+  const center = face.reduce(
+    (acc, vi) => {
+      const v = state.mesh.vertices[vi];
+      acc.x += v.x;
+      acc.y += v.y;
+      acc.z += v.z;
+      return acc;
+    },
+    { x: 0, y: 0, z: 0 }
+  );
+  center.x /= face.length;
+  center.y /= face.length;
+  center.z /= face.length;
+
+  modelGroup.updateMatrixWorld(true);
+  camera.updateMatrixWorld(true);
+
+  const worldCenter = new THREE.Vector3(center.x, center.y, center.z).applyMatrix4(modelGroup.matrixWorld);
+  const worldNormal = new THREE.Vector3(
+    state.mesh.faceNormals[runtime.rootFace].x,
+    state.mesh.faceNormals[runtime.rootFace].y,
+    state.mesh.faceNormals[runtime.rootFace].z
+  )
+    .transformDirection(modelGroup.matrixWorld)
+    .normalize();
+  const camPos = new THREE.Vector3();
+  camera.getWorldPosition(camPos);
+  const toCamera = camPos.sub(worldCenter).normalize();
+
+  return worldNormal.dot(toCamera) > 0.06;
+}
+
+function applyUnfoldGate(nextTimeline) {
+  const disassembleStart = window.PolyhedronPipeline.PHASES[phaseIndexById("disassemble")].start;
+  const gateEpsilon = 0.0005;
+  const crossesGate = state.timeline < disassembleStart && nextTimeline >= disassembleStart;
+  const nearGate = state.timeline >= disassembleStart - 0.01 && state.timeline < disassembleStart + 0.06;
+  if ((crossesGate || nearGate) && isBaseFacingCamera()) {
+    return disassembleStart - gateEpsilon;
+  }
+  return nextTimeline;
+}
+
+function applyRotateBaseGate(nextTimeline) {
+  const phases = window.PolyhedronPipeline.PHASES;
+  const rotateBase = phases[phaseIndexById("rotate_base")];
+  if (!rotateBase) return nextTimeline;
+
+  const gateEpsilon = 0.0005;
+  const movingForward = nextTimeline > state.timeline;
+  const inOrBeyondRotateBase = nextTimeline >= rotateBase.start;
+  const rotateNotDone = !state.rotateBaseSpinDone;
+  if (!movingForward || !inOrBeyondRotateBase || !rotateNotDone) return nextTimeline;
+
+  return Math.min(nextTimeline, rotateBase.end - gateEpsilon);
+}
+
+function applyTimelineGates(nextTimeline) {
+  let t = applyUnfoldGate(nextTimeline);
+  t = applyRotateBaseGate(t);
+  return t;
+}
+
 function jumpToPhase(phaseId) {
   state.playing = false;
   playEl.textContent = "Play";
@@ -585,12 +699,21 @@ function setActivePhaseButton(phaseId) {
   });
 }
 
+function formatHudTimerSeconds(seconds) {
+  const total = Math.max(0, seconds);
+  const mm = Math.floor(total / 60);
+  const ss = Math.floor(total % 60);
+  const ds = Math.floor((total - Math.floor(total)) * 10);
+  return `${String(mm).padStart(2, "0")}:${String(ss).padStart(2, "0")}.${ds}`;
+}
+
 function tick(ts) {
   const dt = Math.min(0.05, (ts - state.lastTs) / 1000);
   state.lastTs = ts;
 
   if (state.playing) {
-    state.timeline += dt * TIMELINE_PLAY_RATE;
+    const nextTimeline = state.timeline + dt * TIMELINE_PLAY_RATE;
+    state.timeline = applyTimelineGates(nextTimeline);
     if (state.timeline >= 1) {
       state.timeline = 1;
       state.playing = false;
@@ -602,7 +725,7 @@ function tick(ts) {
   if (state.targetTimeline !== null) {
     const d = state.targetTimeline - state.timeline;
     const step = Math.sign(d) * Math.min(Math.abs(d), dt * TIMELINE_TRANSITION_RATE);
-    state.timeline += step;
+    state.timeline = applyTimelineGates(state.timeline + step);
     if (Math.abs(state.targetTimeline - state.timeline) < 0.002) {
       state.timeline = state.targetTimeline;
       state.targetTimeline = null;
@@ -610,21 +733,78 @@ function tick(ts) {
     timelineEl.value = String(Math.round(state.timeline * 1000));
   }
 
-  state.autoYaw += parseFloat(speedEl.value) * dt * 0.6;
-  modelGroup.rotation.y = state.autoYaw;
-
   const p = window.PolyhedronPipeline.buildState(state.timeline);
+  const speed = parseFloat(speedEl.value);
+  const isAnimating = state.playing || state.targetTimeline !== null;
+  if (isAnimating) {
+    const rotateBaseIdx = phaseIndexById("rotate_base");
+    const phaseIdx = phaseIndexById(p.phase.id);
+    if (p.phase.id === "rotate_base") {
+      if (state.rotateBaseYaw === null) {
+        state.rotateBaseYaw = modelGroup.rotation.y;
+        state.rotateBaseVel = speed * 0.6;
+        state.rotateBaseSettled = false;
+        state.rotateBaseSpinStart = null;
+        state.rotateBaseSpinDone = false;
+      }
+
+      const decay = Math.exp(-5.8 * dt);
+      state.rotateBaseVel *= decay;
+      state.rotateBaseYaw += state.rotateBaseVel * dt;
+      modelGroup.rotation.y = state.rotateBaseYaw;
+
+      if (!state.rotateBaseSettled && Math.abs(state.rotateBaseVel) < 0.02) {
+        state.rotateBaseSettled = true;
+        state.rotateBaseSpinStart = state.baseSpin;
+        state.rotateBaseSpinDone = false;
+      }
+      if (state.rotateBaseSettled) {
+        if (!state.rotateBaseSpinDone) {
+          const dir = speed < 0 ? -1 : 1;
+          const spinRate = Math.abs(speed) * 1.2; // 2x normal rotation speed.
+          state.baseSpin += dir * spinRate * dt;
+          const turned = Math.abs(state.baseSpin - (state.rotateBaseSpinStart ?? 0));
+          if (turned >= Math.PI * 2) {
+            state.rotateBaseSpinDone = true;
+          }
+        }
+      } else {
+        state.baseSpin = 0;
+      }
+    } else if (phaseIdx < rotateBaseIdx) {
+      state.autoYaw += speed * dt * 0.6;
+      modelGroup.rotation.y = state.autoYaw;
+      state.baseSpin = 0;
+      state.rotateBaseYaw = null;
+      state.rotateBaseVel = 0;
+      state.rotateBaseSettled = false;
+      state.rotateBaseSpinStart = null;
+      state.rotateBaseSpinDone = false;
+      state.resumeAutoYawArmed = false;
+    } else if (p.phase.id === "complete") {
+      if (!state.resumeAutoYawArmed) {
+        state.autoYaw = modelGroup.rotation.y;
+        state.resumeAutoYawArmed = true;
+      }
+      state.autoYaw += speed * dt * 0.6;
+      modelGroup.rotation.y = state.autoYaw;
+    } else {
+      // After rotate_base, keep the settled orientation and spin offset.
+      if (state.rotateBaseYaw !== null) modelGroup.rotation.y = state.rotateBaseYaw;
+      state.resumeAutoYawArmed = false;
+    }
+  }
+
   phaseEl.textContent = `Phase: ${p.label}`;
   setActivePhaseButton(p.phase.id);
   const scheme = activeScheme();
-  const now = new Date();
-  const hh = String(now.getHours()).padStart(2, "0");
-  const mm = String(now.getMinutes()).padStart(2, "0");
-  const ss = String(now.getSeconds()).padStart(2, "0");
+  if (state.runStartTs === null) state.runStartTs = ts;
+  const elapsedSeconds = Math.max(0, (ts - state.runStartTs) / 1000);
+  const hudTimer = formatHudTimerSeconds(elapsedSeconds);
   hud3dEl.style.color = `rgb(${scheme.hudText[0]},${scheme.hudText[1]},${scheme.hudText[2]})`;
   hud3dEl.style.borderColor = `rgba(${scheme.hudKey[0]},${scheme.hudKey[1]},${scheme.hudKey[2]},0.35)`;
   hud3dEl.innerHTML = [
-    ["Time", `${hh}:${mm}:${ss}`],
+    ["Timer", hudTimer],
     ["Solid", state.mesh ? state.mesh.name : "-"],
     ["Phase", p.label],
     ["Timeline", `${Math.round(state.timeline * 100)}%`],
@@ -645,6 +825,13 @@ function bindEvents() {
     setupMesh();
     state.timeline = 0;
     state.targetTimeline = null;
+    state.baseSpin = 0;
+    state.rotateBaseYaw = null;
+    state.rotateBaseVel = 0;
+    state.rotateBaseSettled = false;
+    state.rotateBaseSpinStart = null;
+    state.rotateBaseSpinDone = false;
+    state.resumeAutoYawArmed = false;
     timelineEl.value = "0";
   });
 
@@ -652,6 +839,13 @@ function bindEvents() {
     setupMesh();
     state.timeline = 0;
     state.targetTimeline = null;
+    state.baseSpin = 0;
+    state.rotateBaseYaw = null;
+    state.rotateBaseVel = 0;
+    state.rotateBaseSettled = false;
+    state.rotateBaseSpinStart = null;
+    state.rotateBaseSpinDone = false;
+    state.resumeAutoYawArmed = false;
     timelineEl.value = "0";
   });
 
@@ -663,6 +857,12 @@ function bindEvents() {
     state.timeline = parseInt(timelineEl.value, 10) / 1000;
     state.targetTimeline = null;
     state.playing = false;
+    state.rotateBaseYaw = null;
+    state.rotateBaseVel = 0;
+    state.rotateBaseSettled = false;
+    state.rotateBaseSpinStart = null;
+    state.rotateBaseSpinDone = false;
+    state.resumeAutoYawArmed = false;
     playEl.textContent = "Play";
   });
 
@@ -685,7 +885,15 @@ function bindEvents() {
     playEl.textContent = "Play";
     controls.reset();
     applyViewportCameraPreset(true);
+    state.runStartTs = null;
     state.autoYaw = 0;
+    state.baseSpin = 0;
+    state.rotateBaseYaw = null;
+    state.rotateBaseVel = 0;
+    state.rotateBaseSettled = false;
+    state.rotateBaseSpinStart = null;
+    state.rotateBaseSpinDone = false;
+    state.resumeAutoYawArmed = false;
   });
 
   prevStepEl.addEventListener("click", () => {

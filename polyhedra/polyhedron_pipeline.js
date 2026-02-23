@@ -3,9 +3,10 @@
     { id: "rotate", label: "Rotate 3D", start: 0.0, end: 0.16 },
     { id: "cut", label: "Mark Cut Edges", start: 0.16, end: 0.28 },
     { id: "disassemble", label: "Disassemble (Pre-open)", start: 0.28, end: 0.44 },
-    { id: "unfold", label: "Flatten Net", start: 0.44, end: 0.68 },
-    { id: "assemble", label: "Assemble Back", start: 0.68, end: 0.88 },
-    { id: "complete", label: "Complete 3D", start: 0.88, end: 1.0 }
+    { id: "unfold", label: "Flatten Net", start: 0.44, end: 0.64 },
+    { id: "rotate_base", label: "Rotate On Base Axis", start: 0.64, end: 0.78 },
+    { id: "assemble", label: "Assemble Back", start: 0.78, end: 0.92 },
+    { id: "complete", label: "Complete 3D", start: 0.92, end: 1.0 }
   ];
 
   function timelineForPhase(id) {
@@ -15,8 +16,9 @@
       rotate: 0.08,
       cut: 0.24,
       disassemble: 0.38,
-      unfold: 0.66,
-      assemble: 0.80,
+      unfold: 0.60,
+      rotate_base: 0.71,
+      assemble: 0.86,
       complete: 0.96
     };
     return snaps[id] ?? 0.08;
@@ -41,14 +43,16 @@
     const phase = PHASES.find((p) => t >= p.start && t <= p.end) || PHASES[PHASES.length - 1];
 
     const d = smooth(localT(t, 0.28, 0.44)); // disassemble pre-open
-    const u = smooth(localT(t, 0.44, 0.68)); // full unfold
-    const a = smooth(localT(t, 0.68, 0.88)); // assemble
+    const u = smooth(localT(t, 0.44, 0.64)); // full unfold
+    const rb = smooth(localT(t, 0.64, 0.78)); // rotate while fully unfolded
+    const a = smooth(localT(t, 0.78, 0.92)); // assemble
 
     let netMix = 0;
     if (t < 0.28) netMix = 0;
     else if (t <= 0.44) netMix = d * 0.72;
-    else if (t <= 0.68) netMix = 0.72 + u * 0.28;
-    else if (t <= 0.88) netMix = 1 - a;
+    else if (t <= 0.64) netMix = 0.72 + u * 0.28;
+    else if (t <= 0.78) netMix = 1;
+    else if (t <= 0.92) netMix = 1 - a;
     else netMix = 0;
 
     const cutStrength = t < 0.16 ? 0 : t <= 0.28 ? smooth(localT(t, 0.16, 0.28)) : 1;
@@ -58,6 +62,7 @@
       netMix,
       cutStrength,
       unfoldProgress: u,
+      rotateBaseProgress: rb,
       assembleProgress: a,
       label: phase.label
     };
