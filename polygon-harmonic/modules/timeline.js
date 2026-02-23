@@ -37,10 +37,10 @@ export const TIMELINES = [
             { time: 26.0, type: 'anno', data: { show: true, main: "Augmented Triad", notes: [{ note: 'C', label: '1', color: '#ff2a2a' }, { note: 'E', label: 'maj. 3rd', color: '#ff2a2a' }] } },
             { time: 28.0, type: 'anno', data: { show: true, main: "Augmented Triad", notes: [{ note: 'C', label: '1', color: '#ff2a2a' }, { note: 'E', label: 'maj. 3rd', color: '#ff2a2a' }, { note: 'Ab', label: '# 5th', color: '#9b59b6' }] } },
             { time: 32.0, type: 'anno', data: { show: false } },
-            { time: 32.0, type: 'state', data: { speed: 0.4, direction: -1 } }, // 32초 회전 시작 (원래 속도보다 낮춰 천천히)
+            { time: 32.0, type: 'state', data: { speed: 0.4, direction: -1 } },
             // Audio: "So when we rotate..." (starts at ~20.2s, ends at 32.9s)
             { time: 58.0, type: 'audio', data: { file: 'public/audio/poly_3.mp3', start: 20.2, end: 32.9, text: "So when we rotate this triangle we'll just get a series of augmented chords. If we rotate the triangle clockwise instead we get the same chords just played in the opposite order which is true for all of the polygons will be rotating." } },
-            { time: 59.0, type: 'state', data: { speed: 0.4, direction: 1 } } // 59초 반대로 천천히 돈다
+            { time: 59.0, type: 'state', data: { speed: 0.4, direction: 1 } }
         ]
     },
     {

@@ -115,15 +115,19 @@ const Core = {
             const dock = document.createElement('div');
             dock.id = 'floating-dock-container';
             dock.innerHTML = `
-                <button class="icon-btn" id="btn-settings" title="Settings">⚙️</button>
-                <button class="icon-btn" id="btn-bgm" title="Sound On/Off">🔇</button>
-                <button class="icon-btn" id="btn-next-track" title="Change Music">⏭</button>
-                <button class="icon-btn" id="btn-hide-ui" title="Enter Full Screen">⤢</button>
-                <div class="dock-divider"></div>
-                <button class="icon-btn" id="btn-reset" title="Reset">↺</button>
-                <button class="play-btn" id="btn-play" title="Play/Pause">
-                    <span>❚❚</span> <span>Hold</span>
+                <button class="icon-btn" id="btn-settings" title="Settings">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
                 </button>
+                <button class="icon-btn" id="btn-bgm" title="Sound On/Off"></button>
+                <button class="icon-btn" id="btn-next-track" title="Change Music">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 4 15 12 5 20 5 4"></polygon><line x1="19" y1="5" x2="19" y2="19"></line></svg>
+                </button>
+                <button class="icon-btn" id="btn-hide-ui" title="Enter Full Screen"></button>
+                <div class="dock-divider"></div>
+                <button class="icon-btn" id="btn-reset" title="Reset">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>
+                </button>
+                <button class="play-btn" id="btn-play" title="Play/Pause"></button>
             `;
             document.body.appendChild(dock);
 
@@ -141,9 +145,10 @@ const Core = {
         if (!document.getElementById('ui-toggle-btn')) {
              const btn = document.createElement('button');
              btn.id = 'ui-toggle-btn';
-             btn.textContent = 'Exit Full Screen';
+             btn.innerHTML = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"></path></svg>`;
              btn.title = 'Exit Full Screen';
-             btn.onclick = () => this.toggleCinematicMode();
+             btn.onclick = (e) => { e.preventDefault(); this.toggleCinematicMode(); };
+             btn.ontouchstart = (e) => { e.preventDefault(); this.toggleCinematicMode(); };
              document.body.appendChild(btn);
         }
         this.updateCinematicButton();
@@ -219,7 +224,11 @@ const Core = {
         } else if (window.audioManager) {
             isMuted = window.audioManager.isMuted;
         }
-        btn.innerHTML = isMuted ? '🔇' : '🎵';
+        
+        const svgMuted = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><line x1="23" y1="9" x2="17" y2="15"></line><line x1="17" y1="9" x2="23" y2="15"></line></svg>`;
+        const svgUnmuted = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path></svg>`;
+        
+        btn.innerHTML = isMuted ? svgMuted : svgUnmuted;
         btn.style.opacity = isMuted ? '0.5' : '1';
     },
 
@@ -398,26 +407,32 @@ const Core = {
         const isHidden = document.body.classList.contains('hide-ui');
         const dockBtn = document.getElementById('btn-hide-ui');
         const exitBtn = document.getElementById('ui-toggle-btn');
+        const svgEnter = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path></svg>`;
+        const svgExit = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"></path></svg>`;
+        
         if (dockBtn) {
-            dockBtn.textContent = isHidden ? '⤡' : '⤢';
+            dockBtn.innerHTML = isHidden ? svgExit : svgEnter;
             dockBtn.title = isHidden ? 'Exit Full Screen' : 'Enter Full Screen';
         }
         if (exitBtn) {
-            exitBtn.style.display = isHidden ? 'block' : 'none';
+            exitBtn.style.display = isHidden ? 'flex' : 'none';
         }
     },
 
     // --- Single source of truth for play button state ---
     getPlayLabel() {
         const c = this.currentCase;
+        const svgPlay = `<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>`;
+        const svgPause = `<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" stroke="none"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>`;
+
         if (this.currentCaseMode === 'interactive' && c) {
-            if (c.searchInProgress && !c.searchPaused) return { icon: '❚❚', text: 'Hold', running: true };
-            if (c.searchPaused) return { icon: '▶', text: 'Resume', running: false };
-            return { icon: '▶', text: 'Go', running: false };
+            if (c.searchInProgress && !c.searchPaused) return { icon: svgPause, text: 'Hold', running: true };
+            if (c.searchPaused) return { icon: svgPlay, text: 'Resume', running: false };
+            return { icon: svgPlay, text: 'Go', running: false };
         }
         return this.isRunning
-            ? { icon: '❚❚', text: 'Pause', running: true }
-            : { icon: '▶', text: 'Resume', running: false };
+            ? { icon: svgPause, text: 'Pause', running: true }
+            : { icon: svgPlay, text: 'Resume', running: false };
     },
 
     syncPlayButton() {
@@ -425,7 +440,7 @@ const Core = {
         this.isRunning = state.running;
         const btn = document.getElementById('btn-play');
         if (btn) {
-            btn.innerHTML = `<span>${state.icon}</span> <span>${state.text}</span>`;
+            btn.innerHTML = `<span style="display:flex;align-items:center;">${state.icon}</span> <span>${state.text}</span>`;
             btn.classList.toggle('paused', !state.running);
         }
     },

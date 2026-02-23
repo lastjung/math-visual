@@ -46,7 +46,6 @@ function setupEventListeners() {
 
     playBtn.onclick = async () => {
         await initAudio();
-        // If it was stopped at the end and we press play again, restart from beginning if it's over
         state.isPlaying = !state.isPlaying;
         updatePlayBtn();
     };
@@ -70,10 +69,8 @@ function setupEventListeners() {
 
     if(resetBtn) {
         resetBtn.onclick = async () => {
-            await initAudio(); // Ensure context is ready
+            await initAudio();
             jumpToPolygon(state.soloIndex);
-            
-            // Force play from start
             state.isPlaying = true;
             updatePlayBtn();
         };
@@ -82,56 +79,41 @@ function setupEventListeners() {
     if(loopBtn) {
         loopBtn.onclick = () => {
             state.isLooping = !state.isLooping;
-            loopBtn.innerHTML = state.isLooping 
-                ? '<i data-lucide="repeat"></i> <span>AUTO: ON</span>' 
-                : '<i data-lucide="repeat"></i> <span>AUTO: OFF</span>';
-            if (state.isLooping) loopBtn.style.color = '#00aaff';
-            else loopBtn.style.color = '';
-            if (window.lucide) window.lucide.createIcons();
+            loopBtn.classList.toggle('active', state.isLooping);
         };
     }
     
     if (subtitleBtn) {
         subtitleBtn.onclick = () => {
             state.showSubtitles = !state.showSubtitles;
-            subtitleBtn.innerHTML = state.showSubtitles 
-                ? '<i data-lucide="message-square"></i> <span>TEXT: ON</span>' 
-                : '<i data-lucide="message-square"></i> <span>TEXT: OFF</span>';
-            if (!state.showSubtitles) subtitleBtn.style.color = '#aaa';
-            else subtitleBtn.style.color = '';
+            subtitleBtn.classList.toggle('active', state.showSubtitles);
             
-            // Immediately apply
             const botEl = document.getElementById('bottomDesc');
             const topEl = document.getElementById('topTitle');
             const annoEl = document.getElementById('annotationsLayer');
             if(botEl) botEl.style.display = state.showSubtitles ? '' : 'none';
             if(topEl) topEl.style.display = state.showSubtitles ? '' : 'none';
             if(annoEl && !state.showSubtitles) annoEl.style.display = 'none';
-            
-            if (window.lucide) window.lucide.createIcons();
         };
+        // Initial state: subtitles ON
+        subtitleBtn.classList.add('active');
     }
     
     if (verifBtn) {
         verifBtn.onclick = () => {
             state.isVerificationMode = !state.isVerificationMode;
-            verifBtn.innerHTML = state.isVerificationMode 
-                ? '<i data-lucide="youtube"></i> <span>VERIF: ON</span>' 
-                : '<i data-lucide="youtube"></i> <span>VERIF: OFF</span>';
+            verifBtn.classList.toggle('active', state.isVerificationMode);
             if (state.isVerificationMode) verifBtn.style.color = '#ff0033';
             else verifBtn.style.color = '';
             
-            // Adjust master volume appropriately
             const pianoSlider = document.getElementById('pianoVol');
             if (state.isVerificationMode) {
-                setMasterVolume(0); // Mute synth for verification
+                setMasterVolume(0);
                 if (pianoSlider) pianoSlider.value = 0;
             } else {
                 setMasterVolume(0.4);
                 if (pianoSlider) pianoSlider.value = 0.4;
             }
-                
-            if (window.lucide) window.lucide.createIcons();
         };
     }
 
@@ -141,8 +123,8 @@ function setupEventListeners() {
 function updatePlayBtn() {
     const playBtn = document.getElementById('playBtn');
     playBtn.innerHTML = state.isPlaying 
-        ? '<i data-lucide="pause"></i> PAUSE' 
-        : '<i data-lucide="play"></i> PLAY';
+        ? '<i data-lucide="pause"></i>' 
+        : '<i data-lucide="play"></i>';
     if (state.isPlaying) playBtn.classList.add('playing');
     else playBtn.classList.remove('playing');
     if (window.lucide) window.lucide.createIcons();
