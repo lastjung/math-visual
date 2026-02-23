@@ -261,12 +261,18 @@ input[type=range]::-webkit-slider-thumb {
   height: 18px;
   width: 18px;
   border-radius: 50%;
-  background: var(--deep-blue);
+  background: var(--brilliant-green);
   cursor: pointer;
   margin-top: -7px;
-  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.4);
+  box-shadow: 0 2px 6px rgba(41, 204, 87, 0.4);
   border: 2px solid #fff;
   transition: transform 0.1s;
+}
+
+#settings-panel input[type=range]::-webkit-slider-thumb {
+  background: rgba(30, 30, 40, 0.85);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.5);
 }
 
 input[type=range]::-webkit-slider-thumb:hover {
@@ -814,6 +820,10 @@ body.hide-ui #ui-toggle-btn:hover {
     letter-spacing: 0.01em;
 }
 
+#settings-panel .setting-info-value {
+    color: #475569;
+}
+
 .controls::-webkit-scrollbar {
     width: 8px;
 }
@@ -839,6 +849,10 @@ body.hide-ui #ui-toggle-btn:hover {
 
 .setting-select:focus {
     border-color: var(--deep-blue);
+}
+
+#settings-panel .setting-select:focus {
+    border-color: #94a3b8;
 }
 
 /* Face Parameter Selector */
