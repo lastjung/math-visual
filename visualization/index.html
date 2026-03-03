@@ -26,10 +26,10 @@
                 <div class="top-tabs-row">
                     <button class="top-tab" data-case="golden" type="button" onclick="switchCase('golden', this)">Golden Spiral</button>
                     <button class="top-tab" data-case="rainbow" type="button" onclick="switchCase('rainbow', this)">Rainbow Spiral</button>
-                    <button class="top-tab active" data-case="waves" type="button" onclick="switchCase('waves', this)">Waves</button>
+                    <button class="top-tab" data-case="waves" type="button" onclick="switchCase('waves', this)">Waves</button>
                     <button class="top-tab" data-case="hexagon" type="button" onclick="switchCase('hexagon', this)">Hex Grid</button>
                     <button class="top-tab" data-case="damage" type="button" onclick="switchCase('damage', this)">Damage Rolls</button>
-                    <button class="top-tab" data-case="modulo-circle" type="button" onclick="switchCase('modulo-circle', this)">Cardioid Circle</button>
+                    <button class="top-tab active" data-case="modulo-circle" type="button" onclick="switchCase('modulo-circle', this)">Cardioid Circle</button>
                     <button class="top-tab" data-case="orbit-spirograph" type="button" onclick="switchCase('orbit-spirograph', this)">Orbit Spirograph</button>
                     <button class="top-tab" data-case="sphere-voronoi" type="button" onclick="switchCase('sphere-voronoi', this)">Sphere Voronoi</button>
                     <button class="top-tab" data-case="face-generator" type="button" onclick="switchCase('face-generator', this)">Face Generator</button>
@@ -131,11 +131,11 @@
 
         // Load Default Case
         window.onload = () => {
-            if (typeof WavesCase !== 'undefined') {
-                const defaultTab = document.querySelector('.top-tab[data-case="waves"]');
-                window.switchCase('waves', defaultTab);
+            if (typeof CardioidCircleCase !== 'undefined') {
+                const defaultTab = document.querySelector('.top-tab[data-case="modulo-circle"]');
+                window.switchCase('modulo-circle', defaultTab);
             } else {
-                console.error("WavesCase failed to load!");
+                console.error("CardioidCircleCase failed to load!");
             }
         };
 

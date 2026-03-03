@@ -11,7 +11,7 @@ const CardioidCircleCase = {
     pointCount: 250,
     multiplier: 40,
     multiplierSpeed: 0.35,
-    lineWidth: 1.35,
+    lineWidth: 1.85,
     lineAlpha: 0.4,
     pointRadius: 1.1,
     showPoints: false,
@@ -19,7 +19,19 @@ const CardioidCircleCase = {
     integersOnly: false,
     colorMode: 'angle', // monochrome | angle | length | origin
     rotation: -Math.PI / 2,
-    learningMode: 'off', // off | n-ramp | m-ramp | gcd | integer-snap | mapping
+    learningMode: 'off', // off | n-ramp | m-ramp | gcd | integer-snap | mapping | classic | ultimate | mirror-chaos
+    classicTargets: [2, 3, 4, 5, 6, 7, 8, 9, 10],
+    classicIndex: 0,
+    classicDuration: 5.0,
+    classicTimer: 0,
+    ultimateTargets: [2, 2.1, 1.618, 2.5, 3, 3.14159, 3.5, 4, 5, 8, 13, 21, 34, 55, 67, 89, 99],
+    ultimateIndex: 0,
+    ultimateTimer: 0,
+    ultimateDuration: 5.0,
+    mirrorTargets: [2.5, 3.5, 4.5, 6.66, 13.13, 181, 181.5, 359, 359.7],
+    mirrorIndex: 0,
+    mirrorTimer: 0,
+    mirrorDuration: 5.0,
     learnFixedM: 0,
     learnN: 0,
     nRampSlowRate: 12,
@@ -78,7 +90,10 @@ const CardioidCircleCase = {
                     { value: 'm-ramp', label: 'M Ramp (N Fixed)' },
                     { value: 'gcd', label: 'GCD Loops' },
                     { value: 'integer-snap', label: 'Integer Snap' },
-                    { value: 'mapping', label: 'Mapping Step' }
+                    { value: 'mapping', label: 'Mapping Step' },
+                    { value: 'classic', label: 'Classic (Basic)' },
+                    { value: 'ultimate', label: 'Ultimate (Premium)' },
+                    { value: 'mirror-chaos', label: 'Mirror & Chaos' }
                 ],
                 onChange: (v) => {
                     this.setLearningMode(v);
@@ -438,7 +453,7 @@ const CardioidCircleCase = {
         this.pointCount = 250;
         this.multiplier = 40;
         this.multiplierSpeed = 0.35;
-        this.lineWidth = 1.35;
+        this.lineWidth = 1.85;
         this.lineAlpha = 0.4;
         this.integersOnly = false;
         this.colorMode = 'angle';
@@ -532,6 +547,24 @@ const CardioidCircleCase = {
         if (this.learningMode === 'mapping') {
             this.demoIndex = 0;
         }
+        if (this.learningMode === 'classic') {
+            this.classicTimer = 0;
+            this.classicIndex = 0;
+            this.multiplier = this.classicTargets[this.classicIndex];
+            this.pointCount = 360;
+        }
+        if (this.learningMode === 'ultimate') {
+            this.ultimateTimer = 0;
+            this.ultimateIndex = 0;
+            this.multiplier = this.ultimateTargets[this.ultimateIndex];
+            this.pointCount = 360;
+        }
+        if (this.learningMode === 'mirror-chaos') {
+            this.mirrorTimer = 0;
+            this.mirrorIndex = 0;
+            this.multiplier = this.mirrorTargets[this.mirrorIndex];
+            this.pointCount = 360;
+        }
         if (typeof Core !== 'undefined' && Core.currentCase === this) Core.updateControls();
         this.draw();
     },
@@ -572,6 +605,66 @@ const CardioidCircleCase = {
                 if (this.demoIndex >= n) this.demoIndex = this.demoIndex % n;
             }
             this.multiplier += this.multiplierSpeed * dt;
+            return;
+        }
+        if (this.learningMode === 'classic') {
+            this.classicTimer += dt;
+            if (this.classicTimer >= this.classicDuration) {
+                this.classicTimer = 0;
+                this.classicIndex = (this.classicIndex + 1) % this.classicTargets.length;
+            }
+            // 2 seconds hold, 3 seconds transition
+            const holdTime = 2.0;
+            const currentM = this.classicTargets[this.classicIndex];
+            if (this.classicTimer < holdTime) {
+                this.multiplier = currentM;
+            } else {
+                const t = (this.classicTimer - holdTime) / (this.classicDuration - holdTime);
+                const ease = 0.5 - 0.5 * Math.cos(t * Math.PI);
+                const nextIndex = (this.classicIndex + 1) % this.classicTargets.length;
+                const nextM = this.classicTargets[nextIndex];
+                this.multiplier = currentM + (nextM - currentM) * ease;
+            }
+            return;
+        }
+        if (this.learningMode === 'ultimate') {
+            this.ultimateTimer += dt;
+            if (this.ultimateTimer >= this.ultimateDuration) {
+                this.ultimateTimer = 0;
+                this.ultimateIndex = (this.ultimateIndex + 1) % this.ultimateTargets.length;
+            }
+            // 1 second hold, 4 seconds transition
+            const holdTime = 1.0;
+            const currentM = this.ultimateTargets[this.ultimateIndex];
+            if (this.ultimateTimer < holdTime) {
+                this.multiplier = currentM;
+            } else {
+                const t = (this.ultimateTimer - holdTime) / (this.ultimateDuration - holdTime);
+                const ease = 0.5 - 0.5 * Math.cos(t * Math.PI);
+                const nextIndex = (this.ultimateIndex + 1) % this.ultimateTargets.length;
+                const nextM = this.ultimateTargets[nextIndex];
+                this.multiplier = currentM + (nextM - currentM) * ease;
+            }
+            return;
+        }
+        if (this.learningMode === 'mirror-chaos') {
+            this.mirrorTimer += dt;
+            if (this.mirrorTimer >= this.mirrorDuration) {
+                this.mirrorTimer = 0;
+                this.mirrorIndex = (this.mirrorIndex + 1) % this.mirrorTargets.length;
+            }
+            // 1 second hold, 4 seconds transition
+            const holdTime = 1.0;
+            const currentM = this.mirrorTargets[this.mirrorIndex];
+            if (this.mirrorTimer < holdTime) {
+                this.multiplier = currentM;
+            } else {
+                const t = (this.mirrorTimer - holdTime) / (this.mirrorDuration - holdTime);
+                const ease = 0.5 - 0.5 * Math.cos(t * Math.PI);
+                const nextIndex = (this.mirrorIndex + 1) % this.mirrorTargets.length;
+                const nextM = this.mirrorTargets[nextIndex];
+                this.multiplier = currentM + (nextM - currentM) * ease;
+            }
             return;
         }
         this.multiplier += this.multiplierSpeed * dt;
@@ -700,6 +793,72 @@ const CardioidCircleCase = {
             ctx.fillStyle = 'rgba(255,255,255,0.92)';
             ctx.font = '600 14px Inter, system-ui, sans-serif';
             ctx.fillText(`Integer Snap | speed = ${this.snapRate.toFixed(2)}`, 24, h - 28);
+        }
+
+        if (this.learningMode === 'classic') {
+            ctx.fillStyle = 'rgba(255,255,255,0.92)';
+            ctx.font = '600 14px Inter, system-ui, sans-serif';
+            const timeLeft = Math.max(0, this.classicDuration - this.classicTimer);
+            const targetM = this.classicTargets[this.classicIndex];
+            const patternName = targetM === 2 ? 'Cardioid' : (targetM === 3 ? 'Nephroid' : `${targetM - 1} Petals`);
+            ctx.fillText(`Classic Mode | Next in ${timeLeft.toFixed(1)}s`, 24, h - 28);
+
+            // Large Top-Right Name
+            ctx.save();
+            ctx.textAlign = 'right';
+            ctx.font = '700 32px Inter, system-ui, sans-serif';
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.45)';
+            ctx.fillText(patternName, w - 32, 52);
+            ctx.restore();
+        }
+
+        if (this.learningMode === 'ultimate') {
+            ctx.fillStyle = 'rgba(255,255,255,0.92)';
+            ctx.font = '600 14px Inter, system-ui, sans-serif';
+            const timeLeft = Math.max(0, this.ultimateDuration - this.ultimateTimer);
+            const targetM = this.ultimateTargets[this.ultimateIndex];
+            const names = {
+                2: 'Cardioid', 2.1: 'Warped Heart', 1.618: 'Golden Ratio', 2.5: 'Split Cardioid',
+                3: 'Nephroid', 3.14159: 'Pi Spiral', 3.5: 'Split Nephroid', 4: 'Clover',
+                5: 'Flower', 8: 'Infinity Petals', 13: 'Fibonacci Bloom', 
+                21: 'Fibonacci Spiral', 34: 'Golden Spiral', 55: 'Star Dust', 
+                67: 'Sun Star', 89: 'Natural Harmony', 99: 'Cosmic Web',
+                181: 'Global Grid (Mirror)', 181.5: 'Warped Grid (Chaos)', 
+                359: 'The Singularity (Focus)', 359.7: 'Stardust Fountain'
+            };
+            const patternName = names[targetM] || 'Complex Pattern';
+            ctx.fillText(`Ultimate Mode | Next in ${timeLeft.toFixed(1)}s`, 24, h - 28);
+
+            // Large Top-Right Name
+            ctx.save();
+            ctx.textAlign = 'right';
+            ctx.font = '700 32px Inter, system-ui, sans-serif';
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.45)';
+            ctx.fillText(patternName, w - 32, 52);
+            ctx.restore();
+        }
+
+        if (this.learningMode === 'mirror-chaos') {
+            ctx.fillStyle = 'rgba(255,255,255,0.92)';
+            ctx.font = '600 14px Inter, system-ui, sans-serif';
+            const timeLeft = Math.max(0, this.mirrorDuration - this.mirrorTimer);
+            const targetM = this.mirrorTargets[this.mirrorIndex];
+            const names = {
+                2.5: 'Split Cardioid', 3.5: 'Split Nephroid', 4.5: 'Split Clover',
+                6.66: 'Order in Chaos', 13.13: 'Abstract Rhythm',
+                181: 'Global Grid (Mirror)', 181.5: 'Warped Grid (Chaos)', 
+                359: 'The Singularity (Focus)', 359.7: 'Stardust Fountain'
+            };
+            const patternName = names[targetM] || 'Complex Pattern';
+            ctx.fillText(`Mirror & Chaos | Next in ${timeLeft.toFixed(1)}s`, 24, h - 28);
+
+            // Large Top-Right Name
+            ctx.save();
+            ctx.textAlign = 'right';
+            ctx.font = '700 32px Inter, system-ui, sans-serif';
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.45)';
+            ctx.fillText(patternName, w - 32, 52);
+            ctx.restore();
         }
     }
 };
