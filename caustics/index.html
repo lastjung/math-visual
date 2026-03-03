@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Light Flow Lab | Dynamic Caustics Renderer</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="logo-group">
+            <div class="logo-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+            </div>
+            <div class="logo-text">
+                <h1>LIGHT FLOW LAB</h1>
+                <p>Dynamic Caustics Renderer</p>
+            </div>
+        </div>
+
+        <nav class="shape-tabs">
+            <button class="shape-tab active" data-shape="circle">Circle</button>
+            <button class="shape-tab" data-shape="ellipse">Ellipse</button>
+            <button class="shape-tab" data-shape="parabola">Parabola</button>
+            <button class="shape-tab" data-shape="cardioid">Cardioid</button>
+        </nav>
+        
+        <div style="width: 140px;"></div> <!-- Spacer to balance header -->
+    </header>
+
+    <main class="main-stage">
+        <!-- Canvas Section -->
+        <section class="canvas-area" id="container">
+            <canvas id="causticsCanvas"></canvas>
+            <div class="drag-hint">Drag to direct the light flow</div>
+        </section>
+
+        <!-- Sidebar Section -->
+        <aside class="controls-sidebar">
+            <div class="control-panel">
+                <div class="panel-header">
+                    <span class="panel-title">Simulation</span>
+                    <button class="toggle-btn" id="btn-animate">
+                        <span id="animate-icon"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg></span>
+                        <span id="animate-text">Manual</span>
+                    </button>
+                </div>
+
+                <!-- Source Position Slider -->
+                <div class="setting-row">
+                    <div class="setting-label-group">
+                        <label class="setting-label">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f43f5e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+                            SOURCE POSITION
+                        </label>
+                        <span class="setting-value value-source" id="val-source">0°</span>
+                    </div>
+                    <input type="range" id="range-source" min="-3.14159" max="3.14159" step="0.01" value="0">
+                </div>
+
+                <!-- Ray Density Slider -->
+                <div class="setting-row">
+                    <div class="setting-label-group">
+                        <label class="setting-label">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#06b6d2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+                            RAY DENSITY
+                        </label>
+                        <span class="setting-value value-density" id="val-density">150</span>
+                    </div>
+                    <input type="range" id="range-density" min="20" max="500" value="150">
+                </div>
+
+                <!-- Beam Spread Slider -->
+                <div class="setting-row">
+                    <div class="setting-label-group">
+                        <label class="setting-label">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M3 12h3m12 0h3M12 3v3m0 12v3M5.6 5.6l2.1 2.1m8.6 8.6l2.1 2.1M5.6 18.4l2.1-2.1m8.6-8.6l2.1-2.1"/></svg>
+                            BEAM SPREAD
+                        </label>
+                        <span class="setting-value value-spread" id="val-spread">69°</span>
+                    </div>
+                    <input type="range" id="range-spread" min="0.1" max="5.0" step="0.1" value="1.2">
+                </div>
+
+                <!-- Color Modes -->
+                <div class="mode-tabs">
+                    <button class="mode-tab active" data-mode="cyan">Cyan</button>
+                    <button class="mode-tab" data-mode="rainbow">Rainbow</button>
+                    <button class="mode-tab" data-mode="sunset">Sunset</button>
+                </div>
+
+                <!-- Action Button -->
+                <button class="reset-btn" id="btn-reset">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+                    Reset Lab
+                </button>
+            </div>
+
+            <div class="info-box">
+                <h4 class="info-title">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                    VISUAL FEATURES
+                </h4>
+                <p class="info-desc">
+                    Dynamic <b>flow effects</b> have been applied to the rays to represent the direction of light. Increase the count to enjoy the brilliant flow.
+                </p>
+            </div>
+        </aside>
+    </main>
+
+    <script src="main.js"></script>
+</body>
+</html>
