@@ -60,16 +60,28 @@
                     <input type="range" id="range-source" min="-3.14159" max="3.14159" step="0.01" value="0">
                 </div>
 
-                <!-- Ray Density Slider -->
+                <!-- Ray Number Slider -->
                 <div class="setting-row">
                     <div class="setting-label-group">
                         <label class="setting-label">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#06b6d2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
-                            RAY DENSITY
+                            RAY NUMBER
                         </label>
                         <span class="setting-value value-density" id="val-density">150</span>
                     </div>
                     <input type="range" id="range-density" min="20" max="500" value="150">
+                </div>
+
+                <!-- Ray Speed Slider -->
+                <div class="setting-row">
+                    <div class="setting-label-group">
+                        <label class="setting-label">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+                            RAY SPEED
+                        </label>
+                        <span class="setting-value value-speed" id="val-speed">60</span>
+                    </div>
+                    <input type="range" id="range-speed" min="0" max="100" value="30">
                 </div>
 
                 <!-- Beam Spread Slider -->
@@ -91,11 +103,21 @@
                     <button class="mode-tab" data-mode="sunset">Sunset</button>
                 </div>
 
-                <!-- Action Button -->
-                <button class="reset-btn" id="btn-reset">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
-                    Reset Lab
-                </button>
+                <!-- Action Group -->
+                <div class="action-group">
+                    <button class="reset-btn" id="btn-reset">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+                        Reset
+                    </button>
+                    <button class="play-btn" id="btn-light">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83"/></svg>
+                        <span id="light-text">Emit</span>
+                    </button>
+                    <button class="play-btn active" id="btn-play">
+                        <span id="play-icon"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg></span>
+                        <span id="play-text">Hold</span>
+                    </button>
+                </div>
             </div>
 
             <div class="info-box">

@@ -1,5 +1,6 @@
 /**
  * LIGHT FLOW LAB: Standalone Core Logic
+ * Custom: Free Source Movement
  */
 const App = {
     canvas: null,
@@ -8,9 +9,14 @@ const App = {
     
     // State
     shape: 'circle',
-    rayCount: 232,
-    sourceAngle: -Math.PI / 2,
+    rayNumber: 232,
+    raySpeed: 30,
+    sourcePos: { x: 0, y: -250 }, // Initial position relative to center
     isAnimating: false,
+    isFlowing: true,
+    isLightVisible: true,
+    growth: 0,
+    GROWTH_SPEED: 600, // Pixels per second
     colorMode: 'cyan',
     beamWidth: 1.5,
     spread: 1.2,
@@ -21,6 +27,10 @@ const App = {
         this.canvas = document.getElementById('causticsCanvas');
         this.ctx = this.canvas.getContext('2d');
         this.container = document.getElementById('container');
+
+        // Initialize sourcePos based on canvas size
+        const size = Math.min(window.innerWidth, window.innerHeight) * 0.35;
+        this.sourcePos = { x: 0, y: -size * 0.95 };
 
         this.setupEvents();
         this.resize();
@@ -59,14 +69,25 @@ const App = {
         // Sliders
         const rangeSource = document.getElementById('range-source');
         rangeSource.oninput = (e) => {
-            this.sourceAngle = parseFloat(e.target.value);
+            const angle = parseFloat(e.target.value);
+            const size = Math.min(this.canvas.width, this.canvas.height) * 0.35;
+            this.sourcePos = {
+                x: Math.cos(angle) * size * 0.95,
+                y: Math.sin(angle) * size * 0.95
+            };
             this.isAnimating = false;
             this.updateUI();
         };
 
         const rangeDensity = document.getElementById('range-density');
         rangeDensity.oninput = (e) => {
-            this.rayCount = parseInt(e.target.value);
+            this.rayNumber = parseInt(e.target.value);
+            this.updateUI();
+        };
+
+        const rangeSpeed = document.getElementById('range-speed');
+        rangeSpeed.oninput = (e) => {
+            this.raySpeed = parseInt(e.target.value);
             this.updateUI();
         };
 
@@ -79,22 +100,60 @@ const App = {
         // Reset
         document.getElementById('btn-reset').onclick = () => this.reset();
 
+        // Flow (Play/Hold) Toggle
+        const btnPlay = document.getElementById('btn-play');
+        btnPlay.onclick = () => {
+            this.isFlowing = !this.isFlowing;
+            this.updateUI();
+        };
+
+        // Emit (Light Reset)
+        const btnEmit = document.getElementById('btn-light');
+        btnEmit.onclick = () => {
+            this.isLightVisible = true;
+            this.growth = 0; // Restart propagation
+            this.updateUI();
+        };
+
         // Canvas / Container Mouse Events
+        let isDragging = false;
+
         const handleInteraction = (e) => {
-            if (e.buttons === 1) {
-                const rect = this.canvas.getBoundingClientRect();
-                const x = (e.clientX || e.touches[0].clientX) - rect.left - rect.width/2;
-                const y = (e.clientY || e.touches[0].clientY) - rect.top - rect.height/2;
-                this.sourceAngle = Math.atan2(y, x);
-                this.isAnimating = false;
+            const rect = this.canvas.getBoundingClientRect();
+            const clientX = e.clientX || (e.touches && e.touches[0].clientX);
+            const clientY = e.clientY || (e.touches && e.touches[0].clientY);
+            
+            if (clientX === undefined) return;
+
+            const x = clientX - rect.left - rect.width/2;
+            const y = clientY - rect.top - rect.height/2;
+
+            if (e.type === 'mousedown' || e.type === 'touchstart') {
+                const dist = Math.sqrt((x - this.sourcePos.x)**2 + (y - this.sourcePos.y)**2);
+                if (dist < 50) { // Larger hit area
+                    isDragging = true;
+                    this.isAnimating = false;
+                    if (e.cancelable) e.preventDefault();
+                }
+            }
+
+            if (isDragging) {
+                this.sourcePos = { x, y };
                 this.updateUI();
             }
         };
 
-        this.canvas.onmousedown = handleInteraction;
-        this.canvas.onmousemove = handleInteraction;
-        this.canvas.ontouchstart = handleInteraction;
-        this.canvas.ontouchmove = handleInteraction;
+        const stopDragging = () => {
+            isDragging = false;
+        };
+
+        this.canvas.addEventListener('mousedown', handleInteraction);
+        window.addEventListener('mousemove', handleInteraction);
+        window.addEventListener('mouseup', stopDragging);
+
+        this.canvas.addEventListener('touchstart', handleInteraction, { passive: false });
+        window.addEventListener('touchmove', handleInteraction, { passive: false });
+        window.addEventListener('touchend', stopDragging);
     },
 
     resize() {
@@ -114,25 +173,47 @@ const App = {
             : '<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>';
         text.textContent = this.isAnimating ? 'Auto Spin' : 'Manual';
 
-        document.getElementById('range-source').value = this.sourceAngle;
-        document.getElementById('val-source').textContent = `${(this.sourceAngle * 180 / Math.PI).toFixed(0)}°`;
+        // Update the slider to reflect the current angle relative to center
+        const angle = Math.atan2(this.sourcePos.y, this.sourcePos.x);
+        document.getElementById('range-source').value = angle;
+        document.getElementById('val-source').textContent = `${(angle * 180 / Math.PI).toFixed(0)}°`;
         
-        document.getElementById('range-density').value = this.rayCount;
-        document.getElementById('val-density').textContent = this.rayCount;
+        document.getElementById('range-density').value = this.rayNumber;
+        document.getElementById('val-density').textContent = this.rayNumber;
 
-        document.getElementById('range-spread').value = this.spread;
+        document.getElementById('range-speed').value = this.raySpeed;
+        document.getElementById('val-speed').textContent = this.raySpeed;
+
         document.getElementById('val-spread').textContent = `${(this.spread * 180 / Math.PI).toFixed(0)}°`;
+
+        // Play/Hold Button
+        const btnPlay = document.getElementById('btn-play');
+        const playIcon = document.getElementById('play-icon');
+        const playText = document.getElementById('play-text');
+        this.isFlowing = this.isFlowing; // Keep state
+        playIcon.innerHTML = this.isFlowing 
+            ? '<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>'
+            : '<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>';
+        playText.textContent = this.isFlowing ? 'Hold' : 'Play';
+
+        // Emit Button (Middle)
+        const btnEmit = document.getElementById('btn-light');
+        document.getElementById('light-text').textContent = 'Emit';
     },
 
     reset() {
         this.shape = 'circle';
-        this.rayCount = 150;
-        this.sourceAngle = 0;
+        this.rayNumber = 150;
+        this.raySpeed = 30;
+        const size = Math.min(this.canvas.width, this.canvas.height) * 0.35;
+        this.sourcePos = { x: 0, y: -size * 0.95 };
         this.isAnimating = false;
+        this.isFlowing = true;
+        this.isLightVisible = true;
+        this.growth = 0;
         this.colorMode = 'cyan';
         this.spread = 1.2;
 
-        // Sync UI classes
         document.querySelectorAll('.shape-tab').forEach(b => b.classList.toggle('active', b.dataset.shape === 'circle'));
         document.querySelectorAll('.mode-tab').forEach(b => b.classList.toggle('active', b.dataset.mode === 'cyan'));
 
@@ -171,7 +252,7 @@ const App = {
         let low = 1, high = size * 4;
         let bestDist = null;
 
-        for(let i=0; i<25; i++) {
+        for(let i=0; i<30; i++) { // More precision for free movement
             let mid = (low + high) / 2;
             let px = sx + dx * mid;
             let py = sy + dy * mid;
@@ -200,12 +281,21 @@ const App = {
             lastTime = now;
 
             if (this.isAnimating) {
-                this.sourceAngle = (this.sourceAngle + 0.3 * dt) % (Math.PI * 2);
-                document.getElementById('range-source').value = this.sourceAngle;
-                document.getElementById('val-source').textContent = `${(this.sourceAngle * 180 / Math.PI).toFixed(0)}°`;
+                // Orbiting logic for Auto Spin
+                const angle = Math.atan2(this.sourcePos.y, this.sourcePos.x);
+                const dist = Math.sqrt(this.sourcePos.x**2 + this.sourcePos.y**2);
+                const newAngle = angle + 0.3 * dt;
+                this.sourcePos = {
+                    x: Math.cos(newAngle) * dist,
+                    y: Math.sin(newAngle) * dist
+                };
+                this.updateUI();
             }
             
-            this.flowOffset = (this.flowOffset + 60 * dt) % 60;
+            if (this.isFlowing && this.isLightVisible) {
+                this.flowOffset = (this.flowOffset + this.raySpeed * dt) % 50; // Match [30, 20] dash cycle
+                this.growth += this.GROWTH_SPEED * dt;
+            }
             this.draw();
             requestAnimationFrame(loop);
         };
@@ -235,22 +325,24 @@ const App = {
         }
         ctx.stroke();
 
-        // Rays
-        for (let i = 0; i < this.rayCount; i++) {
-            const t = i / Math.max(1, this.rayCount - 1);
+        // Rays Emission Direction (Points towards center)
+        const aimAngle = Math.atan2(-this.sourcePos.y, -this.sourcePos.x);
+
+        if (!this.isLightVisible) return;
+
+        for (let i = 0; i < this.rayNumber; i++) {
+            const t = i / Math.max(1, this.rayNumber - 1);
             let startPos, angle;
             
             if (this.shape === 'parabola') {
                 const xOffset = (t - 0.5) * size * 1.8;
                 startPos = { x: xOffset, y: -size * 1.2 };
-                angle = Math.PI / 2 + Math.sin(this.sourceAngle) * 0.3;
+                // Parabola still uses Auto Spin for swing
+                const swing = Math.atan2(this.sourcePos.y, this.sourcePos.x);
+                angle = Math.PI / 2 + Math.sin(swing) * 0.3;
             } else {
-                const radiusMult = 0.92;
-                startPos = { 
-                    x: Math.cos(this.sourceAngle) * size * radiusMult, 
-                    y: Math.sin(this.sourceAngle) * size * radiusMult 
-                };
-                angle = this.sourceAngle + Math.PI + (t - 0.5) * this.spread;
+                startPos = { x: this.sourcePos.x, y: this.sourcePos.y };
+                angle = aimAngle + (t - 0.5) * this.spread;
             }
 
             let currX = centerX + startPos.x;
@@ -263,7 +355,7 @@ const App = {
                 ctx.shadowBlur = 20;
                 ctx.shadowColor = '#06b6d2';
                 ctx.beginPath();
-                ctx.arc(currX, currY, 5, 0, Math.PI * 2);
+                ctx.arc(currX, currY, 6, 0, Math.PI * 2);
                 ctx.fill();
                 ctx.restore();
             }
@@ -279,6 +371,8 @@ const App = {
             ctx.lineDashOffset = -this.flowOffset;
             ctx.lineCap = 'round';
             ctx.lineWidth = this.beamWidth;
+            
+            let accumulatedDist = 0;
 
             for (let b = 0; b < this.MAX_BOUNCES; b++) {
                 const hit = this.findBoundaryIntersection(currX - centerX, currY - centerY, currAngle, this.shape, size);
@@ -286,14 +380,34 @@ const App = {
 
                 const nextX = centerX + hit.x;
                 const nextY = centerY + hit.y;
+                
+                const segmentDist = Math.sqrt((nextX - currX)**2 + (nextY - currY)**2);
+                
+                // Propagation logic
+                if (accumulatedDist > this.growth) break;
+                
+                let drawX = nextX;
+                let drawY = nextY;
+                let isLastSegment = false;
 
-                const alpha = Math.max(0.02, (25 / this.rayCount) * (1 - b/this.MAX_BOUNCES));
+                if (accumulatedDist + segmentDist > this.growth) {
+                    const ratio = (this.growth - accumulatedDist) / segmentDist;
+                    drawX = currX + (nextX - currX) * ratio;
+                    drawY = currY + (nextY - currY) * ratio;
+                    isLastSegment = true;
+                }
+
+                const alpha = Math.max(0.02, (25 / this.rayNumber) * (1 - b/this.MAX_BOUNCES));
                 ctx.strokeStyle = `hsla(${baseHue}, 100%, 60%, ${alpha})`;
                 
                 ctx.beginPath();
                 ctx.moveTo(currX, currY);
-                ctx.lineTo(nextX, nextY);
+                ctx.lineTo(drawX, drawY);
                 ctx.stroke();
+
+                if (isLastSegment) break;
+
+                accumulatedDist += segmentDist;
 
                 const normal = this.getNormal(hit.x, hit.y, this.shape, size);
                 const incoming = { x: Math.cos(currAngle), y: Math.sin(currAngle) };
