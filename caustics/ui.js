@@ -19,7 +19,7 @@ export const UI = {
                 
                 // 새로운 탭(도형)으로 변경될 때 이전 동작 정지
                 app.isAnimating = false;
-                app.growth = 0;
+                // app.growth = 0; 
                 this.update(app);
             };
         });
@@ -34,8 +34,8 @@ export const UI = {
         });
 
         // Animation Toggle
-        const btnAnimate = document.getElementById('btn-animate');
-        btnAnimate.onclick = () => {
+        const labelRevolution = document.getElementById('label-revolution');
+        labelRevolution.onclick = () => {
             app.isAnimating = !app.isAnimating;
             this.update(app);
         };
@@ -60,6 +60,13 @@ export const UI = {
         const rangeRotation = document.getElementById('range-rotation');
         rangeRotation.oninput = (e) => {
             app.sourceRotation = parseFloat(e.target.value);
+            app.isAutoRotating = false; // Stop auto-rotating on manual input
+            this.update(app);
+        };
+
+        const labelRotation = document.getElementById('label-rotation');
+        labelRotation.onclick = () => {
+            app.isAutoRotating = !app.isAutoRotating;
             this.update(app);
         };
 
@@ -80,6 +87,14 @@ export const UI = {
             app.spread = parseFloat(e.target.value);
             this.update(app);
         };
+
+        const rangeReflections = document.getElementById('range-reflections');
+        if (rangeReflections) {
+            rangeReflections.oninput = (e) => {
+                app.MAX_BOUNCES = parseInt(e.target.value);
+                this.update(app);
+            };
+        }
 
         const checkAxes = document.getElementById('check-axes');
         if (checkAxes) {
@@ -178,22 +193,16 @@ export const UI = {
      * Update DOM elements to match current state
      */
     update(app) {
-        const btnAnimate = document.getElementById('btn-animate');
-        const icon = document.getElementById('animate-icon');
-        const text = document.getElementById('animate-text');
+        const labelRevolution = document.getElementById('label-revolution');
+        const iconMini = document.getElementById('animate-icon-mini');
         
-        if (btnAnimate.classList.contains('active') !== app.isAnimating) {
-            btnAnimate.classList.toggle('active', app.isAnimating);
-        }
+        labelRevolution.classList.toggle('active', app.isAnimating);
 
         const targetIconHTML = app.isAnimating 
-            ? '<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>'
-            : '<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>';
+            ? '<svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>'
+            : '<svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>';
         
-        if (icon.innerHTML !== targetIconHTML) icon.innerHTML = targetIconHTML;
-
-        const targetText = app.isAnimating ? 'Auto Spin' : 'Manual';
-        if (text.textContent !== targetText) text.textContent = targetText;
+        if (iconMini.innerHTML !== targetIconHTML) iconMini.innerHTML = targetIconHTML;
 
         const angle = Math.atan2(app.sourcePos.y, app.sourcePos.x);
         const rangeSource = document.getElementById('range-source');
@@ -206,6 +215,17 @@ export const UI = {
 
         const valRotation = document.getElementById('val-rotation');
         const rotDeg = `${(app.sourceRotation * 180 / Math.PI).toFixed(0)}°`;
+        
+        const labelRotation = document.getElementById('label-rotation');
+        const iconRotateMini = document.getElementById('rotate-icon-mini');
+        
+        labelRotation.classList.toggle('active', app.isAutoRotating);
+        const rotateIconHTML = app.isAutoRotating 
+            ? '<svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>'
+            : '<svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>';
+        
+        if (iconRotateMini.innerHTML !== rotateIconHTML) iconRotateMini.innerHTML = rotateIconHTML;
+
         if (valRotation.textContent !== rotDeg) {
             valRotation.textContent = rotDeg;
             document.getElementById('range-rotation').value = app.sourceRotation;
@@ -222,6 +242,10 @@ export const UI = {
         const spreadText = `${(app.spread * 180 / Math.PI).toFixed(0)}°`;
         const valSpread = document.getElementById('val-spread');
         if (valSpread.textContent !== spreadText) valSpread.textContent = spreadText;
+
+        document.getElementById('range-reflections').value = app.MAX_BOUNCES;
+        const valReflections = document.getElementById('val-reflections');
+        if (valReflections.textContent != app.MAX_BOUNCES) valReflections.textContent = app.MAX_BOUNCES;
 
         const playIcon = document.getElementById('play-icon');
         const playText = document.getElementById('play-text');

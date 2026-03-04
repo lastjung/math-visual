@@ -126,7 +126,7 @@ export const Renderer = {
 
             let baseHue;
             if (colorMode === 'cyan') baseHue = 185;
-            else if (colorMode === 'rainbow') baseHue = t * 360;
+            else if (colorMode === 'rainbow') baseHue = t * 300; // Change 360 to 300 to avoid red-red overlap
             else baseHue = 20 + t * 40;
 
             ctx.save();

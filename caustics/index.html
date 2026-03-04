@@ -15,8 +15,8 @@
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
             </div>
             <div class="logo-text">
-                <h1>LIGHT FLOW LAB</h1>
-                <p>Dynamic Caustics Renderer</p>
+                <h1>LIGHT FLOW</h1>
+                <p>Caustics Lab</p>
             </div>
         </div>
 
@@ -42,17 +42,13 @@
             <div class="control-panel">
                 <div class="panel-header">
                     <span class="panel-title">Simulation</span>
-                    <button class="toggle-btn" id="btn-animate">
-                        <span id="animate-icon"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg></span>
-                        <span id="animate-text">Manual</span>
-                    </button>
                 </div>
 
                 <!-- Source Position Slider -->
                 <div class="setting-row">
                     <div class="setting-label-group">
-                        <label class="setting-label">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f43f5e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+                        <label class="setting-label clickable-label" id="label-revolution">
+                            <span id="animate-icon-mini" style="margin-right: 4px;"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg></span>
                             Revolution
                         </label>
                         <span class="setting-value value-source" id="val-source">-90°</span>
@@ -63,8 +59,8 @@
                 <!-- Source Rotation Slider -->
                 <div class="setting-row">
                     <div class="setting-label-group">
-                        <label class="setting-label">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f43f5e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 12H3m15.4-6.4l-2.1 2.1m2.1 8.6l-2.1-2.1M16 12h5m-15.4 6.4l2.1-2.1m-2.1-8.6l2.1 2.1"/></svg>
+                        <label class="setting-label clickable-label" id="label-rotation">
+                            <span id="rotate-icon-mini" style="margin-right: 4px;"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg></span>
                             Rotation
                         </label>
                         <span class="setting-value value-rotation" id="val-rotation">0°</span>
@@ -106,6 +102,18 @@
                         <span class="setting-value value-spread" id="val-spread">69°</span>
                     </div>
                     <input type="range" id="range-spread" min="0.1" max="5.0" step="0.1" value="1.2">
+                </div>
+
+                <!-- Reflections Slider -->
+                <div class="setting-row">
+                    <div class="setting-label-group">
+                        <label class="setting-label">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12l10-10 10 10-10 10z"/></svg>
+                            REFLECTIONS
+                        </label>
+                        <span class="setting-value value-reflections" id="val-reflections">10</span>
+                    </div>
+                    <input type="range" id="range-reflections" min="1" max="20" value="10">
                 </div>
 
                 <!-- 1. TYPE Selection -->

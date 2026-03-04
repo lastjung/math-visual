@@ -16,8 +16,9 @@ const App = {
     rayNumber: 30,
     raySpeed: 20,
     sourcePos: { x: 0, y: -250 }, 
-    sourceRotation: 0, 
-    isAnimating: false,
+    sourceRotation: 0,
+    isAnimating: false, // Revolution (Orbit)
+    isAutoRotating: false, // Rotation (Spin)
     isFlowing: true,
     isLightVisible: true,
     showAxes: false,
@@ -27,11 +28,11 @@ const App = {
     spread: 1.2,
     flowOffset: 0,
     baseStyle: 'line',
-    flowMode: 'interval',
+    flowMode: 'none',
     useTrail: false,
     useTaper: true,
     useBloom: false,
-    MAX_BOUNCES: 4, // 반사 최대 4번
+    MAX_BOUNCES: 10, // 반사 최대 10번
 
     init() {
         this.canvas = document.getElementById('causticsCanvas');
@@ -69,12 +70,13 @@ const App = {
         this.growth = 0;
         this.colorMode = 'rainbow';
         this.baseStyle = 'line';
-        this.flowMode = 'interval';
+        this.flowMode = 'none';
         this.useTrail = false;
         this.useTaper = true;
         this.useBloom = false;
         this.spread = 1.2;
         this.beamWidth = 1.6;
+        this.MAX_BOUNCES = 10;
 
         document.querySelectorAll('.shape-tab').forEach(b => b.classList.toggle('active', b.dataset.shape === 'circle'));
         document.querySelectorAll('.mode-tab').forEach(b => b.classList.toggle('active', b.dataset.mode === 'rainbow'));
@@ -93,11 +95,18 @@ const App = {
                 // Orbiting logic for Auto Spin
                 const angle = Math.atan2(this.sourcePos.y, this.sourcePos.x);
                 const dist = Math.sqrt(this.sourcePos.x**2 + this.sourcePos.y**2);
-                const newAngle = angle + 0.3 * dt;
+                const rotateSpeed = (this.raySpeed * 0.01); // Link rotate speed to raySpeed
+                const newAngle = angle + rotateSpeed * dt;
                 this.sourcePos = {
                     x: Math.cos(newAngle) * dist,
                     y: Math.sin(newAngle) * dist
                 };
+                UI.update(this);
+            }
+
+            if (this.isAutoRotating) {
+                // Internal Source Rotation (Spin)
+                this.sourceRotation = (this.sourceRotation + 0.5 * dt) % (Math.PI * 2);
                 UI.update(this);
             }
             
