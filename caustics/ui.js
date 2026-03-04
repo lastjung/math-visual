@@ -33,58 +33,85 @@ export const UI = {
             };
         });
 
-        // Animation Toggle
-        const labelRevolution = document.getElementById('label-revolution');
-        labelRevolution.onclick = () => {
-            app.isAnimating = !app.isAnimating;
-            this.update(app);
+        // Auto Mode Toggles
+        const autoLabels = {
+            'label-revolution': 'revolution',
+            'label-rotation': 'rotation',
+            'label-density': 'density',
+            'label-speed': 'speed',
+            'label-spread': 'spread',
+            'label-reflections': 'reflections'
         };
+
+        const config = {
+            revolution: { speed: 0.1, min: -Math.PI, max: Math.PI, get: () => Math.atan2(app.sourcePos.y, app.sourcePos.x) },
+            rotation: { speed: 0.15, min: -Math.PI, max: Math.PI, get: () => app.sourceRotation },
+            density: { speed: 0.2, min: 20, max: 500, get: () => app.rayNumber },
+            speed: { speed: 0.1, min: 0, max: 100, get: () => app.raySpeed },
+            spread: { speed: 0.3, min: 0.1, max: 5.0, get: () => app.spread },
+            reflections: { speed: 0.1, min: 1, max: 20, get: () => app.MAX_BOUNCES }
+        };
+
+        Object.entries(autoLabels).forEach(([id, key]) => {
+            const el = document.getElementById(id);
+            if (el) {
+                el.onclick = () => {
+                    app.autoModes[key] = !app.autoModes[key];
+                    if (app.autoModes[key]) {
+                        // Calculate phase to start seamlessly from current value
+                        const cfg = config[key];
+                        const current = cfg.get();
+                        const norm = (current - cfg.min) / (cfg.max - cfg.min);
+                        // Solve: sin(t * speed + phase) * 0.5 + 0.5 = norm
+                        // sin(...) = (norm - 0.5) * 2
+                        const targetSin = Math.max(-1, Math.min(1, (norm - 0.5) * 2));
+                        app.autoPhases[key] = Math.asin(targetSin) - app.autoTimer * cfg.speed;
+                    }
+                    this.update(app);
+                };
+            }
+        });
 
         // Sliders
         const rangeSource = document.getElementById('range-source');
         
         rangeSource.oninput = (e) => {
             const angle = parseFloat(e.target.value);
-            // 현재 광원과 중심 사이의 거리(반경)를 계산
             const dist = Math.sqrt(app.sourcePos.x**2 + app.sourcePos.y**2);
-            
-            // 거리를 유지하면서 각도만 업데이트
             app.sourcePos = {
                 x: Math.cos(angle) * dist,
                 y: Math.sin(angle) * dist
             };
-            app.isAnimating = false;
+            app.autoModes.revolution = false;
             this.update(app);
         };
 
         const rangeRotation = document.getElementById('range-rotation');
         rangeRotation.oninput = (e) => {
             app.sourceRotation = parseFloat(e.target.value);
-            app.isAutoRotating = false; // Stop auto-rotating on manual input
+            app.autoModes.rotation = false; // Stop auto-rotating on manual input
             this.update(app);
         };
 
-        const labelRotation = document.getElementById('label-rotation');
-        labelRotation.onclick = () => {
-            app.isAutoRotating = !app.isAutoRotating;
-            this.update(app);
-        };
 
         const rangeDensity = document.getElementById('range-density');
         rangeDensity.oninput = (e) => {
             app.rayNumber = parseInt(e.target.value);
+            app.autoModes.density = false;
             this.update(app);
         };
 
         const rangeSpeed = document.getElementById('range-speed');
         rangeSpeed.oninput = (e) => {
             app.raySpeed = parseInt(e.target.value);
+            app.autoModes.speed = false;
             this.update(app);
         };
 
         const rangeSpread = document.getElementById('range-spread');
         rangeSpread.oninput = (e) => {
             app.spread = parseFloat(e.target.value);
+            app.autoModes.spread = false;
             this.update(app);
         };
 
@@ -92,6 +119,7 @@ export const UI = {
         if (rangeReflections) {
             rangeReflections.oninput = (e) => {
                 app.MAX_BOUNCES = parseInt(e.target.value);
+                app.autoModes.reflections = false;
                 this.update(app);
             };
         }
@@ -144,11 +172,12 @@ export const UI = {
             this.update(app);
         };
 
-        // Emit (Light Reset)
+        // Emit (Always Power ON & Reset)
         const btnEmit = document.getElementById('btn-light');
         btnEmit.onclick = () => {
             app.isLightVisible = true;
             app.growth = 0;
+            app.isFlowing = true;
             this.update(app);
         };
 
@@ -168,7 +197,7 @@ export const UI = {
                 const dist = Math.sqrt((x - app.sourcePos.x)**2 + (y - app.sourcePos.y)**2);
                 if (dist < 50) {
                     isDragging = true;
-                    app.isAnimating = false;
+                    app.autoModes.revolution = false;
                     if (e.cancelable) e.preventDefault();
                 }
             }
@@ -193,16 +222,23 @@ export const UI = {
      * Update DOM elements to match current state
      */
     update(app) {
-        const labelRevolution = document.getElementById('label-revolution');
-        const iconMini = document.getElementById('animate-icon-mini');
-        
-        labelRevolution.classList.toggle('active', app.isAnimating);
+        const updateAutoLabel = (id, iconId, isActive) => {
+            const el = document.getElementById(id);
+            const icon = document.getElementById(iconId);
+            if (!el || !icon) return;
+            el.classList.toggle('active', isActive);
+            const html = isActive 
+                ? '<svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>'
+                : '<svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>';
+            if (icon.innerHTML !== html) icon.innerHTML = html;
+        };
 
-        const targetIconHTML = app.isAnimating 
-            ? '<svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>'
-            : '<svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>';
-        
-        if (iconMini.innerHTML !== targetIconHTML) iconMini.innerHTML = targetIconHTML;
+        updateAutoLabel('label-revolution', 'animate-icon-mini', app.autoModes.revolution);
+        updateAutoLabel('label-rotation', 'rotate-icon-mini', app.autoModes.rotation);
+        updateAutoLabel('label-density', 'density-icon-mini', app.autoModes.density);
+        updateAutoLabel('label-speed', 'speed-icon-mini', app.autoModes.speed);
+        updateAutoLabel('label-spread', 'spread-icon-mini', app.autoModes.spread);
+        updateAutoLabel('label-reflections', 'reflections-icon-mini', app.autoModes.reflections);
 
         const angle = Math.atan2(app.sourcePos.y, app.sourcePos.x);
         const rangeSource = document.getElementById('range-source');
@@ -216,15 +252,6 @@ export const UI = {
         const valRotation = document.getElementById('val-rotation');
         const rotDeg = `${(app.sourceRotation * 180 / Math.PI).toFixed(0)}°`;
         
-        const labelRotation = document.getElementById('label-rotation');
-        const iconRotateMini = document.getElementById('rotate-icon-mini');
-        
-        labelRotation.classList.toggle('active', app.isAutoRotating);
-        const rotateIconHTML = app.isAutoRotating 
-            ? '<svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>'
-            : '<svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>';
-        
-        if (iconRotateMini.innerHTML !== rotateIconHTML) iconRotateMini.innerHTML = rotateIconHTML;
 
         if (valRotation.textContent !== rotDeg) {
             valRotation.textContent = rotDeg;
@@ -255,10 +282,12 @@ export const UI = {
             
         if (playIcon.innerHTML !== playHtml) playIcon.innerHTML = playHtml;
         
-        const nPlayText = app.isFlowing ? 'Hold' : 'Play';
+        const nPlayText = app.isFlowing ? 'Hold' : 'Go';
         if (playText.textContent !== nPlayText) playText.textContent = nPlayText;
 
         const lightText = document.getElementById('light-text');
+        const btnLight = document.getElementById('btn-light');
+        btnLight.classList.toggle('active', app.isLightVisible);
         if (lightText.textContent !== 'Emit') lightText.textContent = 'Emit';
 
         const checkAxes = document.getElementById('check-axes');
