@@ -211,6 +211,13 @@ canvas {
   margin-bottom: 32px;
 }
 
+.setting-row-inline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
 .setting-label-group {
   display: flex;
   justify-content: space-between;
@@ -241,6 +248,7 @@ canvas {
 
 input[type=range] {
   -webkit-appearance: none;
+  appearance: none;
   width: 100%;
   height: 4px;
   background: rgba(255, 255, 255, 0.05);
@@ -288,6 +296,39 @@ input[type=range]::-webkit-slider-thumb {
 }
 
 .mode-tab.active {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+.mode-tabs-mini {
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  padding: 3px;
+  display: flex;
+  gap: 3px;
+  width: 100%;
+}
+
+.mini-tab {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.2);
+  padding: 6px 0;
+  border-radius: 8px;
+  font-size: 8px;
+  font-weight: 700;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.mini-tab:hover {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.mini-tab.active {
   background: rgba(255, 255, 255, 0.1);
   color: #fff;
 }
@@ -416,4 +457,44 @@ input[type=range]::-webkit-slider-thumb {
 .toggle-option input:checked + .toggle-track::after {
   left: 16px;
   background: #fff;
+}
+
+/* Chip Checkboxes */
+.checkbox-group {
+  display: flex;
+  gap: 6px;
+}
+
+.chip-checkbox {
+  cursor: pointer;
+  user-select: none;
+}
+
+.chip-checkbox input {
+  display: none;
+}
+
+.chip-checkbox span {
+  display: block;
+  padding: 4px 10px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-white);
+  border-radius: 8px;
+  font-size: 8px;
+  font-weight: 700;
+  color: var(--text-muted);
+  transition: all 0.2s;
+  text-transform: uppercase;
+}
+
+.chip-checkbox input:checked + span {
+  background: rgba(99, 102, 241, 0.2);
+  border-color: var(--accent-indigo);
+  color: #fff;
+  box-shadow: 0 0 10px rgba(99, 102, 241, 0.3);
+}
+
+.chip-checkbox:hover span {
+  border-color: rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.6);
 }

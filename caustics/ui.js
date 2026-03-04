@@ -16,6 +16,11 @@ export const UI = {
                 app.shape = e.target.dataset.shape;
                 document.querySelectorAll('.shape-tab').forEach(b => b.classList.remove('active'));
                 e.target.classList.add('active');
+                
+                // 새로운 탭(도형)으로 변경될 때 이전 동작 정지
+                app.isAnimating = false;
+                app.growth = 0;
+                this.update(app);
             };
         });
 
@@ -73,6 +78,36 @@ export const UI = {
                 this.update(app);
             };
         }
+
+        // Base Style Mini Tabs
+        document.querySelectorAll('#group-base .mini-tab').forEach(btn => {
+            btn.onclick = (e) => {
+                app.baseStyle = e.target.dataset.value;
+                this.update(app);
+            };
+        });
+
+        // Flow Mode Mini Tabs
+        document.querySelectorAll('#group-flow .mini-tab').forEach(btn => {
+            btn.onclick = (e) => {
+                app.flowMode = e.target.dataset.value;
+                this.update(app);
+            };
+        });
+
+        // Effects Checkboxes
+        document.getElementById('check-trail').onchange = (e) => {
+            app.useTrail = e.target.checked;
+            this.update(app);
+        };
+        document.getElementById('check-taper').onchange = (e) => {
+            app.useTaper = e.target.checked;
+            this.update(app);
+        };
+        document.getElementById('check-bloom').onchange = (e) => {
+            app.useBloom = e.target.checked;
+            this.update(app);
+        };
 
         // Reset
         document.getElementById('btn-reset').onclick = () => app.reset();
@@ -137,34 +172,78 @@ export const UI = {
         const icon = document.getElementById('animate-icon');
         const text = document.getElementById('animate-text');
         
-        btnAnimate.classList.toggle('active', app.isAnimating);
-        icon.innerHTML = app.isAnimating 
+        if (btnAnimate.classList.contains('active') !== app.isAnimating) {
+            btnAnimate.classList.toggle('active', app.isAnimating);
+        }
+
+        const targetIconHTML = app.isAnimating 
             ? '<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>'
             : '<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>';
-        text.textContent = app.isAnimating ? 'Auto Spin' : 'Manual';
+        
+        if (icon.innerHTML !== targetIconHTML) icon.innerHTML = targetIconHTML;
+
+        const targetText = app.isAnimating ? 'Auto Spin' : 'Manual';
+        if (text.textContent !== targetText) text.textContent = targetText;
 
         const angle = Math.atan2(app.sourcePos.y, app.sourcePos.x);
-        document.getElementById('range-source').value = angle;
-        document.getElementById('val-source').textContent = `${(angle * 180 / Math.PI).toFixed(0)}°`;
+        const rangeSource = document.getElementById('range-source');
+        // Only update input if it's materially different to prevent interfering with dragging
+        if (Math.abs(parseFloat(rangeSource.value) - angle) > 0.02) rangeSource.value = angle;
+        
+        const degText = `${(angle * 180 / Math.PI).toFixed(0)}°`;
+        const valSource = document.getElementById('val-source');
+        if (valSource.textContent !== degText) valSource.textContent = degText;
         
         document.getElementById('range-density').value = app.rayNumber;
-        document.getElementById('val-density').textContent = app.rayNumber;
+        const valDensity = document.getElementById('val-density');
+        if (valDensity.textContent != app.rayNumber) valDensity.textContent = app.rayNumber;
 
         document.getElementById('range-speed').value = app.raySpeed;
-        document.getElementById('val-speed').textContent = app.raySpeed;
+        const valSpeed = document.getElementById('val-speed');
+        if (valSpeed.textContent != app.raySpeed) valSpeed.textContent = app.raySpeed;
 
-        document.getElementById('val-spread').textContent = `${(app.spread * 180 / Math.PI).toFixed(0)}°`;
+        const spreadText = `${(app.spread * 180 / Math.PI).toFixed(0)}°`;
+        const valSpread = document.getElementById('val-spread');
+        if (valSpread.textContent !== spreadText) valSpread.textContent = spreadText;
 
         const playIcon = document.getElementById('play-icon');
         const playText = document.getElementById('play-text');
-        playIcon.innerHTML = app.isFlowing 
+        const playHtml = app.isFlowing 
             ? '<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>'
             : '<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>';
-        playText.textContent = app.isFlowing ? 'Hold' : 'Play';
+            
+        if (playIcon.innerHTML !== playHtml) playIcon.innerHTML = playHtml;
+        
+        const nPlayText = app.isFlowing ? 'Hold' : 'Play';
+        if (playText.textContent !== nPlayText) playText.textContent = nPlayText;
 
-        document.getElementById('light-text').textContent = 'Emit';
+        const lightText = document.getElementById('light-text');
+        if (lightText.textContent !== 'Emit') lightText.textContent = 'Emit';
 
         const checkAxes = document.getElementById('check-axes');
-        if (checkAxes) checkAxes.checked = app.showAxes;
+        if (checkAxes && checkAxes.checked !== app.showAxes) checkAxes.checked = app.showAxes;
+
+        // Update Mini Tabs
+        document.querySelectorAll('#group-base .mini-tab').forEach(btn => {
+            const isActive = btn.dataset.value === app.baseStyle;
+            if (btn.classList.contains('active') !== isActive) {
+                btn.classList.toggle('active', isActive);
+            }
+        });
+        document.querySelectorAll('#group-flow .mini-tab').forEach(btn => {
+            const isActive = btn.dataset.value === app.flowMode;
+            if (btn.classList.contains('active') !== isActive) {
+                btn.classList.toggle('active', isActive);
+            }
+        });
+
+        // Update Checkboxes
+        const cTrail = document.getElementById('check-trail');
+        const cTaper = document.getElementById('check-taper');
+        const cBloom = document.getElementById('check-bloom');
+        
+        if (cTrail.checked !== app.useTrail) cTrail.checked = app.useTrail;
+        if (cTaper.checked !== app.useTaper) cTaper.checked = app.useTaper;
+        if (cBloom.checked !== app.useBloom) cBloom.checked = app.useBloom;
     }
 };

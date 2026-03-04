@@ -13,20 +13,24 @@ const App = {
     
     // State
     shape: 'circle',
-    rayNumber: 232,
-    raySpeed: 30,
-    sourcePos: { x: 0, y: -250 }, // Initial position relative to center
+    rayNumber: 30,
+    raySpeed: 20,
+    sourcePos: { x: 0, y: -250 }, 
     isAnimating: false,
     isFlowing: true,
     isLightVisible: true,
-    showAxes: true,
+    showAxes: false,
     growth: 0,
-    GROWTH_SPEED: 600, // Pixels per second
-    colorMode: 'cyan',
-    beamWidth: 1.5,
+    colorMode: 'rainbow',
+    beamWidth: 1.6,
     spread: 1.2,
     flowOffset: 0,
-    MAX_BOUNCES: 4,
+    baseStyle: 'line',
+    flowMode: 'interval',
+    useTrail: false,
+    useTaper: true,
+    useBloom: false,
+    MAX_BOUNCES: 4, // 반사 최대 4번
 
     init() {
         this.canvas = document.getElementById('causticsCanvas');
@@ -35,7 +39,7 @@ const App = {
 
         // Initialize sourcePos based on canvas size
         const size = Math.min(window.innerWidth, window.innerHeight) * 0.35;
-        this.sourcePos = { x: 0, y: -size * 0.95 };
+        this.sourcePos = { x: 0, y: -size * 0.7 }; // Move source inside the circle (top)
 
         UI.setupEvents(this);
         this.resize();
@@ -53,20 +57,26 @@ const App = {
 
     reset() {
         this.shape = 'circle';
-        this.rayNumber = 150;
-        this.raySpeed = 30;
+        this.rayNumber = 30;
+        this.raySpeed = 40;
         const size = Math.min(this.canvas.width, this.canvas.height) * 0.35;
-        this.sourcePos = { x: 0, y: -size * 0.95 };
+        this.sourcePos = { x: 0, y: -size * 0.7 };
         this.isAnimating = false;
         this.isFlowing = true;
         this.isLightVisible = true;
-        this.showAxes = true;
+        this.showAxes = false;
         this.growth = 0;
-        this.colorMode = 'cyan';
+        this.colorMode = 'rainbow';
+        this.baseStyle = 'line';
+        this.flowMode = 'interval';
+        this.useTrail = false;
+        this.useTaper = true;
+        this.useBloom = false;
         this.spread = 1.2;
+        this.beamWidth = 1.6;
 
         document.querySelectorAll('.shape-tab').forEach(b => b.classList.toggle('active', b.dataset.shape === 'circle'));
-        document.querySelectorAll('.mode-tab').forEach(b => b.classList.toggle('active', b.dataset.mode === 'cyan'));
+        document.querySelectorAll('.mode-tab').forEach(b => b.classList.toggle('active', b.dataset.mode === 'rainbow'));
 
         UI.update(this);
     },
@@ -91,8 +101,13 @@ const App = {
             }
             
             if (this.isFlowing && this.isLightVisible) {
-                this.flowOffset = (this.flowOffset + this.raySpeed * dt) % 50; // Match [30, 20] dash cycle
-                this.growth += this.GROWTH_SPEED * dt;
+                // Propagation is always linked to speed
+                this.growth += (this.raySpeed * 25) * dt; 
+
+                // Only update flow offset if flow is not None
+                if (this.flowMode !== 'none') {
+                    this.flowOffset = (this.flowOffset + this.raySpeed * 1.5 * dt) % 50;
+                }
             }
             Renderer.draw(this);
             requestAnimationFrame(loop);

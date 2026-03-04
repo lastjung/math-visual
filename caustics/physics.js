@@ -43,36 +43,74 @@ export const Physics = {
     },
 
     /**
-     * Binary search to find where the ray hits the boundary
+     * Find where the ray hits the boundary
+     * Uses fast binary search for internal rays, raymarch only for external
      */
     findBoundaryIntersection(sx, sy, angle, type, size) {
         const dx = Math.cos(angle);
         const dy = Math.sin(angle);
-        let low = 0, high = size * 6;
-        let bestDist = null;
-
-        for(let i=0; i<30; i++) {
-            let mid = (low + high) / 2;
-            let px = sx + dx * mid;
-            let py = sy + dy * mid;
-            
-            let inside = false;
-            if (type === 'circle') inside = (px*px + py*py) < size*size;
-            else if (type === 'ellipse') inside = (px*px)/(size*size) + (py*py)/(size*size*0.36) < 1;
-            else if (type === 'parabola') {
-                // Inside is the region "above" the cup
-                inside = py < (0.5 - Math.pow(px/(size*0.5), 2) * 0.2) * size;
-            }
-            else if (type === 'cardioid') {
+        
+        // Helper to check if a point is inside the shape
+        const checkInside = (px, py) => {
+            if (type === 'circle') return (px*px + py*py) < size*size;
+            if (type === 'ellipse') return (px*px)/(size*size) + (py*py)/(size*size*0.36) < 1;
+            if (type === 'parabola') return py < (0.5 - Math.pow(px/(size*0.5), 2) * 0.2) * size;
+            if (type === 'cardioid') {
                 const cx = px - size*0.3;
-                const r = Math.sqrt(cx*cx + py*py);
-                const theta = Math.atan2(py, cx);
-                inside = r < size * (1 - Math.cos(theta)) * 0.5;
+                return Math.sqrt(cx*cx + py*py) < size * (1 - Math.cos(Math.atan2(py, cx))) * 0.5;
+            }
+            return false;
+        };
+
+        const nudge = size * 0.03;  // Small forward nudge to escape the current boundary
+        const startInside = checkInside(sx + dx * nudge, sy + dy * nudge);
+
+        if (startInside) {
+            // FAST PATH: Ray starts inside → simple binary search (only 20 iterations!)
+            let low = nudge;
+            let high = size * 3;
+            
+            // Verify that high is actually outside
+            if (checkInside(sx + dx * high, sy + dy * high)) {
+                return null; // Shouldn't happen for closed shapes
             }
 
-            if (inside) { low = mid; } 
-            else { high = mid; bestDist = mid; }
+            for (let i = 0; i < 20; i++) {
+                const mid = (low + high) / 2;
+                if (checkInside(sx + dx * mid, sy + dy * mid)) {
+                    low = mid;
+                } else {
+                    high = mid;
+                }
+            }
+            return { x: sx + dx * high, y: sy + dy * high };
+        } else {
+            // EXTERNAL PATH: Ray starts outside → coarse raymarch to find entry
+            const maxDist = size * 3;
+            const step = size * 0.1;  // Big steps (10% of shape size) = max ~30 iterations
+            
+            let crossedDist = null;
+            for (let d = step; d < maxDist; d += step) {
+                if (checkInside(sx + dx * d, sy + dy * d)) {
+                    crossedDist = d;
+                    break;
+                }
+            }
+            
+            if (crossedDist === null) return null;  // Missed the shape
+
+            // Refine with binary search
+            let low = crossedDist - step;
+            let high = crossedDist;
+            for (let i = 0; i < 15; i++) {
+                const mid = (low + high) / 2;
+                if (!checkInside(sx + dx * mid, sy + dy * mid)) {
+                    low = mid;
+                } else {
+                    high = mid;
+                }
+            }
+            return { x: sx + dx * high, y: sy + dy * high };
         }
-        return bestDist ? { x: sx + dx * bestDist, y: sy + dy * bestDist } : null;
     }
 };

@@ -74,7 +74,7 @@ export const Renderer = {
         // Draw Boundary Guide
         ctx.beginPath();
         ctx.lineWidth = 1.5;
-        ctx.strokeStyle = shape === 'parabola' ? 'rgba(255, 255, 255, 0.15)' : 'rgba(255, 255, 255, 0.08)';
+        ctx.strokeStyle = shape === 'parabola' ? 'rgba(255, 255, 255, 0.3)' : 'rgba(255, 255, 255, 0.2)';
         
         const steps = shape === 'parabola' ? 200 : 360;
         for (let i = 0; i <= steps; i++) {
@@ -87,7 +87,7 @@ export const Renderer = {
 
         if (!isLightVisible) return;
 
-        const aimAngle = Math.atan2(-sourcePos.y, -sourcePos.x);
+        const aimAngle = Math.PI / 2; // Light always points downward regardless of source position
 
         for (let i = 0; i < rayNumber; i++) {
             const t = i / Math.max(1, rayNumber - 1);
@@ -107,13 +107,20 @@ export const Renderer = {
             let currAngle = angle;
 
             if (i === 0) {
+                // Fake Bloom for Main Source
                 ctx.save();
-                ctx.fillStyle = '#fff';
-                ctx.shadowBlur = 25;
-                ctx.shadowColor = '#06b6d2';
-                ctx.beginPath();
-                ctx.arc(currX, currY, 6, 0, Math.PI * 2);
-                ctx.fill();
+                ctx.globalCompositeOperation = 'lighter';
+                
+                // Outer glow
+                ctx.beginPath(); ctx.arc(currX, currY, 20, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(6, 182, 210, 0.15)'; ctx.fill();
+                // Inner glow
+                ctx.beginPath(); ctx.arc(currX, currY, 12, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(6, 182, 210, 0.4)'; ctx.fill();
+                // Core
+                ctx.beginPath(); ctx.arc(currX, currY, 6, 0, Math.PI * 2);
+                ctx.fillStyle = '#fff'; ctx.fill();
+                
                 ctx.restore();
             }
 
@@ -135,15 +142,30 @@ export const Renderer = {
             }
             
             let accumulatedDist = 0;
-            const maxTravel = size * 8;
+            const maxTravel = Math.sqrt(w*w + h*h) * 1.2; // Canvas diagonal + margin, NOT 10000
 
             for (let b = 0; b < MAX_BOUNCES; b++) {
-                const hit = Physics.findBoundaryIntersection(currX - centerX, currY - centerY, currAngle, shape, size);
-                if (!hit) break;
+                // strict safety bound: if ray is completely out of canvas, stop and don't draw
+                if (currX < -w || currX > w*2 || currY < -h || currY > h*2) {
+                    break;
+                }
 
-                const nextX = centerX + hit.x;
-                const nextY = centerY + hit.y;
-                const segmentDist = Math.sqrt((nextX - currX)**2 + (nextY - currY)**2);
+                const hit = Physics.findBoundaryIntersection(currX - centerX, currY - centerY, currAngle, shape, size);
+                
+                let nextX, nextY, segmentDist;
+                if (!hit) {
+                    // Escaped shape: draw only to edge of canvas, not infinity
+                    const escapeDist = maxTravel - accumulatedDist;
+                    nextX = currX + Math.cos(currAngle) * escapeDist;
+                    nextY = currY + Math.sin(currAngle) * escapeDist;
+                    segmentDist = escapeDist;
+                } else {
+                    nextX = centerX + hit.x;
+                    nextY = centerY + hit.y;
+                    segmentDist = Math.sqrt((nextX - currX)**2 + (nextY - currY)**2);
+                }
+
+                if (segmentDist < 0.1) break; // Prevent stuck rays
                 
                 if (accumulatedDist > growth) break;
                 
@@ -183,11 +205,21 @@ export const Renderer = {
                 } 
                 else if (baseStyle === 'particle') {
                     const step = 8;
-                    const dotCount = Math.floor(Math.sqrt((drawX-currX)**2 + (drawY-currY)**2) / step);
+                    const pathLen = Math.sqrt((drawX - currX)**2 + (drawY - currY)**2);
+                    // If ray is escaping (!hit), use fewer dots to stay safe
+                    const maxDots = hit ? 150 : 40;
+                    const dotCount = Math.min(Math.floor(pathLen / step), maxDots);
+                    
+                    const pSize = currentWidth * 1.5;
+                    const halfP = pSize * 0.5;
+                    
+                    ctx.beginPath();
                     for (let d = 0; d <= dotCount; d++) {
-                        const px = currX + (drawX - currX) * (d / dotCount);
-                        const py = currY + (drawY - currY) * (d / dotCount);
-                        ctx.beginPath(); ctx.arc(px, py, currentWidth * 0.8, 0, Math.PI * 2); ctx.fill();
+                        const ratio = dotCount === 0 ? 0 : d / dotCount;
+                        const px = currX + (drawX - currX) * ratio;
+                        const py = currY + (drawY - currY) * ratio;
+                        // fillRect is 10x faster than arc() ensuring 60fps
+                        ctx.fillRect(px - halfP, py - halfP, pSize, pSize);
                     }
                 }
                 else if (baseStyle === 'ghost') {
@@ -198,18 +230,33 @@ export const Renderer = {
                     ctx.globalAlpha = 1.0;
                 }
 
-                // Bloom Effect at reflection
-                if (useBloom && !isLastSegment) {
+                // Bloom Effect at reflection (Fake Bloom for high performance)
+                if (useBloom && hit && !isLastSegment) {
+                    const r = currentWidth * 1.5;
+                    const bloomAlpha = Math.min(1.0, alpha * 2.5);
+                    
                     ctx.save();
-                    ctx.shadowBlur = 15;
-                    ctx.shadowColor = `hsla(${baseHue}, 100%, 60%, 0.8)`;
+                    // Outer halo
                     ctx.beginPath();
-                    ctx.arc(nextX, nextY, currentWidth * 1.5, 0, Math.PI * 2);
+                    ctx.arc(nextX, nextY, r * 4.5, 0, Math.PI * 2);
+                    ctx.fillStyle = `hsla(${baseHue}, 100%, 60%, ${bloomAlpha * 0.15})`;
+                    ctx.fill();
+                    
+                    // Inner halo
+                    ctx.beginPath();
+                    ctx.arc(nextX, nextY, r * 2.0, 0, Math.PI * 2);
+                    ctx.fillStyle = `hsla(${baseHue}, 100%, 60%, ${bloomAlpha * 0.4})`;
+                    ctx.fill();
+                    
+                    // Core (brightest)
+                    ctx.beginPath();
+                    ctx.arc(nextX, nextY, r, 0, Math.PI * 2);
+                    ctx.fillStyle = `hsla(${baseHue}, 100%, 80%, ${bloomAlpha})`;
                     ctx.fill();
                     ctx.restore();
                 }
 
-                if (isLastSegment) break;
+                if (!hit || isLastSegment) break;
 
                 accumulatedDist += segmentDist;
                 const normal = Physics.getNormal(hit.x, hit.y, shape, size);

@@ -67,9 +67,9 @@
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#06b6d2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
                             RAY NUMBER
                         </label>
-                        <span class="setting-value value-density" id="val-density">150</span>
+                        <span class="setting-value value-density" id="val-density">30</span>
                     </div>
-                    <input type="range" id="range-density" min="20" max="500" value="150">
+                    <input type="range" id="range-density" min="20" max="500" value="30">
                 </div>
 
                 <!-- Ray Speed Slider -->
@@ -79,9 +79,9 @@
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
                             RAY SPEED
                         </label>
-                        <span class="setting-value value-speed" id="val-speed">60</span>
+                        <span class="setting-value value-speed" id="val-speed">40</span>
                     </div>
-                    <input type="range" id="range-speed" min="0" max="100" value="30">
+                    <input type="range" id="range-speed" min="0" max="100" value="40">
                 </div>
 
                 <!-- Beam Spread Slider -->
@@ -96,19 +96,58 @@
                     <input type="range" id="range-spread" min="0.1" max="5.0" step="0.1" value="1.2">
                 </div>
 
-                <!-- Axes Toggle -->
-                <div class="setting-row" style="margin-top: 12px; margin-bottom: 24px;">
+                <!-- 1. TYPE Selection -->
+                <div class="setting-row-inline" style="margin-top: 12px;">
+                    <label class="setting-label">TYPE</label>
+                    <div class="mode-tabs-mini" id="group-base" style="width: 180px;">
+                        <button class="mini-tab active" data-value="line">Line</button>
+                        <button class="mini-tab" data-value="particle">Part.</button>
+                        <button class="mini-tab" data-value="ghost">Ghost</button>
+                    </div>
+                </div>
+
+                <!-- 2. FLOW Selection -->
+                <div class="setting-row-inline" style="margin-top: 8px;">
+                    <label class="setting-label">FLOW</label>
+                    <div class="mode-tabs-mini" id="group-flow" style="width: 180px;">
+                        <button class="mini-tab active" data-value="none">None</button>
+                        <button class="mini-tab" data-value="interval">Dash</button>
+                        <button class="mini-tab" data-value="pulse">Pulse</button>
+                    </div>
+                </div>
+
+                <!-- 3. EFFECTS Selection -->
+                <div class="setting-row-inline" style="margin-top: 16px; justify-content: flex-start; gap: 12px;">
+                    <label class="setting-label">EFFECTS</label>
+                    <div class="checkbox-group">
+                        <label class="chip-checkbox">
+                            <input type="checkbox" id="check-trail">
+                            <span>Trail</span>
+                        </label>
+                        <label class="chip-checkbox">
+                            <input type="checkbox" id="check-taper">
+                            <span>Taper</span>
+                        </label>
+                        <label class="chip-checkbox">
+                            <input type="checkbox" id="check-bloom">
+                            <span>Bloom</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- 4. BOTTOM AXES -->
+                <div class="setting-row" style="margin-top: 24px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 16px;">
                     <label class="toggle-option">
-                        <input type="checkbox" id="check-axes" checked>
+                        <input type="checkbox" id="check-axes">
                         <span class="toggle-track"></span>
-                        <span class="setting-label" style="font-weight: 700;">SHOW AXES</span>
+                        <span class="setting-label">SHOW GRID AXES</span>
                     </label>
                 </div>
 
                 <!-- Color Modes -->
                 <div class="mode-tabs">
-                    <button class="mode-tab active" data-mode="cyan">Cyan</button>
-                    <button class="mode-tab" data-mode="rainbow">Rainbow</button>
+                    <button class="mode-tab" data-mode="cyan">Cyan</button>
+                    <button class="mode-tab active" data-mode="rainbow">Rainbow</button>
                     <button class="mode-tab" data-mode="sunset">Sunset</button>
                 </div>
 
