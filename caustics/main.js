@@ -16,6 +16,7 @@ const App = {
     rayNumber: 30,
     raySpeed: 20,
     sourcePos: { x: 0, y: -250 }, 
+    sourceRotation: 0, 
     isAnimating: false,
     isFlowing: true,
     isLightVisible: true,

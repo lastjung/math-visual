@@ -50,7 +50,7 @@ export const Renderer = {
      * Main draw call: Renders the entire simulation frame
      */
     draw(state) {
-        const { ctx, canvas, shape, rayNumber, sourcePos, isLightVisible, spread, flowOffset, beamWidth, growth, MAX_BOUNCES, colorMode, showAxes, baseStyle, flowMode, useTrail, useTaper, useBloom } = state;
+        const { ctx, canvas, shape, rayNumber, sourcePos, sourceRotation, isLightVisible, spread, flowOffset, beamWidth, growth, MAX_BOUNCES, colorMode, showAxes, baseStyle, flowMode, useTrail, useTaper, useBloom } = state;
         const w = canvas.width;
         const h = canvas.height;
         const centerX = w / 2;
@@ -99,7 +99,7 @@ export const Renderer = {
                 angle = Math.PI / 2; // Strictly vertical (downward)
             } else {
                 startPos = { x: sourcePos.x, y: sourcePos.y };
-                angle = aimAngle + (t - 0.5) * spread;
+                angle = aimAngle + sourceRotation + (t - 0.5) * spread;
             }
 
             let currX = centerX + startPos.x;

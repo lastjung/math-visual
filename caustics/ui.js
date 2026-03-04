@@ -57,6 +57,12 @@ export const UI = {
             this.update(app);
         };
 
+        const rangeRotation = document.getElementById('range-rotation');
+        rangeRotation.oninput = (e) => {
+            app.sourceRotation = parseFloat(e.target.value);
+            this.update(app);
+        };
+
         const rangeDensity = document.getElementById('range-density');
         rangeDensity.oninput = (e) => {
             app.rayNumber = parseInt(e.target.value);
@@ -197,6 +203,13 @@ export const UI = {
         const degText = `${(angle * 180 / Math.PI).toFixed(0)}°`;
         const valSource = document.getElementById('val-source');
         if (valSource.textContent !== degText) valSource.textContent = degText;
+
+        const valRotation = document.getElementById('val-rotation');
+        const rotDeg = `${(app.sourceRotation * 180 / Math.PI).toFixed(0)}°`;
+        if (valRotation.textContent !== rotDeg) {
+            valRotation.textContent = rotDeg;
+            document.getElementById('range-rotation').value = app.sourceRotation;
+        }
         
         document.getElementById('range-density').value = app.rayNumber;
         const valDensity = document.getElementById('val-density');
