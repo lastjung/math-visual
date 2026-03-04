@@ -55,9 +55,12 @@
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f43f5e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
                             SOURCE POSITION
                         </label>
-                        <span class="setting-value value-source" id="val-source">0°</span>
+                        <div style="display: flex; gap: 8px; align-items: center;">
+                            <button id="btn-rotate-30" class="mini-action-btn" title="Rotate +30°">+30°</button>
+                            <span class="setting-value value-source" id="val-source">-90°</span>
+                        </div>
                     </div>
-                    <input type="range" id="range-source" min="-3.14159" max="3.14159" step="0.01" value="0">
+                    <input type="range" id="range-source" min="-3.14159" max="3.14159" step="0.01" value="-1.571">
                 </div>
 
                 <!-- Ray Number Slider -->
@@ -67,9 +70,9 @@
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#06b6d2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
                             RAY NUMBER
                         </label>
-                        <span class="setting-value value-density" id="val-density">30</span>
+                        <span class="setting-value value-density" id="val-density">60</span>
                     </div>
-                    <input type="range" id="range-density" min="20" max="500" value="30">
+                    <input type="range" id="range-density" min="20" max="500" value="60">
                 </div>
 
                 <!-- Ray Speed Slider -->

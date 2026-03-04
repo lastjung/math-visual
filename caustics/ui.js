@@ -42,12 +42,32 @@ export const UI = {
 
         // Sliders
         const rangeSource = document.getElementById('range-source');
+        
+        // +30도 회전 버튼 로직
+        const btnRotate30 = document.getElementById('btn-rotate-30');
+        if (btnRotate30) {
+            btnRotate30.onclick = () => {
+                const currentAngle = Math.atan2(app.sourcePos.y, app.sourcePos.x);
+                const dist = Math.sqrt(app.sourcePos.x**2 + app.sourcePos.y**2);
+                const newAngle = currentAngle + (30 * Math.PI / 180);
+                
+                app.sourcePos = {
+                    x: Math.cos(newAngle) * dist,
+                    y: Math.sin(newAngle) * dist
+                };
+                this.update(app);
+            };
+        }
+
         rangeSource.oninput = (e) => {
             const angle = parseFloat(e.target.value);
-            const size = Math.min(app.canvas.width, app.canvas.height) * 0.35;
+            // 현재 광원과 중심 사이의 거리(반경)를 계산
+            const dist = Math.sqrt(app.sourcePos.x**2 + app.sourcePos.y**2);
+            
+            // 거리를 유지하면서 각도만 업데이트
             app.sourcePos = {
-                x: Math.cos(angle) * size * 0.95,
-                y: Math.sin(angle) * size * 0.95
+                x: Math.cos(angle) * dist,
+                y: Math.sin(angle) * dist
             };
             app.isAnimating = false;
             this.update(app);

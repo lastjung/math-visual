@@ -57,7 +57,7 @@ const App = {
 
     reset() {
         this.shape = 'circle';
-        this.rayNumber = 30;
+        this.rayNumber = 60;
         this.raySpeed = 40;
         const size = Math.min(this.canvas.width, this.canvas.height) * 0.35;
         this.sourcePos = { x: 0, y: -size * 0.7 };
