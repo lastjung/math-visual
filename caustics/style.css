@@ -149,8 +149,8 @@ canvas {
 /* Sidebar Controls */
 .controls-sidebar {
   position: absolute;
-  top: 32px;
-  right: 32px;
+  top: 20px;
+  right: 20px;
   width: 288px;
   display: flex;
   flex-direction: column;
@@ -163,7 +163,7 @@ canvas {
   backdrop-filter: blur(30px);
   border: 1px solid var(--border-white);
   border-radius: 32px;
-  padding: 28px;
+  padding: 18px 20px;
   box-shadow: 0 24px 48px rgba(0, 0, 0, 0.4);
 }
 
@@ -172,8 +172,8 @@ canvas {
   justify-content: space-between;
   align-items: center;
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-  padding-bottom: 20px;
-  margin-bottom: 32px;
+  padding-bottom: 12px;
+  margin-bottom: 20px;
 }
 
 .panel-title {
@@ -208,7 +208,7 @@ canvas {
 
 /* Settings Items */
 .setting-row {
-  margin-bottom: 32px;
+  margin-bottom: 16px;
 }
 
 .setting-row-inline {
@@ -222,7 +222,7 @@ canvas {
   display: flex;
   justify-content: space-between;
   align-items: flex-end;
-  margin-bottom: 12px;
+  margin-bottom: 6px;
 }
 
 .setting-label {
@@ -278,7 +278,7 @@ input[type=range]::-webkit-slider-thumb {
   padding: 4px;
   display: flex;
   gap: 4px;
-  margin-bottom: 24px;
+  margin-bottom: 16px;
 }
 
 .mode-tab {
