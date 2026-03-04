@@ -19,7 +19,7 @@ const App = {
     sourcePos: { x: 0, y: -250 }, 
     sourceRotation: 0,
     isFlowing: true, 
-    isLightVisible: false, // Default Light OFF on startup
+    isLightVisible: true, // Default Light OFF on startup
     showAxes: false,
     growth: 0,
     colorMode: 'rainbow',
@@ -27,9 +27,9 @@ const App = {
     spread: 1.2,
     flowOffset: 0,
     baseStyle: 'line',
-    flowMode: 'none',
-    useTrail: false,
-    useTaper: true,
+    flowMode: 'wave',
+    useTrail: true,
+    useTaper: false,
     useBloom: false,
     MAX_BOUNCES: 10, // 반사 최대 10번
     
@@ -80,18 +80,18 @@ const App = {
     reset() {
         this.shape = 'circle';
         this.rayNumber = 30;
-        this.raySpeed = 40;
+        this.raySpeed = 20;
         const size = Math.min(this.canvas.width, this.canvas.height) * 0.35;
         this.sourcePos = { x: 0, y: -size * 0.7 };
         this.isFlowing = true;
-        this.isLightVisible = false;
+        this.isLightVisible = true;
         this.showAxes = false;
         this.growth = 0;
         this.colorMode = 'rainbow';
         this.baseStyle = 'line';
-        this.flowMode = 'none';
-        this.useTrail = false;
-        this.useTaper = true;
+        this.flowMode = 'wave';
+        this.useTrail = true;
+        this.useTaper = false;
         this.useBloom = false;
         this.spread = 1.2;
         this.beamWidth = 1.6;

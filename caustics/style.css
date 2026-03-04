@@ -148,6 +148,7 @@ canvas {
 }
 
 /* Sidebar Controls */
+/* Sidebar Controls */
 .controls-sidebar {
   position: absolute;
   top: 20px;
@@ -240,12 +241,30 @@ canvas {
 .setting-value {
   font-family: ui-monospace, monospace;
   font-size: 14px;
+  font-weight: 700;
 }
 
-.value-source { color: var(--accent-rose); font-weight: 500; }
-.value-density { color: var(--accent-cyan); font-weight: 700; font-size: 18px; }
-.value-speed { color: #10b981; font-weight: 500; }
-.value-spread { color: var(--accent-indigo); font-weight: 500; }
+/* Base Colors for Rows */
+.row-revolution { --row-accent: #38bdf8; } /* Light Blue */
+.row-rotation   { --row-accent: #fbbf24; } /* Amber */
+.row-spread     { --row-accent: #818cf8; } /* Indigo */
+.row-density    { --row-accent: #22d3ee; } /* Cyan */
+.row-speed      { --row-accent: #34d399; } /* Emerald */
+.row-reflections { --row-accent: #e2e8f0; } /* Slate */
+
+/* Apply Row Accent to Label and Value */
+.setting-row .setting-label { color: rgba(148, 163, 184, 0.7); transition: color 0.3s; }
+.setting-row .setting-value { color: var(--row-accent); transition: color 0.3s; }
+
+/* AUTO Mode - RED Override */
+.setting-row.auto-active { --row-accent: #ef4444 !important; }
+.setting-row.auto-active .setting-label { color: #ef4444; }
+.setting-row.auto-active .setting-value { color: #ef4444; }
+.setting-row.auto-active input[type=range]::-webkit-slider-thumb { 
+  background: #ef4444 !important;
+  box-shadow: 0 0 10px rgba(239, 68, 68, 0.5) !important;
+}
+
 
 input[type=range] {
   -webkit-appearance: none;
@@ -263,13 +282,11 @@ input[type=range]::-webkit-slider-thumb {
   height: 16px;
   border-radius: 50%;
   border: 2px solid #fff;
+  background: var(--row-accent, var(--accent-indigo));
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
   cursor: pointer;
   transition: all 0.2s;
 }
-
-#range-source::-webkit-slider-thumb { background: var(--accent-rose); box-shadow: 0 0 10px rgba(244, 63, 94, 0.4); }
-#range-density::-webkit-slider-thumb { background: var(--accent-cyan); box-shadow: 0 0 10px rgba(6, 182, 210, 0.4); }
-#range-spread::-webkit-slider-thumb { background: var(--accent-indigo); box-shadow: 0 0 10px rgba(99, 102, 241, 0.4); }
 
 /* Mode Select Caps */
 .mode-tabs {
@@ -395,6 +412,7 @@ input[type=range]::-webkit-slider-thumb {
   font-size: 11px;
   font-weight: 900;
   color: var(--accent-indigo);
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
   margin-bottom: 8px;
   display: flex;
   align-items: center;
@@ -450,7 +468,7 @@ input[type=range]::-webkit-slider-thumb {
 }
 
 .toggle-option input:checked + .toggle-track {
-  background: var(--accent-indigo);
+  background: var(--row-accent, var(--accent-indigo));
   border-color: transparent;
   box-shadow: 0 0 12px rgba(99, 102, 241, 0.4);
 }

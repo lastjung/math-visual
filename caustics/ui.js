@@ -174,12 +174,22 @@ export const UI = {
 
         // Emit (Always Power ON & Reset)
         const btnEmit = document.getElementById('btn-light');
-        btnEmit.onclick = () => {
+        const triggerEmit = () => {
             app.isLightVisible = true;
             app.growth = 0;
             app.isFlowing = true;
             this.update(app);
         };
+
+        btnEmit.onclick = triggerEmit;
+
+        // Space bar shortcut for Emit
+        window.addEventListener('keydown', (e) => {
+            if (e.code === 'Space') {
+                e.preventDefault(); // Prevent page scrolling
+                triggerEmit();
+            }
+        });
 
         // Mouse/Touch Interaction
         let isDragging = false;
@@ -227,6 +237,11 @@ export const UI = {
             const icon = document.getElementById(iconId);
             if (!el || !icon) return;
             el.classList.toggle('active', isActive);
+            
+            // Toggle red highlight on the entire row
+            const row = el.closest('.setting-row');
+            if (row) row.classList.toggle('auto-active', isActive);
+
             const html = isActive 
                 ? '<svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>'
                 : '<svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>';
