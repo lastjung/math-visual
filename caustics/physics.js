@@ -10,7 +10,7 @@ export const Physics = {
     getShapePoint(rad, type, size) {
         switch(type) {
             case 'circle': return { x: Math.cos(rad) * size, y: Math.sin(rad) * size };
-            case 'ellipse': return { x: Math.cos(rad) * size, y: Math.sin(rad) * size * 0.6 };
+            case 'ellipse': return { x: Math.cos(rad) * size * 1.1, y: Math.sin(rad) * size * 1.1 * 0.6 };
             case 'cardioid': 
                 const r = size * (1 - Math.cos(rad)) * 0.5;
                 return { x: r * Math.cos(rad) + size*0.3, y: r * Math.sin(rad) };
@@ -53,7 +53,7 @@ export const Physics = {
         // Helper to check if a point is inside the shape
         const checkInside = (px, py) => {
             if (type === 'circle') return (px*px + py*py) < size*size;
-            if (type === 'ellipse') return (px*px)/(size*size) + (py*py)/(size*size*0.36) < 1;
+            if (type === 'ellipse') return (px*px)/(size*size*1.21) + (py*py)/(size*size*1.21*0.36) < 1;
             if (type === 'parabola') return py < (0.5 - Math.pow(px/(size*0.5), 2) * 0.2) * size;
             if (type === 'cardioid') {
                 const cx = px - size*0.3;

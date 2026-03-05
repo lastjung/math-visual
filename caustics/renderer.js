@@ -87,7 +87,7 @@ export const Renderer = {
 
         // Draw Ellipse Foci
         if (shape === 'ellipse') {
-            const fociDist = size * 0.8; // c = sqrt(a^2 - b^2) where a=size, b=size*0.6
+            const fociDist = (size * 1.1) * 0.8; // c = sqrt(a^2 - b^2) where a=size*1.1, b=size*1.1*0.6
             const fociList = [{x: -fociDist, y: 0}, {x: fociDist, y: 0}];
             
             ctx.save();
