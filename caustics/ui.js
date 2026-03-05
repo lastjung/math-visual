@@ -178,16 +178,51 @@ export const UI = {
             app.isLightVisible = true;
             app.growth = 0;
             app.isFlowing = true;
+            app.emitStartTime = performance.now();
             this.update(app);
         };
 
         btnEmit.onclick = triggerEmit;
 
-        // Space bar shortcut for Emit
+        // Keyboard Shortcuts
+        const keyMap = {
+            'Digit1': 'revolution',
+            'Digit2': 'rotation',
+            'Digit3': 'spread',
+            'Digit4': 'density',
+            'Digit5': 'speed',
+            'Digit6': 'reflections'
+        };
+
         window.addEventListener('keydown', (e) => {
+            // Space bar shortcut for Emit
             if (e.code === 'Space') {
-                e.preventDefault(); // Prevent page scrolling
+                e.preventDefault(); 
                 triggerEmit();
+                return;
+            }
+
+            // Digit keys for Auto Modes
+            const autoKey = keyMap[e.code];
+            if (autoKey) {
+                e.preventDefault();
+                app.autoModes[autoKey] = !app.autoModes[autoKey];
+                
+                if (app.autoModes[autoKey]) {
+                    const cfg = config[autoKey];
+                    const current = cfg.get();
+                    const norm = (current - cfg.min) / (cfg.max - cfg.min);
+                    const targetSin = Math.max(-1, Math.min(1, (norm - 0.5) * 2));
+                    app.autoPhases[autoKey] = Math.asin(targetSin) - app.autoTimer * cfg.speed;
+                }
+                this.update(app);
+                return;
+            }
+
+            // Left Arrow for Reset
+            if (e.code === 'ArrowLeft') {
+                e.preventDefault();
+                app.reset();
             }
         });
 

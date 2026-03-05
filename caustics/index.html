@@ -37,6 +37,9 @@
             <div class="drag-hint">Drag to direct the light flow</div>
         </section>
 
+        <!-- HUD Timer -->
+        <div id="hud-timer" class="hud-timer">00:00.00</div>
+
         <!-- Sidebar Section -->
         <aside class="controls-sidebar">
             <div class="control-panel">
@@ -49,7 +52,7 @@
                     <div class="setting-label-group">
                         <label class="setting-label clickable-label" id="label-revolution">
                             <span id="animate-icon-mini" style="margin-right: 4px;"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg></span>
-                            Revolution
+                            1. REVOLUTION
                         </label>
                         <span class="setting-value value-source" id="val-source">-90°</span>
                     </div>
@@ -61,7 +64,7 @@
                     <div class="setting-label-group">
                         <label class="setting-label clickable-label" id="label-rotation">
                             <span id="rotate-icon-mini" style="margin-right: 4px;"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg></span>
-                            Rotation
+                            2. ROTATION
                         </label>
                         <span class="setting-value value-rotation" id="val-rotation">0°</span>
                     </div>
@@ -73,7 +76,7 @@
                     <div class="setting-label-group">
                         <label class="setting-label clickable-label" id="label-spread">
                             <span id="spread-icon-mini" style="margin-right: 4px;"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg></span>
-                            BEAM SPREAD
+                            3. BEAM SPREAD
                         </label>
                         <span class="setting-value value-spread" id="val-spread">69°</span>
                     </div>
@@ -85,7 +88,7 @@
                     <div class="setting-label-group">
                         <label class="setting-label clickable-label" id="label-density">
                             <span id="density-icon-mini" style="margin-right: 4px;"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg></span>
-                            RAY NUMBER
+                            4. RAY NUMBER
                         </label>
                         <span class="setting-value value-density" id="val-density">30</span>
                     </div>
@@ -97,7 +100,7 @@
                     <div class="setting-label-group">
                         <label class="setting-label clickable-label" id="label-speed">
                             <span id="speed-icon-mini" style="margin-right: 4px;"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg></span>
-                            RAY SPEED
+                            5. RAY SPEED
                         </label>
                         <span class="setting-value value-speed" id="val-speed">20</span>
                     </div>
@@ -109,7 +112,7 @@
                     <div class="setting-label-group">
                         <label class="setting-label clickable-label" id="label-reflections">
                             <span id="reflections-icon-mini" style="margin-right: 4px;"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg></span>
-                            REFLECTIONS
+                            6. REFLECTIONS
                         </label>
                         <span class="setting-value value-reflections" id="val-reflections">10</span>
                     </div>
@@ -145,7 +148,7 @@
                             <span>Trail</span>
                         </label>
                         <label class="chip-checkbox">
-                            <input type="checkbox" id="check-taper">
+                            <input type="checkbox" id="check-taper" checked>
                             <span>Taper</span>
                         </label>
                         <label class="chip-checkbox">

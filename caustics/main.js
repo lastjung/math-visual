@@ -29,9 +29,17 @@ const App = {
     baseStyle: 'line',
     flowMode: 'wave',
     useTrail: true,
-    useTaper: false,
+    useTaper: true,
     useBloom: false,
     MAX_BOUNCES: 10, // 반사 최대 10번
+    emitStartTime: null,
+
+    formatTime(seconds) {
+        const mins = Math.floor(seconds / 60);
+        const secs = Math.floor(seconds % 60);
+        const ms = Math.floor((seconds % 1) * 100);
+        return `LAPSE: ${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}.${ms.toString().padStart(2, '0')}`;
+    },
     
     autoModes: {
         revolution: false,
@@ -58,6 +66,7 @@ const App = {
         this.canvas = document.getElementById('causticsCanvas');
         this.ctx = this.canvas.getContext('2d');
         this.container = document.getElementById('container');
+        this.hudElement = document.getElementById('hud-timer');
 
         // Initialize sourcePos based on canvas size
         const size = Math.min(window.innerWidth, window.innerHeight) * 0.35;
@@ -83,19 +92,20 @@ const App = {
         this.raySpeed = 20;
         const size = Math.min(this.canvas.width, this.canvas.height) * 0.35;
         this.sourcePos = { x: 0, y: -size * 0.7 };
-        this.isFlowing = true;
-        this.isLightVisible = true;
+        this.isFlowing = false;
+        this.isLightVisible = false;
         this.showAxes = false;
         this.growth = 0;
         this.colorMode = 'rainbow';
         this.baseStyle = 'line';
         this.flowMode = 'wave';
         this.useTrail = true;
-        this.useTaper = false;
+        this.useTaper = true;
         this.useBloom = false;
         this.spread = 1.2;
         this.beamWidth = 1.6;
         this.MAX_BOUNCES = 10;
+        this.emitStartTime = null;
 
         // Reset auto modes and phases
         this.autoModes = {
@@ -180,7 +190,7 @@ const App = {
             if (this.isFlowing && this.isLightVisible) {
                 // Use safeDt: prevent negative values and massive jumps (background sleep)
                 const safeDt = Math.max(0, Math.min(dt, 0.1)); 
-                this.growth += (this.raySpeed * 25) * safeDt; 
+                this.growth += (this.raySpeed * 8) * safeDt; 
                 
                 // Cap growth at a safe level (diagonal of canvas * 5) to ensure stability
                 const maxCap = Math.sqrt(this.canvas.width**2 + this.canvas.height**2) * 5;
@@ -188,6 +198,18 @@ const App = {
 
                 if (this.flowMode !== 'none') {
                     this.flowOffset = (this.flowOffset + this.raySpeed * 1.5 * safeDt) % 50;
+                }
+            }
+
+            // HUD Update
+            if (this.hudElement) {
+                if (this.emitStartTime) {
+                    const elapsed = (performance.now() - this.emitStartTime) / 1000;
+                    this.hudElement.textContent = this.formatTime(elapsed);
+                    this.hudElement.classList.add('visible');
+                } else {
+                    this.hudElement.classList.remove('visible');
+                    this.hudElement.textContent = "00:00.00";
                 }
             }
             Renderer.draw(this);

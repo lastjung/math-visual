@@ -105,14 +105,11 @@ export const Renderer = {
             const currAngle = angle;
 
             if (i === 0) {
-                // Always draw Light Source
+                // Original minimal light source
                 ctx.save();
-                ctx.globalCompositeOperation = 'lighter';
-                ctx.beginPath(); ctx.arc(currX, currY, 20, 0, Math.PI * 2);
-                ctx.fillStyle = 'rgba(6, 182, 210, 0.15)'; ctx.fill();
-                ctx.beginPath(); ctx.arc(currX, currY, 12, 0, Math.PI * 2);
-                ctx.fillStyle = 'rgba(6, 182, 210, 0.4)'; ctx.fill();
-                ctx.beginPath(); ctx.arc(currX, currY, 6, 0, Math.PI * 2);
+                ctx.beginPath(); ctx.arc(currX, currY, 10, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.1)'; ctx.fill();
+                ctx.beginPath(); ctx.arc(currX, currY, 4, 0, Math.PI * 2);
                 ctx.fillStyle = '#fff'; ctx.fill();
                 ctx.restore();
             }
@@ -173,7 +170,7 @@ export const Renderer = {
                     isLastSegment = true;
                 }
 
-                let alpha = (30 / rayNumber) * (1 - b/MAX_BOUNCES);
+                let alpha = (5 / rayNumber) * (1 - b/MAX_BOUNCES);
                 if (flowMode === 'pulse') {
                     const pulse = Math.sin((accumulatedDist - flowOffset * 10) * 0.02) * 0.5 + 0.5;
                     alpha *= (0.2 + 0.8 * pulse);
