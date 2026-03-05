@@ -87,7 +87,7 @@ const App = {
 
 
     reset() {
-        this.shape = 'circle';
+        // this.shape = 'circle'; // Keep current shape
         this.rayNumber = 30;
         this.raySpeed = 20;
         const size = Math.min(this.canvas.width, this.canvas.height) * 0.35;
@@ -127,7 +127,7 @@ const App = {
         this.autoTimer = 0;
         this.sourceRotation = 0; // Ensure sourceRotation is reset
 
-        document.querySelectorAll('.shape-tab').forEach(b => b.classList.toggle('active', b.dataset.shape === 'circle'));
+        document.querySelectorAll('.shape-tab').forEach(b => b.classList.toggle('active', b.dataset.shape === this.shape));
         document.querySelectorAll('.mode-tab').forEach(b => b.classList.toggle('active', b.dataset.mode === 'rainbow'));
 
         UI.update(this);

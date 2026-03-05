@@ -85,6 +85,25 @@ export const Renderer = {
         }
         ctx.stroke();
 
+        // Draw Ellipse Foci
+        if (shape === 'ellipse') {
+            const fociDist = size * 0.8; // c = sqrt(a^2 - b^2) where a=size, b=size*0.6
+            const fociList = [{x: -fociDist, y: 0}, {x: fociDist, y: 0}];
+            
+            ctx.save();
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+            ctx.lineWidth = 1;
+            fociList.forEach(f => {
+                const fx = centerX + f.x;
+                const fy = centerY + f.y;
+                
+                // Draw small crosshair
+                ctx.beginPath(); ctx.moveTo(fx - 5, fy); ctx.lineTo(fx + 5, fy); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(fx, fy - 5); ctx.lineTo(fx, fy + 5); ctx.stroke();
+            });
+            ctx.restore();
+        }
+
         const aimAngle = Math.PI / 2;
 
         for (let i = 0; i < rayNumber; i++) {
