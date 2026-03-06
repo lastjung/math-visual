@@ -13,13 +13,12 @@ export const UI = {
         // Shape Tabs
         document.querySelectorAll('.shape-tab').forEach(btn => {
             btn.onclick = (e) => {
-                app.shape = e.target.dataset.shape;
+                const nextShape = e.target.dataset.shape;
+                app.shape = nextShape;
                 document.querySelectorAll('.shape-tab').forEach(b => b.classList.remove('active'));
                 e.target.classList.add('active');
-                
-                // 새로운 탭(도형)으로 변경될 때 이전 동작 정지
-                app.isAnimating = false;
-                // app.growth = 0; 
+
+                app.applyShapeSwitchReset(nextShape);
                 this.update(app);
             };
         });
@@ -48,25 +47,26 @@ export const UI = {
             rotation: { speed: 0.15, min: -Math.PI, max: Math.PI, get: () => app.sourceRotation },
             density: { speed: 0.2, min: 20, max: 500, get: () => app.rayNumber },
             speed: { speed: 0.1, min: 0, max: 100, get: () => app.raySpeed },
-            spread: { speed: 0.3, min: 0.1, max: 5.0, get: () => app.spread },
+            spread: { speed: 0.15, min: 0.1, max: 5.0, get: () => app.spread },
             reflections: { speed: 0.1, min: 1, max: 20, get: () => app.MAX_BOUNCES }
+        };
+
+        const setAutoMode = (key, enabled) => {
+            app.autoModes[key] = enabled;
+            if (!enabled) return;
+            const cfg = config[key];
+            const current = cfg.get();
+            const norm = (current - cfg.min) / (cfg.max - cfg.min);
+            const targetSin = Math.max(-1, Math.min(1, (norm - 0.5) * 2));
+            app.autoPhases[key] = Math.asin(targetSin) - app.autoTimer * cfg.speed;
         };
 
         Object.entries(autoLabels).forEach(([id, key]) => {
             const el = document.getElementById(id);
             if (el) {
                 el.onclick = () => {
-                    app.autoModes[key] = !app.autoModes[key];
-                    if (app.autoModes[key]) {
-                        // Calculate phase to start seamlessly from current value
-                        const cfg = config[key];
-                        const current = cfg.get();
-                        const norm = (current - cfg.min) / (cfg.max - cfg.min);
-                        // Solve: sin(t * speed + phase) * 0.5 + 0.5 = norm
-                        // sin(...) = (norm - 0.5) * 2
-                        const targetSin = Math.max(-1, Math.min(1, (norm - 0.5) * 2));
-                        app.autoPhases[key] = Math.asin(targetSin) - app.autoTimer * cfg.speed;
-                    }
+                    setAutoMode(key, !app.autoModes[key]);
+                    app.isSimulationMode = false;
                     this.update(app);
                 };
             }
@@ -120,6 +120,15 @@ export const UI = {
             rangeReflections.oninput = (e) => {
                 app.MAX_BOUNCES = parseInt(e.target.value);
                 app.autoModes.reflections = false;
+                app.isSimulationMode = false;
+                this.update(app);
+            };
+        }
+
+        const rangeAlpha = document.getElementById('range-alpha');
+        if (rangeAlpha) {
+            rangeAlpha.oninput = (e) => {
+                app.alphaIntensity = parseFloat(e.target.value);
                 this.update(app);
             };
         }
@@ -169,6 +178,7 @@ export const UI = {
         const btnPlay = document.getElementById('btn-play');
         btnPlay.onclick = () => {
             app.isFlowing = !app.isFlowing;
+            app.isSimulationMode = false;
             this.update(app);
         };
 
@@ -184,6 +194,28 @@ export const UI = {
 
         btnEmit.onclick = triggerEmit;
 
+        const btnSim = document.getElementById('btn-sim');
+        if (btnSim) {
+            btnSim.onclick = () => {
+                const willEnable = !app.isSimulationMode;
+                const keys = ['revolution', 'rotation', 'density', 'spread'];
+                keys.forEach(k => setAutoMode(k, willEnable));
+                app.autoModes.reflections = false;
+                app.isSimulationMode = willEnable;
+                if (willEnable) {
+                    app.preSimulationBounces = app.MAX_BOUNCES;
+                    app.rayNumber = Math.min(app.rayNumber, 180);
+                    app.MAX_BOUNCES = 1;
+                    app.isLightVisible = true;
+                    app.isFlowing = true;
+                    app.emitStartTime = performance.now();
+                } else {
+                    app.MAX_BOUNCES = Math.max(1, app.preSimulationBounces || app.MAX_BOUNCES);
+                }
+                this.update(app);
+            };
+        }
+
         // Keyboard Shortcuts
         const keyMap = {
             'Digit1': 'revolution',
@@ -193,8 +225,22 @@ export const UI = {
             'Digit5': 'speed',
             'Digit6': 'reflections'
         };
+        let sHeld = false;
 
         window.addEventListener('keydown', (e) => {
+            const target = e.target;
+            const isTyping =
+                target &&
+                (target.tagName === 'INPUT' ||
+                 target.tagName === 'TEXTAREA' ||
+                 target.isContentEditable);
+            if (isTyping) return;
+
+            if (e.code === 'KeyS') {
+                sHeld = true;
+                return;
+            }
+
             // Space bar shortcut for Emit
             if (e.code === 'Space') {
                 e.preventDefault(); 
@@ -204,26 +250,24 @@ export const UI = {
 
             // Digit keys for Auto Modes
             const autoKey = keyMap[e.code];
-            if (autoKey) {
+            if (autoKey && sHeld) {
                 e.preventDefault();
                 app.autoModes[autoKey] = !app.autoModes[autoKey];
-                
-                if (app.autoModes[autoKey]) {
-                    const cfg = config[autoKey];
-                    const current = cfg.get();
-                    const norm = (current - cfg.min) / (cfg.max - cfg.min);
-                    const targetSin = Math.max(-1, Math.min(1, (norm - 0.5) * 2));
-                    app.autoPhases[autoKey] = Math.asin(targetSin) - app.autoTimer * cfg.speed;
-                }
+                setAutoMode(autoKey, app.autoModes[autoKey]);
+                app.isSimulationMode = false;
                 this.update(app);
                 return;
             }
 
-            // Left Arrow for Reset
-            if (e.code === 'ArrowLeft') {
+            // Shift + Left Arrow for Reset (safer than plain ArrowLeft)
+            if (e.code === 'ArrowLeft' && e.shiftKey) {
                 e.preventDefault();
                 app.reset();
             }
+        });
+
+        window.addEventListener('keyup', (e) => {
+            if (e.code === 'KeyS') sHeld = false;
         });
 
         // Mouse/Touch Interaction
@@ -317,12 +361,18 @@ export const UI = {
         if (valSpeed.textContent != app.raySpeed) valSpeed.textContent = app.raySpeed;
 
         const spreadText = `${(app.spread * 180 / Math.PI).toFixed(0)}°`;
+        document.getElementById('range-spread').value = app.spread;
         const valSpread = document.getElementById('val-spread');
         if (valSpread.textContent !== spreadText) valSpread.textContent = spreadText;
 
         document.getElementById('range-reflections').value = app.MAX_BOUNCES;
         const valReflections = document.getElementById('val-reflections');
         if (valReflections.textContent != app.MAX_BOUNCES) valReflections.textContent = app.MAX_BOUNCES;
+
+        document.getElementById('range-alpha').value = app.alphaIntensity;
+        const valAlpha = document.getElementById('val-alpha');
+        const alphaText = `${app.alphaIntensity.toFixed(2)}x`;
+        if (valAlpha.textContent !== alphaText) valAlpha.textContent = alphaText;
 
         const playIcon = document.getElementById('play-icon');
         const playText = document.getElementById('play-text');
@@ -339,6 +389,19 @@ export const UI = {
         const btnLight = document.getElementById('btn-light');
         btnLight.classList.toggle('active', app.isLightVisible);
         if (lightText.textContent !== 'Emit') lightText.textContent = 'Emit';
+
+        const btnSim = document.getElementById('btn-sim');
+        const simIcon = document.getElementById('sim-icon');
+        const simText = document.getElementById('sim-text');
+        if (btnSim && simIcon && simText) {
+            btnSim.classList.toggle('active', app.isSimulationMode);
+            const simHtml = app.isSimulationMode
+                ? '<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>'
+                : '<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>';
+            if (simIcon.innerHTML !== simHtml) simIcon.innerHTML = simHtml;
+            const simLabel = app.isSimulationMode ? 'Sim On' : 'Sim Off';
+            if (simText.textContent !== simLabel) simText.textContent = simLabel;
+        }
 
         const checkAxes = document.getElementById('check-axes');
         if (checkAxes && checkAxes.checked !== app.showAxes) checkAxes.checked = app.showAxes;

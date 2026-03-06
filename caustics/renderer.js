@@ -50,7 +50,7 @@ export const Renderer = {
      * Main draw call: Renders the entire simulation frame
      */
     draw(state) {
-        const { ctx, canvas, shape, rayNumber, sourcePos, sourceRotation, isLightVisible, spread, flowOffset, beamWidth, growth, MAX_BOUNCES, colorMode, showAxes, baseStyle, flowMode, useTrail, useTaper, useBloom } = state;
+        const { ctx, canvas, shape, rayNumber, sourcePos, sourceRotation, isLightVisible, spread, flowOffset, beamWidth, growth, MAX_BOUNCES, colorMode, showAxes, baseStyle, flowMode, useTrail, useTaper, useBloom, alphaIntensity } = state;
         const w = canvas.width;
         const h = canvas.height;
         const centerX = w / 2;
@@ -106,8 +106,19 @@ export const Renderer = {
 
         const aimAngle = Math.PI / 2;
 
-        for (let i = 0; i < rayNumber; i++) {
-            const t = i / Math.max(1, rayNumber - 1);
+        // Frame safety guard: keep total ray-segment work bounded to avoid hard freezes.
+        const workBudget = baseStyle === 'particle' ? 1200 : 2600;
+        let drawRayNumber = Math.max(1, Math.floor(rayNumber));
+        let drawMaxBounces = Math.max(1, Math.floor(MAX_BOUNCES));
+        if (drawRayNumber * drawMaxBounces > workBudget) {
+            drawMaxBounces = Math.max(1, Math.floor(workBudget / drawRayNumber));
+            if (drawRayNumber * drawMaxBounces > workBudget) {
+                drawRayNumber = Math.max(1, Math.floor(workBudget / drawMaxBounces));
+            }
+        }
+
+        for (let i = 0; i < drawRayNumber; i++) {
+            const t = i / Math.max(1, drawRayNumber - 1);
             let startPos, angle;
             
             if (shape === 'parabola') {
@@ -158,7 +169,7 @@ export const Renderer = {
             let ry = currY;
             let ra = currAngle;
 
-            for (let b = 0; b < MAX_BOUNCES; b++) {
+            for (let b = 0; b < drawMaxBounces; b++) {
                 if (rx < -w || rx > w*2 || ry < -h || ry > h*2) break;
 
                 const hit = Physics.findBoundaryIntersection(rx - centerX, ry - centerY, ra, shape, size);
@@ -189,16 +200,31 @@ export const Renderer = {
                     isLastSegment = true;
                 }
 
-                let alpha = (5 / rayNumber) * (1 - b/MAX_BOUNCES);
+                // Keep a visibility floor so beams remain readable even with Trail OFF or high ray counts.
+                const alphaFloor = useTrail ? 0.03 : 0.12;
+                const alphaFromDensity = 5 / Math.max(1, drawRayNumber);
+                // Reflection-based exponential decay: each bounce dims naturally.
+                const bounceDecay = Math.pow(0.78, b);
+                let alpha = Math.max(alphaFloor, alphaFromDensity) * bounceDecay;
+
+                // Make the first segment (straight/direct path) slightly more pronounced.
+                if (b === 0) alpha *= 1.45;
+
+                // Trail OFF needs extra brightness because there is no temporal accumulation.
+                if (!useTrail) alpha *= 1.35;
+
                 if (flowMode === 'pulse') {
                     const pulse = Math.sin((accumulatedDist - flowOffset * 10) * 0.02) * 0.5 + 0.5;
                     alpha *= (0.2 + 0.8 * pulse);
                 }
+                alpha *= alphaIntensity;
+                alpha = Math.min(alpha, 0.95);
 
                 ctx.strokeStyle = `hsla(${baseHue}, 100%, 60%, ${alpha})`;
                 ctx.fillStyle = `hsla(${baseHue}, 100%, 60%, ${alpha})`;
 
                 let cw = beamWidth;
+                if (!useTrail) cw *= 1.35;
                 if (useTaper) cw *= Math.max(0.1, 1 - (accumulatedDist / maxTravel));
                 ctx.lineWidth = cw;
 
