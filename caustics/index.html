@@ -219,15 +219,18 @@
             <!-- Top row: Volume and Controls -->
             <div class="player-controls-row">
                 <div class="volume-group">
-                    <svg class="icon-volume" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                    <svg class="icon-volume" id="apple-bgm-icon" width="22" height="22" viewBox="0 0 24 24" fill="currentColor" style="cursor: pointer;">
                         <path d="M11 5L6 9H2V15H6L11 19V5Z"/><path d="M19.07 4.93C20.94 6.81 22 9.31 22 12C22 14.69 20.94 17.19 19.07 19.07M15.54 8.46C16.47 9.4 17 10.65 17 12C17 13.35 16.47 14.6 15.54 15.54" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
                     </svg>
-                    <input type="range" id="apple-volume" class="apple-slider-vol" min="0.2" max="3.0" step="0.05" value="1.0">
+                    <input type="range" id="apple-volume" class="apple-slider-vol" min="0" max="1" step="0.01" value="0.5" title="BGM Volume">
+                    <button class="player-btn-mini" id="apple-next-track" title="Next Track">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 4 15 12 5 20 5 4"></polygon><line x1="19" y1="5" x2="19" y2="19"></line></svg>
+                    </button>
                 </div>
                 
                 <div class="playback-group">
                     <button class="player-btn-mini" id="apple-partial-reset" title="Partial Reset (Beam)">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="19 20 9 12 19 4 19 20"/><line x1="5" y1="19" x2="5" y2="5"/></svg>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14L4 9l5-5"/><path d="M20 20v-7a4 4 0 0 0-4-4H4"/></svg>
                     </button>
                     <button class="player-btn-speed" id="apple-speed-down" title="Slow Down (0.9x)">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="11 17 6 12 11 7"/><polyline points="18 17 13 12 18 7"/></svg>
@@ -266,6 +269,7 @@
 
             <!-- Bottom row: Progress Timeline -->
             <div class="player-timeline-row">
+                <span id="apple-track-name" class="track-name-inline">No Track Playing</span>
                 <span class="time-label" id="apple-time-current">00:00</span>
                 <div class="timeline-container">
                     <div class="timeline-track">
@@ -277,6 +281,7 @@
         </div>
     </div>
 
+    <script src="audio.js"></script>
     <script type="module" src="main.js"></script>
 </body>
 </html>

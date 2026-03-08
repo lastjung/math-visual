@@ -187,6 +187,8 @@ export const UI = {
         if (btnWindowFull) {
             btnWindowFull.onclick = () => {
                 document.body.classList.toggle('window-full');
+                app.isWindowFull = document.body.classList.contains('window-full');
+                app.recalcParallelRange();
                 setTimeout(() => app.resize(), 50);
             };
         }
@@ -214,6 +216,7 @@ export const UI = {
             'Digit6': 'reflections'
         };
         let sHeld = false;
+        let aHeld = false;
 
         window.addEventListener('keydown', (e) => {
             const target = e.target;
@@ -226,6 +229,16 @@ export const UI = {
 
             if (e.code === 'KeyS') {
                 sHeld = true;
+                return;
+            }
+            if (e.code === 'KeyA') {
+                aHeld = true;
+                return;
+            }
+
+            if (aHeld && e.code === 'Digit4') {
+                e.preventDefault();
+                app["4_ray_mum_simm"]();
                 return;
             }
 
@@ -255,6 +268,7 @@ export const UI = {
 
         window.addEventListener('keyup', (e) => {
             if (e.code === 'KeyS') sHeld = false;
+            if (e.code === 'KeyA') aHeld = false;
         });
 
         // Mouse/Touch Interaction
@@ -427,30 +441,37 @@ export const UI = {
         }
 
         const appleVol = document.getElementById('apple-volume');
-        if (appleVol && Math.abs(parseFloat(appleVol.value) - app.alphaIntensity) > 0.01) {
-            appleVol.value = app.alphaIntensity;
+        if (appleVol && window.audioManager) {
+            const currentVol = window.audioManager.targetVolume;
+            if (Math.abs(parseFloat(appleVol.value) - currentVol) > 0.01) {
+                appleVol.value = currentVol;
+            }
         }
 
         const cycleDuration = 60;
         
         const appleTime = document.getElementById('apple-time-current');
         if (appleTime) {
-            const cycleTime = app.elapsedTime % cycleDuration;
-            const mins = Math.floor(cycleTime / 60);
-            const secs = Math.floor(cycleTime % 60);
+            const timeVal = Math.floor(app.elapsedTime || 0);
+            const mins = Math.floor(timeVal / 60);
+            const secs = Math.floor(timeVal % 60);
             appleTime.textContent = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
         }
 
         const appleProgress = document.getElementById('apple-progress-bar');
-        const appleTotal = document.getElementById('apple-time-total');
+        const appleTrackName = document.getElementById('apple-track-name');
         if (appleProgress) {
             const progress = (app.elapsedTime % cycleDuration) / cycleDuration * 100;
             appleProgress.style.width = `${progress}%`;
             
-            if (appleTotal) {
-                // Display fixed total duration for the cycle
-                appleTotal.textContent = "01:00";
+            if (appleTrackName && app.currentTrackName) {
+                appleTrackName.textContent = app.currentTrackName;
             }
+        }
+
+        const bgmIcon = document.getElementById('apple-bgm-icon');
+        if (bgmIcon && window.audioManager) {
+            bgmIcon.style.opacity = window.audioManager.isMuted ? '0.3' : '1';
         }
     },
 
@@ -527,9 +548,30 @@ export const UI = {
         }
         
         volSlider.oninput = (e) => {
-            app.alphaIntensity = parseFloat(e.target.value);
-            this.update(app);
+            if (window.audioManager) {
+                window.audioManager.isMuted = false;
+                window.audioManager.setTargetVolume(parseFloat(e.target.value));
+                window.audioManager.resume();
+            }
         };
+
+        const btnNextTrack = document.getElementById('apple-next-track');
+        if (btnNextTrack) {
+            btnNextTrack.onclick = () => {
+                app.nextBGM();
+                this.update(app);
+            };
+        }
+
+        const bgmIcon = document.getElementById('apple-bgm-icon');
+        if (bgmIcon) {
+            bgmIcon.onclick = () => {
+                if (window.audioManager) {
+                    const isMuted = window.audioManager.toggleMute();
+                    bgmIcon.style.opacity = isMuted ? '0.3' : '1';
+                }
+            };
+        }
 
         // Window Hide / Restore Logic
         const btnClose = document.getElementById('apple-player-close');
@@ -583,25 +625,5 @@ export const UI = {
             }
         });
 
-        // Volume Toggle (Visual Mute)
-        const volIcon = document.querySelector('.icon-volume');
-        const appleVolSlider = document.getElementById('apple-volume');
-        if (volIcon && appleVolSlider) {
-            let lastVol = appleVolSlider.value;
-            volIcon.onclick = () => {
-                const isMuted = volIcon.classList.toggle('is-muted');
-                if (isMuted) {
-                    lastVol = appleVolSlider.value;
-                    appleVolSlider.value = 0;
-                } else {
-                    appleVolSlider.value = lastVol;
-                }
-                // Update app state if exists
-                if (app.alphaIntensity !== undefined) {
-                    app.alphaIntensity = parseFloat(appleVolSlider.value);
-                    this.update(app);
-                }
-            };
-        }
     }
 };

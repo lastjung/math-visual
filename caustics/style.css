@@ -760,18 +760,39 @@ input[type=range]::-webkit-slider-thumb {
 .volume-group {
   display: flex;
   align-items: center;
-  gap: 10px;
-  width: 130px;
+  gap: 12px;
+  width: 160px;
+}
+
+.track-name-inline {
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.4);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 130px; /* Increased slightly for better fit */
+  flex-shrink: 0;
+  text-align: left;
+  font-family: ui-monospace, monospace;
+}
+
+.time-label {
+  font-size: 11px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.6);
+  min-width: 36px;
+  font-family: ui-monospace, monospace;
 }
 
 .icon-volume {
   color: #fff;
-  opacity: 0.8;
+  opacity: 0.85;
   cursor: pointer;
   transition: all 0.2s;
+  flex-shrink: 0;
 }
 
-.icon-volume:hover { opacity: 1; }
+.icon-volume:hover { opacity: 1; transform: scale(1.1); }
 
 .icon-volume.is-muted {
   color: #ff453a;
@@ -782,21 +803,21 @@ input[type=range]::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
   width: 100%;
-  height: 4px;
+  height: 5px;
   background: rgba(255, 255, 255, 0.2);
-  border-radius: 2px;
+  border-radius: 2.5px;
   outline: none;
 }
 
 .apple-slider-vol::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  width: 18px;
-  height: 18px;
+  width: 20px;
+  height: 20px;
   background: #fff;
   border-radius: 50%;
   cursor: pointer;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.4);
 }
 
 /* Playback Group */
@@ -811,14 +832,14 @@ input[type=range]::-webkit-slider-thumb {
   border: 1px solid rgba(255, 255, 255, 0.05);
   color: #fff;
   cursor: pointer;
-  width: 28px;
-  height: 28px;
+  width: 32px;
+  height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 8px;
+  border-radius: 9px;
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-  opacity: 0.5;
+  opacity: 0.7;
   outline: none !important;
 }
 
@@ -934,7 +955,7 @@ body.window-full .drag-hint {
   gap: 16px;
   color: #fff;
   opacity: 0.8;
-  width: 130px;
+  width: 160px;
   justify-content: flex-end;
 }
 
@@ -949,7 +970,7 @@ body.window-full .drag-hint {
   font-size: 11px;
   font-weight: 500;
   color: rgba(255, 255, 255, 0.6);
-  min-width: 36px;
+  min-width: 38px;
   font-family: ui-monospace, monospace;
 }
 

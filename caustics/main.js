@@ -40,9 +40,64 @@ const App = {
     alphaIntensity: 1.0,
     isPaintMode: false, // New: Don't clear canvas for layering effect
     isSimulationMode: false,
+    isWindowFull: false,
     preSimulationBounces: 10,
     MAX_BOUNCES: 10, // 반사 최대 10번
     emitStartTime: null,
+    overlayMessage: null,
+    isSimRunning: false,
+    simTimers: [], // Track simulation timeouts for cancellation
+
+    // --- Audio System ---
+    BGM_BASE_PATH: '../visualization/assets/music/bgm/',
+    BGM_TRACKS: [
+        'Math_01_Minimalist_Sine_Pulse.mp3', 'Math_02_Fractal_Recursive_Ambient.mp3',
+        'Math_03_Euclidean_Polyrhythm.mp3', 'Math_04_Cybernetic_Grid_Logic.mp3',
+        'Math_05_Infinite_Series_Flow.mp3', 'Math_06_Binary_Symphony.mp3',
+        'Math_07_Quantum_Resonance.mp3', 'Math_08_Geometric_Vector_Motion.mp3',
+        'Math_09_Fibonacci_Golden_Ratio.mp3', 'Math_10_Bitwise_Glitch_Architecture.mp3',
+        'Math_11_Calculus_Flow.mp3', 'Math_12_Neural_Network_Synapse.mp3',
+        'Math_13_Retro_8-bit_Math.mp3', 'Math_14_Primality_Test_Beat.mp3',
+        'Math_15_Deep_Space_Topology.mp3', 'Math_16_Coordinate_Plane_Ambient.mp3',
+        'Math_17_Mathematical_Induction.mp3', 'Math_18_Lo-fi_Coding_Marathon.mp3',
+        'Math_19_Abstract_Set_Theory.mp3', 'Math_20_Theorem_Q.E.D..mp3',
+        'piano-shorts/Piano_Short_01_Nocturne_Full_HQ.mp3', 'piano-shorts/Piano_Short_02_Moonlight_Full_HQ.mp3',
+        'piano-shorts/Piano_Short_03_Claire_Full_HQ.mp3', 'piano-shorts/Piano_Short_04_Liebestraum_Full_HQ.mp3',
+        'piano-shorts/Piano_Short_05_Gymnopedie_Full_HQ.mp3', 'piano-shorts/Piano_Short_06_Classical_Sonata_Full_HQ.mp3',
+        'piano-shorts/Piano_Short_07_Rach_Grand_Full_HQ.mp3', 'piano-shorts/Piano_Short_08_River_Flows_Full_HQ.mp3',
+        'piano-shorts/Piano_Short_09_Hisaishi_Fantasy_Full_HQ.mp3', 'piano-shorts/Piano_Short_10_Jazz_Mood_Full_HQ.mp3',
+        'piano-shorts/Piano_Short_11_Ragtime_Fun_Full_HQ.mp3', 'piano-shorts/Piano_Short_12_Minimal_Cycle_Full_HQ.mp3',
+        'piano-shorts/Piano_Short_13_Cinematic_Tear_Full_HQ.mp3', 'piano-shorts/Piano_Short_14_Pop_Vibe_Full_HQ.mp3',
+        'piano-shorts/Piano_Short_15_Mystery_Night_Full_HQ.mp3', 'piano-shorts/Piano_Short_16_Morning_Dew_Full_HQ.mp3',
+        'piano-shorts/Piano_Short_17_Rainy_Window_Full_HQ.mp3', 'piano-shorts/Piano_Short_18_Soulful_Touch_Full_HQ.mp3',
+        'piano-shorts/Piano_Short_19_Wedding_Grace_Full_HQ.mp3', 'piano-shorts/Piano_Short_20_Grand_Power_Full_HQ.mp3'
+    ],
+    currentTrackName: '',
+
+    initAudio() {
+        if (!window.audioManager) return;
+        
+        // Auto-play next track when current ends
+        window.audioManager.audio.onended = () => this.nextBGM();
+        
+        // Initial random track
+        this.nextBGM(false); 
+    },
+
+    nextBGM(autoPlay = true) {
+        if (!window.audioManager) return;
+        const pool = this.BGM_TRACKS;
+        const randomTrack = pool[Math.floor(Math.random() * pool.length)];
+        this.currentTrackName = randomTrack.split('/').pop().replace('.mp3', '').replace(/_/g, ' ');
+        
+        const url = this.BGM_BASE_PATH + randomTrack;
+        if (autoPlay) {
+            window.audioManager.play(url, { forceSwitch: true });
+        } else {
+            window.audioManager.currentTrack = url;
+            window.audioManager.audio.src = url;
+        }
+    },
 
     formatTime(seconds) {
         const mins = Math.floor(seconds / 60);
@@ -215,6 +270,10 @@ const App = {
 
         UI.setupEvents(this);
         this.startLoop();
+        
+        // 3. Audio Initialization
+        this.initAudio();
+
         UI.update(this);
     },
 
@@ -227,9 +286,11 @@ const App = {
 
 
     resetRays(shouldStop = true) {
+        this.stopSimulation(); // ALWAYS stop any ongoing simulation on reset
         this.growth = 0;
         if (shouldStop) {
             this.isFlowing = false;
+            // if (window.audioManager) window.audioManager.stop(); // Keep music playing as requested before
         }
         this.isLightVisible = true;
         this.emitStartTime = performance.now();
@@ -245,6 +306,23 @@ const App = {
         UI.update(this);
     },
 
+    stopSimulation() {
+        if (!this.isSimRunning && !this.overlayMessage) return;
+        
+        // Clear all pending timeouts
+        this.simTimers.forEach(t => clearTimeout(t));
+        this.simTimers = [];
+        
+        this.isSimRunning = false;
+        this.overlayMessage = null;
+        
+        // Return to normal interactive state
+        this.isLightVisible = true;
+        this.isFlowing = false;
+        
+        UI.update(this);
+    },
+
     toggleFlow() {
         this.isFlowing = !this.isFlowing;
         if (this.isFlowing) {
@@ -252,6 +330,19 @@ const App = {
             if (!this.emitStartTime) {
                 this.emitStartTime = performance.now();
             }
+            if (window.audioManager) {
+                if (!window.audioManager.currentTrack) {
+                    this.nextBGM(true);
+                } else {
+                    window.audioManager.resume();
+                }
+            }
+        } else {
+            if (window.audioManager) {
+                window.audioManager.isMuted = false;
+                window.audioManager.resume();
+            }
+            if (window.audioManager) window.audioManager.stop();
         }
         UI.update(this);
     },
@@ -281,6 +372,8 @@ const App = {
         this.beamWidth = 1.6;
         this.MAX_BOUNCES = 10;
         this.emitStartTime = null;
+
+        if (window.audioManager) window.audioManager.stop();
 
         // Reset auto modes and phases
         this.autoModes = {
@@ -316,7 +409,8 @@ const App = {
      */
     recalcParallelRange() {
         if (!this.canvas) return;
-        const size = Math.min(this.canvas.width, this.canvas.height) * 0.35;
+        const sizeMult = this.isWindowFull ? 0.45 : 0.35;
+        const size = Math.min(this.canvas.width, this.canvas.height) * sizeMult;
         const y = this.sourcePos.y;
         
         let minX = 0, maxX = 0;
@@ -349,6 +443,85 @@ const App = {
             min: minX * margin,
             max: maxX * margin
         };
+    },
+
+    "4_ray_mum_simm"() {
+        if (this.isSimRunning) return; // Prevent multiple runs
+        this.stopSimulation(); // Clear any residue
+        this.isSimRunning = true;
+
+        // Step 1: Handle Audio Auto-Start
+        if (window.audioManager && window.audioManager.targetVolume > 0) {
+            window.audioManager.isMuted = false;
+            window.audioManager.resume();
+        }
+
+        const stages = [30, 100, 200, 350];
+        let currentIdx = 0;
+
+        const runStage = () => {
+            if (currentIdx >= stages.length) {
+                // FINAL END SEQUENCE - NO CLEARING, SHOW OVER PATTERN
+                this.overlayMessage = "Simulation End";
+                UI.update(this);
+                const endTimer = setTimeout(() => {
+                    this.overlayMessage = null;
+                    this.isSimRunning = false;
+                    this.isLightVisible = false;
+                    this.isFlowing = false;
+                    UI.update(this);
+                }, 4000);
+                this.simTimers.push(endTimer);
+                return;
+            }
+
+            const val = stages[currentIdx];
+            
+            // A. KILL & CLEAR
+            this.isLightVisible = false;
+            this.isFlowing = false;
+            if (this.ctx) {
+                this.ctx.fillStyle = '#050508';
+                this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+                Renderer.clearPaint();
+            }
+
+            // SET MESSAGE (NEW MULTI-LINE FOR FIRST STEP)
+            if (currentIdx === 0) {
+                this.overlayMessage = ["Begin the Journey of Light", "30 Rays"];
+            } else {
+                this.overlayMessage = `${val} Rays`;
+            }
+            UI.update(this);
+
+            // B. SHOW TEXT
+            const textTime = (currentIdx === 0) ? 3000 : 2000;
+            const textTimer = setTimeout(() => {
+                // C. CLEAR & START SIM
+                if (this.ctx) {
+                    this.ctx.fillStyle = '#050508';
+                    this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+                    Renderer.clearPaint();
+                }
+                this.overlayMessage = null;
+                this.rayNumber = val;
+                this.growth = 0;
+                this.isLightVisible = true;
+                this.isFlowing = true;
+                UI.update(this);
+
+                // D. WAIT FOR SIM DURATION
+                const simTime = (val === 350) ? 15000 : 12000;
+                const simTimer = setTimeout(() => {
+                    currentIdx++;
+                    runStage();
+                }, simTime);
+                this.simTimers.push(simTimer);
+            }, textTime);
+            this.simTimers.push(textTimer);
+        };
+
+        runStage();
     },
 
 

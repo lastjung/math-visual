@@ -58,7 +58,8 @@ export const Renderer = {
         const h = canvas.height;
         const centerX = w / 2;
         const centerY = h / 2 - 60; 
-        const size = Math.min(w, h) * 0.35;
+        const sizeMult = state.isWindowFull ? 0.45 : 0.35;
+        const size = Math.min(w, h) * sizeMult;
 
         // --- 1. PREPARE CONTEXTS ---
         if (state.isPaintMode) {
@@ -249,6 +250,116 @@ export const Renderer = {
             // Draw UI AFTER rays in Paint mode so it's always clean and on top.
             this.drawUI(ctx, state, centerX, centerY, size);
         }
+
+        // --- 6. DRAW OVERLAY MESSAGE (ALWAYS LAST) ---
+        if (state.overlayMessage) {
+            ctx.save();
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.shadowBlur = 30;
+            ctx.shadowColor = 'rgba(255, 255, 255, 0.6)';
+            ctx.fillStyle = 'white';
+
+            if (Array.isArray(state.overlayMessage)) {
+                // Multi-line support
+                const mainText = state.overlayMessage[0];
+                const subText = state.overlayMessage[1];
+
+                // Main Title - Reduced size to fit inside circle
+                ctx.font = '900 48px Inter';
+                ctx.fillText(mainText, centerX, centerY - 20);
+
+                // Sub Title - Increased size and opacity for visibility
+                if (subText) {
+                    ctx.font = '700 32px Inter';
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+                    ctx.fillText(subText, centerX, centerY + 50);
+                }
+            } else {
+                // Single line support - Also slightly smaller for safety
+                ctx.font = '900 48px Inter';
+                ctx.fillText(state.overlayMessage, centerX, centerY);
+            }
+            ctx.restore();
+        }
+
+        // --- 7. DRAW AUDIO VISUALIZER (NEW) ---
+        this.drawVisualizer(ctx, w, h, state.autoTimer || 0, size);
+    },
+
+    /**
+     * Procedural Contained Wave Visualizer
+     */
+    drawVisualizer(ctx, w, h, t, size) {
+        ctx.save();
+        
+        // 1. Box Layout (Matches Circle Width)
+        const visWidth = size * 1.6;
+        const visHeight = 50;
+        const x = w / 2 - visWidth / 2;
+        const y = h - 135; // Moved higher from h - 95
+        const radius = 15;
+
+        // 2. Draw Container Box
+        ctx.beginPath();
+        if (ctx.roundRect) {
+            ctx.roundRect(x, y, visWidth, visHeight, radius);
+        } else {
+            ctx.rect(x, y, visWidth, visHeight);
+        }
+        
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.04)';
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+
+        // 3. Clip Waves to Box
+        ctx.save();
+        ctx.beginPath();
+        if (ctx.roundRect) ctx.roundRect(x, y, visWidth, visHeight, radius);
+        else ctx.rect(x, y, visWidth, visHeight);
+        ctx.clip();
+
+        const waveCount = 3;
+        const baseY = y + visHeight / 2;
+        
+        ctx.globalCompositeOperation = 'screen';
+        
+        for (let i = 0; i < waveCount; i++) {
+            ctx.beginPath();
+            ctx.lineWidth = 2;
+            
+            // Vibrant Cyan/Mint colors
+            const alpha = 0.3 + (i * 0.2);
+            ctx.strokeStyle = `rgba(6, 182, 210, ${alpha})`;
+            
+            const freq = 0.036 + (i * 0.012);
+            const amp = 10 + (i * 8);
+            const speed = 4.0 + (i * 2.5); // Increased speed for vibration feel
+            const offset = i * Math.PI * 0.5;
+
+            // Amplitude pulsing for vibration effect
+            const pulsingAmp = amp * (0.7 + Math.sin(t * 12 + i) * 0.3);
+
+            for (let px = x; px <= x + visWidth; px += 2) {
+                // Combine traveling wave with a standing wave component for "vibration"
+                const wave = Math.sin((px - x) * freq + t * speed + offset) * 0.6 +
+                             Math.sin((px - x) * freq * 1.5 - t * speed * 1.2) * 0.4;
+                
+                // Add high-speed jitter
+                const jitter = Math.sin(t * 30 + px * 0.1) * 2;
+                
+                const py = baseY + wave * pulsingAmp + jitter;
+                
+                if (px === x) ctx.moveTo(px, py);
+                else ctx.lineTo(px, py);
+            }
+            ctx.stroke();
+        }
+        
+        ctx.restore();
+        ctx.restore();
     },
 
     /**
