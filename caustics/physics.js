@@ -43,6 +43,20 @@ export const Physics = {
     },
 
     /**
+     * Check if a point is inside the given shape
+     */
+    isInside(px, py, type, size) {
+        if (type === 'circle') return (px*px + py*py) < size*size;
+        if (type === 'ellipse') return (px*px)/(size*size*1.21) + (py*py)/(size*size*1.21*0.36) < 1;
+        if (type === 'parabola') return py < (0.5 - Math.pow(px/(size*0.5), 2) * 0.2) * size;
+        if (type === 'cardioid') {
+            const cx = px - size*0.3;
+            return Math.sqrt(cx*cx + py*py) < size * (1 - Math.cos(Math.atan2(py, cx))) * 0.5;
+        }
+        return false;
+    },
+
+    /**
      * Find where the ray hits the boundary
      * Uses fast binary search for internal rays, raymarch only for external
      */
@@ -50,20 +64,8 @@ export const Physics = {
         const dx = Math.cos(angle);
         const dy = Math.sin(angle);
         
-        // Helper to check if a point is inside the shape
-        const checkInside = (px, py) => {
-            if (type === 'circle') return (px*px + py*py) < size*size;
-            if (type === 'ellipse') return (px*px)/(size*size*1.21) + (py*py)/(size*size*1.21*0.36) < 1;
-            if (type === 'parabola') return py < (0.5 - Math.pow(px/(size*0.5), 2) * 0.2) * size;
-            if (type === 'cardioid') {
-                const cx = px - size*0.3;
-                return Math.sqrt(cx*cx + py*py) < size * (1 - Math.cos(Math.atan2(py, cx))) * 0.5;
-            }
-            return false;
-        };
-
         const nudge = size * 0.03;  // Small forward nudge to escape the current boundary
-        const startInside = checkInside(sx + dx * nudge, sy + dy * nudge);
+        const startInside = this.isInside(sx + dx * nudge, sy + dy * nudge, type, size);
 
         if (startInside) {
             // FAST PATH: Ray starts inside → simple binary search (only 20 iterations!)
@@ -71,13 +73,13 @@ export const Physics = {
             let high = size * 3;
             
             // Verify that high is actually outside
-            if (checkInside(sx + dx * high, sy + dy * high)) {
+            if (this.isInside(sx + dx * high, sy + dy * high, type, size)) {
                 return null; // Shouldn't happen for closed shapes
             }
 
             for (let i = 0; i < 20; i++) {
                 const mid = (low + high) / 2;
-                if (checkInside(sx + dx * mid, sy + dy * mid)) {
+                if (this.isInside(sx + dx * mid, sy + dy * mid, type, size)) {
                     low = mid;
                 } else {
                     high = mid;
@@ -91,7 +93,7 @@ export const Physics = {
             
             let crossedDist = null;
             for (let d = step; d < maxDist; d += step) {
-                if (checkInside(sx + dx * d, sy + dy * d)) {
+                if (this.isInside(sx + dx * d, sy + dy * d, type, size)) {
                     crossedDist = d;
                     break;
                 }
@@ -104,7 +106,7 @@ export const Physics = {
             let high = crossedDist;
             for (let i = 0; i < 15; i++) {
                 const mid = (low + high) / 2;
-                if (!checkInside(sx + dx * mid, sy + dy * mid)) {
+                if (!this.isInside(sx + dx * mid, sy + dy * mid, type, size)) {
                     low = mid;
                 } else {
                     high = mid;

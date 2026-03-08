@@ -9,6 +9,7 @@ export const UI = {
      */
     setupEvents(app) {
         window.addEventListener('resize', () => app.resize());
+        this.setupApplePlayer(app);
 
         // Shape Tabs
         document.querySelectorAll('.shape-tab').forEach(btn => {
@@ -19,6 +20,7 @@ export const UI = {
                 e.target.classList.add('active');
 
                 app.applyShapeSwitchReset(nextShape);
+                app.recalcParallelRange(); // Calculate new range for Parallel mode
                 this.update(app);
             };
         });
@@ -47,7 +49,7 @@ export const UI = {
             rotation: { speed: 0.15, min: -Math.PI, max: Math.PI, get: () => app.sourceRotation },
             density: { speed: 0.2, min: 20, max: 500, get: () => app.rayNumber },
             speed: { speed: 0.1, min: 0, max: 100, get: () => app.raySpeed },
-            spread: { speed: 0.15, min: 0.1, max: 5.0, get: () => app.spread },
+            spread: { speed: 0.15, min: 0.1, max: 6.28, get: () => app.spread },
             reflections: { speed: 0.1, min: 1, max: 20, get: () => app.MAX_BOUNCES }
         };
 
@@ -66,7 +68,6 @@ export const UI = {
             if (el) {
                 el.onclick = () => {
                     setAutoMode(key, !app.autoModes[key]);
-                    app.isSimulationMode = false;
                     this.update(app);
                 };
             }
@@ -120,7 +121,6 @@ export const UI = {
             rangeReflections.oninput = (e) => {
                 app.MAX_BOUNCES = parseInt(e.target.value);
                 app.autoModes.reflections = false;
-                app.isSimulationMode = false;
                 this.update(app);
             };
         }
@@ -157,6 +157,14 @@ export const UI = {
             };
         });
 
+        // Source Mode Mini Tabs
+        document.querySelectorAll('#group-source-mode .mini-tab').forEach(btn => {
+            btn.onclick = (e) => {
+                app.lightSourceMode = e.target.dataset.value;
+                this.update(app);
+            };
+        });
+
         // Effects Checkboxes
         document.getElementById('check-trail').onchange = (e) => {
             app.useTrail = e.target.checked;
@@ -171,43 +179,26 @@ export const UI = {
             this.update(app);
         };
 
-        // Reset
-        document.getElementById('btn-reset').onclick = () => app.reset();
-
-        // Flow (Play/Hold) Toggle
-        const btnPlay = document.getElementById('btn-play');
-        btnPlay.onclick = () => app.toggleFlow();
-
-        // Emit (Ray-only reset)
-        const btnEmit = document.getElementById('btn-light');
-        btnEmit.onclick = () => {
-            app.resetRays();
-            btnEmit.classList.remove('flash-active');
-            void btnEmit.offsetWidth; 
-            btnEmit.classList.add('flash-active');
-        };
-
-        const btnSim = document.getElementById('btn-sim');
-        if (btnSim) {
-            btnSim.onclick = () => {
-                const willEnable = !app.isSimulationMode;
-                const keys = ['revolution', 'rotation', 'density', 'spread'];
-                keys.forEach(k => setAutoMode(k, willEnable));
-                app.autoModes.reflections = false;
-                app.isSimulationMode = willEnable;
-                if (willEnable) {
-                    app.preSimulationBounces = app.MAX_BOUNCES;
-                    app.rayNumber = Math.min(app.rayNumber, 180);
-                    app.MAX_BOUNCES = 4; // Adjusted from 1 to 4
-                    app.isLightVisible = true;
-                    app.isFlowing = true;
-                    app.emitStartTime = performance.now();
-                } else {
-                    app.MAX_BOUNCES = Math.max(1, app.preSimulationBounces || app.MAX_BOUNCES);
-                }
-                this.update(app);
+        const btnWindowFull = document.getElementById('apple-fullscreen');
+        if (btnWindowFull) {
+            btnWindowFull.onclick = () => {
+                document.body.classList.toggle('window-full');
+                setTimeout(() => app.resize(), 50);
             };
         }
+
+        const btnSideToggle = document.getElementById('apple-sidebar-toggle');
+        if (btnSideToggle) {
+            btnSideToggle.onclick = () => {
+                const sidebar = document.querySelector('.controls-sidebar');
+                if (sidebar) {
+                    sidebar.style.display = sidebar.style.display === 'none' ? 'block' : 'none';
+                    app.resize();
+                }
+            };
+        }
+
+
 
         // Keyboard Shortcuts
         const keyMap = {
@@ -247,7 +238,6 @@ export const UI = {
                 e.preventDefault();
                 app.autoModes[autoKey] = !app.autoModes[autoKey];
                 setAutoMode(autoKey, app.autoModes[autoKey]);
-                app.isSimulationMode = false;
                 this.update(app);
                 return;
             }
@@ -267,24 +257,22 @@ export const UI = {
         let isDragging = false;
         const handleInteraction = (e) => {
             const rect = app.canvas.getBoundingClientRect();
-            const clientX = e.clientX || (e.touches && e.touches[0].clientX);
-            const clientY = e.clientY || (e.touches && e.touches[0].clientY);
+            const clientX = (e.clientX !== undefined) ? e.clientX : (e.touches && e.touches[0].clientX);
+            const clientY = (e.clientY !== undefined) ? e.clientY : (e.touches && e.touches[0].clientY);
             
             if (clientX === undefined) return;
 
             const x = clientX - rect.left - rect.width/2;
-            const y = clientY - rect.top - rect.height/2;
+            const y = clientY - rect.top - (rect.height/2 - 60); // Sync with renderer's centerY shift
 
             if (e.type === 'mousedown' || e.type === 'touchstart') {
-                const dist = Math.sqrt((x - app.sourcePos.x)**2 + (y - app.sourcePos.y)**2);
-                if (dist < 50) {
-                    isDragging = true;
-                    app.autoModes.revolution = false;
-                    if (e.cancelable) e.preventDefault();
-                }
-            }
-
-            if (isDragging) {
+                // Clicking anywhere on canvas moves the source and starts dragging
+                isDragging = true;
+                app.sourcePos = { x, y };
+                app.autoModes.revolution = false;
+                if (e.cancelable) e.preventDefault();
+                this.update(app);
+            } else if (isDragging && (e.type === 'mousemove' || e.type === 'touchmove')) {
                 app.sourcePos = { x, y };
                 this.update(app);
             }
@@ -367,23 +355,12 @@ export const UI = {
         const alphaText = `${app.alphaIntensity.toFixed(2)}x`;
         if (valAlpha.textContent !== alphaText) valAlpha.textContent = alphaText;
 
-        const playIcon = document.getElementById('play-icon');
-        const playText = document.getElementById('play-text');
-        const playHtml = app.isFlowing 
-            ? '<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>'
-            : '<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>';
-            
-        if (playIcon.innerHTML !== playHtml) playIcon.innerHTML = playHtml;
-        
-        const nPlayText = app.isFlowing ? 'Hold' : 'Go';
-        if (playText.textContent !== nPlayText) playText.textContent = nPlayText;
-        document.getElementById('btn-play').classList.toggle('active', app.isFlowing);
-
-        const lightText = document.getElementById('light-text');
         const btnLight = document.getElementById('btn-light');
-        // Light button reflects 'Power ON' state but isn't as solid as 'Go'
-        btnLight.classList.toggle('light-on', app.isLightVisible);
-        if (lightText.textContent !== 'Emit') lightText.textContent = 'Emit';
+        if (btnLight) {
+            btnLight.classList.toggle('light-on', app.isLightVisible);
+            const lightText = document.getElementById('light-text');
+            if (lightText && lightText.textContent !== 'Emit') lightText.textContent = 'Emit';
+        }
 
         const btnSim = document.getElementById('btn-sim');
         const simIcon = document.getElementById('sim-icon');
@@ -414,14 +391,209 @@ export const UI = {
                 btn.classList.toggle('active', isActive);
             }
         });
+        document.querySelectorAll('#group-source-mode .mini-tab').forEach(btn => {
+            const isActive = btn.dataset.value === app.lightSourceMode;
+            if (btn.classList.contains('active') !== isActive) {
+                btn.classList.toggle('active', isActive);
+            }
+        });
 
         // Update Checkboxes
         const cTrail = document.getElementById('check-trail');
         const cTaper = document.getElementById('check-taper');
         const cBloom = document.getElementById('check-bloom');
         
-        if (cTrail.checked !== app.useTrail) cTrail.checked = app.useTrail;
-        if (cTaper.checked !== app.useTaper) cTaper.checked = app.useTaper;
-        if (cBloom.checked !== app.useBloom) cBloom.checked = app.useBloom;
+        if (cTrail && cTrail.checked !== app.useTrail) cTrail.checked = app.useTrail;
+        if (cTaper && cTaper.checked !== app.useTaper) cTaper.checked = app.useTaper;
+        if (cBloom && cBloom.checked !== app.useBloom) cBloom.checked = app.useBloom;
+
+        // Sync Apple Player
+        const applePlay = document.getElementById('apple-play');
+        const applePlayIcon = document.getElementById('apple-play-icon');
+        if (applePlay) {
+            applePlay.classList.toggle('active', app.isFlowing);
+            const playHtml = app.isFlowing 
+                ? '<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>'
+                : '<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>';
+            if (applePlayIcon.innerHTML !== playHtml) applePlayIcon.innerHTML = playHtml;
+        }
+
+        const appleVol = document.getElementById('apple-volume');
+        if (appleVol && Math.abs(parseFloat(appleVol.value) - app.alphaIntensity) > 0.01) {
+            appleVol.value = app.alphaIntensity;
+        }
+
+        const cycleDuration = 60;
+        
+        const appleTime = document.getElementById('apple-time-current');
+        if (appleTime) {
+            const cycleTime = app.elapsedTime % cycleDuration;
+            const mins = Math.floor(cycleTime / 60);
+            const secs = Math.floor(cycleTime % 60);
+            appleTime.textContent = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        const appleProgress = document.getElementById('apple-progress-bar');
+        const appleTotal = document.getElementById('apple-time-total');
+        if (appleProgress) {
+            const progress = (app.elapsedTime % cycleDuration) / cycleDuration * 100;
+            appleProgress.style.width = `${progress}%`;
+            
+            if (appleTotal) {
+                // Display fixed total duration for the cycle
+                appleTotal.textContent = "01:00";
+            }
+        }
+    },
+
+    setupApplePlayer(app) {
+        const player = document.getElementById('apple-player');
+        const grip = document.getElementById('player-grip');
+        const btnPlay = document.getElementById('apple-play');
+        const volSlider = document.getElementById('apple-volume');
+
+        // Draggable Logic
+        let isDragging = false;
+        let startX, startY;
+
+        grip.onmousedown = (e) => {
+            isDragging = true;
+            startX = e.clientX - player.offsetLeft;
+            startY = e.clientY - player.offsetTop;
+            player.style.bottom = 'auto'; // Disable bottom-fixed once moved
+            player.style.transform = 'none'; 
+            player.style.left = player.offsetLeft + 'px';
+            player.style.top = player.offsetTop + 'px';
+        };
+
+        window.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+            player.style.left = (e.clientX - startX) + 'px';
+            player.style.top = (e.clientY - startY) + 'px';
+        });
+
+        window.addEventListener('mouseup', () => isDragging = false);
+
+        // Controls
+        btnPlay.onclick = () => {
+            app.toggleFlow();
+            if (app.isFlowing) app.recalcParallelRange(); // Calculate once when play starts
+        };
+
+        const btnFullReset = document.getElementById('apple-full-reset');
+        if (btnFullReset) {
+            btnFullReset.onclick = () => {
+                app.reset();
+                app.recalcParallelRange();
+            };
+        }
+
+        const btnPartialReset = document.getElementById('apple-partial-reset');
+        if (btnPartialReset) {
+            btnPartialReset.onclick = () => {
+                app.resetRays(true);
+                app.recalcParallelRange();
+                this.update(app);
+            };
+        }
+
+        const btnSpeedUp = document.getElementById('apple-speed-up');
+        const btnSpeedDown = document.getElementById('apple-speed-down');
+        
+        if (btnSpeedUp) {
+            btnSpeedUp.onclick = () => {
+                app.simSpeedMultiplier *= 1.1;
+                // Cap max multiplier for stability
+                if (app.simSpeedMultiplier > 10.0) app.simSpeedMultiplier = 10.0;
+                this.update(app);
+            };
+        }
+
+        if (btnSpeedDown) {
+            btnSpeedDown.onclick = () => {
+                app.simSpeedMultiplier *= 0.9;
+                // Cap min multiplier 
+                if (app.simSpeedMultiplier < 0.1) app.simSpeedMultiplier = 0.1;
+                this.update(app);
+            };
+        }
+        
+        volSlider.oninput = (e) => {
+            app.alphaIntensity = parseFloat(e.target.value);
+            this.update(app);
+        };
+
+        // Window Hide / Restore Logic
+        const btnClose = document.getElementById('apple-player-close');
+        if (btnClose) {
+            btnClose.onclick = (e) => {
+                e.stopPropagation();
+                player.classList.add('hidden');
+            };
+        }
+
+        // Sidebar Drag Logic
+        const sidebar = document.querySelector('.controls-sidebar');
+        const sidebarGrip = document.getElementById('sidebar-grip');
+        let isSidebarDragging = false;
+        let sidebarStartX, sidebarStartY;
+
+        if (sidebarGrip && sidebar) {
+            sidebarGrip.onmousedown = (e) => {
+                isSidebarDragging = true;
+                sidebarStartX = e.clientX - sidebar.offsetLeft;
+                sidebarStartY = e.clientY - sidebar.offsetTop;
+                sidebar.style.transition = 'none';
+            };
+
+            window.addEventListener('mousemove', (e) => {
+                if (!isSidebarDragging) return;
+                sidebar.style.left = (e.clientX - sidebarStartX) + 'px';
+                sidebar.style.top = (e.clientY - sidebarStartY) + 'px';
+                sidebar.style.right = 'auto'; // Reset initial right positioning
+            });
+
+            window.addEventListener('mouseup', () => {
+                if (isSidebarDragging) {
+                    isSidebarDragging = false;
+                    sidebar.style.transition = 'opacity 0.6s, transform 0.6s cubic-bezier(0.16, 1, 0.3, 1)';
+                }
+            });
+        }
+
+        const btnSidebarClose = document.getElementById('sidebar-close');
+        if (btnSidebarClose && sidebar) {
+            btnSidebarClose.onclick = () => {
+                sidebar.classList.add('hidden');
+            };
+        }
+
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                player.classList.remove('hidden');
+                if (sidebar) sidebar.classList.remove('hidden');
+            }
+        });
+
+        // Volume Toggle (Visual Mute)
+        const volIcon = document.querySelector('.icon-volume');
+        const appleVolSlider = document.getElementById('apple-volume');
+        if (volIcon && appleVolSlider) {
+            let lastVol = appleVolSlider.value;
+            volIcon.onclick = () => {
+                const isMuted = volIcon.classList.toggle('is-muted');
+                if (isMuted) {
+                    lastVol = appleVolSlider.value;
+                    appleVolSlider.value = 0;
+                } else {
+                    appleVolSlider.value = lastVol;
+                }
+                // Update app state if exists
+                if (app.alphaIntensity !== undefined) {
+                    app.alphaIntensity = parseFloat(appleVolSlider.value);
+                    this.update(app);
+                }
+            };
+        }
     }
 };

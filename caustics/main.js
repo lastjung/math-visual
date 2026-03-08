@@ -32,6 +32,8 @@ const App = {
     flowOffset: 0,
     baseStyle: 'line',
     flowMode: 'none',
+    lightSourceMode: 'point', // 'point' or 'parallel'
+    parallelRange: { min: -100, max: 100 }, // Cached range for Parallel rays
     useTrail: true,
     useTaper: true,
     useBloom: false,
@@ -45,7 +47,7 @@ const App = {
         const mins = Math.floor(seconds / 60);
         const secs = Math.floor(seconds % 60);
         const ms = Math.floor((seconds % 1) * 100);
-        return `LAPSE: ${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}.${ms.toString().padStart(2, '0')}`;
+        return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}.${ms.toString().padStart(2, '0')}`;
     },
     
     autoModes: {
@@ -65,7 +67,8 @@ const App = {
         reflections: 0
     },
     autoTimer: 0,
-    elapsedTime: 0, 
+    elapsedTime: 0,
+    simSpeedMultiplier: 1.0, 
 
     getDefaultSourcePos() {
         const size = Math.min(window.innerWidth, window.innerHeight) * 0.35;
@@ -122,11 +125,13 @@ const App = {
             spread: this.spread,
             baseStyle: this.baseStyle,
             flowMode: this.flowMode,
+            lightSourceMode: this.lightSourceMode,
             useTrail: this.useTrail,
             useTaper: this.useTaper,
             useBloom: this.useBloom,
             alphaIntensity: this.alphaIntensity,
-            MAX_BOUNCES: this.MAX_BOUNCES
+            MAX_BOUNCES: this.MAX_BOUNCES,
+            parallelRange: this.parallelRange
         };
     },
 
@@ -166,10 +171,14 @@ const App = {
             this.flowOffset = 0;
             this.baseStyle = saved.baseStyle ?? this.baseStyle;
             this.flowMode = saved.flowMode ?? this.flowMode;
+            this.lightSourceMode = saved.lightSourceMode ?? 'point';
             this.useTrail = saved.useTrail ?? this.useTrail;
             this.useTaper = saved.useTaper ?? this.useTaper;
             this.useBloom = saved.useBloom ?? this.useBloom;
             this.alphaIntensity = saved.alphaIntensity ?? this.alphaIntensity;
+            this.parallelRange = saved.parallelRange ?? { min: -100, max: 100 };
+            
+            this.recalcParallelRange(); // Ensure range is valid for current sourcePos.y
             this.isSimulationMode = false;
             this.MAX_BOUNCES = saved.MAX_BOUNCES ?? this.MAX_BOUNCES;
 
@@ -188,6 +197,7 @@ const App = {
         this.ctx = this.canvas.getContext('2d');
         this.container = document.getElementById('container');
         this.hudElement = document.getElementById('hud-timer');
+        this.speedElement = document.getElementById('hud-speed');
 
         this.resize();
         this.sourcePos = this.getDefaultSourcePos();
@@ -227,7 +237,6 @@ const App = {
                 this.emitStartTime = performance.now();
             }
         }
-        this.isSimulationMode = false;
         UI.update(this);
     },
 
@@ -244,6 +253,7 @@ const App = {
         this.colorMode = 'rainbow';
         this.baseStyle = 'line';
         this.flowMode = 'none';
+        this.lightSourceMode = 'point';
         this.useTrail = true;
         this.useTaper = true;
         this.useBloom = false;
@@ -280,6 +290,48 @@ const App = {
 
         UI.update(this);
         this.persistState();
+        this.recalcParallelRange();
+    },
+
+    /**
+     * Calculate the valid X-range for parallel rays at the current sourcePos.y
+     * Following user optimization: calculated once per state change.
+     */
+    recalcParallelRange() {
+        if (!this.canvas) return;
+        const size = Math.min(this.canvas.width, this.canvas.height) * 0.35;
+        const y = this.sourcePos.y;
+        
+        let minX = 0, maxX = 0;
+        let foundAny = false;
+
+        // Scan from center outwards
+        const scanStep = 5; 
+        const scanLimit = size * 2;
+
+        // Scan Right
+        for (let x = 0; x < scanLimit; x += scanStep) {
+            if (Physics.isInside(x, y, this.shape, size)) {
+                maxX = x;
+                foundAny = true;
+            } else if (foundAny) break;
+        }
+        
+        // Scan Left
+        let foundLeft = false;
+        for (let x = 0; x > -scanLimit; x -= scanStep) {
+            if (Physics.isInside(x, y, this.shape, size)) {
+                minX = x;
+                foundLeft = true;
+            } else if (foundLeft) break;
+        }
+
+        // Apply a small "inner" margin (95% of width) per user request
+        const margin = 0.95;
+        this.parallelRange = {
+            min: minX * margin,
+            max: maxX * margin
+        };
     },
 
 
@@ -290,8 +342,9 @@ const App = {
                 const dt = (now - lastTime) / 1000;
                 lastTime = now;
 
-                // Use direct timestamp for immunity against duplicate loops
-                this.autoTimer = now / 1000;
+                // Incremental autoTimer for seamless speed multiplier changes
+                const safeDt = Math.max(0, Math.min(dt, 0.1)); 
+                this.autoTimer += safeDt * this.simSpeedMultiplier;
                 const t = this.autoTimer;
 
                 // Ping-pong Helper: Oscillation using stored phase
@@ -327,7 +380,7 @@ const App = {
 
                 // Spread
                 if (this.autoModes.spread) {
-                    this.spread = 0.1 + oscillate('spread', 0.15) * 4.9;
+                    this.spread = 0.1 + oscillate('spread', 0.15) * 6.18;
                 }
 
                 // Reflections
@@ -368,10 +421,16 @@ const App = {
                     }
 
                     if (this.isLightVisible) {
-                        this.hudElement.textContent = `TIME: ${this.elapsedTime.toFixed(2)}s`;
+                        this.hudElement.textContent = `TIME  ${this.formatTime(this.elapsedTime)}`;
                         this.hudElement.classList.add('visible');
+                        
+                        if (this.speedElement) {
+                            this.speedElement.textContent = `SPEED ${this.simSpeedMultiplier.toFixed(2)}x`;
+                            this.speedElement.classList.add('visible');
+                        }
                     } else {
                         this.hudElement.classList.remove('visible');
+                        if (this.speedElement) this.speedElement.classList.remove('visible');
                     }
                 }
                 Renderer.draw(this);

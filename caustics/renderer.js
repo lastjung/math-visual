@@ -54,7 +54,7 @@ export const Renderer = {
         const w = canvas.width;
         const h = canvas.height;
         const centerX = w / 2;
-        const centerY = h / 2;
+        const centerY = h / 2 - 60; // Shifted up to avoid bottom player overlap
         const size = Math.min(w, h) * 0.35;
 
         // Clear Background with Trail Support
@@ -72,9 +72,12 @@ export const Renderer = {
         }
 
         // Draw Boundary Guide
+        ctx.save();
         ctx.beginPath();
-        ctx.lineWidth = 1.5;
-        ctx.strokeStyle = shape === 'parabola' ? 'rgba(255, 255, 255, 0.3)' : 'rgba(255, 255, 255, 0.2)';
+        ctx.lineWidth = 2.0;
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+        ctx.shadowBlur = 10;
+        ctx.shadowColor = 'rgba(255, 255, 255, 0.2)';
         
         const steps = shape === 'parabola' ? 200 : 360;
         for (let i = 0; i <= steps; i++) {
@@ -84,6 +87,7 @@ export const Renderer = {
             else ctx.lineTo(centerX + p.x, centerY + p.y);
         }
         ctx.stroke();
+        ctx.restore();
 
         // Draw Ellipse Foci
         if (shape === 'ellipse') {
@@ -104,7 +108,10 @@ export const Renderer = {
             ctx.restore();
         }
 
-        const aimAngle = Math.PI / 2;
+        // Calculate aim angle to point towards center (0,0) by default in Point mode
+        const aimAngle = (state.lightSourceMode === 'parallel' || shape === 'parabola')
+            ? Math.PI / 2 
+            : Math.atan2(-sourcePos.y, -sourcePos.x);
 
         // Frame safety guard: keep total ray-segment work bounded to avoid hard freezes.
         const workBudget = baseStyle === 'particle' ? 1200 : 2600;
@@ -117,14 +124,18 @@ export const Renderer = {
             }
         }
 
+        const { min: pMin, max: pMax } = state.parallelRange;
+
         for (let i = 0; i < drawRayNumber; i++) {
             const t = i / Math.max(1, drawRayNumber - 1);
             let startPos, angle;
             
-            if (shape === 'parabola') {
-                const xOffset = (t - 0.5) * size * 1.8;
-                startPos = { x: xOffset, y: -size * 1.5 };
-                angle = Math.PI / 2;
+            // Light Generation Logic: Point vs Parallel
+            if (state.lightSourceMode === 'parallel' || shape === 'parabola') {
+                // Use pre-calculated cached range for efficiency (User Optimization)
+                const xOffset = pMin + t * (pMax - pMin);
+                startPos = { x: xOffset, y: sourcePos.y }; 
+                angle = Math.PI / 2; // Vertical down
             } else {
                 startPos = { x: sourcePos.x, y: sourcePos.y };
                 angle = aimAngle + sourceRotation + (t - 0.5) * spread;
@@ -135,11 +146,13 @@ export const Renderer = {
             const currAngle = angle;
 
             if (i === 0) {
-                // Original minimal light source
+                // Draw light source guide at sourcePos
+                const sX = centerX + sourcePos.x;
+                const sY = centerY + sourcePos.y;
                 ctx.save();
-                ctx.beginPath(); ctx.arc(currX, currY, 10, 0, Math.PI * 2);
-                ctx.fillStyle = 'rgba(255, 255, 255, 0.1)'; ctx.fill();
-                ctx.beginPath(); ctx.arc(currX, currY, 4, 0, Math.PI * 2);
+                ctx.beginPath(); ctx.arc(sX, sY, 10, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.15)'; ctx.fill();
+                ctx.beginPath(); ctx.arc(sX, sY, 4, 0, Math.PI * 2);
                 ctx.fillStyle = '#fff'; ctx.fill();
                 ctx.restore();
             }

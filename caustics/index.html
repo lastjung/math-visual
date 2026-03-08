@@ -37,14 +37,19 @@
             <div class="drag-hint">Drag to direct the light flow</div>
         </section>
 
-        <!-- HUD Timer -->
+        <!-- HUD Elements -->
         <div id="hud-timer" class="hud-timer">00:00.00</div>
+        <div id="hud-speed" class="hud-speed">1.00x</div>
 
         <!-- Sidebar Section -->
         <aside class="controls-sidebar">
+            <div class="sidebar-grip" id="sidebar-grip"></div>
             <div class="control-panel">
                 <div class="panel-header">
-                    <span class="panel-title">Simulation</span>
+                    <span class="panel-title">Simulation Settings</span>
+                    <button class="sidebar-close" id="sidebar-close" title="Hide Sidebar (Esc to show)">
+                        <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    </button>
                 </div>
 
                 <!-- Source Position Slider -->
@@ -80,7 +85,7 @@
                         </label>
                         <span class="setting-value value-spread" id="val-spread">69°</span>
                     </div>
-                    <input type="range" id="range-spread" min="0.1" max="5.0" step="0.1" value="1.2">
+                    <input type="range" id="range-spread" min="0.1" max="6.28" step="0.1" value="1.2">
                 </div>
 
                 <!-- Ray Number Slider -->
@@ -150,7 +155,16 @@
                     </div>
                 </div>
 
-                <!-- 3. EFFECTS Selection -->
+                <!-- 3. SOURCE Selection -->
+                <div class="setting-row-inline" style="margin-top: 8px;">
+                    <label class="setting-label">SOURCE</label>
+                    <div class="mode-tabs-mini" id="group-source-mode" style="width: 180px;">
+                        <button class="mini-tab active" data-value="point">Point</button>
+                        <button class="mini-tab" data-value="parallel">Parallel</button>
+                    </div>
+                </div>
+
+                <!-- 4. EFFECTS Selection -->
                 <div class="setting-row-inline" style="margin-top: 16px; justify-content: flex-start; gap: 12px;">
                     <label class="setting-label">EFFECTS</label>
                     <div class="checkbox-group">
@@ -185,28 +199,79 @@
                     <button class="mode-tab" data-mode="sunset">Sunset</button>
                 </div>
 
-                <!-- Action Group -->
-                <div class="action-group">
-                    <button class="play-btn" id="btn-reset">
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
-                        Reset
-                    </button>
-                    <button class="play-btn active" id="btn-light">
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83"/></svg>
-                        <span id="light-text">Emit</span>
-                    </button>
-                    <button class="play-btn active" id="btn-play">
-                        <span id="play-icon"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg></span>
-                        <span id="play-text">Hold</span>
-                    </button>
-                    <button class="play-btn" id="btn-sim">
-                        <span id="sim-icon"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg></span>
-                        <span id="sim-text">Sim Off</span>
-                    </button>
-                </div>
+
             </div>
         </aside>
     </main>
+    
+    <!-- Apple-style Floating Player (Independent Layer) -->
+    <div class="apple-player" id="apple-player">
+        <!-- Close button: always accessible when hovered -->
+        <button class="player-close" id="apple-player-close" title="Hide Player (Esc to show)">
+            <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+        <div class="player-grip" id="player-grip"></div>
+        <div class="player-main">
+            <!-- Top row: Volume and Controls -->
+            <div class="player-controls-row">
+                <div class="volume-group">
+                    <svg class="icon-volume" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M11 5L6 9H2V15H6L11 19V5Z"/><path d="M19.07 4.93C20.94 6.81 22 9.31 22 12C22 14.69 20.94 17.19 19.07 19.07M15.54 8.46C16.47 9.4 17 10.65 17 12C17 13.35 16.47 14.6 15.54 15.54" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                    <input type="range" id="apple-volume" class="apple-slider-vol" min="0.2" max="3.0" step="0.05" value="1.0">
+                </div>
+                
+                <div class="playback-group">
+                    <button class="player-btn-mini" id="apple-partial-reset" title="Partial Reset (Beam)">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="19 20 9 12 19 4 19 20"/><line x1="5" y1="19" x2="5" y2="5"/></svg>
+                    </button>
+                    <button class="player-btn-speed" id="apple-speed-down" title="Slow Down (0.9x)">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="11 17 6 12 11 7"/><polyline points="18 17 13 12 18 7"/></svg>
+                    </button>
+                    <button class="player-btn-main" id="apple-play">
+                        <div id="apple-play-icon" class="play-svg-wrapper">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                        </div>
+                    </button>
+                    <button class="player-btn-speed" id="apple-speed-up" title="Speed Up (1.1x)">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="13 17 18 12 13 7"/><polyline points="6 17 11 12 6 7"/></svg>
+                    </button>
+                    <button class="player-btn-mini" id="apple-full-reset" title="Full Reset (All)">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+                    </button>
+                </div>
+
+                <div class="extra-group">
+                    <button class="player-btn-small" id="apple-fullscreen" title="Window Fullscreen">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="15 3 21 3 21 9"></polyline>
+                            <polyline points="9 21 3 21 3 15"></polyline>
+                            <line x1="21" y1="3" x2="14" y2="10"></line>
+                            <line x1="3" y1="21" x2="10" y2="14"></line>
+                        </svg>
+                    </button>
+                    <button class="player-btn-small" id="apple-sidebar-toggle" title="Toggle Sidebar">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                            <line x1="9" y1="3" x2="9" y2="21"></line>
+                        </svg>
+                    </button>
+
+                </div>
+            </div>
+
+            <!-- Bottom row: Progress Timeline -->
+            <div class="player-timeline-row">
+                <span class="time-label" id="apple-time-current">00:00</span>
+                <div class="timeline-container">
+                    <div class="timeline-track">
+                        <div class="timeline-progress" id="apple-progress-bar"></div>
+                    </div>
+                </div>
+                <span class="time-label" id="apple-time-total">01:00</span>
+            </div>
+        </div>
+    </div>
 
     <script type="module" src="main.js"></script>
 </body>
