@@ -65,6 +65,7 @@ const App = {
         reflections: 0
     },
     autoTimer: 0,
+    elapsedTime: 0, 
 
     getDefaultSourcePos() {
         const size = Math.min(window.innerWidth, window.innerHeight) * 0.35;
@@ -207,6 +208,29 @@ const App = {
     },
 
 
+    resetRays(shouldStop = true) {
+        this.growth = 0;
+        if (shouldStop) {
+            this.isFlowing = false;
+        }
+        this.isLightVisible = true;
+        this.emitStartTime = performance.now();
+        this.elapsedTime = 0; // Timer goes back to 0 on Reset
+        UI.update(this);
+    },
+
+    toggleFlow() {
+        this.isFlowing = !this.isFlowing;
+        if (this.isFlowing) {
+            this.isLightVisible = true;
+            if (!this.emitStartTime) {
+                this.emitStartTime = performance.now();
+            }
+        }
+        this.isSimulationMode = false;
+        UI.update(this);
+    },
+
     reset() {
         // this.shape = 'circle'; // Keep current shape
         this.rayNumber = 30;
@@ -296,9 +320,9 @@ const App = {
                     this.rayNumber = Math.floor(20 + oscillate('density', 0.2) * 480);
                 }
 
-                // Speed
+                // Speed (Ensure minimum 10 during auto-animation)
                 if (this.autoModes.speed) {
-                    this.raySpeed = oscillate('speed', 0.1) * 100;
+                    this.raySpeed = 10 + oscillate('speed', 0.1) * 90;
                 }
 
                 // Spread
@@ -326,8 +350,7 @@ const App = {
                 if (this.isFlowing && this.isLightVisible) {
                     // Use safeDt: prevent negative values and massive jumps (background sleep)
                     const safeDt = Math.max(0, Math.min(dt, 0.1)); 
-                    this.growth += (this.raySpeed * 8) * safeDt; 
-                    
+                    this.growth += (this.raySpeed * 10) * safeDt; // Increased from 8 to 10 for better flow                    
                     // Cap growth at a safe level (diagonal of canvas * 5) to ensure stability
                     const maxCap = Math.sqrt(this.canvas.width**2 + this.canvas.height**2) * 5;
                     if (this.growth > maxCap) this.growth = maxCap;
@@ -337,15 +360,18 @@ const App = {
                     }
                 }
 
-                // HUD Update
+                // HUD & Timer Update
                 if (this.hudElement) {
-                    if (this.emitStartTime) {
-                        const elapsed = (performance.now() - this.emitStartTime) / 1000;
-                        this.hudElement.textContent = this.formatTime(elapsed);
+                    if (this.isFlowing) {
+                        const safeDt = Math.max(0, Math.min(dt, 0.1)); 
+                        this.elapsedTime += safeDt;
+                    }
+
+                    if (this.isLightVisible) {
+                        this.hudElement.textContent = `TIME: ${this.elapsedTime.toFixed(2)}s`;
                         this.hudElement.classList.add('visible');
                     } else {
                         this.hudElement.classList.remove('visible');
-                        this.hudElement.textContent = "00:00.00";
                     }
                 }
                 Renderer.draw(this);

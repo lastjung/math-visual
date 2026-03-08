@@ -373,31 +373,74 @@ input[type=range]::-webkit-slider-thumb {
   justify-content: center;
   gap: 8px;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.play-btn {
-  background: rgba(6, 182, 210, 0.1);
-  border-color: rgba(6, 182, 210, 0.2);
+/* Emit Button styling (Reset-like but light-specific) */
+#btn-light {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+  color: #94a3b8;
+}
+
+#btn-light.light-on {
+  background: rgba(6, 182, 210, 0.15);
+  border-color: rgba(6, 182, 210, 0.5);
   color: var(--accent-cyan);
 }
 
-.play-btn.active {
-  background: var(--accent-cyan);
-  color: #fff;
-  box-shadow: 0 8px 24px rgba(6, 182, 210, 0.3);
+#btn-light:hover {
+  background: rgba(6, 182, 210, 0.15);
+  box-shadow: 0 0 20px rgba(6, 182, 210, 0.1);
 }
 
-.reset-btn:hover, .play-btn:hover {
+#btn-light:active {
+  background: var(--accent-cyan);
+  color: #fff;
+  transform: scale(0.95);
+  transition: transform 0.05s;
+}
+
+/* Go/Hold Button styling (Significant flow control) */
+#btn-play {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+  min-width: 90px;
+}
+
+#btn-play.active {
+  background: var(--accent-cyan);
+  border-color: #22d3ee;
+  color: #fff;
+  box-shadow: 0 12px 32px rgba(6, 182, 210, 0.35);
+}
+
+#btn-play.active:hover {
+  background: #0891b2;
+  box-shadow: 0 16px 40px rgba(6, 182, 210, 0.45);
+}
+
+.reset-btn:hover {
   background: rgba(255, 255, 255, 0.1);
 }
 
-.play-btn.active:hover {
-  background: #0891b2;
+.reset-btn:active {
+  transform: scale(0.92);
 }
 
-.reset-btn:active, .play-btn:active {
-  transform: scale(0.95);
+.play-btn:active {
+  transform: scale(0.92);
+}
+
+/* Animation for EMIT trigger */
+@keyframes emit-flash {
+  0% { box-shadow: 0 0 0 0 rgba(6, 182, 210, 0.7); }
+  70% { box-shadow: 0 0 0 10px rgba(6, 182, 210, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(6, 182, 210, 0); }
+}
+
+.flash-active {
+  animation: emit-flash 0.4s ease-out;
 }
 
 /* Info Box */

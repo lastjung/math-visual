@@ -176,23 +176,16 @@ export const UI = {
 
         // Flow (Play/Hold) Toggle
         const btnPlay = document.getElementById('btn-play');
-        btnPlay.onclick = () => {
-            app.isFlowing = !app.isFlowing;
-            app.isSimulationMode = false;
-            this.update(app);
-        };
+        btnPlay.onclick = () => app.toggleFlow();
 
-        // Emit (Always Power ON & Reset)
+        // Emit (Ray-only reset)
         const btnEmit = document.getElementById('btn-light');
-        const triggerEmit = () => {
-            app.isLightVisible = true;
-            app.growth = 0;
-            app.isFlowing = true;
-            app.emitStartTime = performance.now();
-            this.update(app);
+        btnEmit.onclick = () => {
+            app.resetRays();
+            btnEmit.classList.remove('flash-active');
+            void btnEmit.offsetWidth; 
+            btnEmit.classList.add('flash-active');
         };
-
-        btnEmit.onclick = triggerEmit;
 
         const btnSim = document.getElementById('btn-sim');
         if (btnSim) {
@@ -205,7 +198,7 @@ export const UI = {
                 if (willEnable) {
                     app.preSimulationBounces = app.MAX_BOUNCES;
                     app.rayNumber = Math.min(app.rayNumber, 180);
-                    app.MAX_BOUNCES = 1;
+                    app.MAX_BOUNCES = 4; // Adjusted from 1 to 4
                     app.isLightVisible = true;
                     app.isFlowing = true;
                     app.emitStartTime = performance.now();
@@ -241,10 +234,10 @@ export const UI = {
                 return;
             }
 
-            // Space bar shortcut for Emit
+            // Space bar shortcut for Go / Hold
             if (e.code === 'Space') {
                 e.preventDefault(); 
-                triggerEmit();
+                app.toggleFlow();
                 return;
             }
 
@@ -384,10 +377,12 @@ export const UI = {
         
         const nPlayText = app.isFlowing ? 'Hold' : 'Go';
         if (playText.textContent !== nPlayText) playText.textContent = nPlayText;
+        document.getElementById('btn-play').classList.toggle('active', app.isFlowing);
 
         const lightText = document.getElementById('light-text');
         const btnLight = document.getElementById('btn-light');
-        btnLight.classList.toggle('active', app.isLightVisible);
+        // Light button reflects 'Power ON' state but isn't as solid as 'Go'
+        btnLight.classList.toggle('light-on', app.isLightVisible);
         if (lightText.textContent !== 'Emit') lightText.textContent = 'Emit';
 
         const btnSim = document.getElementById('btn-sim');
