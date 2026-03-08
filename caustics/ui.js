@@ -178,6 +178,10 @@ export const UI = {
             app.useBloom = e.target.checked;
             this.update(app);
         };
+        document.getElementById('check-paint').onchange = (e) => {
+            app.isPaintMode = e.target.checked;
+            this.update(app);
+        };
 
         const btnWindowFull = document.getElementById('apple-fullscreen');
         if (btnWindowFull) {
@@ -266,14 +270,16 @@ export const UI = {
             const y = clientY - rect.top - (rect.height/2 - 60); // Sync with renderer's centerY shift
 
             if (e.type === 'mousedown' || e.type === 'touchstart') {
-                // Clicking anywhere on canvas moves the source and starts dragging
-                isDragging = true;
-                app.sourcePos = { x, y };
-                app.autoModes.revolution = false;
-                if (e.cancelable) e.preventDefault();
-                this.update(app);
+                // Check if click is near the existing source (50px hit radius)
+                const dist = Math.sqrt((x - app.sourcePos.x)**2 + (y - app.sourcePos.y)**2);
+                if (dist < 50) {
+                    isDragging = true;
+                    app.autoModes.revolution = false;
+                    if (e.cancelable) e.preventDefault();
+                }
             } else if (isDragging && (e.type === 'mousemove' || e.type === 'touchmove')) {
                 app.sourcePos = { x, y };
+                app.recalcParallelRange(); // Update range while moving
                 this.update(app);
             }
         };
@@ -402,10 +408,12 @@ export const UI = {
         const cTrail = document.getElementById('check-trail');
         const cTaper = document.getElementById('check-taper');
         const cBloom = document.getElementById('check-bloom');
+        const cPaint = document.getElementById('check-paint');
         
         if (cTrail && cTrail.checked !== app.useTrail) cTrail.checked = app.useTrail;
         if (cTaper && cTaper.checked !== app.useTaper) cTaper.checked = app.useTaper;
         if (cBloom && cBloom.checked !== app.useBloom) cBloom.checked = app.useBloom;
+        if (cPaint && cPaint.checked !== app.isPaintMode) cPaint.checked = app.isPaintMode;
 
         // Sync Apple Player
         const applePlay = document.getElementById('apple-play');

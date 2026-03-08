@@ -38,6 +38,7 @@ const App = {
     useTaper: true,
     useBloom: false,
     alphaIntensity: 1.0,
+    isPaintMode: false, // New: Don't clear canvas for layering effect
     isSimulationMode: false,
     preSimulationBounces: 10,
     MAX_BOUNCES: 10, // 반사 최대 10번
@@ -130,6 +131,7 @@ const App = {
             useTaper: this.useTaper,
             useBloom: this.useBloom,
             alphaIntensity: this.alphaIntensity,
+            isPaintMode: this.isPaintMode,
             MAX_BOUNCES: this.MAX_BOUNCES,
             parallelRange: this.parallelRange
         };
@@ -176,6 +178,7 @@ const App = {
             this.useTaper = saved.useTaper ?? this.useTaper;
             this.useBloom = saved.useBloom ?? this.useBloom;
             this.alphaIntensity = saved.alphaIntensity ?? this.alphaIntensity;
+            this.isPaintMode = saved.isPaintMode ?? false;
             this.parallelRange = saved.parallelRange ?? { min: -100, max: 100 };
             
             this.recalcParallelRange(); // Ensure range is valid for current sourcePos.y
@@ -202,6 +205,11 @@ const App = {
         this.resize();
         this.sourcePos = this.getDefaultSourcePos();
         this.restoreState();
+
+        // 1. Sync Parallel Range immediately after restore/positioning
+        this.recalcParallelRange();
+
+        // 2. UI and Event Setup
         document.querySelectorAll('.shape-tab').forEach(b => b.classList.toggle('active', b.dataset.shape === this.shape));
         document.querySelectorAll('.mode-tab').forEach(b => b.classList.toggle('active', b.dataset.mode === this.colorMode));
 
@@ -225,7 +233,15 @@ const App = {
         }
         this.isLightVisible = true;
         this.emitStartTime = performance.now();
-        this.elapsedTime = 0; // Timer goes back to 0 on Reset
+        this.elapsedTime = 0; 
+        
+        // Manual Clear: Even in Paint Mode, the Reset button should clear the canvas
+        if (this.ctx) {
+            this.ctx.fillStyle = '#050508';
+            this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+            Renderer.clearPaint(); // Clear the hidden paint buffer too
+        }
+
         UI.update(this);
     },
 
@@ -253,11 +269,12 @@ const App = {
         this.colorMode = 'rainbow';
         this.baseStyle = 'line';
         this.flowMode = 'none';
-        this.lightSourceMode = 'point';
+        // this.lightSourceMode = 'point'; // Exempt from reset
         this.useTrail = true;
         this.useTaper = true;
         this.useBloom = false;
         this.alphaIntensity = 1.0;
+        this.isPaintMode = false;
         this.isSimulationMode = false;
         this.preSimulationBounces = 10;
         this.spread = 1.2;
