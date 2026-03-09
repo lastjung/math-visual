@@ -43,7 +43,7 @@ const App = {
     isWindowFull: false,
     preSimulationBounces: 10,
     MAX_BOUNCES: 1, // 반사 효과 끔 (기본 1회)
-    currentNarrative: 'Exploring the Secrets of Light Flow',
+    currentNarrative: 'The Hidden Soul of Beams',
     emitStartTime: null,
     overlayMessage: null,
     isSimRunning: false,
@@ -250,7 +250,15 @@ const App = {
             this.recalcParallelRange(); // Ensure range is valid for current sourcePos.y
             this.isSimulationMode = false;
             this.MAX_BOUNCES = saved.MAX_BOUNCES ?? this.MAX_BOUNCES;
-            this.currentNarrative = saved.currentNarrative ?? this.currentNarrative;
+            
+            // Safety Validation for Narratives: Replace legacy/invalid strings with the default
+            const validNarratives = ['none', 'The Secret Foci of Ovals', 'The Parabolic Point', 'Reflections of Order', 'Circle of Infinite Light', 'The Hidden Soul of Beams', 'Dance of the Photons'];
+            const restoredNarrative = saved.currentNarrative;
+            if (validNarratives.includes(restoredNarrative)) {
+                this.currentNarrative = restoredNarrative;
+            } else {
+                this.currentNarrative = 'The Hidden Soul of Beams'; // Reset to new default if legacy detected
+            }
 
             this.lastPersistSnapshot = raw;
             return true;

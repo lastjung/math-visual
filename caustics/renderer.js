@@ -105,7 +105,7 @@ export const Renderer = {
         // aimAngle is set to Math.PI/2 (90deg) so that 0 rotation points DOWN.
         const aimAngle = Math.PI / 2; 
 
-        const workBudget = baseStyle === 'particle' ? 1200 : 2600;
+        const workBudget = state.isWindowFull ? 4000 : 2600;
         let drawRayNumber = Math.max(1, Math.floor(rayNumber));
         let drawMaxBounces = Math.max(1, Math.floor(MAX_BOUNCES));
         if (drawRayNumber * drawMaxBounces > workBudget) {
@@ -119,10 +119,9 @@ export const Renderer = {
         const maxTravel = Math.sqrt(w*w + h*h) * 1.2;
 
         if (isLightVisible) {
-            const indices = Array.from({length: drawRayNumber}, (_, i) => i);
-            
-            // Pre-calculate all ray paths for multi-pass rendering
-            const rayPaths = indices.map(idx => {
+            // Memory Optimization: Avoid Array.from and map every frame
+            const rayPaths = [];
+            for (let idx = 0; idx < drawRayNumber; idx++) {
                 const t = idx / Math.max(1, drawRayNumber - 1);
                 let sPos, angle;
                 
@@ -138,31 +137,35 @@ export const Renderer = {
                 }
 
                 let baseHue;
-                if (colorMode === 'cyan') baseHue = 185;
-                else if (colorMode === 'rainbow') baseHue = t * 300;
-                else baseHue = 20 + t * 40;
+                if (colorMode === 'rainbow') baseHue = (t * 360 + flowOffset * 0.5) % 360;
+                else if (colorMode === 'cyan') baseHue = 180 + Math.sin(t * 5 + flowOffset * 0.1) * 20;
+                else if (colorMode === 'sunset') baseHue = 10 + Math.sin(t * 3 + flowOffset * 0.1) * 30;
 
-                const rx = centerX + sPos.x;
-                const ry = centerY + sPos.y;
+                rayPaths.push({
+                    rx: centerX + sPos.x,
+                    ry: centerY + sPos.y,
+                    ra: angle,
+                    baseHue: baseHue,
+                    accDist: 0,
+                    active: true
+                });
+            }
+            // PERFORMANCE: Move global style settings OUTSIDE the hot loop where possible
+            targetCtx.save();
+            targetCtx.globalCompositeOperation = state.isPaintMode ? 'source-over' : 'lighter';
+            targetCtx.lineCap = 'round';
+            if (flowMode === 'interval') {
+                targetCtx.setLineDash([30, 20]);
+                targetCtx.lineDashOffset = -flowOffset * 2;
+            } else {
+                targetCtx.setLineDash([]);
+            }
 
-                return { sPos, angle, baseHue, rx: rx, ry: ry, ra: angle, accDist: 0, active: true };
-            });
-
-            // MULTI-PASS DRAWING: 
-            // Level 0 (Sources) first, then Level 1 (Reflections), so reflections cover ALL sources.
+            // MULTI-PASS DRAWING
             for (let b = 0; b < drawMaxBounces; b++) {
-                for (let ray of rayPaths) {
+                for (let i = 0; i < rayPaths.length; i++) {
+                    const ray = rayPaths[i];
                     if (!ray.active) continue;
-
-                    targetCtx.save();
-                    targetCtx.globalCompositeOperation = state.isPaintMode ? 'source-over' : 'lighter';
-                    targetCtx.lineCap = 'round';
-                    if (flowMode === 'interval') {
-                        targetCtx.setLineDash([30, 20]);
-                        targetCtx.lineDashOffset = -flowOffset * 2;
-                    } else {
-                        targetCtx.setLineDash([]);
-                    }
 
                     const hit = Physics.findBoundaryIntersection(ray.rx - centerX, ray.ry - centerY, ray.ra, shape, size);
                     let nextX, nextY, segDist;
@@ -179,7 +182,6 @@ export const Renderer = {
 
                     if (segDist < 0.1 || ray.accDist > growth) {
                         ray.active = false;
-                        targetCtx.restore();
                         continue;
                     }
                     
@@ -212,14 +214,14 @@ export const Renderer = {
                     targetCtx.fillStyle = `hsla(${ray.baseHue}, 100%, 60%, ${alpha})`;
 
                     let cw = beamWidth;
-                    if (state.isPaintMode) cw *= 0.5; // 50% thinner for Paint mode
+                    if (state.isPaintMode) cw *= 0.5; 
                     if (!useTrail) cw *= 1.35;
                     targetCtx.lineWidth = cw;
 
                     if (baseStyle === 'line') {
                         targetCtx.beginPath(); targetCtx.moveTo(ray.rx, ray.ry); targetCtx.lineTo(dX, dY); targetCtx.stroke();
                     } else if (baseStyle === 'particle') {
-                        const step = 8;
+                        const step = Math.max(4, 8 / (state.isWindowFull ? 1 : 2)); // Dynamic step for resolution
                         const pathLen = Math.sqrt((dX - ray.rx)**2 + (dY - ray.ry)**2);
                         const dotCount = Math.min(Math.floor(pathLen / step), (hit ? 150 : 40));
                         const pSize = cw * 1.5;
@@ -234,37 +236,43 @@ export const Renderer = {
 
                     if (useBloom && hit && !isLast && !state.isPaintMode) {
                         const r = cw * 1.5; const ba = Math.min(1.0, alpha * 2.5);
-                        targetCtx.save();
                         targetCtx.beginPath(); targetCtx.arc(nextX, nextY, r * 4.5, 0, Math.PI * 2);
                         targetCtx.fillStyle = `hsla(${ray.baseHue}, 100%, 60%, ${ba * 0.15})`; targetCtx.fill();
                         targetCtx.beginPath(); targetCtx.arc(nextX, nextY, r * 2.0, 0, Math.PI * 2);
                         targetCtx.fillStyle = `hsla(${ray.baseHue}, 100%, 60%, ${ba * 0.4})`; targetCtx.fill();
                         targetCtx.beginPath(); targetCtx.arc(nextX, nextY, r, 0, Math.PI * 2);
                         targetCtx.fillStyle = `hsla(${ray.baseHue}, 100%, 80%, ${ba})`; targetCtx.fill();
-                        targetCtx.restore();
                     }
 
                     if (!hit || isLast) {
                         ray.active = false;
                     } else {
                         ray.accDist += segDist;
-                        const norm = Physics.getNormal(hit.x, hit.y, shape, size);
-                        const incom = { x: Math.cos(ray.ra), y: Math.sin(ray.ra) };
-                        const dotP = incom.x * norm.x + incom.y * norm.y;
-                        const rX = incom.x - 2 * dotP * norm.x;
-                        const rY = incom.y - 2 * dotP * norm.y;
-                        ray.ra = Math.atan2(rY, rX); ray.rx = nextX; ray.ry = nextY;
+                        ray.rx = nextX; ray.ry = nextY;
+                        
+                        // Physics.getNormal returns an INWARD pointing normal for ovals.
+                        const normal = Physics.getNormal(hit.x, hit.y, shape, size);
+                        const incomingX = Math.cos(ray.ra);
+                        const incomingY = Math.sin(ray.ra);
+                        const dot = incomingX * normal.x + incomingY * normal.y;
+                        
+                        const rx = incomingX - 2 * dot * normal.x;
+                        const ry = incomingY - 2 * dot * normal.y;
+                        ray.ra = Math.atan2(ry, rx);
+                        
+                        // Nudge slightly ALONG the inward normal to ensure the next segment starts inside
+                        ray.rx += normal.x * 0.1; 
+                        ray.ry += normal.y * 0.1;
                     }
-                    targetCtx.restore();
                 }
             }
+            targetCtx.restore();
         }
 
         // --- 5. COMPOSITE PAINT & DRAW TOP UI ---
         if (state.isPaintMode) {
             ctx.clearRect(0, 0, w, h);
             ctx.drawImage(this.paintCanvas, 0, 0);
-            // Draw UI AFTER rays in Paint mode so it's always clean and on top.
             this.drawUI(ctx, state, centerX, centerY, size);
         }
 
@@ -280,8 +288,8 @@ export const Renderer = {
                 const mainText = state.overlayMessage[0];
                 const subText = state.overlayMessage[1];
 
-                // Main Title - Now uses the selected Narrative, smaller for safety
-                ctx.font = '900 32px Inter';
+                // Main Title - Now uses the selected Narrative, smaller (26px) to prevent overflow
+                ctx.font = '900 26px Inter';
                 ctx.fillText(mainText, centerX, centerY - 20);
 
                 // Sub Title - "Begin the Journey of Light", even smaller

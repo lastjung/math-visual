@@ -147,6 +147,7 @@ export const UI = {
         if (selectNarrative) {
             selectNarrative.onchange = (e) => {
                 app.currentNarrative = e.target.value;
+                app.saveToPersist(); // Force save immediately
                 this.update(app);
             };
         }
@@ -440,7 +441,8 @@ export const UI = {
         if (cPaint && cPaint.checked !== app.isPaintMode) cPaint.checked = app.isPaintMode;
 
         const sNarrative = document.getElementById('select-narrative');
-        if (sNarrative && sNarrative.value !== app.currentNarrative) {
+        if (sNarrative) {
+            // Strong sync: make sure dropdown matches state
             sNarrative.value = app.currentNarrative;
         }
 
