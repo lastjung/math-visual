@@ -28,21 +28,21 @@ const App = {
     growth: 0,
     colorMode: 'rainbow',
     beamWidth: 1.6,
-    spread: 1.2,
+    spread: 0,
     flowOffset: 0,
     baseStyle: 'line',
     flowMode: 'none',
     lightSourceMode: 'point', // 'point' or 'parallel'
     parallelRange: { min: -100, max: 100 }, // Cached range for Parallel rays
     useTrail: true,
-    useTaper: true,
+    useTaper: false,
     useBloom: false,
     alphaIntensity: 1.0,
     isPaintMode: false, // New: Don't clear canvas for layering effect
     isSimulationMode: false,
     isWindowFull: false,
     preSimulationBounces: 10,
-    MAX_BOUNCES: 10, // 반사 최대 10번
+    MAX_BOUNCES: 1, // 반사 효과 끔 (기본 1회)
     emitStartTime: null,
     overlayMessage: null,
     isSimRunning: false,
@@ -124,6 +124,7 @@ const App = {
     },
     autoTimer: 0,
     elapsedTime: 0,
+    musicVisTimer: 0, // Separate timer for visualizer animation
     simSpeedMultiplier: 1.0, 
 
     getDefaultSourcePos() {
@@ -139,13 +140,21 @@ const App = {
         };
 
         if (shape === 'ellipse') {
-            defaults.sourcePos = { x: 0, y: -size * 0.3 };
+            const fDist = size * 0.88; // sqrt(1.1^2 - 0.66^2)
+            defaults.sourcePos = { x: -fDist, y: 0 };
             defaults.sourceRotation = 0;
         } else if (shape === 'cardioid') {
             defaults.sourcePos = { x: -size * 0.2, y: -size * 0.45 };
             defaults.sourceRotation = 0;
         } else if (shape === 'parabola') {
             defaults.sourcePos = { x: 0, y: -size * 1.5 };
+            defaults.sourceRotation = 0;
+        } else if (shape === 'rect') {
+            defaults.sourcePos = { x: 0, y: -size * 1.05 };
+            defaults.sourceRotation = 0;
+        } else if (shape === 'v-oval') {
+            const fDist = size * 0.6324; // sqrt(1.1^2 - 0.9^2)
+            defaults.sourcePos = { x: 0, y: -fDist };
             defaults.sourceRotation = 0;
         }
 
@@ -290,7 +299,7 @@ const App = {
         this.growth = 0;
         if (shouldStop) {
             this.isFlowing = false;
-            // if (window.audioManager) window.audioManager.stop(); // Keep music playing as requested before
+            if (window.audioManager) window.audioManager.pause();
         }
         this.isLightVisible = true;
         this.emitStartTime = performance.now();
@@ -309,7 +318,7 @@ const App = {
     stopSimulation() {
         if (!this.isSimRunning && !this.overlayMessage) return;
         
-        // Clear all pending timeouts
+        // Clear all pending timeouts to kill the "ghost" chains
         this.simTimers.forEach(t => clearTimeout(t));
         this.simTimers = [];
         
@@ -320,10 +329,18 @@ const App = {
         this.isLightVisible = true;
         this.isFlowing = false;
         
+        // Pause music when simulation is force-stopped
+        if (window.audioManager) window.audioManager.pause();
+        
         UI.update(this);
     },
 
     toggleFlow() {
+        if (this.isSimRunning) {
+            this.stopSimulation();
+            return;
+        }
+
         this.isFlowing = !this.isFlowing;
         if (this.isFlowing) {
             this.isLightVisible = true;
@@ -338,16 +355,14 @@ const App = {
                 }
             }
         } else {
-            if (window.audioManager) {
-                window.audioManager.isMuted = false;
-                window.audioManager.resume();
-            }
-            if (window.audioManager) window.audioManager.stop();
+            // Pause instead of stop to allow resuming from the same position
+            if (window.audioManager) window.audioManager.pause();
         }
         UI.update(this);
     },
 
     reset() {
+        this.stopSimulation(); // Kill any simulation ghost chains first
         // this.shape = 'circle'; // Keep current shape
         this.rayNumber = 30;
         this.raySpeed = 20;
@@ -373,7 +388,10 @@ const App = {
         this.MAX_BOUNCES = 10;
         this.emitStartTime = null;
 
-        if (window.audioManager) window.audioManager.stop();
+        if (window.audioManager) {
+            window.audioManager.stop();
+            this.nextBGM(false); // Reset to a new random track (ready but not playing)
+        }
 
         // Reset auto modes and phases
         this.autoModes = {
@@ -623,6 +641,12 @@ const App = {
                         if (this.speedElement) this.speedElement.classList.remove('visible');
                     }
                 }
+
+                // Update Music Visualizer Timer (only if audio is playing)
+                if (window.audioManager && window.audioManager.audio && !window.audioManager.audio.paused) {
+                    this.musicVisTimer += safeDt;
+                }
+
                 Renderer.draw(this);
                 if (now - this.lastPersistAt > 200) {
                     this.persistState();

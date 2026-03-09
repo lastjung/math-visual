@@ -49,7 +49,7 @@ export const UI = {
             rotation: { speed: 0.15, min: -Math.PI, max: Math.PI, get: () => app.sourceRotation },
             density: { speed: 0.2, min: 20, max: 500, get: () => app.rayNumber },
             speed: { speed: 0.1, min: 0, max: 100, get: () => app.raySpeed },
-            spread: { speed: 0.15, min: 0.1, max: 6.28, get: () => app.spread },
+            spread: { speed: 0.15, min: 0, max: Math.PI * 2, get: () => app.spread },
             reflections: { speed: 0.1, min: 1, max: 20, get: () => app.MAX_BOUNCES }
         };
 
@@ -622,6 +622,15 @@ export const UI = {
             if (e.key === 'Escape') {
                 player.classList.remove('hidden');
                 if (sidebar) sidebar.classList.remove('hidden');
+
+                // Exit Full Window mode on Esc
+                if (document.body.classList.contains('window-full')) {
+                    document.body.classList.remove('window-full');
+                    app.isWindowFull = false;
+                    app.recalcParallelRange();
+                    setTimeout(() => app.resize(), 50);
+                    this.update(app);
+                }
             }
         });
 

@@ -88,16 +88,18 @@ body {
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid transparent;
   color: var(--text-muted);
-  padding: 8px 18px;
-  border-radius: 999px;
-  font-size: 11px;
-  font-weight: 900;
-  text-transform: uppercase;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .shape-tab:hover {
+  background: rgba(255, 255, 255, 0.1);
   color: #fff;
 }
 
@@ -107,6 +109,15 @@ body {
   color: #fff;
   transform: scale(1.05);
   box-shadow: 0 0 20px rgba(6, 182, 210, 0.4);
+}
+
+.shape-tab svg {
+  transition: transform 0.3s ease;
+}
+
+.shape-tab.active svg {
+  filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.5));
+  transform: scale(1.1);
 }
 
 /* Main Layout */

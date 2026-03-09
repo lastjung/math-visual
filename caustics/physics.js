@@ -9,8 +9,8 @@ export const Physics = {
      */
     getShapePoint(rad, type, size) {
         switch(type) {
-            case 'circle': return { x: Math.cos(rad) * size, y: Math.sin(rad) * size };
             case 'ellipse': return { x: Math.cos(rad) * size * 1.1, y: Math.sin(rad) * size * 1.1 * 0.6 };
+            case 'v-oval': return { x: Math.cos(rad) * size * 0.9, y: Math.sin(rad) * size * 1.1 };
             case 'cardioid': 
                 const r = size * (1 - Math.cos(rad)) * 0.5;
                 return { x: r * Math.cos(rad) + size*0.3, y: r * Math.sin(rad) };
@@ -19,6 +19,15 @@ export const Physics = {
                 const px = (rad / Math.PI - 1) * 2.0; 
                 // A cup shape opening upwards: vertex at (0, 0.5*size)
                 return { x: px * size * 0.5, y: (0.5 - px * px * 0.2) * size };
+            case 'rect':
+                const rw = size * 1.5;
+                const rh = size * 2.1;
+                // Periodic mapping of rad [0, 2PI] to perimeter
+                const p = (rad / (2 * Math.PI)) * 2 * (rw + rh);
+                if (p < rw) return { x: -rw/2 + p, y: -rh/2 };
+                if (p < rw + rh) return { x: rw/2, y: -rh/2 + (p - rw) };
+                if (p < 2*rw + rh) return { x: rw/2 - (p - (rw + rh)), y: rh/2 };
+                return { x: -rw/2, y: rh/2 - (p - (2*rw + rh)) };
             default: return { x: Math.cos(rad) * size, y: Math.sin(rad) * size };
         }
     },
@@ -30,11 +39,25 @@ export const Physics = {
         let nx, ny;
         if (type === 'circle') { nx = -x; ny = -y; }
         else if (type === 'ellipse') { nx = -x; ny = -y / (0.6 * 0.6); }
+        else if (type === 'v-oval') { nx = -x / (0.9 * 0.9); ny = -y / (1.1 * 1.1); }
         else if (type === 'parabola') { 
             // For y = (0.5 - 0.2 * (x/(0.5*size))^2) * size
             // dy/dx = -0.8 * x / (0.5 * size)
             nx = 0.8 * x / (0.5 * size); 
             ny = 1; 
+        }
+        else if (type === 'rect') {
+            const rw = size * 1.5;
+            const rh = size * 2.1;
+            const hw = rw / 2;
+            const hh = rh / 2;
+            const dL = Math.abs(x + hw); const dR = Math.abs(x - hw);
+            const dT = Math.abs(y + hh); const dB = Math.abs(y - hh);
+            const m = Math.min(dL, dR, dT, dB);
+            if (m === dL) { nx = 1; ny = 0; }
+            else if (m === dR) { nx = -1; ny = 0; }
+            else if (m === dT) { nx = 0; ny = 1; }
+            else { nx = 0; ny = -1; }
         }
         else { nx = -x; ny = -y; } 
         
@@ -48,10 +71,16 @@ export const Physics = {
     isInside(px, py, type, size) {
         if (type === 'circle') return (px*px + py*py) < size*size;
         if (type === 'ellipse') return (px*px)/(size*size*1.21) + (py*py)/(size*size*1.21*0.36) < 1;
+        if (type === 'v-oval') return (px*px)/(size*size*0.81) + (py*py)/(size*size*1.21) < 1;
         if (type === 'parabola') return py < (0.5 - Math.pow(px/(size*0.5), 2) * 0.2) * size;
         if (type === 'cardioid') {
             const cx = px - size*0.3;
             return Math.sqrt(cx*cx + py*py) < size * (1 - Math.cos(Math.atan2(py, cx))) * 0.5;
+        }
+        if (type === 'rect') {
+            const rw = size * 1.5;
+            const rh = size * 2.1;
+            return Math.abs(px) < rw/2 && Math.abs(py) < rh/2;
         }
         return false;
     },
@@ -64,7 +93,7 @@ export const Physics = {
         const dx = Math.cos(angle);
         const dy = Math.sin(angle);
         
-        const nudge = size * 0.03;  // Small forward nudge to escape the current boundary
+        const nudge = 0.1;  // Much smaller nudge for precision
         const startInside = this.isInside(sx + dx * nudge, sy + dy * nudge, type, size);
 
         if (startInside) {
@@ -88,7 +117,7 @@ export const Physics = {
             return { x: sx + dx * high, y: sy + dy * high };
         } else {
             // EXTERNAL PATH: Ray starts outside → coarse raymarch to find entry
-            const maxDist = size * 3;
+            const maxDist = size * 15;
             const step = size * 0.1;  // Big steps (10% of shape size) = max ~30 iterations
             
             let crossedDist = null;

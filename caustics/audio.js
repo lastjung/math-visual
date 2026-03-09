@@ -71,15 +71,11 @@ class AudioManager {
     toggleMute() {
         this.isMuted = !this.isMuted;
         if (this.isMuted) {
-            if (!this.audio.paused) {
-                this.audio.pause();
-            }
             this.audio.volume = 0;
+            // Removed audio.pause() so playback continues silently
         } else {
-            if (this.currentTrack && this.audio.paused) {
-                this.audio.play().then(() => {
-                    this.fadeIn();
-                }).catch(() => {});
+            if (this.currentTrack && !this.audio.paused) {
+                this.fadeIn();
             } else {
                 this.audio.volume = this.targetVolume;
             }
@@ -104,24 +100,34 @@ class AudioManager {
 
     fadeIn() {
         if (this.isMuted) return;
-        if (this.fadeInterval) clearInterval(this.fadeInterval);
+        if (this.fadeInterval) {
+            clearInterval(this.fadeInterval);
+            this.fadeInterval = null;
+        }
         
         this.audio.volume = 0;
         this.audio.play().catch(e => console.log("Autoplay blocked"));
         
         let vol = 0;
         this.fadeInterval = setInterval(() => {
-            vol += 0.05; // Faster increment
+            vol += 0.05; 
             if (vol >= this.targetVolume) {
                 vol = this.targetVolume;
+                this.audio.volume = vol;
                 clearInterval(this.fadeInterval);
+                this.fadeInterval = null;
+            } else {
+                this.audio.volume = vol;
             }
-            this.audio.volume = vol;
-        }, 50); // Faster tick (was 100)
+        }, 50); 
     }
 
     fadeOut(callback) {
-        if (this.fadeInterval) clearInterval(this.fadeInterval);
+        if (this.fadeInterval) {
+            clearInterval(this.fadeInterval);
+            this.fadeInterval = null;
+        }
+        
         if (this.audio.paused) {
             if (callback) callback();
             return;
@@ -129,16 +135,18 @@ class AudioManager {
 
         let vol = this.audio.volume;
         this.fadeInterval = setInterval(() => {
-            vol -= 0.1; // Faster decrement (was 0.05)
+            vol -= 0.1; 
             if (vol <= 0) {
                 vol = 0;
+                this.audio.volume = 0;
                 this.audio.pause();
                 clearInterval(this.fadeInterval);
+                this.fadeInterval = null;
                 if (callback) callback();
             } else {
                 this.audio.volume = vol;
             }
-        }, 30); // Faster tick (was 50)
+        }, 30); 
     }
 }
 
