@@ -273,18 +273,18 @@ export const Renderer = {
             ctx.save();
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
-            ctx.fillStyle = 'white';
+            ctx.fillStyle = '#fcd34d'; // Premium Yellow for Narratives
 
             if (Array.isArray(state.overlayMessage)) {
                 // Multi-line support
                 const mainText = state.overlayMessage[0];
                 const subText = state.overlayMessage[1];
 
-                // Main Title - Reduced size to fit inside circle
+                // Main Title - Now uses the selected Narrative, smaller for safety
                 ctx.font = '900 32px Inter';
                 ctx.fillText(mainText, centerX, centerY - 20);
 
-                // Sub Title - Increased size and opacity for visibility
+                // Sub Title - "Begin the Journey of Light", even smaller
                 if (subText) {
                     ctx.font = '700 20px Inter';
                     ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';

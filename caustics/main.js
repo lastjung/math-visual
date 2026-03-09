@@ -43,6 +43,7 @@ const App = {
     isWindowFull: false,
     preSimulationBounces: 10,
     MAX_BOUNCES: 1, // 반사 효과 끔 (기본 1회)
+    currentNarrative: 'Exploring the Secrets of Light Flow',
     emitStartTime: null,
     overlayMessage: null,
     isSimRunning: false,
@@ -197,6 +198,7 @@ const App = {
             alphaIntensity: this.alphaIntensity,
             isPaintMode: this.isPaintMode,
             MAX_BOUNCES: this.MAX_BOUNCES,
+            currentNarrative: this.currentNarrative,
             parallelRange: this.parallelRange
         };
     },
@@ -248,6 +250,7 @@ const App = {
             this.recalcParallelRange(); // Ensure range is valid for current sourcePos.y
             this.isSimulationMode = false;
             this.MAX_BOUNCES = saved.MAX_BOUNCES ?? this.MAX_BOUNCES;
+            this.currentNarrative = saved.currentNarrative ?? this.currentNarrative;
 
             this.lastPersistSnapshot = raw;
             return true;
@@ -458,8 +461,8 @@ const App = {
         // Apply a small "inner" margin (95% of width) per user request
         const margin = 0.95;
         this.parallelRange = {
-            min: minX * margin,
-            max: maxX * margin
+            min: (minX * margin) - this.sourcePos.x,
+            max: (maxX * margin) - this.sourcePos.x
         };
     },
 
@@ -467,6 +470,8 @@ const App = {
         if (this.isSimRunning) return; // Prevent multiple runs
         this.stopSimulation(); // Clear any residue
         this.isSimRunning = true;
+
+        const currentNarrative = this.currentNarrative === 'none' ? null : this.currentNarrative;
 
         // Step 1: Handle Audio Auto-Start
         if (window.audioManager && window.audioManager.targetVolume > 0) {
@@ -504,9 +509,14 @@ const App = {
                 Renderer.clearPaint();
             }
 
-            // SET MESSAGE (NEW MULTI-LINE FOR FIRST STEP)
+            // B. SET MESSAGE (MANUAL SELECTION AS PRIMARY TITLE)
             if (currentIdx === 0) {
-                this.overlayMessage = ["Begin the Journey of Light", "30 Rays"];
+                if (currentNarrative) {
+                    // Narrative becomes the main title, Journey becomes subtext with ray count
+                    this.overlayMessage = [currentNarrative, "Begin the Journey of Light (30 Rays)"];
+                } else {
+                    this.overlayMessage = "Begin the Journey of Light (30 Rays)";
+                }
             } else {
                 this.overlayMessage = `${val} Rays`;
             }

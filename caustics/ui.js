@@ -14,10 +14,11 @@ export const UI = {
         // Shape Tabs
         document.querySelectorAll('.shape-tab').forEach(btn => {
             btn.onclick = (e) => {
-                const nextShape = e.target.dataset.shape;
+                const button = e.currentTarget;
+                const nextShape = button.dataset.shape;
                 app.shape = nextShape;
                 document.querySelectorAll('.shape-tab').forEach(b => b.classList.remove('active'));
-                e.target.classList.add('active');
+                button.classList.add('active');
 
                 app.applyShapeSwitchReset(nextShape);
                 app.recalcParallelRange(); // Calculate new range for Parallel mode
@@ -28,9 +29,10 @@ export const UI = {
         // Color Mode Tabs
         document.querySelectorAll('.mode-tab').forEach(btn => {
             btn.onclick = (e) => {
-                app.colorMode = e.target.dataset.mode;
+                const button = e.currentTarget;
+                app.colorMode = button.dataset.mode;
                 document.querySelectorAll('.mode-tab').forEach(b => b.classList.remove('active'));
-                e.target.classList.add('active');
+                button.classList.add('active');
             };
         });
 
@@ -137,6 +139,14 @@ export const UI = {
         if (checkAxes) {
             checkAxes.onchange = (e) => {
                 app.showAxes = e.target.checked;
+                this.update(app);
+            };
+        }
+
+        const selectNarrative = document.getElementById('select-narrative');
+        if (selectNarrative) {
+            selectNarrative.onchange = (e) => {
+                app.currentNarrative = e.target.value;
                 this.update(app);
             };
         }
@@ -428,6 +438,11 @@ export const UI = {
         if (cTaper && cTaper.checked !== app.useTaper) cTaper.checked = app.useTaper;
         if (cBloom && cBloom.checked !== app.useBloom) cBloom.checked = app.useBloom;
         if (cPaint && cPaint.checked !== app.isPaintMode) cPaint.checked = app.isPaintMode;
+
+        const sNarrative = document.getElementById('select-narrative');
+        if (sNarrative && sNarrative.value !== app.currentNarrative) {
+            sNarrative.value = app.currentNarrative;
+        }
 
         // Sync Apple Player
         const applePlay = document.getElementById('apple-play');

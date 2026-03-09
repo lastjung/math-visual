@@ -26,6 +26,16 @@
                     <circle cx="12" cy="12" r="9"></circle>
                 </svg>
             </button>
+            <button class="shape-tab" data-shape="rect" title="Rectangle">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="6" y="3" width="12" height="18" rx="1"></rect>
+                </svg>
+            </button>
+            <button class="shape-tab" data-shape="v-oval" title="Vertical Oval">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <ellipse cx="12" cy="12" rx="6" ry="10"></ellipse>
+                </svg>
+            </button>
             <button class="shape-tab" data-shape="ellipse" title="Ellipse">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                     <ellipse cx="12" cy="12" rx="10" ry="6"></ellipse>
@@ -39,16 +49,6 @@
             <button class="shape-tab" data-shape="cardioid" title="Cardioid">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M12 21s-8-4.5-8-11.5A5.5 5.5 0 0 1 12 5a5.5 5.5 0 0 1 8 4.5c0 7-8 11.5-8 11.5z"></path>
-                </svg>
-            </button>
-            <button class="shape-tab" data-shape="rect" title="Rectangle">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <rect x="6" y="3" width="12" height="18" rx="1"></rect>
-                </svg>
-            </button>
-            <button class="shape-tab" data-shape="v-oval" title="Vertical Oval">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <ellipse cx="12" cy="12" rx="6" ry="10"></ellipse>
                 </svg>
             </button>
         </nav>
@@ -214,12 +214,28 @@
                 </div>
 
                 <!-- 4. BOTTOM AXES -->
-                <div class="setting-row" style="margin-top: 24px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 16px;">
+                <div class="setting-row" style="margin-top: 16px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 16px;">
                     <label class="toggle-option">
                         <input type="checkbox" id="check-axes">
                         <span class="toggle-track"></span>
                         <span class="setting-label">SHOW GRID AXES</span>
                     </label>
+                </div>
+
+                <!-- 5. Simulation Narrative Selection -->
+                <div class="setting-row" style="margin-top: 8px;">
+                    <div class="setting-label-group">
+                        <label class="setting-label">SIMULATION NARRATIVE</label>
+                    </div>
+                    <select id="select-narrative" class="apple-select">
+                        <option value="none">None (No Subtitle)</option>
+                        <option value="The Secret Foci of Ovals">The Secret Foci of Ovals</option>
+                        <option value="The Parabolic Point">The Parabolic Point</option>
+                        <option value="Reflections of Order">Reflections of Order</option>
+                        <option value="Circle of Infinite Light">Circle of Infinite Light</option>
+                        <option value="The Hidden Soul of Beams" selected>The Hidden Soul of Beams</option>
+                        <option value="Dance of the Photons">Dance of the Photons</option>
+                    </select>
                 </div>
 
                 <!-- Color Modes -->
