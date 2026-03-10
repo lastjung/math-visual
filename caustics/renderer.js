@@ -7,6 +7,36 @@ import { Physics } from './physics.js';
 export const Renderer = {
     paintCanvas: null,
     paintCtx: null,
+    
+    /**
+     * computeBaseAlpha: Shared logic to determine brightness of a ray segment (Used by Normal Mode)
+     */
+    computeBaseAlpha(state, ray, b, drawRayNumber) {
+        const { useTrail, flowMode, flowOffset, alphaIntensity } = state;
+        const alphaFloor = useTrail ? 0.03 : 0.12;
+        const alphaFromDensity = 5 / Math.max(1, drawRayNumber);
+        const bounceDecay = Math.pow(0.78, b);
+        let alpha = Math.max(alphaFloor, alphaFromDensity) * bounceDecay;
+        if (b === 0) alpha *= 1.45;
+        if (!useTrail) alpha *= 1.35;
+        if (flowMode === 'pulse') {
+            const pulse = Math.sin((ray.accDist - flowOffset * 10) * 0.02) * 0.5 + 0.5;
+            alpha *= (0.2 + 0.8 * pulse);
+        }
+        alpha *= alphaIntensity;
+        return Math.min(alpha, 0.95);
+    },
+
+    /**
+     * computeDensityFactor: Translates physical density grid into brightness modulation
+     */
+    computeDensityFactor(density) {
+        // Continuous Proportional Correction (Normalization)
+        // Aim for a target stable density. Stabilizes regardless of ray count.
+        const TARGET_D = 4.5; 
+        const DAMPING = 1.1;
+        return (TARGET_D + DAMPING) / (density + DAMPING);
+    },
 
     /**
      * Draw coordinate axes with labels and arrows
@@ -62,7 +92,7 @@ export const Renderer = {
         const size = Math.min(w, h) * sizeMult;
 
         // --- 1. PREPARE CONTEXTS ---
-        if (state.isPaintMode || state.isPaint2Mode || state.isLightMode) {
+        if (state.isPaintMode || state.isPaint2Mode) { // Light mode no longer uses persistent buffer
             if (!this.paintCanvas) {
                 this.paintCanvas = document.createElement('canvas');
                 this.paintCtx = this.paintCanvas.getContext('2d');
@@ -82,8 +112,8 @@ export const Renderer = {
 
         const targetCtx = state.isPaintMode ? this.paintCtx : ctx;
 
-        // --- 2. CLEAR (NORMAL MODE ONLY) ---
-        if (!state.isPaintMode && !state.isPaint2Mode && !state.isLightMode) {
+        // --- 2. CLEAR (NORMAL/LIGHT MODES) ---
+        if (!state.isPaintMode && !state.isPaint2Mode) {
             if (useTrail) {
                 ctx.fillStyle = 'rgba(5, 5, 8, 0.15)'; 
                 ctx.fillRect(0, 0, w, h);
@@ -97,7 +127,7 @@ export const Renderer = {
         // We draw UI on main 'ctx' so it's sharp and clean.
         // In Paint/Light mode, we draw this AFTER rays to keep it on top.
         // In Normal mode, we draw it BEFORE rays to allow the Bloom/Light to overlay nicely.
-        if (!state.isPaintMode && !state.isPaint2Mode && !state.isLightMode) {
+        if (!state.isPaintMode && !state.isPaint2Mode) {
             this.drawUI(ctx, state, centerX, centerY, size);
         }
 
@@ -117,7 +147,8 @@ export const Renderer = {
 
         const { min: pMin, max: pMax } = state.parallelRange;
         const maxTravel = Math.sqrt(w*w + h*h) * 1.2;
-        const isNormalOrPaint1 = isLightVisible && !state.isPaint2Mode && !state.isLightMode;
+        const isNormalOrPaint1 = state.isLightVisible && !state.isPaint2Mode && !state.isLightMode;
+        const isLightEffect = state.isLightVisible && state.isLightMode;
 
         if (isNormalOrPaint1) {
             // Memory Optimization: Avoid Array.from and map every frame
@@ -126,7 +157,7 @@ export const Renderer = {
                 const t = idx / Math.max(1, drawRayNumber - 1);
                 let sPos, angle;
                 
-                if (state.lightSourceMode === 'parallel' || shape === 'parabola') {
+                if (state.lightSourceMode === 'parallel') {
                     const d = pMin + t * (pMax - pMin);
                     const cosR = Math.cos(sourceRotation);
                     const sinR = Math.sin(sourceRotation);
@@ -273,8 +304,88 @@ export const Renderer = {
             targetCtx.restore();
         }
 
-        // --- 5. COMPOSITE PAINT/LIGHT & DRAW TOP UI ---
-        if (state.isPaintMode || state.isPaint2Mode || state.isLightMode) {
+        if (isLightEffect) {
+            const LD = window.LightDensityModule;
+            const TARGET_D = 15.0;            // Calibrated for high energy (50)
+            const DAMPING = 1.5;             // Softens the curve for organic response
+            const DEPOSIT = 1.8;             // Stronger footprint for the intense beam
+
+            const rayPaths = [];
+            for (let idx = 0; idx < drawRayNumber; idx++) {
+                const t = idx / Math.max(1, drawRayNumber - 1);
+                let sPos, angle;
+                if (state.lightSourceMode === 'parallel') {
+                    const d = pMin + t * (pMax - pMin);
+                    const cosR = Math.cos(sourceRotation); const sinR = Math.sin(sourceRotation);
+                    sPos = { x: sourcePos.x + d * cosR, y: sourcePos.y + d * sinR }; 
+                    angle = sourceRotation + Math.PI / 2;
+                } else {
+                    sPos = { x: sourcePos.x, y: sourcePos.y };
+                    angle = aimAngle + sourceRotation + (t - 0.5) * spread;
+                }
+                let baseHue;
+                if (colorMode === 'rainbow') baseHue = (t * 360 + flowOffset * 0.5) % 360;
+                else if (colorMode === 'cyan') baseHue = 180 + Math.sin(t * 5 + flowOffset * 0.1) * 20;
+                else if (colorMode === 'sunset') baseHue = 10 + Math.sin(t * 3 + flowOffset * 0.1) * 30;
+
+                rayPaths.push({ rx: centerX + sPos.x, ry: centerY + sPos.y, ra: angle, baseHue: baseHue, accDist: 0, active: true });
+            }
+
+            ctx.save();
+            ctx.globalCompositeOperation = 'lighter';
+            ctx.lineCap = 'round';
+            
+            let firstRayActualBounces = 0;
+            for (let b = 0; b < drawMaxBounces; b++) {
+                for (let i = 0; i < rayPaths.length; i++) {
+                    const ray = rayPaths[i]; if (!ray.active) continue;
+                    const hit = Physics.findBoundaryIntersection(ray.rx - centerX, ray.ry - centerY, ray.ra, shape, size);
+                    let nx, ny, sd;
+                    if (!hit) { sd = maxTravel - ray.accDist; nx = ray.rx + Math.cos(ray.ra) * sd; ny = ray.ry + Math.sin(ray.ra) * sd; } 
+                    else { nx = centerX + hit.x; ny = centerY + hit.y; sd = Math.sqrt((nx - ray.rx)**2 + (ny - ray.ry)**2); }
+
+                    if (sd < 0.1 || ray.accDist > growth) { ray.active = false; continue; }
+                    let dX = nx, dY = ny, isLast = false;
+                    if (ray.accDist + sd > growth) { const r = (growth - ray.accDist) / sd; dX = ray.rx + (nx - ray.rx) * r; dY = ray.ry + (ny - ray.ry) * r; isLast = true; }
+
+                    // --- [LIGHT MODE ONLY: HEAD DECAY SYSTEM] ---
+                    // Energy is strongest at the tail (source) and decays spatially towards the head.
+                    const baseEnergy = 1.35; 
+                    const spatialDecay = Math.pow(0.9983, ray.accDist); // Spatial decay factor
+                    let alpha = baseEnergy * spatialDecay * state.alphaIntensity;
+
+                    const density = LD ? LD.getDensityAlongLine(ray.rx, ray.ry, dX, dY) : 0;
+                    
+                    // 2. Exposure Correction (Density Only)
+                    const exposure = (TARGET_D + DAMPING) / (density + DAMPING);
+                    // Reintroduced 0.7 lower bound for solid visual presence
+                    const finalAlpha = Math.max(0.7, Math.min(0.98, alpha * exposure));
+
+                    // 3. Draw Pure Straight Stroke
+                    ctx.strokeStyle = `hsla(${ray.baseHue}, 100%, 60%, ${finalAlpha})`;
+                    ctx.lineWidth = beamWidth;
+                    ctx.beginPath(); ctx.moveTo(ray.rx, ray.ry); ctx.lineTo(dX, dY); ctx.stroke();
+
+                    // 4. Record Trace
+                    if (LD) LD.recordDensityAlongLine(ray.rx, ray.ry, dX, dY, DEPOSIT);
+
+                    if (!hit || isLast) { ray.active = false; } 
+                    else {
+                        ray.accDist += sd; ray.rx = nx; ray.ry = ny;
+                        const normal = Physics.getNormal(hit.x, hit.y, shape, size); const inX = Math.cos(ray.ra); const inY = Math.sin(ray.ra);
+                        const dot = inX * normal.x + inY * normal.y;
+                        ray.ra = Math.atan2(inY - 2 * dot * normal.y, inX - 2 * dot * normal.x);
+                        ray.rx += normal.x * 0.1; ray.ry += normal.y * 0.1;
+                        if (i === 0) firstRayActualBounces++;
+                    }
+                }
+            }
+            state.currentBounces = firstRayActualBounces;
+            ctx.restore();
+        }
+
+        // --- 5. COMPOSITE PAINT (ONLY) & DRAW TOP UI ---
+        if (state.isPaintMode || state.isPaint2Mode) { // Light mode no longer uses this composite branch
             ctx.clearRect(0, 0, w, h);
             // Both Paint and Light use the paintCanvas buffer
             ctx.drawImage(this.paintCanvas, 0, 0);
@@ -487,80 +598,6 @@ export const Renderer = {
             case 5: r = 1; g = 0; b = q; break;
         }
         return { r, g, b };
-    },
-
-    /**
-     * Draw the physical light density (Sharp Vector Mode)
-     * "Suppress originals, boost remote": Normalizes intensity based on local density and distance.
-     */
-    drawLight(state, segments) {
-        if (!this.paintCanvas) return;
-        const ctx = this.paintCtx;
-        const centerX = state.canvas.width / 2;
-        const centerY = state.canvas.height / 2 - 60;
-        
-        const LightDensity = window.LightDensityModule;
-        if (!LightDensity) return;
-
-        const rayCount = state.rayNumber || 100;
-
-        ctx.save();
-        // Use 'source-over' with 1/N blending to preserve colors
-        ctx.globalCompositeOperation = 'source-over'; 
-        ctx.lineCap = 'butt'; // Sharp edges for a more "light beam" look
-        
-        for (let i = 0; i < segments.length; i++) {
-            const seg = segments[i];
-            
-            // 1. DENSITY CHECK: Prevents self-dimming while allowing cross-over sum
-            let density = 1;
-            if (seg.isSource || seg.isHit) {
-                density = LightDensity.addDensity(centerX + seg.x1, centerY + seg.y1);
-            } else {
-                density = LightDensity.getDensity(centerX + seg.x1, centerY + seg.y1);
-            }
-            
-            // 2. VIBRANT COLOR MODEL: Use 50% lightness for pure ROYGBIV
-            // 1/N blend: Newer photons average with older ones
-            const userPower = state.alphaIntensity || 1.0;
-            const alpha = (1.0 / density) * userPower;
-            
-            // 3. "Remote as New": Boost far rays to keep the simulation "alive" at edges
-            const dist = seg.accDist || 0;
-            const spread = Math.max(0.01, state.spread);
-            const remoteBoost = (1.0 + (dist * spread * 0.1));
-            
-            const finalAlpha = Math.min(1.0, alpha * remoteBoost);
-            
-            // PHYSICAL LIGHT BEAM: Center is brighter, edges are colored
-            // Main Beam
-            ctx.strokeStyle = `hsla(${seg.hue}, 100%, 50%, ${finalAlpha})`;
-            ctx.lineWidth = state.beamWidth * 0.8; // Thinner for "Light" vs "Paint"
-            
-            ctx.beginPath();
-            ctx.moveTo(centerX + seg.x1, centerY + seg.y1);
-            ctx.lineTo(centerX + seg.x2, centerY + seg.y2);
-            ctx.stroke();
-            
-            // Photon Glow (Bloom)
-            if (state.useBloom) {
-                ctx.strokeStyle = `hsla(${seg.hue}, 100%, 70%, ${finalAlpha * 0.3})`;
-                ctx.lineWidth = state.beamWidth * 2.5;
-                ctx.beginPath();
-                ctx.moveTo(centerX + seg.x1, centerY + seg.y1);
-                ctx.lineTo(centerX + seg.x2, centerY + seg.y2);
-                ctx.stroke();
-            }
-            
-            // Impact Point Spark
-            if (state.useBloom && seg.isHit) {
-                const r = state.beamWidth * 2.0;
-                const sparkA = Math.min(0.9, finalAlpha * 5.0);
-                ctx.fillStyle = `hsla(${seg.hue}, 100%, 80%, ${sparkA})`;
-                ctx.beginPath(); ctx.arc(centerX + seg.x2, centerY + seg.y2, r, 0, Math.PI * 2); ctx.fill();
-            }
-        }
-        ctx.restore();
     },
 
     /**

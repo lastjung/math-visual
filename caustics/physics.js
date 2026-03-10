@@ -4,6 +4,18 @@
  */
 
 export const Physics = {
+    PARABOLA_P: -0.25,
+    PARABOLA_OFFSET_V: 0.75,
+    PARABOLA_U_MAX: 1.0,
+
+    getParabolaAbsUMax() {
+        return this.PARABOLA_U_MAX;
+    },
+    
+    parabolaCurve(normalizedX) {
+        return 4 * this.PARABOLA_P * normalizedX * normalizedX + this.PARABOLA_OFFSET_V;
+    },
+
     /**
      * Get a point on the boundary shape based on angle (rad)
      */
@@ -15,10 +27,13 @@ export const Physics = {
                 const r = size * (1 - Math.cos(rad)) * 0.5;
                 return { x: r * Math.cos(rad) + size*0.3, y: r * Math.sin(rad) };
             case 'parabola':
-                // Symmetric range [-2, 2] for rad from 0 to 2PI
-                const px = (rad / Math.PI - 1) * 2.0; 
-                // A cup shape opening upwards: vertex at (0, 0.5*size)
-                return { x: px * size * 0.5, y: (0.5 - px * px * 0.2) * size };
+                // In normalized coordinates: v = 4pu^2, where p is the signed focus value.
+                const uMax = this.getParabolaAbsUMax();
+                const u = -uMax + (rad / (Math.PI * 2)) * (2 * uMax);
+                return {
+                    x: u * size,
+                    y: this.parabolaCurve(u) * size
+                };
             case 'rect':
                 const rw = size * 1.5;
                 const rh = size * 2.1;
@@ -41,10 +56,10 @@ export const Physics = {
         else if (type === 'ellipse') { nx = -x; ny = -y / (0.6 * 0.6); }
         else if (type === 'v-oval') { nx = -x / (0.9 * 0.9); ny = -y / (1.1 * 1.1); }
         else if (type === 'parabola') { 
-            // For y = (0.5 - 0.2 * (x/(0.5*size))^2) * size
-            // dy/dx = -0.8 * x / (0.5 * size)
-            nx = 0.8 * x / (0.5 * size); 
-            ny = 1; 
+            const u = x / size;
+            // v = 4pu^2 => dv/du = 8pu
+            nx = 8 * this.PARABOLA_P * u;
+            ny = -1; 
         }
         else if (type === 'rect') {
             const rw = size * 1.5;
@@ -72,7 +87,11 @@ export const Physics = {
         if (type === 'circle') return (px*px + py*py) < size*size;
         if (type === 'ellipse') return (px*px)/(size*size*1.21) + (py*py)/(size*size*1.21*0.36) < 1;
         if (type === 'v-oval') return (px*px)/(size*size*0.81) + (py*py)/(size*size*1.21) < 1;
-        if (type === 'parabola') return py < (0.5 - Math.pow(px/(size*0.5), 2) * 0.2) * size;
+        if (type === 'parabola') {
+            const u = px / size;
+            const v = py / size;
+            return v < this.parabolaCurve(u);
+        }
         if (type === 'cardioid') {
             const cx = px - size*0.3;
             return Math.sqrt(cx*cx + py*py) < size * (1 - Math.cos(Math.atan2(py, cx))) * 0.5;

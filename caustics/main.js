@@ -42,7 +42,7 @@ const App = {
     useBloom: false,
     alphaIntensity: 1.0,
     isPaintMode: false, // Normal Paint Mode (Overlays)
-    isPaint2Mode: false, // Incremental Paint Mode (Additive Persistence)
+    isPaint2Mode: true, // Incremental Paint Mode (Additive Persistence) - SET AS DEFAULT
     isLightMode: false,  // Physical Light Density Mode
     isSimulationMode: false,
     isWindowFull: false,
@@ -154,7 +154,7 @@ const App = {
             defaults.sourcePos = { x: -size * 0.2, y: -size * 0.45 };
             defaults.sourceRotation = 0;
         } else if (shape === 'parabola') {
-            defaults.sourcePos = { x: 0, y: -size * 1.5 };
+            defaults.sourcePos = { x: 0, y: size * (Physics.PARABOLA_OFFSET_V + Physics.PARABOLA_P) }; // Point source sits exactly at the parabola focus
             defaults.sourceRotation = 0;
         } else if (shape === 'rect') {
             defaults.sourcePos = { x: 0, y: -size * 1.05 };
@@ -180,6 +180,9 @@ const App = {
         const defaults = this.getShapeDefaults(nextShape);
         this.sourcePos = defaults.sourcePos;
         this.sourceRotation = defaults.sourceRotation;
+        if (nextShape === 'parabola') {
+            this.lightSourceMode = 'point';
+        }
         this.autoModes.revolution = false;
         this.autoModes.rotation = false;
     },
@@ -258,9 +261,9 @@ const App = {
             this.useTaper = saved.useTaper ?? this.useTaper;
             this.useBloom = saved.useBloom ?? this.useBloom;
             this.alphaIntensity = saved.alphaIntensity ?? this.alphaIntensity;
-            this.isPaintMode = saved.isPaintMode ?? false;
-            this.isPaint2Mode = saved.isPaint2Mode ?? false;
-            this.isLightMode = saved.isLightMode ?? false;
+            this.isPaintMode = saved.isPaintMode ?? this.isPaintMode;
+            this.isPaint2Mode = saved.isPaint2Mode ?? this.isPaint2Mode;
+            this.isLightMode = saved.isLightMode ?? this.isLightMode;
             this.parallelRange = saved.parallelRange ?? { min: -100, max: 100 };
             
             this.recalcParallelRange(); // Ensure range is valid for current sourcePos.y
@@ -297,6 +300,9 @@ const App = {
         this.resize();
         this.sourcePos = this.getDefaultSourcePos();
         this.restoreState();
+        if (this.shape === 'parabola' && this.lightSourceMode === 'point') {
+            this.sourcePos = this.getShapeDefaults('parabola').sourcePos;
+        }
 
         // 1. Sync Parallel Range immediately after restore/positioning
         this.recalcParallelRange();
@@ -412,7 +418,7 @@ const App = {
         this.useBloom = false;
         this.alphaIntensity = 1.0;
         this.isPaintMode = false;
-        this.isPaint2Mode = false;
+        this.isPaint2Mode = true;
         this.isLightMode = false;
         this.isSimulationMode = false;
         this.preSimulationBounces = 10;
@@ -421,9 +427,12 @@ const App = {
         this.MAX_BOUNCES = 10;
         this.emitStartTime = null;
 
-        if (window.audioManager) {
-            window.audioManager.stop();
-            this.nextBGM(false); // Reset to a new random track (ready but not playing)
+        // Force Clear All Canvases Immediately
+        if (this.ctx) {
+            this.ctx.fillStyle = '#050508';
+            this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+            Renderer.clearPaint();
+            if (window.LightDensityModule) window.LightDensityModule.clear();
         }
 
         // Reset auto modes and phases
@@ -445,6 +454,14 @@ const App = {
         };
         this.autoTimer = 0;
         this.sourceRotation = defaults.sourceRotation;
+        // Aggressive Clear: Ensure all buffers are wiped on Full Reset
+        if (this.ctx) {
+            this.ctx.fillStyle = '#050508';
+            this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+            Renderer.clearPaint();
+            if (window.LightDensityModule) window.LightDensityModule.clear();
+        }
+        
         Simulator.clear();
 
         document.querySelectorAll('.shape-tab').forEach(b => b.classList.toggle('active', b.dataset.shape === this.shape));
@@ -498,10 +515,9 @@ const App = {
     },
 
     "4_ray_mum_simm"() {
-        if (this.isSimRunning) return; // Prevent multiple runs
-        this.stopSimulation(); // Clear any residue
+        if (this.isSimRunning) return; 
         this.isSimRunning = true;
-
+        // Removed all forced mode and setting overrides
         const currentNarrative = this.currentNarrative === 'none' ? null : this.currentNarrative;
 
         // Step 1: Handle Audio Auto-Start
@@ -510,7 +526,7 @@ const App = {
             window.audioManager.resume();
         }
 
-        const stages = [30, 100, 200, 350];
+        const stages = [30, 100, 350, 1000];
         let currentIdx = 0;
 
         const runStage = () => {
@@ -539,6 +555,7 @@ const App = {
                 this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
                 Renderer.clearPaint();
                 Simulator.clear(); // Reset simulator for each new stage in the sequence
+                if (window.LightDensityModule) window.LightDensityModule.clear();
             }
 
             // B. SET MESSAGE (MANUAL SELECTION AS PRIMARY TITLE)
@@ -563,6 +580,7 @@ const App = {
                     this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
                     Renderer.clearPaint();
                     Simulator.clear(); // Reset again just before actual flow starts
+                    if (window.LightDensityModule) window.LightDensityModule.clear();
                 }
                 this.overlayMessage = null;
                 this.rayNumber = val;
@@ -639,11 +657,7 @@ const App = {
                     this.MAX_BOUNCES = Math.floor(1 + oscillate('reflections', 0.1) * 19);
                 }
 
-                // Safety guard for heavy simulation combinations.
-                if (this.isSimulationMode) {
-                    this.rayNumber = Math.min(this.rayNumber, 220);
-                    this.MAX_BOUNCES = Math.min(this.MAX_BOUNCES, 12);
-                }
+                // Safety guard removed - respecting user settings fully
 
                 // UI update is relatively expensive; throttle during animation loop.
                 if (now - this.lastUiUpdateAt > 80) {
@@ -656,24 +670,24 @@ const App = {
                     const safeDt = Math.max(0, Math.min(dt, 0.1));
                     const growthSpeed = this.raySpeed * 10 * this.simSpeedMultiplier;
                     
-                    if (this.isLightMode) {
-                        const delta = growthSpeed * safeDt;
-                        const newSegments = Simulator.step(this, delta);
-                        Renderer.drawLight(this, newSegments);
-                        // LightDensity.addDensity is handled INSIDE Renderer.drawLight for each segment
-                    } else if (this.isPaint2Mode) {
-                        // Incremental Logic: Progress the simulator
+                    if (this.isPaint2Mode) {
+                        // Progress increment for Paint 2
                         const delta = growthSpeed * safeDt;
                         const newSegments = Simulator.step(this, delta);
                         Renderer.drawPaint2Segments(this, newSegments);
                     } else {
-                        // Legacy Continuous Growth Logic
+                        // Light, Normal, and Paint 1 share frame-based growth logic
                         this.growth += growthSpeed * safeDt;
                         const maxCap = Math.sqrt(this.canvas.width**2 + this.canvas.height**2) * 5;
                         if (this.growth > maxCap) this.growth = maxCap;
 
                         if (this.flowMode !== 'none') {
                             this.flowOffset = (this.flowOffset + growthSpeed * 0.15 * safeDt) % 50;
+                        }
+
+                        // Light Density grid decay (Stronger for short-memory effect)
+                        if (this.isLightMode && window.LightDensityModule) {
+                            window.LightDensityModule.decay(0.85);
                         }
                     }
                 }

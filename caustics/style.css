@@ -164,12 +164,37 @@ canvas {
   position: absolute;
   top: 20px;
   right: 20px;
-  width: 288px;
+  width: 298px; /* Slightly wider for better spacing */
+  max-height: calc(100vh - 40px);
   display: flex;
   flex-direction: column;
   gap: 12px;
   z-index: 50;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 4px; /* Space for scrollbar */
   transition: opacity 0.6s, transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  
+  /* Custom Slim Scrollbar (Apple Style) */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
+}
+
+.controls-sidebar::-webkit-scrollbar {
+  width: 4px;
+}
+
+.controls-sidebar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.controls-sidebar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+}
+
+.controls-sidebar::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
 }
 
 .sidebar-grip {
@@ -747,6 +772,39 @@ input[type=range]::-webkit-slider-thumb {
   transform: translate(-50%, 60px) scale(0.95);
 }
 
+.player-restore-tab {
+  position: absolute;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 8px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  background: rgba(10, 10, 15, 0.72);
+  backdrop-filter: blur(20px) saturate(120%);
+  -webkit-backdrop-filter: blur(20px) saturate(120%);
+  color: rgba(255, 255, 255, 0.78);
+  font: 700 10px var(--font-sans);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  cursor: pointer;
+  z-index: 1999;
+  box-shadow: 0 18px 36px rgba(0, 0, 0, 0.35);
+  transition: opacity 0.25s ease, transform 0.25s ease, color 0.25s ease, border-color 0.25s ease;
+}
+
+.player-restore-tab:hover {
+  color: #fff;
+  border-color: rgba(34, 211, 238, 0.4);
+  transform: translateX(-50%) translateY(-2px);
+}
+
+.player-restore-tab.hidden {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(-50%) translateY(10px);
+}
+
 .player-close {
   position: absolute;
   top: 8px;
@@ -763,11 +821,11 @@ input[type=range]::-webkit-slider-thumb {
   cursor: pointer;
   z-index: 10;
   transition: all 0.2s;
-  opacity: 0.3;
+  opacity: 0.9;
 }
 
 .apple-player:hover .player-close {
-  opacity: 0.7;
+  opacity: 1;
 }
 
 .player-close:hover {
@@ -947,6 +1005,7 @@ input[type=range]::-webkit-slider-thumb {
 body.window-full .header,
 body.window-full .controls-sidebar,
 body.window-full .apple-player,
+body.window-full .player-restore-tab,
 body.window-full .drag-hint {
   display: none !important;
 }
@@ -1060,4 +1119,3 @@ body.window-full .drag-hint {
 #apple-play.active .play-svg-wrapper {
   color: #fff;
 }
-

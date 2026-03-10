@@ -14,7 +14,6 @@ export const Simulator = {
         const { rayNumber, sourcePos, sourceRotation, spread, colorMode, flowOffset, lightSourceMode, shape, parallelRange } = app;
         const { min: pMin, max: pMax } = parallelRange;
         const aimAngle = Math.PI / 2;
-        
         this.rayStates = [];
         const count = Math.max(1, Math.floor(rayNumber));
         
@@ -22,7 +21,7 @@ export const Simulator = {
             const t = i / Math.max(1, count - 1);
             let sPos, angle;
             
-            if (lightSourceMode === 'parallel' || shape === 'parabola') {
+            if (lightSourceMode === 'parallel') {
                 const d = pMin + t * (pMax - pMin);
                 const cosR = Math.cos(sourceRotation);
                 const sinR = Math.sin(sourceRotation);

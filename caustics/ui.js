@@ -105,10 +105,18 @@ export const UI = {
 
         const rangeSpeed = document.getElementById('range-speed');
         rangeSpeed.oninput = (e) => {
-            app.raySpeed = parseInt(e.target.value);
+            app.raySpeed = parseFloat(e.target.value);
             app.autoModes.speed = false;
             this.update(app);
         };
+
+        const rangeBeamWidth = document.getElementById('range-beam-width');
+        if (rangeBeamWidth) {
+            rangeBeamWidth.oninput = (e) => {
+                app.beamWidth = parseFloat(e.target.value);
+                this.update(app);
+            };
+        }
 
         const rangeSpread = document.getElementById('range-spread');
         rangeSpread.oninput = (e) => {
@@ -171,6 +179,9 @@ export const UI = {
         document.querySelectorAll('#group-source-mode .mini-tab').forEach(btn => {
             btn.onclick = (e) => {
                 app.lightSourceMode = e.target.dataset.value;
+                if (app.shape === 'parabola' && app.lightSourceMode === 'point') {
+                    app.sourcePos = app.getShapeDefaults('parabola').sourcePos;
+                }
                 this.update(app);
             };
         });
@@ -387,6 +398,7 @@ export const UI = {
         const valSpread = document.getElementById('val-spread');
         if (valSpread.textContent !== spreadText) valSpread.textContent = spreadText;
 
+        if (document.getElementById('val-beam-width')) document.getElementById('val-beam-width').textContent = app.beamWidth.toFixed(1);
         document.getElementById('range-reflections').value = app.MAX_BOUNCES;
         const valReflections = document.getElementById('val-reflections');
         if (valReflections.textContent != app.MAX_BOUNCES) valReflections.textContent = app.MAX_BOUNCES;
@@ -515,9 +527,20 @@ export const UI = {
 
     setupApplePlayer(app) {
         const player = document.getElementById('apple-player');
+        const restoreTab = document.getElementById('apple-player-restore');
         const grip = document.getElementById('player-grip');
         const btnPlay = document.getElementById('apple-play');
         const volSlider = document.getElementById('apple-volume');
+
+        const showPlayer = () => {
+            player.classList.remove('hidden');
+            if (restoreTab) restoreTab.classList.add('hidden');
+        };
+
+        const hidePlayer = () => {
+            player.classList.add('hidden');
+            if (restoreTab) restoreTab.classList.remove('hidden');
+        };
 
         // Draggable Logic
         let isDragging = false;
@@ -616,7 +639,13 @@ export const UI = {
         if (btnClose) {
             btnClose.onclick = (e) => {
                 e.stopPropagation();
-                player.classList.add('hidden');
+                hidePlayer();
+            };
+        }
+
+        if (restoreTab) {
+            restoreTab.onclick = () => {
+                showPlayer();
             };
         }
 
@@ -658,7 +687,6 @@ export const UI = {
 
         window.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
-                player.classList.remove('hidden');
                 if (sidebar) sidebar.classList.remove('hidden');
 
                 // Exit Full Window mode on Esc

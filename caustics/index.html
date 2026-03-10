@@ -139,12 +139,23 @@
                     <input type="range" id="range-speed" min="0" max="100" value="20">
                 </div>
 
+                <!-- Ray Width Slider (NEW) -->
+                <div class="setting-row row-beam-width">
+                    <div class="setting-label-group">
+                        <label class="setting-label" id="label-beam-width">
+                            6. RAY WIDTH
+                        </label>
+                        <span class="setting-value value-beam-width" id="val-beam-width">1.6</span>
+                    </div>
+                    <input type="range" id="range-beam-width" min="0.5" max="8.0" step="0.1" value="1.6">
+                </div>
+
                 <!-- Reflections Slider -->
                 <div class="setting-row row-reflections">
                     <div class="setting-label-group">
                         <label class="setting-label clickable-label" id="label-reflections">
                             <span id="reflections-icon-mini" style="margin-right: 4px;"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg></span>
-                            6. REFLECTIONS
+                            7. REFLECTIONS
                         </label>
                         <span class="setting-value value-reflections" id="val-reflections">10</span>
                     </div>
@@ -195,9 +206,9 @@
                 <div class="setting-row-inline" style="margin-top: 8px;">
                     <label class="setting-label">RENDER MODE</label>
                     <div class="mode-tabs-mini" id="group-render-mode" style="width: 220px;">
-                        <button class="mini-tab active" data-value="none">Normal</button>
+                        <button class="mini-tab" data-value="none">Normal</button>
                         <button class="mini-tab" data-value="paint1">Paint 1</button>
-                        <button class="mini-tab" data-value="paint2">Paint 2</button>
+                        <button class="mini-tab active" data-value="paint2">Paint 2</button>
                         <button class="mini-tab" data-value="light">Light</button>
                     </div>
                 </div>
@@ -261,7 +272,7 @@
     <!-- Apple-style Floating Player (Independent Layer) -->
     <div class="apple-player" id="apple-player">
         <!-- Close button: always accessible when hovered -->
-        <button class="player-close" id="apple-player-close" title="Hide Player (Esc to show)">
+        <button class="player-close" id="apple-player-close" title="Hide Player">
             <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
         </button>
         <div class="player-grip" id="player-grip"></div>
@@ -330,6 +341,7 @@
             </div>
         </div>
     </div>
+    <button class="player-restore-tab hidden" id="apple-player-restore" title="Show Player">Music</button>
 
     <script src="audio.js"></script>
     <script type="module" src="main.js"></script>
