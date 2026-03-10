@@ -926,6 +926,7 @@ input[type=range]::-webkit-slider-thumb {
 /* Window Fullscreen Mode */
 body.window-full .header,
 body.window-full .controls-sidebar,
+body.window-full .apple-player,
 body.window-full .drag-hint {
   display: none !important;
 }

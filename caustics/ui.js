@@ -199,6 +199,10 @@ export const UI = {
             btnWindowFull.onclick = () => {
                 document.body.classList.toggle('window-full');
                 app.isWindowFull = document.body.classList.contains('window-full');
+                
+                // Automatically re-align light source to New Foci positions
+                app.syncSourceToFoci();
+                
                 app.recalcParallelRange();
                 setTimeout(() => app.resize(), 50);
             };

@@ -134,7 +134,8 @@ const App = {
     },
 
     getShapeDefaults(shape) {
-        const size = Math.min(this.canvas?.width || window.innerWidth, this.canvas?.height || window.innerHeight) * 0.35;
+        const sizeMult = this.isWindowFull ? 0.45 : 0.35;
+        const size = Math.min(this.canvas?.width || window.innerWidth, this.canvas?.height || window.innerHeight) * sizeMult;
         const defaults = {
             sourcePos: { x: 0, y: -size * 0.7 },
             sourceRotation: 0
@@ -176,6 +177,12 @@ const App = {
         this.sourceRotation = defaults.sourceRotation;
         this.autoModes.revolution = false;
         this.autoModes.rotation = false;
+    },
+
+    syncSourceToFoci() {
+        const defaults = this.getShapeDefaults(this.shape);
+        this.sourcePos = defaults.sourcePos;
+        this.recalcParallelRange();
     },
 
     buildPersistedState() {
