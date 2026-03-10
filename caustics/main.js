@@ -5,6 +5,9 @@
 import { Physics } from './physics.js';
 import { Renderer } from './renderer.js';
 import { UI } from './ui.js';
+import { Simulator } from './simulator.js';
+import { LightDensity } from './light-density.js';
+window.LightDensityModule = LightDensity; // Fix visibility
 
 const App = {
     STORAGE_KEY: 'caustics:state:v1',
@@ -38,7 +41,9 @@ const App = {
     useTaper: false,
     useBloom: false,
     alphaIntensity: 1.0,
-    isPaintMode: false, // New: Don't clear canvas for layering effect
+    isPaintMode: false, // Normal Paint Mode (Overlays)
+    isPaint2Mode: false, // Incremental Paint Mode (Additive Persistence)
+    isLightMode: false,  // Physical Light Density Mode
     isSimulationMode: false,
     isWindowFull: false,
     preSimulationBounces: 10,
@@ -204,6 +209,8 @@ const App = {
             useBloom: this.useBloom,
             alphaIntensity: this.alphaIntensity,
             isPaintMode: this.isPaintMode,
+            isPaint2Mode: this.isPaint2Mode,
+            isLightMode: this.isLightMode,
             MAX_BOUNCES: this.MAX_BOUNCES,
             currentNarrative: this.currentNarrative,
             parallelRange: this.parallelRange
@@ -252,6 +259,8 @@ const App = {
             this.useBloom = saved.useBloom ?? this.useBloom;
             this.alphaIntensity = saved.alphaIntensity ?? this.alphaIntensity;
             this.isPaintMode = saved.isPaintMode ?? false;
+            this.isPaint2Mode = saved.isPaint2Mode ?? false;
+            this.isLightMode = saved.isLightMode ?? false;
             this.parallelRange = saved.parallelRange ?? { min: -100, max: 100 };
             
             this.recalcParallelRange(); // Ensure range is valid for current sourcePos.y
@@ -283,6 +292,7 @@ const App = {
         this.container = document.getElementById('container');
         this.hudElement = document.getElementById('hud-timer');
         this.speedElement = document.getElementById('hud-speed');
+        this.bouncesElement = document.getElementById('hud-bounces');
 
         this.resize();
         this.sourcePos = this.getDefaultSourcePos();
@@ -309,6 +319,7 @@ const App = {
         if (!this.container) return;
         this.canvas.width = this.container.clientWidth;
         this.canvas.height = this.container.clientHeight;
+        if (window.LightDensityModule) window.LightDensityModule.init(this.canvas);
     },
 
 
@@ -328,6 +339,8 @@ const App = {
             this.ctx.fillStyle = '#050508';
             this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
             Renderer.clearPaint(); // Clear the hidden paint buffer too
+            Simulator.clear(); // Reset simulation state
+            LightDensity.clear(); // Reset density grid
         }
 
         UI.update(this);
@@ -399,6 +412,8 @@ const App = {
         this.useBloom = false;
         this.alphaIntensity = 1.0;
         this.isPaintMode = false;
+        this.isPaint2Mode = false;
+        this.isLightMode = false;
         this.isSimulationMode = false;
         this.preSimulationBounces = 10;
         this.spread = 1.2;
@@ -430,6 +445,7 @@ const App = {
         };
         this.autoTimer = 0;
         this.sourceRotation = defaults.sourceRotation;
+        Simulator.clear();
 
         document.querySelectorAll('.shape-tab').forEach(b => b.classList.toggle('active', b.dataset.shape === this.shape));
         document.querySelectorAll('.mode-tab').forEach(b => b.classList.toggle('active', b.dataset.mode === 'rainbow'));
@@ -522,6 +538,7 @@ const App = {
                 this.ctx.fillStyle = '#050508';
                 this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
                 Renderer.clearPaint();
+                Simulator.clear(); // Reset simulator for each new stage in the sequence
             }
 
             // B. SET MESSAGE (MANUAL SELECTION AS PRIMARY TITLE)
@@ -545,6 +562,7 @@ const App = {
                     this.ctx.fillStyle = '#050508';
                     this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
                     Renderer.clearPaint();
+                    Simulator.clear(); // Reset again just before actual flow starts
                 }
                 this.overlayMessage = null;
                 this.rayNumber = val;
@@ -603,7 +621,7 @@ const App = {
 
                 // Density (Ray Number)
                 if (this.autoModes.density) {
-                    this.rayNumber = Math.floor(20 + oscillate('density', 0.2) * 480);
+                    this.rayNumber = Math.floor(20 + oscillate('density', 0.2) * 980);
                 }
 
                 // Speed (Ensure minimum 10 during auto-animation)
@@ -635,14 +653,28 @@ const App = {
                 
                 if (this.isFlowing && this.isLightVisible) {
                     // Use safeDt: prevent negative values and massive jumps (background sleep)
-                    const safeDt = Math.max(0, Math.min(dt, 0.1)); 
-                    this.growth += (this.raySpeed * 10) * safeDt; // Increased from 8 to 10 for better flow                    
-                    // Cap growth at a safe level (diagonal of canvas * 5) to ensure stability
-                    const maxCap = Math.sqrt(this.canvas.width**2 + this.canvas.height**2) * 5;
-                    if (this.growth > maxCap) this.growth = maxCap;
+                    const safeDt = Math.max(0, Math.min(dt, 0.1));
+                    const growthSpeed = this.raySpeed * 10 * this.simSpeedMultiplier;
+                    
+                    if (this.isLightMode) {
+                        const delta = growthSpeed * safeDt;
+                        const newSegments = Simulator.step(this, delta);
+                        Renderer.drawLight(this, newSegments);
+                        // LightDensity.addDensity is handled INSIDE Renderer.drawLight for each segment
+                    } else if (this.isPaint2Mode) {
+                        // Incremental Logic: Progress the simulator
+                        const delta = growthSpeed * safeDt;
+                        const newSegments = Simulator.step(this, delta);
+                        Renderer.drawPaint2Segments(this, newSegments);
+                    } else {
+                        // Legacy Continuous Growth Logic
+                        this.growth += growthSpeed * safeDt;
+                        const maxCap = Math.sqrt(this.canvas.width**2 + this.canvas.height**2) * 5;
+                        if (this.growth > maxCap) this.growth = maxCap;
 
-                    if (this.flowMode !== 'none') {
-                        this.flowOffset = (this.flowOffset + this.raySpeed * 1.5 * safeDt) % 50;
+                        if (this.flowMode !== 'none') {
+                            this.flowOffset = (this.flowOffset + growthSpeed * 0.15 * safeDt) % 50;
+                        }
                     }
                 }
 
@@ -661,9 +693,22 @@ const App = {
                             this.speedElement.textContent = `SPEED ${this.simSpeedMultiplier.toFixed(2)}x`;
                             this.speedElement.classList.add('visible');
                         }
+
+                        if (this.bouncesElement) {
+                            let bCount = 0;
+                            if (this.isPaint2Mode && Simulator.rayStates.length > 0) {
+                                bCount = Simulator.rayStates[0].active ? Simulator.rayStates[0].bounces : Simulator.rayStates[0].bounces; 
+                            } else {
+                                // For normal mode, use the count calculated during Renderer.draw
+                                bCount = this.currentBounces || 0; 
+                            }
+                            this.bouncesElement.textContent = `BOUNCES ${bCount}`;
+                            this.bouncesElement.classList.add('visible');
+                        }
                     } else {
                         this.hudElement.classList.remove('visible');
                         if (this.speedElement) this.speedElement.classList.remove('visible');
+                        if (this.bouncesElement) this.bouncesElement.classList.remove('visible');
                     }
                 }
 

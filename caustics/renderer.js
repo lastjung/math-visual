@@ -62,7 +62,7 @@ export const Renderer = {
         const size = Math.min(w, h) * sizeMult;
 
         // --- 1. PREPARE CONTEXTS ---
-        if (state.isPaintMode) {
+        if (state.isPaintMode || state.isPaint2Mode || state.isLightMode) {
             if (!this.paintCanvas) {
                 this.paintCanvas = document.createElement('canvas');
                 this.paintCtx = this.paintCanvas.getContext('2d');
@@ -83,7 +83,7 @@ export const Renderer = {
         const targetCtx = state.isPaintMode ? this.paintCtx : ctx;
 
         // --- 2. CLEAR (NORMAL MODE ONLY) ---
-        if (!state.isPaintMode) {
+        if (!state.isPaintMode && !state.isPaint2Mode && !state.isLightMode) {
             if (useTrail) {
                 ctx.fillStyle = 'rgba(5, 5, 8, 0.15)'; 
                 ctx.fillRect(0, 0, w, h);
@@ -95,9 +95,9 @@ export const Renderer = {
 
         // --- 3. DRAW UI/GUIDES (BEFORE RAYS IN NORMAL, SKIP IN PAINT BUFFER) ---
         // We draw UI on main 'ctx' so it's sharp and clean.
-        // In Paint mode, we draw this AFTER rays to keep it on top.
+        // In Paint/Light mode, we draw this AFTER rays to keep it on top.
         // In Normal mode, we draw it BEFORE rays to allow the Bloom/Light to overlay nicely.
-        if (!state.isPaintMode) {
+        if (!state.isPaintMode && !state.isPaint2Mode && !state.isLightMode) {
             this.drawUI(ctx, state, centerX, centerY, size);
         }
 
@@ -105,7 +105,7 @@ export const Renderer = {
         // aimAngle is set to Math.PI/2 (90deg) so that 0 rotation points DOWN.
         const aimAngle = Math.PI / 2; 
 
-        const workBudget = state.isWindowFull ? 4000 : 2600;
+        const workBudget = state.isWindowFull ? 8000 : 5200;
         let drawRayNumber = Math.max(1, Math.floor(rayNumber));
         let drawMaxBounces = Math.max(1, Math.floor(MAX_BOUNCES));
         if (drawRayNumber * drawMaxBounces > workBudget) {
@@ -117,8 +117,9 @@ export const Renderer = {
 
         const { min: pMin, max: pMax } = state.parallelRange;
         const maxTravel = Math.sqrt(w*w + h*h) * 1.2;
+        const isNormalOrPaint1 = isLightVisible && !state.isPaint2Mode && !state.isLightMode;
 
-        if (isLightVisible) {
+        if (isNormalOrPaint1) {
             // Memory Optimization: Avoid Array.from and map every frame
             const rayPaths = [];
             for (let idx = 0; idx < drawRayNumber; idx++) {
@@ -162,6 +163,7 @@ export const Renderer = {
             }
 
             // MULTI-PASS DRAWING
+            let firstRayActualBounces = 0;
             for (let b = 0; b < drawMaxBounces; b++) {
                 for (let i = 0; i < rayPaths.length; i++) {
                     const ray = rayPaths[i];
@@ -214,7 +216,6 @@ export const Renderer = {
                     targetCtx.fillStyle = `hsla(${ray.baseHue}, 100%, 60%, ${alpha})`;
 
                     let cw = beamWidth;
-                    if (state.isPaintMode) cw *= 0.5; 
                     if (!useTrail) cw *= 1.35;
                     targetCtx.lineWidth = cw;
 
@@ -263,15 +264,19 @@ export const Renderer = {
                         // Nudge slightly ALONG the inward normal to ensure the next segment starts inside
                         ray.rx += normal.x * 0.1; 
                         ray.ry += normal.y * 0.1;
+                        
+                        if (i === 0) firstRayActualBounces++;
                     }
                 }
             }
+            state.currentBounces = firstRayActualBounces;
             targetCtx.restore();
         }
 
-        // --- 5. COMPOSITE PAINT & DRAW TOP UI ---
-        if (state.isPaintMode) {
+        // --- 5. COMPOSITE PAINT/LIGHT & DRAW TOP UI ---
+        if (state.isPaintMode || state.isPaint2Mode || state.isLightMode) {
             ctx.clearRect(0, 0, w, h);
+            // Both Paint and Light use the paintCanvas buffer
             ctx.drawImage(this.paintCanvas, 0, 0);
             this.drawUI(ctx, state, centerX, centerY, size);
         }
@@ -460,5 +465,141 @@ export const Renderer = {
             this.paintCtx.fillStyle = '#050508';
             this.paintCtx.fillRect(0, 0, this.paintCanvas.width, this.paintCanvas.height);
         }
+        if (window.LightDensityModule) window.LightDensityModule.clear();
+    },
+
+    /**
+     * Helper: Convert Hue to RGB Energy
+     */
+    hueToRgbEnergy(h) {
+        h = (h % 360) / 360;
+        let r, g, b;
+        const i = Math.floor(h * 6);
+        const f = h * 6 - i;
+        const q = 1 - f;
+        const t = f;
+        switch (i % 6) {
+            case 0: r = 1; g = t; b = 0; break;
+            case 1: r = q; g = 1; b = 0; break;
+            case 2: r = 0; g = 1; b = t; break;
+            case 3: r = 0; g = q; b = 1; break;
+            case 4: r = t; g = 0; b = 1; break;
+            case 5: r = 1; g = 0; b = q; break;
+        }
+        return { r, g, b };
+    },
+
+    /**
+     * Draw the physical light density (Sharp Vector Mode)
+     * "Suppress originals, boost remote": Normalizes intensity based on local density and distance.
+     */
+    drawLight(state, segments) {
+        if (!this.paintCanvas) return;
+        const ctx = this.paintCtx;
+        const centerX = state.canvas.width / 2;
+        const centerY = state.canvas.height / 2 - 60;
+        
+        const LightDensity = window.LightDensityModule;
+        if (!LightDensity) return;
+
+        const rayCount = state.rayNumber || 100;
+
+        ctx.save();
+        // Use 'source-over' with 1/N blending to preserve colors
+        ctx.globalCompositeOperation = 'source-over'; 
+        ctx.lineCap = 'butt'; // Sharp edges for a more "light beam" look
+        
+        for (let i = 0; i < segments.length; i++) {
+            const seg = segments[i];
+            
+            // 1. DENSITY CHECK: Prevents self-dimming while allowing cross-over sum
+            let density = 1;
+            if (seg.isSource || seg.isHit) {
+                density = LightDensity.addDensity(centerX + seg.x1, centerY + seg.y1);
+            } else {
+                density = LightDensity.getDensity(centerX + seg.x1, centerY + seg.y1);
+            }
+            
+            // 2. VIBRANT COLOR MODEL: Use 50% lightness for pure ROYGBIV
+            // 1/N blend: Newer photons average with older ones
+            const userPower = state.alphaIntensity || 1.0;
+            const alpha = (1.0 / density) * userPower;
+            
+            // 3. "Remote as New": Boost far rays to keep the simulation "alive" at edges
+            const dist = seg.accDist || 0;
+            const spread = Math.max(0.01, state.spread);
+            const remoteBoost = (1.0 + (dist * spread * 0.1));
+            
+            const finalAlpha = Math.min(1.0, alpha * remoteBoost);
+            
+            // PHYSICAL LIGHT BEAM: Center is brighter, edges are colored
+            // Main Beam
+            ctx.strokeStyle = `hsla(${seg.hue}, 100%, 50%, ${finalAlpha})`;
+            ctx.lineWidth = state.beamWidth * 0.8; // Thinner for "Light" vs "Paint"
+            
+            ctx.beginPath();
+            ctx.moveTo(centerX + seg.x1, centerY + seg.y1);
+            ctx.lineTo(centerX + seg.x2, centerY + seg.y2);
+            ctx.stroke();
+            
+            // Photon Glow (Bloom)
+            if (state.useBloom) {
+                ctx.strokeStyle = `hsla(${seg.hue}, 100%, 70%, ${finalAlpha * 0.3})`;
+                ctx.lineWidth = state.beamWidth * 2.5;
+                ctx.beginPath();
+                ctx.moveTo(centerX + seg.x1, centerY + seg.y1);
+                ctx.lineTo(centerX + seg.x2, centerY + seg.y2);
+                ctx.stroke();
+            }
+            
+            // Impact Point Spark
+            if (state.useBloom && seg.isHit) {
+                const r = state.beamWidth * 2.0;
+                const sparkA = Math.min(0.9, finalAlpha * 5.0);
+                ctx.fillStyle = `hsla(${seg.hue}, 100%, 80%, ${sparkA})`;
+                ctx.beginPath(); ctx.arc(centerX + seg.x2, centerY + seg.y2, r, 0, Math.PI * 2); ctx.fill();
+            }
+        }
+        ctx.restore();
+    },
+
+    /**
+     * Draw incremental segments for Paint 2 mode
+     */
+    drawPaint2Segments(state, segments) {
+        if (!this.paintCanvas) return;
+        const ctx = this.paintCtx;
+        const w = state.canvas.width;
+        const h = state.canvas.height;
+        const centerX = w / 2;
+        const centerY = h / 2 - 60;
+        
+        ctx.save();
+        ctx.globalCompositeOperation = 'source-over'; // Fixed: Pure overwrite mode
+        ctx.lineCap = 'round';
+        
+        for (let i = 0; i < segments.length; i++) {
+            const seg = segments[i];
+            // Alpha fixed to 0.95 as requested, multiplied by state.alphaIntensity slider
+            const alpha = 0.95 * state.alphaIntensity;
+            
+            ctx.strokeStyle = `hsla(${seg.hue}, 100%, 60%, ${alpha})`;
+            ctx.lineWidth = state.beamWidth;
+            
+            ctx.beginPath();
+            ctx.moveTo(centerX + seg.x1, centerY + seg.y1);
+            ctx.lineTo(centerX + seg.x2, centerY + seg.y2);
+            ctx.stroke();
+            
+            if (state.useBloom && seg.isHit) {
+                const r = state.beamWidth * 1.5;
+                const ba = Math.min(1.0, alpha * 2.5);
+                ctx.fillStyle = `hsla(${seg.hue}, 100%, 60%, ${ba * 0.15})`;
+                ctx.beginPath(); ctx.arc(centerX + seg.x2, centerY + seg.y2, r * 4.5, 0, Math.PI * 2); ctx.fill();
+                ctx.fillStyle = `hsla(${seg.hue}, 100%, 80%, ${ba})`;
+                ctx.beginPath(); ctx.arc(centerX + seg.x2, centerY + seg.y2, r, 0, Math.PI * 2); ctx.fill();
+            }
+        }
+        ctx.restore();
     }
 };

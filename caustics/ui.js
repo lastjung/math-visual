@@ -49,7 +49,7 @@ export const UI = {
         const config = {
             revolution: { speed: 0.1, min: -Math.PI, max: Math.PI, get: () => Math.atan2(app.sourcePos.y, app.sourcePos.x) },
             rotation: { speed: 0.15, min: -Math.PI, max: Math.PI, get: () => app.sourceRotation },
-            density: { speed: 0.2, min: 20, max: 500, get: () => app.rayNumber },
+            density: { speed: 0.2, min: 20, max: 1000, get: () => app.rayNumber },
             speed: { speed: 0.1, min: 0, max: 100, get: () => app.raySpeed },
             spread: { speed: 0.15, min: 0, max: Math.PI * 2, get: () => app.spread },
             reflections: { speed: 0.1, min: 1, max: 20, get: () => app.MAX_BOUNCES }
@@ -92,7 +92,6 @@ export const UI = {
         const rangeRotation = document.getElementById('range-rotation');
         rangeRotation.oninput = (e) => {
             app.sourceRotation = parseFloat(e.target.value);
-            app.autoModes.rotation = false; // Stop auto-rotating on manual input
             this.update(app);
         };
 
@@ -189,10 +188,17 @@ export const UI = {
             app.useBloom = e.target.checked;
             this.update(app);
         };
-        document.getElementById('check-paint').onchange = (e) => {
-            app.isPaintMode = e.target.checked;
-            this.update(app);
-        };
+        // Render Mode Mini Tabs
+        document.querySelectorAll('#group-render-mode .mini-tab').forEach(btn => {
+            btn.onclick = (e) => {
+                const val = e.target.dataset.value;
+                app.isPaintMode = (val === 'paint1');
+                app.isPaint2Mode = (val === 'paint2');
+                app.isLightMode = (val === 'light');
+                if (app.isPaint2Mode || app.isLightMode) app.resetRays(false); 
+                this.update(app);
+            };
+        });
 
         const btnWindowFull = document.getElementById('apple-fullscreen');
         if (btnWindowFull) {
@@ -307,8 +313,8 @@ export const UI = {
                     if (e.cancelable) e.preventDefault();
                 }
             } else if (isDragging && (e.type === 'mousemove' || e.type === 'touchmove')) {
-                app.sourcePos = { x, y };
-                app.recalcParallelRange(); // Update range while moving
+                    app.sourcePos = { x, y };
+                    app.recalcParallelRange(); // Update range while moving
                 this.update(app);
             }
         };
@@ -414,6 +420,18 @@ export const UI = {
         if (checkAxes && checkAxes.checked !== app.showAxes) checkAxes.checked = app.showAxes;
 
         // Update Mini Tabs
+        document.querySelectorAll('#group-render-mode .mini-tab').forEach(btn => {
+            let activeVal = 'none';
+            if (app.isPaintMode) activeVal = 'paint1';
+            else if (app.isPaint2Mode) activeVal = 'paint2';
+            else if (app.isLightMode) activeVal = 'light';
+            
+            const isActive = btn.dataset.value === activeVal;
+            if (btn.classList.contains('active') !== isActive) {
+                btn.classList.toggle('active', isActive);
+            }
+        });
+
         document.querySelectorAll('#group-base .mini-tab').forEach(btn => {
             const isActive = btn.dataset.value === app.baseStyle;
             if (btn.classList.contains('active') !== isActive) {
@@ -442,7 +460,6 @@ export const UI = {
         if (cTrail && cTrail.checked !== app.useTrail) cTrail.checked = app.useTrail;
         if (cTaper && cTaper.checked !== app.useTaper) cTaper.checked = app.useTaper;
         if (cBloom && cBloom.checked !== app.useBloom) cBloom.checked = app.useBloom;
-        if (cPaint && cPaint.checked !== app.isPaintMode) cPaint.checked = app.isPaintMode;
 
         const sNarrative = document.getElementById('select-narrative');
         if (sNarrative) {

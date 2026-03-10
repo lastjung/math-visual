@@ -66,6 +66,7 @@
         <!-- HUD Elements -->
         <div id="hud-timer" class="hud-timer">00:00.00</div>
         <div id="hud-speed" class="hud-speed">1.00x</div>
+        <div id="hud-bounces" class="hud-bounces">BOUNCES 0</div>
 
         <!-- Sidebar Section -->
         <aside class="controls-sidebar">
@@ -123,7 +124,7 @@
                         </label>
                         <span class="setting-value value-density" id="val-density">30</span>
                     </div>
-                    <input type="range" id="range-density" min="20" max="500" value="30">
+                    <input type="range" id="range-density" min="20" max="1000" value="30">
                 </div>
 
                 <!-- Ray Speed Slider -->
@@ -190,7 +191,18 @@
                     </div>
                 </div>
 
-                <!-- 4. EFFECTS Selection -->
+                <!-- 4. RENDER MODE Selection -->
+                <div class="setting-row-inline" style="margin-top: 8px;">
+                    <label class="setting-label">RENDER MODE</label>
+                    <div class="mode-tabs-mini" id="group-render-mode" style="width: 220px;">
+                        <button class="mini-tab active" data-value="none">Normal</button>
+                        <button class="mini-tab" data-value="paint1">Paint 1</button>
+                        <button class="mini-tab" data-value="paint2">Paint 2</button>
+                        <button class="mini-tab" data-value="light">Light</button>
+                    </div>
+                </div>
+
+                <!-- 5. EFFECTS Selection -->
                 <div class="setting-row-inline" style="margin-top: 16px; justify-content: flex-start; gap: 12px;">
                     <label class="setting-label">EFFECTS</label>
                     <div class="checkbox-group">
@@ -206,14 +218,10 @@
                             <input type="checkbox" id="check-bloom">
                             <span>Bloom</span>
                         </label>
-                        <label class="chip-checkbox">
-                            <input type="checkbox" id="check-paint">
-                            <span>Paint</span>
-                        </label>
                     </div>
                 </div>
 
-                <!-- 4. BOTTOM AXES -->
+                <!-- 6. BOTTOM AXES -->
                 <div class="setting-row" style="margin-top: 16px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 16px;">
                     <label class="toggle-option">
                         <input type="checkbox" id="check-axes">
@@ -222,7 +230,7 @@
                     </label>
                 </div>
 
-                <!-- 5. Simulation Narrative Selection -->
+                <!-- 7. Simulation Narrative Selection -->
                 <div class="setting-row" style="margin-top: 8px;">
                     <div class="setting-label-group">
                         <label class="setting-label">SIMULATION NARRATIVE</label>

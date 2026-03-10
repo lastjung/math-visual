@@ -93,55 +93,51 @@ export const Physics = {
         const dx = Math.cos(angle);
         const dy = Math.sin(angle);
         
-        const nudge = 0.1;  // Much smaller nudge for precision
-        const startInside = this.isInside(sx + dx * nudge, sy + dy * nudge, type, size);
+        // Safety: If it's already far outside, don't even try
+        const distSq = sx*sx + sy*sy;
+        const maxRadiusSq = (size * 5) ** 2;
+        if (distSq > maxRadiusSq) return null;
 
-        if (startInside) {
-            // FAST PATH: Ray starts inside → simple binary search (only 20 iterations!)
-            let low = nudge;
-            let high = size * 3;
+        const nudge = 0.05; 
+        const isCurrentlyInside = this.isInside(sx, sy, type, size);
+        const forwardInside = this.isInside(sx + dx * nudge, sy + dy * nudge, type, size);
+
+        // Case 1: We are inside (or on the edge pointing in)
+        if (isCurrentlyInside || forwardInside) {
+            let low = 0;
+            let high = size * 5; 
             
-            // Verify that high is actually outside
-            if (this.isInside(sx + dx * high, sy + dy * high, type, size)) {
-                return null; // Shouldn't happen for closed shapes
-            }
-
-            for (let i = 0; i < 20; i++) {
+            // Binary search for the EXIT point
+            for (let i = 0; i < 24; i++) {
                 const mid = (low + high) / 2;
-                if (this.isInside(sx + dx * mid, sy + dy * mid, type, size)) {
-                    low = mid;
-                } else {
-                    high = mid;
-                }
+                if (this.isInside(sx + dx * mid, sy + dy * mid, type, size)) low = mid;
+                else high = mid;
             }
             return { x: sx + dx * high, y: sy + dy * high };
-        } else {
-            // EXTERNAL PATH: Ray starts outside → coarse raymarch to find entry
-            const maxDist = size * 15;
-            const step = size * 0.1;  // Big steps (10% of shape size) = max ~30 iterations
-            
-            let crossedDist = null;
-            for (let d = step; d < maxDist; d += step) {
-                if (this.isInside(sx + dx * d, sy + dy * d, type, size)) {
-                    crossedDist = d;
-                    break;
-                }
+        } 
+        
+        // Case 2: We are outside pointing away or towards
+        // Coarse raymarch to find entry
+        const maxDist = size * 10;
+        const step = size * 0.05;
+        let entryDist = null;
+        for (let d = step; d < maxDist; d += step) {
+            if (this.isInside(sx + dx * d, sy + dy * d, type, size)) {
+                entryDist = d;
+                break;
             }
-            
-            if (crossedDist === null) return null;  // Missed the shape
-
-            // Refine with binary search
-            let low = crossedDist - step;
-            let high = crossedDist;
-            for (let i = 0; i < 15; i++) {
-                const mid = (low + high) / 2;
-                if (!this.isInside(sx + dx * mid, sy + dy * mid, type, size)) {
-                    low = mid;
-                } else {
-                    high = mid;
-                }
-            }
-            return { x: sx + dx * high, y: sy + dy * high };
         }
+        
+        if (entryDist === null) return null;
+
+        // Refine entry point
+        let low = entryDist - step;
+        let high = entryDist;
+        for (let i = 0; i < 20; i++) {
+            const mid = (low + high) / 2;
+            if (!this.isInside(sx + dx * mid, sy + dy * mid, type, size)) low = mid;
+            else high = mid;
+        }
+        return { x: sx + dx * high, y: sy + dy * high };
     }
 };

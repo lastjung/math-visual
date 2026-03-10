@@ -700,6 +700,26 @@ input[type=range]::-webkit-slider-thumb {
   opacity: 1;
 }
 
+.hud-bounces {
+  position: absolute;
+  top: 132px; /* Fixed spacing from speed HUD */
+  left: 32px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 11px;
+  font-weight: 500;
+  color: #fbbf24; /* Amber to distinguish it from speed/timer */
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+  pointer-events: none;
+  z-index: 10000;
+  letter-spacing: 0.04em;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.hud-bounces.visible {
+  opacity: 1;
+}
+
 /* Apple-style Floating Player Container */
 .apple-player {
   position: absolute;
