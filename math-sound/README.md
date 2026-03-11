@@ -182,9 +182,18 @@ math-sound/
 
 | 키      | 기능               |
 | ------- | ------------------ |
-| `Space` | 재생/일시정지 토글 |
-| `←`     | 이전 함수로 이동   |
-| `→`     | 다음 함수로 이동   |
+| `Space` | Toggle Play/Pause |
+| `←`     | Previous function |
+| `→`     | Next function     |
+| `Enter` | Add to Simulation Box |
+
+### ⌨️ S-System Shortcuts (Advanced)
+
+| Shortcut | Function |
+| -------- | -------- |
+| `S + 1`  | **Random Box**: Start/Stop Random Simulation |
+| `S + 2`  | **Simulation Play**: Play Simulation Box (1 loop each) |
+| `S + 3`  | **Box Window**: Toggle Simulation Box Visibility |
 
 ### 슬라이더
 

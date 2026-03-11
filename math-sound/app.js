@@ -211,11 +211,44 @@ function setupEventListeners() {
         if (!state.isPlaying) drawStaticGraph();
     });
 
+    let sPressed = false;
+
     document.addEventListener('keydown', (e) => {
+        // Prevent shortcuts when typing in inputs
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
+        const key = e.key.toLowerCase();
+        if (key === 's') sPressed = true;
+
+        if (sPressed) {
+            if (key === '1') {
+                e.preventDefault();
+                toggleAutoPlay();
+                return;
+            }
+            if (key === '2') {
+                e.preventDefault();
+                if (state.playQueue.length > 0) {
+                    state.autoTargetCount = 1;
+                    state.isQueueMode = true;
+                    playQueueItem(0);
+                }
+                return;
+            }
+            if (key === '3') {
+                e.preventDefault();
+                if (mixerPanel) mixerPanel.classList.toggle('hidden');
+                return;
+            }
+        }
+
         if (e.code === 'Space') { e.preventDefault(); togglePlay(); }
         else if (e.code === 'ArrowRight') navigateFunction(1);
         else if (e.code === 'ArrowLeft') navigateFunction(-1);
-        else if (e.key === 'Enter') addLayer();
+        else if (e.key === 'Enter') {
+            e.preventDefault();
+            addToQueue();
+        }
         else if (e.key === 'Escape') {
             if (document.body.classList.contains('is-fullscreen')) {
                 toggleFullscreen();
@@ -233,6 +266,10 @@ function setupEventListeners() {
             setupCanvas();
             drawStaticGraph();
         }
+    });
+
+    document.addEventListener('keyup', (e) => {
+        if (e.key.toLowerCase() === 's') sPressed = false;
     });
 }
 
