@@ -5,8 +5,10 @@
 import { Physics } from './physics.js';
 
 export const Renderer = {
-    paintCanvas: null,
-    paintCtx: null,
+    paintCanvas1: null,
+    paintCtx1: null,
+    paintCanvas2: null,
+    paintCtx2: null,
     
     /**
      * computeBaseAlpha: Shared logic to determine brightness of a ray segment (Used by Normal Mode)
@@ -92,25 +94,40 @@ export const Renderer = {
         const size = Math.min(w, h) * sizeMult;
 
         // --- 1. PREPARE CONTEXTS ---
-        if (state.isPaintMode || state.isPaint2Mode) { // Light mode no longer uses persistent buffer
-            if (!this.paintCanvas) {
-                this.paintCanvas = document.createElement('canvas');
-                this.paintCtx = this.paintCanvas.getContext('2d');
-                // Immediate fill to prevent first-frame white flash
-                this.paintCanvas.width = w;
-                this.paintCanvas.height = h;
-                this.paintCtx.fillStyle = '#050508';
-                this.paintCtx.fillRect(0, 0, w, h);
+        if (state.isPaintMode) {
+            if (!this.paintCanvas1) {
+                this.paintCanvas1 = document.createElement('canvas');
+                this.paintCtx1 = this.paintCanvas1.getContext('2d');
+                this.paintCanvas1.width = w;
+                this.paintCanvas1.height = h;
             }
-            if (this.paintCanvas.width !== w || this.paintCanvas.height !== h) {
-                this.paintCanvas.width = w;
-                this.paintCanvas.height = h;
-                this.paintCtx.fillStyle = '#050508';
-                this.paintCtx.fillRect(0, 0, w, h);
+            if (this.paintCanvas1.width !== w || this.paintCanvas1.height !== h) {
+                this.paintCanvas1.width = w;
+                this.paintCanvas1.height = h;
+            }
+            // Paint 1 (isPaintMode) is for real-time auto-modes: Clear every frame
+            this.paintCtx1.fillStyle = '#050508';
+            this.paintCtx1.fillRect(0, 0, w, h);
+        }
+
+        if (state.isPaint2Mode) {
+            if (!this.paintCanvas2) {
+                this.paintCanvas2 = document.createElement('canvas');
+                this.paintCtx2 = this.paintCanvas2.getContext('2d');
+                this.paintCanvas2.width = w;
+                this.paintCanvas2.height = h;
+                this.paintCtx2.fillStyle = '#050508';
+                this.paintCtx2.fillRect(0, 0, w, h);
+            }
+            if (this.paintCanvas2.width !== w || this.paintCanvas2.height !== h) {
+                this.paintCanvas2.width = w;
+                this.paintCanvas2.height = h;
+                this.paintCtx2.fillStyle = '#050508';
+                this.paintCtx2.fillRect(0, 0, w, h);
             }
         }
 
-        const targetCtx = state.isPaintMode ? this.paintCtx : ctx;
+        const targetCtx = state.isPaintMode ? this.paintCtx1 : (state.isPaint2Mode ? this.paintCtx2 : ctx);
 
         // --- 2. CLEAR (NORMAL/LIGHT MODES) ---
         if (!state.isPaintMode && !state.isPaint2Mode) {
@@ -332,7 +349,8 @@ export const Renderer = {
             }
 
             ctx.save();
-            ctx.globalCompositeOperation = 'lighter';
+            // STEP 1: Temp Sync with Normal Mode (source-over instead of lighter)
+            ctx.globalCompositeOperation = 'source-over';
             ctx.lineCap = 'round';
             
             let firstRayActualBounces = 0;
@@ -354,15 +372,12 @@ export const Renderer = {
                     const spatialDecay = Math.pow(0.9983, ray.accDist); // Spatial decay factor
                     let alpha = baseEnergy * spatialDecay * state.alphaIntensity;
 
-                    const density = LD ? LD.getDensityAlongLine(ray.rx, ray.ry, dX, dY) : 0;
-                    
-                    // 2. Exposure Correction (Density Only)
-                    const exposure = (TARGET_D + DAMPING) / (density + DAMPING);
-                    // Reintroduced 0.7 lower bound for solid visual presence
-                    const finalAlpha = Math.max(0.7, Math.min(0.98, alpha * exposure));
+                    // STEP 2: Record Energy Density (Internal calculation active via LD.recordDensityAlongLine below)
+                    // STEP 3: Fixed Alpha to match Normal Mode look (0.18)
+                    const finalAlpha = 0.18;
 
                     // 3. Draw Pure Straight Stroke
-                    ctx.strokeStyle = `hsla(${ray.baseHue}, 100%, 60%, ${finalAlpha})`;
+                    ctx.strokeStyle = `hsla(${ray.baseHue}, 100%, 45%, ${finalAlpha})`;
                     ctx.lineWidth = beamWidth;
                     ctx.beginPath(); ctx.moveTo(ray.rx, ray.ry); ctx.lineTo(dX, dY); ctx.stroke();
 
@@ -385,10 +400,10 @@ export const Renderer = {
         }
 
         // --- 5. COMPOSITE PAINT (ONLY) & DRAW TOP UI ---
-        if (state.isPaintMode || state.isPaint2Mode) { // Light mode no longer uses this composite branch
+        if (state.isPaintMode || state.isPaint2Mode) { 
             ctx.clearRect(0, 0, w, h);
-            // Both Paint and Light use the paintCanvas buffer
-            ctx.drawImage(this.paintCanvas, 0, 0);
+            const targetCanvas = state.isPaintMode ? this.paintCanvas1 : this.paintCanvas2;
+            if (targetCanvas) ctx.drawImage(targetCanvas, 0, 0);
             this.drawUI(ctx, state, centerX, centerY, size);
         }
 
@@ -572,9 +587,13 @@ export const Renderer = {
     },
 
     clearPaint() {
-        if (this.paintCtx) {
-            this.paintCtx.fillStyle = '#050508';
-            this.paintCtx.fillRect(0, 0, this.paintCanvas.width, this.paintCanvas.height);
+        if (this.paintCtx1) {
+            this.paintCtx1.fillStyle = '#050508';
+            this.paintCtx1.fillRect(0, 0, this.paintCanvas1.width, this.paintCanvas1.height);
+        }
+        if (this.paintCtx2) {
+            this.paintCtx2.fillStyle = '#050508';
+            this.paintCtx2.fillRect(0, 0, this.paintCanvas2.width, this.paintCanvas2.height);
         }
         if (window.LightDensityModule) window.LightDensityModule.clear();
     },
@@ -604,8 +623,8 @@ export const Renderer = {
      * Draw incremental segments for Paint 2 mode
      */
     drawPaint2Segments(state, segments) {
-        if (!this.paintCanvas) return;
-        const ctx = this.paintCtx;
+        if (!this.paintCanvas2) return;
+        const ctx = this.paintCtx2;
         const w = state.canvas.width;
         const h = state.canvas.height;
         const centerX = w / 2;

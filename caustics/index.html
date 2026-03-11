@@ -206,9 +206,9 @@
                 <div class="setting-row-inline" style="margin-top: 8px;">
                     <label class="setting-label">RENDER MODE</label>
                     <div class="mode-tabs-mini" id="group-render-mode" style="width: 220px;">
-                        <button class="mini-tab" data-value="none">Normal</button>
+                        <button class="mini-tab active" data-value="none">Normal</button>
                         <button class="mini-tab" data-value="paint1">Paint 1</button>
-                        <button class="mini-tab active" data-value="paint2">Paint 2</button>
+                        <button class="mini-tab" data-value="paint2">Paint 2</button>
                         <button class="mini-tab" data-value="light">Light</button>
                     </div>
                 </div>
@@ -245,6 +245,10 @@
                 <div class="setting-row" style="margin-top: 8px;">
                     <div class="setting-label-group">
                         <label class="setting-label">SIMULATION NARRATIVE</label>
+                        <button id="btn-sim" class="sim-toggle-btn" title="Start/Stop Automated Journey">
+                            <span id="sim-icon"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg></span>
+                            <span id="sim-text">Sim Off</span>
+                        </button>
                     </div>
                     <select id="select-narrative" class="apple-select">
                         <option value="none">None (No Subtitle)</option>

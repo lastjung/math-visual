@@ -41,9 +41,9 @@ const App = {
     useTaper: false,
     useBloom: false,
     alphaIntensity: 1.0,
-    isPaintMode: false, // Normal Paint Mode (Overlays)
-    isPaint2Mode: true, // Incremental Paint Mode (Additive Persistence) - SET AS DEFAULT
-    isLightMode: false,  // Physical Light Density Mode
+    isPaintMode: false, 
+    isPaint2Mode: false, 
+    isLightMode: false,  
     isSimulationMode: false,
     isWindowFull: false,
     preSimulationBounces: 10,
@@ -169,13 +169,6 @@ const App = {
     },
 
     applyShapeSwitchReset(nextShape) {
-        // Reset only light playback state; keep shared sliders/settings unchanged.
-        this.isFlowing = false;
-        this.isLightVisible = false;
-        this.growth = 0;
-        this.flowOffset = 0;
-        this.emitStartTime = null;
-
         // Reset only tab-specific values.
         const defaults = this.getShapeDefaults(nextShape);
         this.sourcePos = defaults.sourcePos;
@@ -185,6 +178,9 @@ const App = {
         }
         this.autoModes.revolution = false;
         this.autoModes.rotation = false;
+
+        // Use Partial Reset to handle timer, HUD, and clearing
+        this.resetRays(true);
     },
 
     syncSourceToFoci() {
@@ -261,9 +257,9 @@ const App = {
             this.useTaper = saved.useTaper ?? this.useTaper;
             this.useBloom = saved.useBloom ?? this.useBloom;
             this.alphaIntensity = saved.alphaIntensity ?? this.alphaIntensity;
-            this.isPaintMode = saved.isPaintMode ?? this.isPaintMode;
-            this.isPaint2Mode = saved.isPaint2Mode ?? this.isPaint2Mode;
-            this.isLightMode = saved.isLightMode ?? this.isLightMode;
+            this.isPaintMode = saved.isPaintMode === true;
+            this.isPaint2Mode = saved.isPaint2Mode === true;
+            this.isLightMode = saved.isLightMode === true;
             this.parallelRange = saved.parallelRange ?? { min: -100, max: 100 };
             
             this.recalcParallelRange(); // Ensure range is valid for current sourcePos.y
@@ -405,35 +401,17 @@ const App = {
         this.raySpeed = 20;
         const defaults = this.getShapeDefaults(this.shape);
         this.sourcePos = defaults.sourcePos;
-        this.isFlowing = false;
-        this.isLightVisible = false;
-        this.showAxes = false;
-        this.growth = 0;
-        this.colorMode = 'rainbow';
-        this.baseStyle = 'line';
-        this.flowMode = 'none';
-        // this.lightSourceMode = 'point'; // Exempt from reset
-        this.useTrail = true;
-        this.useTaper = true;
-        this.useBloom = false;
-        this.alphaIntensity = 1.0;
-        this.isPaintMode = false;
-        this.isPaint2Mode = true;
-        this.isLightMode = false;
+        // this.isPaintMode = false; // Preserve current mode
+        // this.isPaint2Mode = true;
+        // this.isLightMode = false;
         this.isSimulationMode = false;
         this.preSimulationBounces = 10;
         this.spread = 1.2;
         this.beamWidth = 1.6;
         this.MAX_BOUNCES = 10;
-        this.emitStartTime = null;
-
-        // Force Clear All Canvases Immediately
-        if (this.ctx) {
-            this.ctx.fillStyle = '#050508';
-            this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-            Renderer.clearPaint();
-            if (window.LightDensityModule) window.LightDensityModule.clear();
-        }
+        
+        // Use resetRays for consistent behavior (timer reset, HUD visibility, canvas clearing)
+        this.resetRays(true);
 
         // Reset auto modes and phases
         this.autoModes = {
@@ -454,19 +432,6 @@ const App = {
         };
         this.autoTimer = 0;
         this.sourceRotation = defaults.sourceRotation;
-        // Aggressive Clear: Ensure all buffers are wiped on Full Reset
-        if (this.ctx) {
-            this.ctx.fillStyle = '#050508';
-            this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-            Renderer.clearPaint();
-            if (window.LightDensityModule) window.LightDensityModule.clear();
-        }
-        
-        Simulator.clear();
-
-        document.querySelectorAll('.shape-tab').forEach(b => b.classList.toggle('active', b.dataset.shape === this.shape));
-        document.querySelectorAll('.mode-tab').forEach(b => b.classList.toggle('active', b.dataset.mode === 'rainbow'));
-
         UI.update(this);
         this.persistState();
         this.recalcParallelRange();
