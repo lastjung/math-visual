@@ -26,6 +26,12 @@ export function drawStaticGraph() {
     graphCtx.fillStyle = '#ffffff';
     graphCtx.fillRect(0, 0, width, height);
 
+    if (!state.currentFunction) {
+        // Draw empty axes at least or just clear
+        drawAxes(width, height, -10, 10, -10, 10);
+        return;
+    }
+
     // 1. Draw Axis first
     const funcData = MATH_FUNCTIONS[state.currentFunction];
     const { xMin, xMax, yMin, yMax } = getBounds(funcData);
@@ -294,7 +300,7 @@ export function drawAxes(width, height, xMin, xMax, yMin, yMax) {
 }
 
 export function animate() {
-    if (!state.isPlaying) return;
+    if (!state.isPlaying || !state.currentFunction) return;
 
     const funcData = MATH_FUNCTIONS[state.currentFunction];
     const width = elements.graphCanvas.offsetWidth;

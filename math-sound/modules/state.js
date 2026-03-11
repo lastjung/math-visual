@@ -30,8 +30,13 @@ export const state = {
     // Auto Play State
     isAutoPlaying: false,
     autoQueue: [],
+    autoQueueIndex: -1,
     autoLoopCount: 0,
-    autoTargetCount: 3 // Default
+    autoTargetCount: 3, // Default
+    // Sequential Queue State
+    playQueue: [],
+    currentQueueIndex: -1,
+    isQueueMode: false
 };
 
 export const elements = {
@@ -57,11 +62,16 @@ export const elements = {
     slidersPanel: document.getElementById('slidersPanel'),
     slidersToggle: document.getElementById('slidersToggle'),
     categoryTabs: document.querySelectorAll('.category-tab'),
+    menuPanel: document.getElementById('menuPanel'),
+    closeMenuBtn: document.getElementById('closeMenuBtn'),
+    controlsBox: document.getElementById('controlsBox'),
+    closeControlsBtn: document.getElementById('closeControlsBtn'),
     currentIndex: document.getElementById('currentIndex'),
     totalCount: document.getElementById('totalCount'),
     container: document.querySelector('.container'),
     canvasWrapper: document.querySelector('.canvas-wrapper'),
-    canvasClock: document.getElementById('canvasClock')
+    canvasClock: document.getElementById('canvasClock'),
+    fullscreenBtn: document.getElementById('fullscreenBtn')
 };
 
 // Canvas contexts (Initialised in app.js or renderer.js)

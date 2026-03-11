@@ -25,7 +25,7 @@
         </header>
 
         <div class="layout">
-            <div class="main-panel">
+            <div class="main-panel" id="mainPanel">
                 <!-- Main Canvas Area -->
                 <div class="canvas-wrapper">
                     <span class="function-title" id="functionTitle">Sine</span>
@@ -47,7 +47,8 @@
                 </div>
 
                 <!-- Controls -->
-                <div class="controls">
+                <div class="controls" id="controlsBox">
+                    <button id="closeControlsBtn" class="close-controls-btn" title="컨트롤 숨기기">×</button>
                     <button id="prevBtn" class="control-btn prev-btn" title="이전">
                         <span class="icon">⟨</span>
                     </button>
@@ -69,22 +70,29 @@
                     <button id="layerBtn" class="control-btn layer-btn" title="레이어 믹서 토글">
                         <span class="icon">🎹</span>
                     </button>
+                    <button id="fullscreenBtn" class="control-btn fullscreen-btn" title="전체화면 토글">
+                        <span class="icon">⛶</span>
+                    </button>
                 </div>
 
-                <!-- Live Layers (Performance Mixer) -->
+                <!-- Simulation Sequence (Performance Mixer repurposed) -->
                 <div id="mixerPanel" class="mixer-panel hidden">
                     <div class="mixer-header">
-                        <h3>Live Mixer</h3>
-                        <button id="clearAllBtn" class="clear-all-btn">Clear All</button>
+                        <h3>Simulation Queue</h3>
+                        <div class="header-right">
+                            <button id="clearAllBtn" class="clear-all-btn">Clear Queue</button>
+                            <button id="closeMixerBtn" class="close-mixer-btn" title="닫기">✕</button>
+                        </div>
                     </div>
-                    <div id="activeLayers" class="active-layers">
+                    <div id="activeLayers" class="active-layers queue-mode">
                         <!-- Populated by JavaScript -->
                     </div>
                 </div>
 
             </div>
 
-            <aside class="menu-panel">
+            <aside class="menu-panel" id="menuPanel">
+                <button id="closeMenuBtn" class="close-menu-btn" title="메뉴 숨기기">×</button>
                 <!-- Category Tabs -->
                 <div class="category-tabs" id="categoryTabs">
                     <!-- Populated by JavaScript -->
