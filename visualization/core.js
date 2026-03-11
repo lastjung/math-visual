@@ -12,7 +12,7 @@ const Core = {
     isRunning: true,
     currentCaseMode: 'display',
     lastSelectedTrack: null,
-    randomBgmTracks: [
+    mathBgmTracks: [
         'assets/music/bgm/Math_01_Minimalist_Sine_Pulse.mp3',
         'assets/music/bgm/Math_02_Fractal_Recursive_Ambient.mp3',
         'assets/music/bgm/Math_03_Euclidean_Polyrhythm.mp3',
@@ -32,7 +32,9 @@ const Core = {
         'assets/music/bgm/Math_17_Mathematical_Induction.mp3',
         'assets/music/bgm/Math_18_Lo-fi_Coding_Marathon.mp3',
         'assets/music/bgm/Math_19_Abstract_Set_Theory.mp3',
-        'assets/music/bgm/Math_20_Theorem_Q.E.D..mp3',
+        'assets/music/bgm/Math_20_Theorem_Q.E.D..mp3'
+    ],
+    pianoBgmTracks: [
         'assets/music/bgm/piano-shorts/Piano_Short_01_Nocturne_Full_HQ.mp3',
         'assets/music/bgm/piano-shorts/Piano_Short_02_Moonlight_Full_HQ.mp3',
         'assets/music/bgm/piano-shorts/Piano_Short_03_Claire_Full_HQ.mp3',
@@ -60,20 +62,46 @@ const Core = {
         return this.currentCase._selectedMusicTrack || this.currentCase.musicTrack || null;
     },
 
-    pickRandomTrack(previousTrack = null) {
-        if (!this.randomBgmTracks.length) return null;
-        if (this.randomBgmTracks.length === 1) return this.randomBgmTracks[0];
+    getTrackPool(track) {
+        if (typeof track !== 'string' || !track) return null;
+        if (track.includes('/piano-shorts/')) return this.pianoBgmTracks;
+        if (track.includes('assets/music/bgm/Math_')) return this.mathBgmTracks;
+        return null;
+    },
+
+    getTrackPoolName(track) {
+        const pool = this.getTrackPool(track);
+        if (pool === this.pianoBgmTracks) return 'piano';
+        if (pool === this.mathBgmTracks) return 'math';
+        return null;
+    },
+
+    getPreferredTrackPool() {
+        if (!this.currentCase) return this.mathBgmTracks;
+        const seedTrack = this.currentCase._selectedMusicTrack
+            || this.currentCase.musicTrack
+            || this.lastSelectedTrack
+            || (window.audioManager ? window.audioManager.currentTrack : null);
+        return this.getTrackPool(seedTrack) || this.mathBgmTracks;
+    },
+
+    pickRandomTrack(previousTrack = null, pool = null) {
+        const activePool = Array.isArray(pool) && pool.length ? pool : this.getPreferredTrackPool();
+        if (!activePool.length) return null;
+        if (activePool.length === 1) return activePool[0];
 
         const candidates = previousTrack
-            ? this.randomBgmTracks.filter((track) => track !== previousTrack)
-            : this.randomBgmTracks;
-        const pool = candidates.length ? candidates : this.randomBgmTracks;
-        return pool[Math.floor(Math.random() * pool.length)];
+            ? activePool.filter((track) => track !== previousTrack)
+            : activePool;
+        const safePool = candidates.length ? candidates : activePool;
+        return safePool[Math.floor(Math.random() * safePool.length)];
     },
 
     selectCaseTrack() {
+        const preferredPool = this.getPreferredTrackPool();
         const previousTrack = this.lastSelectedTrack || (window.audioManager ? window.audioManager.currentTrack : null);
-        const randomTrack = this.pickRandomTrack(previousTrack);
+        const poolPreviousTrack = this.getTrackPool(previousTrack) === preferredPool ? previousTrack : null;
+        const randomTrack = this.pickRandomTrack(poolPreviousTrack, preferredPool);
         this.currentCase._selectedMusicTrack = randomTrack || this.currentCase.musicTrack || null;
         this.lastSelectedTrack = this.currentCase._selectedMusicTrack;
     },
@@ -192,7 +220,8 @@ const Core = {
     changeMusicTrack() {
         if (!this.currentCase || !window.audioManager) return;
         const previousTrack = this.getCurrentTrack() || this.lastSelectedTrack;
-        const nextTrack = this.pickRandomTrack(previousTrack);
+        const preferredPool = this.getTrackPool(previousTrack) || this.getPreferredTrackPool();
+        const nextTrack = this.pickRandomTrack(previousTrack, preferredPool);
         if (!nextTrack) return;
 
         this.currentCase._selectedMusicTrack = nextTrack;
@@ -250,6 +279,8 @@ const Core = {
         const bgmState = (this.currentCase && typeof this.currentCase.isCaseAudioMuted === 'function')
             ? (this.currentCase.isCaseAudioMuted() ? 'OFF' : 'ON')
             : (window.audioManager && !window.audioManager.isMuted ? 'ON' : 'OFF');
+        const trackPoolName = this.getTrackPoolName(this.getCurrentTrack());
+        const nextTrackLabel = trackPoolName === 'piano' ? 'Next Piano' : 'Next Random';
         const volumeValue = window.audioManager && typeof window.audioManager.getTargetVolume === 'function'
             ? window.audioManager.getTargetVolume()
             : (window.audioManager ? window.audioManager.targetVolume : 0.5);
@@ -274,7 +305,7 @@ const Core = {
                     ${bgmLabel}: ${bgmState}
                 </button>
                 <button class="btn-secondary" id="sidebar-next-track" style="width:100%; font-size:0.8rem;">
-                    Next Track
+                    ${nextTrackLabel}
                 </button>
             </div>
             <div class="setting-header" style="margin-top:10px;">

@@ -36,7 +36,9 @@ export const state = {
     // Sequential Queue State
     playQueue: [],
     currentQueueIndex: -1,
-    isQueueMode: false
+    isQueueMode: false,
+    isPrimingPlayback: false,
+    introOverlayTimer: null
 };
 
 export const elements = {
@@ -71,7 +73,10 @@ export const elements = {
     container: document.querySelector('.container'),
     canvasWrapper: document.querySelector('.canvas-wrapper'),
     canvasClock: document.getElementById('canvasClock'),
-    fullscreenBtn: document.getElementById('fullscreenBtn')
+    fullscreenBtn: document.getElementById('fullscreenBtn'),
+    equationIntroOverlay: document.getElementById('equationIntroOverlay'),
+    equationIntroFormula: document.getElementById('equationIntroFormula'),
+    equationIntroCopy: document.getElementById('equationIntroCopy')
 };
 
 // Canvas contexts (Initialised in app.js or renderer.js)

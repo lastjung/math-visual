@@ -15,28 +15,28 @@ export function initAudio() {
     state.gainNode.gain.setValueAtTime(state.volume, state.audioContext.currentTime);
     state.gainNode.connect(state.audioContext.destination);
 
-    // Tone shaping: boost lows + soften harsh highs + control peaks
+    // Tone shaping: keep lows present, but reduce harshness and perceived loudness.
     state.lowShelfNode = state.audioContext.createBiquadFilter();
     state.lowShelfNode.type = 'lowshelf';
-    state.lowShelfNode.frequency.setValueAtTime(200, state.audioContext.currentTime);
-    state.lowShelfNode.gain.setValueAtTime(4.5, state.audioContext.currentTime);
+    state.lowShelfNode.frequency.setValueAtTime(180, state.audioContext.currentTime);
+    state.lowShelfNode.gain.setValueAtTime(2.5, state.audioContext.currentTime);
 
     state.highShelfNode = state.audioContext.createBiquadFilter();
     state.highShelfNode.type = 'highshelf';
-    state.highShelfNode.frequency.setValueAtTime(3500, state.audioContext.currentTime);
-    state.highShelfNode.gain.setValueAtTime(-4.5, state.audioContext.currentTime);
+    state.highShelfNode.frequency.setValueAtTime(2800, state.audioContext.currentTime);
+    state.highShelfNode.gain.setValueAtTime(-6.5, state.audioContext.currentTime);
 
     state.filterNode = state.audioContext.createBiquadFilter();
     state.filterNode.type = 'lowpass';
-    state.filterNode.frequency.setValueAtTime(3500, state.audioContext.currentTime);
-    state.filterNode.Q.setValueAtTime(0.85, state.audioContext.currentTime);
+    state.filterNode.frequency.setValueAtTime(2800, state.audioContext.currentTime);
+    state.filterNode.Q.setValueAtTime(0.75, state.audioContext.currentTime);
 
     state.compressorNode = state.audioContext.createDynamicsCompressor();
-    state.compressorNode.threshold.setValueAtTime(-26, state.audioContext.currentTime);
-    state.compressorNode.knee.setValueAtTime(20, state.audioContext.currentTime);
-    state.compressorNode.ratio.setValueAtTime(3.5, state.audioContext.currentTime);
-    state.compressorNode.attack.setValueAtTime(0.005, state.audioContext.currentTime);
-    state.compressorNode.release.setValueAtTime(0.18, state.audioContext.currentTime);
+    state.compressorNode.threshold.setValueAtTime(-20, state.audioContext.currentTime);
+    state.compressorNode.knee.setValueAtTime(24, state.audioContext.currentTime);
+    state.compressorNode.ratio.setValueAtTime(2.4, state.audioContext.currentTime);
+    state.compressorNode.attack.setValueAtTime(0.012, state.audioContext.currentTime);
+    state.compressorNode.release.setValueAtTime(0.24, state.audioContext.currentTime);
 
     state.clipperNode = state.audioContext.createWaveShaper();
     state.clipperNode.curve = createSoftClipCurve(600);
@@ -129,8 +129,8 @@ export function createSoundFromFunction(functionId = state.currentFunction) {
         y = Math.max(-1, Math.min(1, y / 10));
 
         const freq = funcData.baseFreq + y * funcData.audioScale;
-        // 수학적으로 0인 구간은 무음 처리 (0.5는 마스터 최대 볼륨 비율)
-        const amplitude = Math.min(0.5, Math.abs(rawY) * 2);
+        // Keep dynamic range but reduce top-end aggressiveness and overall density.
+        const amplitude = Math.min(0.35, Math.abs(rawY) * 1.35);
         const freqGain = frequencyGain(freq);
         channelData[i] = Math.sin(2 * Math.PI * freq * t) * amplitude * freqGain;
     }
@@ -157,8 +157,8 @@ export function playSound(functionId = state.currentFunction, forceLayer = false
         const source = state.audioContext.createBufferSource();
         const layerGain = state.audioContext.createGain();
         
-        // MIDI layers are 50% of the master volume to prevent clipping
-        layerGain.gain.setValueAtTime(state.volume * 0.5, state.audioContext.currentTime);
+        // Layers stay quieter to avoid build-up and harshness.
+        layerGain.gain.setValueAtTime(state.volume * 0.38, state.audioContext.currentTime);
         
         source.buffer = buffer;
         source.loop = true;
@@ -180,9 +180,9 @@ export function playSound(functionId = state.currentFunction, forceLayer = false
 
         const buffer = createSoundFromFunction(functionId);
         const source = state.audioContext.createBufferSource();
-        // Preview is 100% of the volume
+        // Preview runs slightly below full volume to reduce perceived harshness.
         const previewGain = state.audioContext.createGain();
-        previewGain.gain.setValueAtTime(state.volume, state.audioContext.currentTime);
+        previewGain.gain.setValueAtTime(state.volume * 0.82, state.audioContext.currentTime);
 
         source.buffer = buffer;
         source.loop = true;
@@ -201,7 +201,7 @@ export function playSound(functionId = state.currentFunction, forceLayer = false
 
 function createSoftClipCurve(samples = 400) {
     const curve = new Float32Array(samples);
-    const k = 2.0;
+    const k = 1.35;
     for (let i = 0; i < samples; i++) {
         const x = (i * 2) / (samples - 1) - 1;
         curve[i] = Math.tanh(k * x);
@@ -211,9 +211,9 @@ function createSoftClipCurve(samples = 400) {
 
 function frequencyGain(freq) {
     const safeFreq = Math.max(0, freq);
-    const atten = 1 / (1 + Math.pow(safeFreq / 700, 1.3));
-    const gain = 0.9 * atten + 0.15;
-    return Math.min(1, Math.max(0.25, gain));
+    const atten = 1 / (1 + Math.pow(safeFreq / 620, 1.45));
+    const gain = 0.88 * atten + 0.1;
+    return Math.min(1, Math.max(0.18, gain));
 }
 
 export function stopSound(layerId) {

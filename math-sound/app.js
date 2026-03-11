@@ -4,6 +4,11 @@ import { playSound, stopSound, stopAllSounds, stopPreview } from './modules/audi
 import { drawStaticGraph, animate, setRendererCallbacks } from './modules/renderer.js';
 
 const FAVORITES_KEY = 'math-sound:favorites';
+const QUEUE_STORAGE_KEY = 'math-sound:play-queue';
+const EQUATION_INTRO_COPY = 'How might this equation look as a graph, and what would it sound like?';
+const EQUATION_OUTRO_COPY = 'This one is finished. Waiting for the next equation.';
+const EQUATION_INTRO_DURATION_MS = 3000;
+const EQUATION_OUTRO_DURATION_MS = 2000;
 let favoriteSet = new Set();
 
 // ==========================================
@@ -12,6 +17,7 @@ let favoriteSet = new Set();
 function init() {
     setupCanvas();
     loadFavorites();
+    loadQueue();
     renderCategoryTabs();
     setupEventListeners();
     setRendererCallbacks(updateTimer, playNextAuto, stopPreview);
@@ -20,6 +26,7 @@ function init() {
     selectCategory('waves');
     selectFunction('sine');
     drawStaticGraph();
+    renderQueue();
 
     if (elements.slidersPanel) elements.slidersPanel.classList.add('collapsed');
 }
@@ -411,6 +418,8 @@ function selectFunction(funcName) {
     if (state.isPlaying) {
         playSound(state.currentFunction);
         animate();
+    } else if (state.isPrimingPlayback) {
+        updateEquationIntroContent();
     }
 }
 
@@ -454,6 +463,24 @@ function saveFavorites() {
     localStorage.setItem(FAVORITES_KEY, JSON.stringify(Array.from(favoriteSet)));
 }
 
+function loadQueue() {
+    try {
+        const raw = localStorage.getItem(QUEUE_STORAGE_KEY);
+        const list = raw ? JSON.parse(raw) : [];
+        state.playQueue = Array.isArray(list) ? list.filter((key) => MATH_FUNCTIONS[key]) : [];
+        state.isQueueMode = state.playQueue.length > 0;
+        state.currentQueueIndex = state.playQueue.length > 0 ? 0 : -1;
+    } catch (e) {
+        state.playQueue = [];
+        state.isQueueMode = false;
+        state.currentQueueIndex = -1;
+    }
+}
+
+function saveQueue() {
+    localStorage.setItem(QUEUE_STORAGE_KEY, JSON.stringify(state.playQueue));
+}
+
 function toggleFavorite(funcKey, btn, card) {
     if (favoriteSet.has(funcKey)) favoriteSet.delete(funcKey);
     else favoriteSet.add(funcKey);
@@ -467,11 +494,82 @@ function toggleFavorite(funcKey, btn, card) {
 // 재생 제어
 // ==========================================
 function togglePlay() {
-    state.isPlaying ? pause() : play();
+    (state.isPlaying || state.isPrimingPlayback) ? pause() : play();
 }
 
-function play() {
+function updateEquationIntroContent() {
+    const funcData = MATH_FUNCTIONS[state.currentFunction];
+    if (!funcData || !elements.equationIntroFormula) return;
+
+    if (window.katex) {
+        try {
+            katex.render(funcData.latex, elements.equationIntroFormula, { throwOnError: false });
+        } catch (e) {
+            elements.equationIntroFormula.textContent = funcData.formula;
+        }
+    } else {
+        elements.equationIntroFormula.textContent = funcData.formula;
+    }
+
+    if (elements.equationIntroCopy) {
+        elements.equationIntroCopy.textContent = EQUATION_INTRO_COPY;
+    }
+}
+
+function updateEquationOutroContent() {
+    if (!elements.equationIntroFormula || !elements.equationIntroCopy) return;
+    elements.equationIntroFormula.textContent = 'Playback Complete';
+    elements.equationIntroCopy.textContent = EQUATION_OUTRO_COPY;
+}
+
+function hideEquationIntro() {
+    if (!elements.equationIntroOverlay) return;
+    elements.equationIntroOverlay.classList.remove('visible');
+    elements.equationIntroOverlay.setAttribute('aria-hidden', 'true');
+}
+
+function cancelPendingPlayIntro() {
+    if (state.introOverlayTimer) {
+        clearTimeout(state.introOverlayTimer);
+        state.introOverlayTimer = null;
+    }
+    state.isPrimingPlayback = false;
+    hideEquationIntro();
+}
+
+function showEquationOverlay() {
+    if (!elements.equationIntroOverlay) return;
+    elements.equationIntroOverlay.classList.add('visible');
+    elements.equationIntroOverlay.setAttribute('aria-hidden', 'false');
+}
+
+function showWaitingMessage(callback) {
+    cancelPendingPlayIntro();
+    updateEquationOutroContent();
+    showEquationOverlay();
+    state.isPrimingPlayback = true;
+    state.introOverlayTimer = window.setTimeout(() => {
+        state.introOverlayTimer = null;
+        hideEquationIntro();
+        state.isPrimingPlayback = false;
+        if (callback) callback();
+    }, EQUATION_OUTRO_DURATION_MS);
+}
+
+function showCompletionMessage() {
+    updateEquationOutroContent();
+    showEquationOverlay();
+    state.isPrimingPlayback = true;
+    state.introOverlayTimer = window.setTimeout(() => {
+        state.introOverlayTimer = null;
+        hideEquationIntro();
+        state.isPrimingPlayback = false;
+    }, EQUATION_OUTRO_DURATION_MS);
+}
+
+function startPlaybackNow() {
     state.isPlaying = true;
+    state.isPrimingPlayback = false;
     state.timerStartTime = performance.now();
     elements.playBtn.classList.add('playing');
     elements.playBtn.querySelector('.icon').textContent = '❚❚';
@@ -492,6 +590,26 @@ function play() {
     animate();
 }
 
+function play(withIntro = false) {
+    if (!withIntro) {
+        cancelPendingPlayIntro();
+        startPlaybackNow();
+        return;
+    }
+
+    if (state.isPrimingPlayback) return;
+
+    updateEquationIntroContent();
+    showEquationOverlay();
+
+    state.isPrimingPlayback = true;
+    state.introOverlayTimer = window.setTimeout(() => {
+        state.introOverlayTimer = null;
+        hideEquationIntro();
+        startPlaybackNow();
+    }, EQUATION_INTRO_DURATION_MS);
+}
+
 function addToQueue(funcName) {
     if (state.audioContext && state.audioContext.state === 'suspended') {
         state.audioContext.resume();
@@ -505,6 +623,7 @@ function addToQueue(funcName) {
         state.currentQueueIndex = 0;
         selectFunction(targetFunc);
     }
+    saveQueue();
     
     renderQueue();
     
@@ -521,7 +640,7 @@ function playQueueItem(index) {
     selectFunction(funcKey);
     renderQueue();
     
-    if (!state.isPlaying) play();
+    if (!state.isPlaying) play(true);
 }
 
 function renderQueue() {
@@ -529,9 +648,10 @@ function renderQueue() {
     const container = document.getElementById('activeLayers');
     if (!mixerPanel || !container) return;
 
-    const isAuto = state.isAutoPlaying;
-    const currentList = isAuto ? state.autoQueue : state.playQueue;
-    const activeIdx = isAuto ? state.autoQueueIndex : state.currentQueueIndex;
+    const showPianoQueue = state.playQueue.length > 0;
+    const isAuto = !showPianoQueue && state.isAutoPlaying;
+    const currentList = showPianoQueue ? state.playQueue : (isAuto ? state.autoQueue : []);
+    const activeIdx = showPianoQueue ? state.currentQueueIndex : state.autoQueueIndex;
 
     // 제목 업데이트
     const titleEl = mixerPanel.querySelector('h3');
@@ -539,7 +659,7 @@ function renderQueue() {
         titleEl.textContent = isAuto ? '🎲 Random Box' : '🎹 Simulation Queue';
     }
 
-    if (currentList.length === 0 && !isAuto) {
+    if (currentList.length === 0) {
         mixerPanel.classList.add('hidden');
         return;
     }
@@ -566,7 +686,7 @@ function renderQueue() {
             if (isAuto) {
                 state.autoQueueIndex = index;
                 selectFunction(state.autoQueue[index]);
-                if (!state.isPlaying) play();
+                if (!state.isPlaying) play(true);
                 renderQueue();
             } else {
                 playQueueItem(index);
@@ -591,6 +711,7 @@ function renderQueue() {
 function removeFromQueue(index) {
     const wasPlaying = (index === state.currentQueueIndex);
     state.playQueue.splice(index, 1);
+    saveQueue();
     
     if (state.playQueue.length === 0) {
         state.isQueueMode = false;
@@ -607,6 +728,7 @@ function removeFromQueue(index) {
 }
 
 function pause() {
+    cancelPendingPlayIntro();
     state.isPlaying = false;
     elements.playBtn.classList.remove('playing');
     elements.playBtn.querySelector('.icon').textContent = '▶';
@@ -629,7 +751,9 @@ function stop() {
     state.timerStartTime = null;
     elements.canvasClock.textContent = '00:00.00';
     state.drawProgress = 1.0; 
-    state.currentQueueIndex = -1; // Reset queue position on stop
+    if (state.playQueue.length === 0) {
+        state.currentQueueIndex = -1;
+    }
     renderQueue();
     drawStaticGraph();
 }
@@ -647,6 +771,7 @@ function clearAllQueue() {
     state.playQueue = [];
     state.currentQueueIndex = -1;
     state.isQueueMode = false;
+    saveQueue();
     stop();
     
     // Clear visualization
@@ -704,7 +829,7 @@ function startAutoPlay() {
     selectFunction(state.autoQueue[0]);
     
     // 5. 즉시 재생 시작
-    if (!state.isPlaying) play();
+    if (!state.isPlaying) play(true);
 }
 
 function playNextAuto() {
@@ -714,6 +839,7 @@ function playNextAuto() {
             playQueueItem(state.currentQueueIndex + 1);
         } else {
             stop();
+            showCompletionMessage();
         }
         return;
     }
@@ -729,12 +855,10 @@ function playNextAuto() {
         selectFunction(nextFunc);
         state.autoLoopCount = 0;
         renderQueue(); // 현재 연주 곡 표시 갱신
-        
-        setTimeout(() => {
-            if (state.isAutoPlaying) play();
-        }, 1000);
+        if (state.isAutoPlaying) play(true);
     } else {
         stop();
+        showCompletionMessage();
     }
 }
 
