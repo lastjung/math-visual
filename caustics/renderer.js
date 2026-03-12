@@ -217,6 +217,7 @@ export const Renderer = {
                     const ray = rayPaths[i];
                     if (!ray.active) continue;
 
+                    const wasInside = Physics.isInside(ray.rx - centerX, ray.ry - centerY, shape, size);
                     const hit = Physics.findBoundaryIntersection(ray.rx - centerX, ray.ry - centerY, ray.ra, shape, size);
                     let nextX, nextY, segDist;
                     
@@ -299,19 +300,17 @@ export const Renderer = {
                         ray.accDist += segDist;
                         ray.rx = nextX; ray.ry = nextY;
                         
-                        // Physics.getNormal returns an INWARD pointing normal for ovals.
                         const normal = Physics.getNormal(hit.x, hit.y, shape, size);
                         const incomingX = Math.cos(ray.ra);
                         const incomingY = Math.sin(ray.ra);
-                        const dot = incomingX * normal.x + incomingY * normal.y;
-                        
-                        const rx = incomingX - 2 * dot * normal.x;
-                        const ry = incomingY - 2 * dot * normal.y;
+                        const reflected = Physics.reflect(incomingX, incomingY, normal);
+                        const rx = reflected.x;
+                        const ry = reflected.y;
                         ray.ra = Math.atan2(ry, rx);
-                        
-                        // Nudge slightly ALONG the inward normal to ensure the next segment starts inside
-                        ray.rx += normal.x * 0.1; 
-                        ray.ry += normal.y * 0.1;
+
+                        const nudged = Physics.nudgeAfterHit(hit.x, hit.y, normal, wasInside);
+                        ray.rx = centerX + nudged.x;
+                        ray.ry = centerY + nudged.y;
                         
                         if (i === 0) firstRayActualBounces++;
                     }
@@ -357,6 +356,7 @@ export const Renderer = {
             for (let b = 0; b < drawMaxBounces; b++) {
                 for (let i = 0; i < rayPaths.length; i++) {
                     const ray = rayPaths[i]; if (!ray.active) continue;
+                    const wasInside = Physics.isInside(ray.rx - centerX, ray.ry - centerY, shape, size);
                     const hit = Physics.findBoundaryIntersection(ray.rx - centerX, ray.ry - centerY, ray.ra, shape, size);
                     let nx, ny, sd;
                     if (!hit) { sd = maxTravel - ray.accDist; nx = ray.rx + Math.cos(ray.ra) * sd; ny = ray.ry + Math.sin(ray.ra) * sd; } 
@@ -387,10 +387,14 @@ export const Renderer = {
                     if (!hit || isLast) { ray.active = false; } 
                     else {
                         ray.accDist += sd; ray.rx = nx; ray.ry = ny;
-                        const normal = Physics.getNormal(hit.x, hit.y, shape, size); const inX = Math.cos(ray.ra); const inY = Math.sin(ray.ra);
-                        const dot = inX * normal.x + inY * normal.y;
-                        ray.ra = Math.atan2(inY - 2 * dot * normal.y, inX - 2 * dot * normal.x);
-                        ray.rx += normal.x * 0.1; ray.ry += normal.y * 0.1;
+                        const normal = Physics.getNormal(hit.x, hit.y, shape, size);
+                        const inX = Math.cos(ray.ra);
+                        const inY = Math.sin(ray.ra);
+                        const reflected = Physics.reflect(inX, inY, normal);
+                        ray.ra = Math.atan2(reflected.y, reflected.x);
+                        const nudged = Physics.nudgeAfterHit(hit.x, hit.y, normal, wasInside);
+                        ray.rx = centerX + nudged.x;
+                        ray.ry = centerY + nudged.y;
                         if (i === 0) firstRayActualBounces++;
                     }
                 }

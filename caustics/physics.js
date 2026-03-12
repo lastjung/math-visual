@@ -7,6 +7,7 @@ export const Physics = {
     PARABOLA_P: -0.25,
     PARABOLA_OFFSET_V: 0.75,
     PARABOLA_U_MAX: 1.0,
+    BOUNDARY_EPSILON: 0.1,
 
     getParabolaAbsUMax() {
         return this.PARABOLA_U_MAX;
@@ -14,6 +15,13 @@ export const Physics = {
     
     parabolaCurve(normalizedX) {
         return 4 * this.PARABOLA_P * normalizedX * normalizedX + this.PARABOLA_OFFSET_V;
+    },
+
+    cardioidImplicit(x, y, size) {
+        const a = size * 0.75;
+        const cx = x - size * 0.5;
+        const r = Math.hypot(cx, y);
+        return (r * r) + (a * cx) - (a * r);
     },
 
     /**
@@ -55,6 +63,20 @@ export const Physics = {
         if (type === 'circle') { nx = -x; ny = -y; }
         else if (type === 'ellipse') { nx = -x; ny = -y / (0.6 * 0.6); }
         else if (type === 'v-oval') { nx = -x / (0.9 * 0.9); ny = -y / (1.1 * 1.1); }
+        else if (type === 'cardioid') {
+            const a = size * 0.75;
+            const cx = x - size * 0.5;
+            const r = Math.hypot(cx, y);
+            if (r < 1e-6) {
+                nx = -1;
+                ny = 0;
+            } else {
+                const gradX = 2 * cx + a - (a * cx) / r;
+                const gradY = 2 * y - (a * y) / r;
+                nx = -gradX;
+                ny = -gradY;
+            }
+        }
         else if (type === 'parabola') { 
             const u = x / size;
             // v = 4pu^2 => dv/du = 8pu
@@ -77,6 +99,9 @@ export const Physics = {
         else { nx = -x; ny = -y; } 
         
         const len = Math.sqrt(nx * nx + ny * ny);
+        if (len < 1e-8) {
+            return type === 'cardioid' ? { x: -1, y: 0 } : { x: 0, y: -1 };
+        }
         return { x: nx / len, y: ny / len };
     },
 
@@ -93,8 +118,7 @@ export const Physics = {
             return v < this.parabolaCurve(u);
         }
         if (type === 'cardioid') {
-            const cx = px - size*0.5;
-            return Math.sqrt(cx*cx + py*py) < size * (1 - Math.cos(Math.atan2(py, cx))) * 0.75;
+            return this.cardioidImplicit(px, py, size) < 0;
         }
         if (type === 'rect') {
             const rw = size * 1.5;
@@ -102,6 +126,23 @@ export const Physics = {
             return Math.abs(px) < rw/2 && Math.abs(py) < rh/2;
         }
         return false;
+    },
+
+    reflect(inX, inY, normal) {
+        const dot = inX * normal.x + inY * normal.y;
+        return {
+            x: inX - 2 * dot * normal.x,
+            y: inY - 2 * dot * normal.y,
+            dot
+        };
+    },
+
+    nudgeAfterHit(hitX, hitY, normal, shouldStayInside, epsilon = this.BOUNDARY_EPSILON) {
+        const dir = shouldStayInside ? 1 : -1;
+        return {
+            x: hitX + normal.x * epsilon * dir,
+            y: hitY + normal.y * epsilon * dir
+        };
     },
 
     /**
@@ -117,12 +158,42 @@ export const Physics = {
         const maxRadiusSq = (size * 5) ** 2;
         if (distSq > maxRadiusSq) return null;
 
-        const nudge = 0.05; 
-        const isCurrentlyInside = this.isInside(sx, sy, type, size);
-        const forwardInside = this.isInside(sx + dx * nudge, sy + dy * nudge, type, size);
+        // Cardioid is non-convex near the cusp, so the binary-search exit logic
+        // used for convex shapes can jump to a later crossing and appear to tunnel.
+        if (type === 'cardioid') {
+            const startInside = this.isInside(sx, sy, type, size);
+            const maxDist = size * 10;
+            const step = Math.max(0.5, size * 0.01);
+            let prevDist = 0;
+            let prevInside = startInside;
 
-        // Case 1: We are inside (or on the edge pointing in)
-        if (isCurrentlyInside || forwardInside) {
+            for (let d = step; d <= maxDist; d += step) {
+                const cx = sx + dx * d;
+                const cy = sy + dy * d;
+                const currInside = this.isInside(cx, cy, type, size);
+                if (currInside !== prevInside) {
+                    let low = prevDist;
+                    let high = d;
+                    for (let i = 0; i < 28; i++) {
+                        const mid = (low + high) * 0.5;
+                        const mx = sx + dx * mid;
+                        const my = sy + dy * mid;
+                        if (this.isInside(mx, my, type, size) === prevInside) low = mid;
+                        else high = mid;
+                    }
+                    const boundaryDist = (low + high) * 0.5;
+                    return { x: sx + dx * boundaryDist, y: sy + dy * boundaryDist };
+                }
+                prevDist = d;
+                prevInside = currInside;
+            }
+            return null;
+        }
+
+        const isCurrentlyInside = this.isInside(sx, sy, type, size);
+
+        // Case 1: We are inside, so search for the exit point.
+        if (isCurrentlyInside) {
             let low = 0;
             let high = size * 5; 
             
@@ -132,7 +203,8 @@ export const Physics = {
                 if (this.isInside(sx + dx * mid, sy + dy * mid, type, size)) low = mid;
                 else high = mid;
             }
-            return { x: sx + dx * high, y: sy + dy * high };
+            const boundaryDist = (low + high) * 0.5;
+            return { x: sx + dx * boundaryDist, y: sy + dy * boundaryDist };
         } 
         
         // Case 2: We are outside pointing away or towards
@@ -157,6 +229,7 @@ export const Physics = {
             if (!this.isInside(sx + dx * mid, sy + dy * mid, type, size)) low = mid;
             else high = mid;
         }
-        return { x: sx + dx * high, y: sy + dy * high };
+        const boundaryDist = (low + high) * 0.5;
+        return { x: sx + dx * boundaryDist, y: sy + dy * boundaryDist };
     }
 };

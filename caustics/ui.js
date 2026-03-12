@@ -268,6 +268,12 @@ export const UI = {
                 return;
             }
 
+            if (aHeld && e.code === 'Digit3') {
+                e.preventDefault();
+                app["3_beam_spread_simm"]();
+                return;
+            }
+
             if (aHeld && e.code === 'Digit4') {
                 e.preventDefault();
                 app["4_ray_mum_simm"]();
@@ -365,10 +371,10 @@ export const UI = {
                     
                     if (dragTarget === 'min') {
                         app.parallelRange.min = -dist;
-                        app.sourceRotation = newAngle; 
+                        app.sourceRotation = Math.atan2(-dy, -dx); 
                     } else if (dragTarget === 'max') {
                         app.parallelRange.max = dist;
-                        app.sourceRotation = newAngle;
+                        app.sourceRotation = Math.atan2(dy, dx);
                     }
                 }
                 this.update(app);
@@ -612,7 +618,6 @@ export const UI = {
         // Controls
         btnPlay.onclick = () => {
             app.toggleFlow();
-            if (app.isFlowing) app.recalcParallelRange(); // Calculate once when play starts
         };
 
         const btnFullReset = document.getElementById('apple-full-reset');
@@ -627,7 +632,6 @@ export const UI = {
         if (btnPartialReset) {
             btnPartialReset.onclick = () => {
                 app.resetRays(true);
-                app.recalcParallelRange();
                 this.update(app);
             };
         }

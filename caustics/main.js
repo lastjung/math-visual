@@ -141,6 +141,7 @@ const App = {
     getShapeDefaults(shape) {
         const sizeMult = this.isWindowFull ? 0.45 : 0.35;
         const size = Math.min(this.canvas?.width || window.innerWidth, this.canvas?.height || window.innerHeight) * sizeMult;
+        const edgePad = Math.max(8, size * 0.04);
         const defaults = {
             sourcePos: { x: 0, y: -size * 0.7 },
             sourceRotation: 0
@@ -151,13 +152,13 @@ const App = {
             defaults.sourcePos = { x: -fDist, y: 0 };
             defaults.sourceRotation = 0;
         } else if (shape === 'cardioid') {
-            defaults.sourcePos = { x: -size * 0.2, y: -size * 0.45 };
+            defaults.sourcePos = { x: -size * 0.4, y: 0 };
             defaults.sourceRotation = 0;
         } else if (shape === 'parabola') {
             defaults.sourcePos = { x: 0, y: size * (Physics.PARABOLA_OFFSET_V + Physics.PARABOLA_P) }; // Point source sits exactly at the parabola focus
             defaults.sourceRotation = 0;
         } else if (shape === 'rect') {
-            defaults.sourcePos = { x: 0, y: -size * 1.05 };
+            defaults.sourcePos = { x: 0, y: -(size * 1.05 - edgePad) };
             defaults.sourceRotation = 0;
         } else if (shape === 'v-oval') {
             const fDist = size * 0.6324; // sqrt(1.1^2 - 0.9^2)
@@ -168,10 +169,40 @@ const App = {
         return defaults;
     },
 
+    sanitizeSourcePosition() {
+        if (!this.canvas) return;
+        const sizeMult = this.isWindowFull ? 0.45 : 0.35;
+        const size = Math.min(this.canvas.width, this.canvas.height) * sizeMult;
+
+        if (this.shape === 'rect') {
+            const halfW = size * 1.5 * 0.5;
+            const halfH = size * 2.1 * 0.5;
+            const eps = Math.max(6, size * 0.03);
+            const insideOrNearRect =
+                Math.abs(this.sourcePos.x) <= halfW + eps &&
+                Math.abs(this.sourcePos.y) <= halfH + eps;
+
+            if (insideOrNearRect) {
+                const leftGap = Math.abs(this.sourcePos.x + halfW);
+                const rightGap = Math.abs(this.sourcePos.x - halfW);
+                const topGap = Math.abs(this.sourcePos.y + halfH);
+                const bottomGap = Math.abs(this.sourcePos.y - halfH);
+                const minGap = Math.min(leftGap, rightGap, topGap, bottomGap);
+                const inset = Math.max(12, eps);
+
+                if (minGap === topGap) this.sourcePos.y = -halfH + inset;
+                else if (minGap === bottomGap) this.sourcePos.y = halfH - inset;
+                else if (minGap === leftGap) this.sourcePos.x = -halfW + inset;
+                else this.sourcePos.x = halfW - inset;
+            }
+        }
+    },
+
     applyShapeSwitchReset(nextShape) {
         // Reset only tab-specific values.
         const defaults = this.getShapeDefaults(nextShape);
         this.sourcePos = defaults.sourcePos;
+        this.sanitizeSourcePosition();
         this.sourceRotation = defaults.sourceRotation;
         if (nextShape === 'parabola') {
             this.lightSourceMode = 'point';
@@ -240,6 +271,7 @@ const App = {
             if (saved.sourcePos && typeof saved.sourcePos.x === 'number' && typeof saved.sourcePos.y === 'number') {
                 this.sourcePos = { x: saved.sourcePos.x, y: saved.sourcePos.y };
             }
+            this.sanitizeSourcePosition();
             this.sourceRotation = saved.sourceRotation ?? this.sourceRotation;
             // Runtime playback state is intentionally not restored to avoid unintended re-emission.
             this.isFlowing = false;
@@ -296,6 +328,7 @@ const App = {
         this.resize();
         this.sourcePos = this.getDefaultSourcePos();
         this.restoreState();
+        this.sanitizeSourcePosition();
         if (this.shape === 'parabola' && this.lightSourceMode === 'point') {
             this.sourcePos = this.getShapeDefaults('parabola').sourcePos;
         }
@@ -401,6 +434,7 @@ const App = {
         this.raySpeed = 20;
         const defaults = this.getShapeDefaults(this.shape);
         this.sourcePos = defaults.sourcePos;
+        this.sanitizeSourcePosition();
         // this.isPaintMode = false; // Preserve current mode
         // this.isPaint2Mode = true;
         // this.isLightMode = false;
@@ -477,6 +511,91 @@ const App = {
             min: (minX * margin) - this.sourcePos.x,
             max: (maxX * margin) - this.sourcePos.x
         };
+    },
+
+    "3_beam_spread_simm"() {
+        if (this.isSimRunning) return; 
+        this.isSimRunning = true;
+        const currentNarrative = this.currentNarrative === 'none' ? null : this.currentNarrative;
+
+        if (window.audioManager && window.audioManager.targetVolume > 0) {
+            window.audioManager.isMuted = false;
+            window.audioManager.resume();
+        }
+
+        // Use degrees for mapping but convert to radians for physics
+        const stages = [15, 30, 60, 90]; 
+        let currentIdx = 0;
+
+        const runStage = () => {
+            if (currentIdx >= stages.length) {
+                this.overlayMessage = "Simulation End";
+                UI.update(this);
+                const endTimer = setTimeout(() => {
+                    this.overlayMessage = null;
+                    this.isSimRunning = false;
+                    this.isLightVisible = false;
+                    this.isFlowing = false;
+                    UI.update(this);
+                }, 4000);
+                this.simTimers.push(endTimer);
+                return;
+            }
+
+            const degreeVal = stages[currentIdx];
+            const radVal = degreeVal * (Math.PI / 180); // Conversion to Radians
+            
+            // A. KILL & CLEAR
+            this.isLightVisible = false;
+            this.isFlowing = false;
+            if (this.ctx) {
+                this.ctx.fillStyle = '#050508';
+                this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+                Renderer.clearPaint();
+                Simulator.clear();
+                if (window.LightDensityModule) window.LightDensityModule.clear();
+            }
+
+            // B. SET MESSAGE
+            if (currentIdx === 0) {
+                if (currentNarrative) {
+                    this.overlayMessage = [currentNarrative, `Expand the Beam Spread (Angle ${degreeVal})` ];
+                } else {
+                    this.overlayMessage = `Expand the Beam Spread (Angle ${degreeVal})`;
+                }
+            } else {
+                this.overlayMessage = `Angle ${degreeVal}`;
+            }
+            UI.update(this);
+
+            // B. SHOW TEXT
+            const textTime = (currentIdx === 0) ? 3000 : 2000;
+            const textTimer = setTimeout(() => {
+                if (this.ctx) {
+                    this.ctx.fillStyle = '#050508';
+                    this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+                    Renderer.clearPaint();
+                    Simulator.clear();
+                    if (window.LightDensityModule) window.LightDensityModule.clear();
+                }
+                this.overlayMessage = null;
+                this.spread = radVal; // Actual Radian value applied here
+                this.growth = 0;
+                this.isLightVisible = true;
+                this.isFlowing = true;
+                UI.update(this);
+
+                const simTime = 12000;
+                const simTimer = setTimeout(() => {
+                    currentIdx++;
+                    runStage();
+                }, simTime);
+                this.simTimers.push(simTimer);
+            }, textTime);
+            this.simTimers.push(textTimer);
+        };
+
+        runStage();
     },
 
     "4_ray_mum_simm"() {
