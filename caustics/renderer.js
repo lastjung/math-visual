@@ -578,7 +578,9 @@ export const Renderer = {
         // Light Source Guide
         const sX = centerX + state.sourcePos.x;
         const sY = centerY + state.sourcePos.y;
+        
         ctx.save();
+        // Point source or center of parallel source
         ctx.beginPath(); ctx.arc(sX, sY, 10, 0, Math.PI * 2);
         ctx.fillStyle = 'rgba(255, 255, 255, 0.15)'; ctx.fill();
         ctx.beginPath(); ctx.arc(sX, sY, 4, 0, Math.PI * 2);

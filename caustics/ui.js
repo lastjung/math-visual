@@ -305,6 +305,8 @@ export const UI = {
 
         // Mouse/Touch Interaction
         let isDragging = false;
+        let dragTarget = 'center'; // 'center', 'min', or 'max'
+
         const handleInteraction = (e) => {
             const rect = app.canvas.getBoundingClientRect();
             const clientX = (e.clientX !== undefined) ? e.clientX : (e.touches && e.touches[0].clientX);
@@ -316,16 +318,59 @@ export const UI = {
             const y = clientY - rect.top - (rect.height/2 - 60); // Sync with renderer's centerY shift
 
             if (e.type === 'mousedown' || e.type === 'touchstart') {
-                // Check if click is near the existing source (50px hit radius)
-                const dist = Math.sqrt((x - app.sourcePos.x)**2 + (y - app.sourcePos.y)**2);
-                if (dist < 50) {
-                    isDragging = true;
+                const sX = app.sourcePos.x;
+                const sY = app.sourcePos.y;
+                
+                // Identify target
+                if (app.lightSourceMode === 'parallel') {
+                    const cosR = Math.cos(app.sourceRotation);
+                    const sinR = Math.sin(app.sourceRotation);
+                    const { min, max } = app.parallelRange;
+                    
+                    const h1 = { x: sX + min * cosR, y: sY + min * sinR };
+                    const h2 = { x: sX + max * cosR, y: sY + max * sinR };
+                    
+                    const d0 = Math.sqrt((x - sX)**2 + (y - sY)**2);
+                    const d1 = Math.sqrt((x - h1.x)**2 + (y - h1.y)**2);
+                    const d2 = Math.sqrt((x - h2.x)**2 + (y - h2.y)**2);
+                    
+                    if (d1 < 30) {
+                        isDragging = true; dragTarget = 'min';
+                    } else if (d2 < 30) {
+                        isDragging = true; dragTarget = 'max';
+                    } else if (d0 < 40) {
+                        isDragging = true; dragTarget = 'center';
+                    }
+                } else {
+                    const d0 = Math.sqrt((x - sX)**2 + (y - sY)**2);
+                    if (d0 < 50) {
+                        isDragging = true; dragTarget = 'center';
+                    }
+                }
+
+                if (isDragging) {
                     app.autoModes.revolution = false;
+                    app.autoModes.rotation = false; // Kill auto rotation if we grab and move
                     if (e.cancelable) e.preventDefault();
                 }
             } else if (isDragging && (e.type === 'mousemove' || e.type === 'touchmove')) {
+                if (dragTarget === 'center') {
                     app.sourcePos = { x, y };
-                    app.recalcParallelRange(); // Update range while moving
+                } else {
+                    // Update Range and Rotation
+                    const dx = x - app.sourcePos.x;
+                    const dy = y - app.sourcePos.y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    const newAngle = Math.atan2(dy, dx);
+                    
+                    if (dragTarget === 'min') {
+                        app.parallelRange.min = -dist;
+                        app.sourceRotation = newAngle; 
+                    } else if (dragTarget === 'max') {
+                        app.parallelRange.max = dist;
+                        app.sourceRotation = newAngle;
+                    }
+                }
                 this.update(app);
             }
         };

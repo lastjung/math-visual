@@ -24,8 +24,8 @@ export const Physics = {
             case 'ellipse': return { x: Math.cos(rad) * size * 1.1, y: Math.sin(rad) * size * 1.1 * 0.6 };
             case 'v-oval': return { x: Math.cos(rad) * size * 0.9, y: Math.sin(rad) * size * 1.1 };
             case 'cardioid': 
-                const r = size * (1 - Math.cos(rad)) * 0.5;
-                return { x: r * Math.cos(rad) + size*0.3, y: r * Math.sin(rad) };
+                const r = size * (1 - Math.cos(rad)) * 0.75;
+                return { x: r * Math.cos(rad) + size*0.5, y: r * Math.sin(rad) };
             case 'parabola':
                 // In normalized coordinates: v = 4pu^2, where p is the signed focus value.
                 const uMax = this.getParabolaAbsUMax();
@@ -93,8 +93,8 @@ export const Physics = {
             return v < this.parabolaCurve(u);
         }
         if (type === 'cardioid') {
-            const cx = px - size*0.3;
-            return Math.sqrt(cx*cx + py*py) < size * (1 - Math.cos(Math.atan2(py, cx))) * 0.5;
+            const cx = px - size*0.5;
+            return Math.sqrt(cx*cx + py*py) < size * (1 - Math.cos(Math.atan2(py, cx))) * 0.75;
         }
         if (type === 'rect') {
             const rw = size * 1.5;
