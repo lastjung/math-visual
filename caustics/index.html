@@ -84,62 +84,148 @@
             <div class="sidebar-grip" id="sidebar-grip-left"></div>
             <div class="control-panel">
                 <div class="panel-header">
-                    <span class="panel-title">Visual & Flow</span>
+                    <span class="panel-title">Shape Studio</span>
                     <button class="sidebar-close" id="sidebar-close-left" title="Hide Sidebar">
                         <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                     </button>
                 </div>
 
-                <!-- 1. TYPE Selection -->
-                <div class="setting-row-inline" style="margin-top: 4px;">
-                    <label class="setting-label">TYPE</label>
-                    <div class="mode-tabs-mini" id="group-base" style="width: 180px;">
-                        <button class="mini-tab active" data-value="line">Line</button>
-                        <button class="mini-tab" data-value="particle">Part.</button>
-                        <button class="mini-tab" data-value="ghost">Ghost</button>
+                <section class="shape-focus-block">
+                    <div class="shape-focus-topline">
+                        <span class="shape-focus-kicker">Current Shape</span>
+                        <span class="shape-badge" id="shape-badge">Circle</span>
                     </div>
-                </div>
+                    <h3 class="shape-focus-title" id="shape-options-title">Circle Study</h3>
+                    <p class="shape-focus-copy" id="shape-options-copy">
+                        Symmetric reflections keep the beam stable from nearly any launch angle.
+                    </p>
+                </section>
 
-                <!-- 2. FLOW Selection -->
-                <div class="setting-row-inline" style="margin-top: 8px;">
-                    <label class="setting-label">FLOW</label>
-                    <div class="mode-tabs-mini" id="group-flow" style="width: 180px;">
-                        <button class="mini-tab active" data-value="none">None</button>
-                        <button class="mini-tab" data-value="interval">Dash</button>
-                        <button class="mini-tab" data-value="pulse">Pulse</button>
-                    </div>
-                </div>
-
-                <!-- 5. EFFECTS Selection -->
-                <div class="setting-row-inline" style="margin-top: 16px; justify-content: flex-start; gap: 12px;">
-                    <label class="setting-label">EFFECTS</label>
-                    <div class="checkbox-group">
-                        <label class="chip-checkbox">
-                            <input type="checkbox" id="check-trail">
-                            <span>Trail</span>
-                        </label>
-                        <label class="chip-checkbox">
-                            <input type="checkbox" id="check-taper" checked>
-                            <span>Taper</span>
-                        </label>
-                        <label class="chip-checkbox">
-                            <input type="checkbox" id="check-bloom">
-                            <span>Bloom</span>
-                        </label>
-                    </div>
-                </div>
-
-                <!-- 6. BOTTOM AXES & TOOLS -->
-                <div class="setting-row" style="margin-top: 16px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 16px; display: flex; align-items: center; justify-content: space-between;">
-                    <label class="toggle-option" style="flex: 1;">
-                        <input type="checkbox" id="check-axes">
-                        <span class="toggle-track"></span>
-                        <span class="setting-label">AXES</span>
-                    </label>
-                    <button id="btn-foci-sync" class="apple-btn-shell" title="Sync Source to Geometric Foci" style="margin-left: 12px; font-size: 10px; padding: 4px 10px;">
-                        FOCI
+                <section class="shape-accordion is-open" data-accordion-section="visual">
+                    <button class="shape-accordion-toggle" data-accordion-toggle="visual" type="button">
+                        <span class="shape-options-label">Visual Controls</span>
+                        <span class="shape-accordion-icon">+</span>
                     </button>
-                </div>
+                    <div class="shape-accordion-body">
+                        <div class="setting-row-inline" style="margin-top: 4px;">
+                            <label class="setting-label">TYPE</label>
+                            <div class="mode-tabs-mini" id="group-base" style="width: 180px;">
+                                <button class="mini-tab active" data-value="line">Line</button>
+                                <button class="mini-tab" data-value="particle">Part.</button>
+                                <button class="mini-tab" data-value="ghost">Ghost</button>
+                            </div>
+                        </div>
+
+                        <div class="setting-row-inline" style="margin-top: 8px;">
+                            <label class="setting-label">FLOW</label>
+                            <div class="mode-tabs-mini" id="group-flow" style="width: 180px;">
+                                <button class="mini-tab active" data-value="none">None</button>
+                                <button class="mini-tab" data-value="interval">Dash</button>
+                                <button class="mini-tab" data-value="pulse">Pulse</button>
+                            </div>
+                        </div>
+
+                        <div class="setting-row-inline" style="margin-top: 16px; justify-content: flex-start; gap: 12px;">
+                            <label class="setting-label">EFFECTS</label>
+                            <div class="checkbox-group">
+                                <label class="chip-checkbox">
+                                    <input type="checkbox" id="check-trail">
+                                    <span>Trail</span>
+                                </label>
+                                <label class="chip-checkbox">
+                                    <input type="checkbox" id="check-taper" checked>
+                                    <span>Taper</span>
+                                </label>
+                                <label class="chip-checkbox">
+                                    <input type="checkbox" id="check-bloom">
+                                    <span>Bloom</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="setting-row" style="margin-top: 16px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 16px; display: flex; align-items: center; justify-content: space-between;">
+                            <label class="toggle-option" style="flex: 1;">
+                                <input type="checkbox" id="check-axes">
+                                <span class="toggle-track"></span>
+                                <span class="setting-label">AXES</span>
+                            </label>
+                            <button id="btn-foci-sync" class="apple-btn-shell" title="Sync Source to Geometric Anchor" style="margin-left: 12px; font-size: 10px; padding: 4px 10px;">
+                                FOCI
+                            </button>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="shape-options-section shape-accordion is-open" data-accordion-section="shape">
+                    <button class="shape-accordion-toggle" data-accordion-toggle="shape" type="button">
+                        <div class="shape-options-header">
+                        <span class="shape-options-label">Shape Options</span>
+                        <span class="shape-options-meta" id="shape-options-meta">Symmetry</span>
+                        </div>
+                        <span class="shape-accordion-icon">+</span>
+                    </button>
+                    <div class="shape-accordion-body">
+                        <div class="shape-option-card" id="shape-option-card">
+                            <div class="shape-option-card-title" id="shape-option-card-title">Closed Orbit</div>
+                            <div class="shape-option-card-copy" id="shape-option-card-copy">
+                                Circular boundaries are ideal for clean repeating paths and stable echo-like motion.
+                            </div>
+                        </div>
+                        <div class="shape-option-note" id="shape-option-note">
+                            Tip: drag the source off-center, then rotate slowly to search for repeating loops.
+                        </div>
+                        <div class="shape-preset-grid" id="shape-preset-grid">
+                            <button class="shape-preset-btn" id="shape-preset-0" data-preset-slot="0">Center Orbit</button>
+                            <button class="shape-preset-btn" id="shape-preset-1" data-preset-slot="1">Wide Sweep</button>
+                            <button class="shape-preset-btn" id="shape-preset-2" data-preset-slot="2">Dense Echo</button>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="shape-options-section triangle-source-section shape-accordion" id="triangle-source-section" data-accordion-section="triangle">
+                    <button class="shape-accordion-toggle" data-accordion-toggle="triangle" type="button">
+                        <div class="shape-options-header">
+                            <span class="shape-options-label">Triangle Sources</span>
+                            <span class="shape-options-meta">Point Only</span>
+                        </div>
+                        <span class="shape-accordion-icon">+</span>
+                    </button>
+                    <div class="shape-accordion-body">
+                        <div class="setting-row-inline" style="margin-bottom: 10px;">
+                            <label class="setting-label">PATTERN</label>
+                            <div class="mode-tabs-mini" id="group-triangle-source" style="width: 180px;">
+                                <button class="mini-tab active" data-value="single">Single</button>
+                                <button class="mini-tab" data-value="triad">Triad</button>
+                                <button class="mini-tab" data-value="strip">Strip</button>
+                            </div>
+                        </div>
+
+                        <div class="setting-row-inline triangle-direction-row" id="triangle-direction-row" style="margin-bottom: 10px;">
+                            <label class="setting-label">DIRECTION</label>
+                            <div class="mode-tabs-mini" id="group-triangle-direction" style="width: 180px;">
+                                <button class="mini-tab active" data-value="parallel">Parallel</button>
+                                <button class="mini-tab" data-value="inward">Inward</button>
+                                <button class="mini-tab" data-value="outward">Outward</button>
+                            </div>
+                        </div>
+
+                        <div class="setting-row">
+                            <div class="setting-label-group">
+                                <label class="setting-label">POINT COUNT</label>
+                                <span class="setting-value" id="val-triangle-count">5</span>
+                            </div>
+                            <input type="range" id="range-triangle-count" min="2" max="12" step="1" value="5">
+                        </div>
+
+                        <div class="setting-row" style="margin-bottom: 0;">
+                            <div class="setting-label-group">
+                                <label class="setting-label">VERTEX BIAS</label>
+                                <span class="setting-value" id="val-triangle-bias">0.60</span>
+                            </div>
+                            <input type="range" id="range-triangle-bias" min="0.1" max="1.0" step="0.05" value="0.6">
+                        </div>
+                    </div>
+                </section>
 
             </div>
         </aside>

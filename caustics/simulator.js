@@ -33,36 +33,23 @@ export const Simulator = {
      * Initialize or reset ray states for incremental simulation
      */
     initRays(app) {
-        const { rayNumber, sourcePos, sourceRotation, spread, colorMode, flowOffset, lightSourceMode, shape, parallelRange } = app;
-        const { min: pMin, max: pMax } = parallelRange;
-        const aimAngle = Math.PI / 2;
+        const { rayNumber, colorMode, flowOffset } = app;
         this.rayStates = [];
         const count = Math.max(1, Math.floor(rayNumber));
-        
-        for (let i = 0; i < count; i++) {
-            const t = i / Math.max(1, count - 1);
-            let sPos, angle;
-            
-            if (lightSourceMode === 'parallel') {
-                const d = pMin + t * (pMax - pMin);
-                const cosR = Math.cos(sourceRotation);
-                const sinR = Math.sin(sourceRotation);
-                sPos = { x: sourcePos.x + d * cosR, y: sourcePos.y + d * sinR };
-                angle = sourceRotation + Math.PI / 2;
-            } else {
-                sPos = { x: sourcePos.x, y: sourcePos.y };
-                angle = aimAngle + sourceRotation + (t - 0.5) * spread;
-            }
+        const size = app.getShapeSize();
+        const launchConfigs = app.buildLaunchRayConfigs(count, size, flowOffset);
 
+        for (let i = 0; i < launchConfigs.length; i++) {
+            const config = launchConfigs[i];
             let baseHue;
-            if (colorMode === 'rainbow') baseHue = (t * 360 + flowOffset * 0.5) % 360;
-            else if (colorMode === 'cyan') baseHue = 180 + Math.sin(t * 5 + flowOffset * 0.1) * 20;
-            else if (colorMode === 'sunset') baseHue = 10 + Math.sin(t * 3 + flowOffset * 0.1) * 30;
+            if (colorMode === 'rainbow') baseHue = (config.t * 360 + flowOffset * 0.5) % 360;
+            else if (colorMode === 'cyan') baseHue = 180 + Math.sin(config.t * 5 + flowOffset * 0.1) * 20;
+            else if (colorMode === 'sunset') baseHue = 10 + Math.sin(config.t * 3 + flowOffset * 0.1) * 30;
 
             this.rayStates.push({
-                x: sPos.x,
-                y: sPos.y,
-                angle: angle,
+                x: config.sPos.x,
+                y: config.sPos.y,
+                angle: config.angle,
                 accDist: 0,
                 bounces: 0,
                 hue: baseHue,

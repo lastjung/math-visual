@@ -162,51 +162,24 @@ export const Renderer = {
             }
         }
 
-        const { min: pMin, max: pMax } = state.parallelRange;
         const maxTravel = Math.sqrt(w*w + h*h) * 1.2;
         const isNormalOrPaint1 = state.isLightVisible && !state.isPaint2Mode && !state.isLightMode;
         const isLightEffect = state.isLightVisible && state.isLightMode;
 
         if (isNormalOrPaint1) {
-            // Memory Optimization: Avoid Array.from and map every frame
+            const launchConfigs = state.buildLaunchRayConfigs(drawRayNumber, size, flowOffset);
             const rayPaths = [];
-            for (let idx = 0; idx < drawRayNumber; idx++) {
-                const t = idx / Math.max(1, drawRayNumber - 1);
-                let sPos, angle;
-                
-                if (state.lightSourceMode === 'parallel') {
-                    const d = pMin + t * (pMax - pMin);
-                    const cosR = Math.cos(sourceRotation);
-                    const sinR = Math.sin(sourceRotation);
-                    sPos = { x: sourcePos.x + d * cosR, y: sourcePos.y + d * sinR }; 
-                    angle = sourceRotation + Math.PI / 2;
-                } else if (state.lightSourceMode === 'converge') {
-                    const targetPos = sourcePos;
-                    const baseAngle = aimAngle + sourceRotation + (t - 0.5) * spread;
-                    const hit = Physics.getConvergeLaunchPoint(targetPos, baseAngle, shape, size);
-                    if (hit) {
-                        sPos = { x: hit.x, y: hit.y };
-                        angle = baseAngle + Math.PI; // Point back to center
-                    } else {
-                        sPos = { x: targetPos.x, y: targetPos.y };
-                        angle = baseAngle;
-                    }
-                } else {
-                    sPos = { x: sourcePos.x, y: sourcePos.y };
-                    angle = aimAngle + sourceRotation + (t - 0.5) * spread;
-                }
-
-                sPos = Physics.offsetRayStart(sPos, angle, size);
-
+            for (let idx = 0; idx < launchConfigs.length; idx++) {
+                const config = launchConfigs[idx];
                 let baseHue;
-                if (colorMode === 'rainbow') baseHue = (t * 360 + flowOffset * 0.5) % 360;
-                else if (colorMode === 'cyan') baseHue = 180 + Math.sin(t * 5 + flowOffset * 0.1) * 20;
-                else if (colorMode === 'sunset') baseHue = 10 + Math.sin(t * 3 + flowOffset * 0.1) * 30;
+                if (colorMode === 'rainbow') baseHue = (config.t * 360 + flowOffset * 0.5) % 360;
+                else if (colorMode === 'cyan') baseHue = 180 + Math.sin(config.t * 5 + flowOffset * 0.1) * 20;
+                else if (colorMode === 'sunset') baseHue = 10 + Math.sin(config.t * 3 + flowOffset * 0.1) * 30;
 
                 rayPaths.push({
-                    rx: centerX + sPos.x,
-                    ry: centerY + sPos.y,
-                    ra: angle,
+                    rx: centerX + config.sPos.x,
+                    ry: centerY + config.sPos.y,
+                    ra: config.angle,
                     baseHue: baseHue,
                     accDist: 0,
                     active: true
@@ -339,37 +312,16 @@ export const Renderer = {
             const DAMPING = 1.5;             // Softens the curve for organic response
             const DEPOSIT = 1.8;             // Stronger footprint for the intense beam
 
+            const launchConfigs = state.buildLaunchRayConfigs(drawRayNumber, size, flowOffset);
             const rayPaths = [];
-            for (let idx = 0; idx < drawRayNumber; idx++) {
-                const t = idx / Math.max(1, drawRayNumber - 1);
-                let sPos, angle;
-                if (state.lightSourceMode === 'parallel') {
-                    const d = pMin + t * (pMax - pMin);
-                    const cosR = Math.cos(sourceRotation); const sinR = Math.sin(sourceRotation);
-                    sPos = { x: sourcePos.x + d * cosR, y: sourcePos.y + d * sinR }; 
-                    angle = sourceRotation + Math.PI / 2;
-                } else if (state.lightSourceMode === 'converge') {
-                    const targetPos = sourcePos;
-                    const baseAngle = aimAngle + sourceRotation + (t - 0.5) * spread;
-                    const hit = Physics.getConvergeLaunchPoint(targetPos, baseAngle, shape, size);
-                    if (hit) {
-                        sPos = { x: hit.x, y: hit.y };
-                        angle = baseAngle + Math.PI;
-                    } else {
-                        sPos = { x: targetPos.x, y: targetPos.y };
-                        angle = baseAngle;
-                    }
-                } else {
-                    sPos = { x: sourcePos.x, y: sourcePos.y };
-                    angle = aimAngle + sourceRotation + (t - 0.5) * spread;
-                }
-                sPos = Physics.offsetRayStart(sPos, angle, size);
+            for (let idx = 0; idx < launchConfigs.length; idx++) {
+                const config = launchConfigs[idx];
                 let baseHue;
-                if (colorMode === 'rainbow') baseHue = (t * 360 + flowOffset * 0.5) % 360;
-                else if (colorMode === 'cyan') baseHue = 180 + Math.sin(t * 5 + flowOffset * 0.1) * 20;
-                else if (colorMode === 'sunset') baseHue = 10 + Math.sin(t * 3 + flowOffset * 0.1) * 30;
+                if (colorMode === 'rainbow') baseHue = (config.t * 360 + flowOffset * 0.5) % 360;
+                else if (colorMode === 'cyan') baseHue = 180 + Math.sin(config.t * 5 + flowOffset * 0.1) * 20;
+                else if (colorMode === 'sunset') baseHue = 10 + Math.sin(config.t * 3 + flowOffset * 0.1) * 30;
 
-                rayPaths.push({ rx: centerX + sPos.x, ry: centerY + sPos.y, ra: angle, baseHue: baseHue, accDist: 0, active: true });
+                rayPaths.push({ rx: centerX + config.sPos.x, ry: centerY + config.sPos.y, ra: config.angle, baseHue: baseHue, accDist: 0, active: true });
             }
 
             ctx.save();
@@ -672,6 +624,15 @@ export const Renderer = {
 
         // 2. Main Light Source Dot (ALWAYS VISIBLE)
         ctx.save();
+        if (state.shape === 'triangle' && state.lightSourceMode === 'point' && state.triangleSourceMode !== 'single') {
+            const origins = state.getTriangleSourceOrigins(size);
+            ctx.fillStyle = 'rgba(103, 232, 249, 0.78)';
+            origins.forEach((origin) => {
+                ctx.beginPath();
+                ctx.arc(centerX + origin.x, centerY + origin.y, 3, 0, Math.PI * 2);
+                ctx.fill();
+            });
+        }
         ctx.beginPath(); ctx.arc(sX, sY, 10, 0, Math.PI * 2);
         ctx.fillStyle = 'rgba(255, 255, 255, 0.15)'; ctx.fill();
         ctx.beginPath(); ctx.arc(sX, sY, 4, 0, Math.PI * 2);

@@ -36,6 +36,10 @@ const App = {
     baseStyle: 'line',
     flowMode: 'none',
     lightSourceMode: 'point', // 'point' or 'parallel'
+    triangleSourceMode: 'single',
+    triangleDirectionMode: 'parallel',
+    trianglePointCount: 5,
+    triangleVertexBias: 0.6,
     parallelRange: { min: -100, max: 100 }, // Cached range for Parallel rays
     useTrail: true,
     useTaper: false,
@@ -176,6 +180,131 @@ const App = {
         return defaults;
     },
 
+    getTriangleVertices(size) {
+        const tr = size * 1.17;
+        const toy = size * 0.2;
+        return [
+            { x: 0, y: -tr + toy },
+            { x: tr * Math.sqrt(3) / 2, y: tr / 2 + toy },
+            { x: -tr * Math.sqrt(3) / 2, y: tr / 2 + toy }
+        ];
+    },
+
+    getTriangleSourceOrigins(size) {
+        const base = { ...this.sourcePos };
+        if (this.shape !== 'triangle' || this.lightSourceMode !== 'point') return [base];
+
+        if (this.triangleSourceMode === 'triad') {
+            const mix = 0.14 + this.triangleVertexBias * 0.3;
+            return this.getTriangleVertices(size).map((vertex) => ({
+                x: base.x * (1 - mix) + vertex.x * mix,
+                y: base.y * (1 - mix) + vertex.y * mix
+            }));
+        }
+
+        if (this.triangleSourceMode === 'strip') {
+            const count = Math.max(2, Math.floor(this.trianglePointCount));
+            const halfWidth = size * (0.12 + this.triangleVertexBias * 0.42);
+            const axisAngle = this.sourceRotation;
+            const dx = Math.cos(axisAngle);
+            const dy = Math.sin(axisAngle);
+            return Array.from({ length: count }, (_, index) => {
+                const t = count === 1 ? 0.5 : index / (count - 1);
+                const offset = (t - 0.5) * 2 * halfWidth;
+                return {
+                    x: base.x + dx * offset,
+                    y: base.y + dy * offset
+                };
+            });
+        }
+
+        return [base];
+    },
+
+    getTriangleLaunchAngle(origin, localT = 0.5) {
+        const baseAngle = Math.PI / 2 + this.sourceRotation;
+        const spreadOffset = (localT - 0.5) * this.spread;
+
+        if (this.triangleSourceMode === 'single') {
+            return baseAngle + spreadOffset;
+        }
+
+        if (this.triangleDirectionMode === 'inward') {
+            const inwardAngle = Math.atan2(-origin.y, -origin.x);
+            return inwardAngle + spreadOffset;
+        }
+
+        if (this.triangleDirectionMode === 'outward') {
+            const outwardAngle = Math.atan2(origin.y, origin.x);
+            return outwardAngle + spreadOffset;
+        }
+
+        return baseAngle + spreadOffset;
+    },
+
+    buildLaunchRayConfigs(rayCount, size, flowOffset = this.flowOffset) {
+        const count = Math.max(1, Math.floor(rayCount));
+        const aimAngle = Math.PI / 2;
+        const configs = [];
+        const origins = this.getTriangleSourceOrigins(size);
+
+        if (this.shape === 'triangle' && this.lightSourceMode === 'point' && origins.length > 1) {
+            const groupCount = origins.length;
+            const basePerGroup = Math.floor(count / groupCount);
+            const remainder = count % groupCount;
+
+            origins.forEach((origin, groupIndex) => {
+                const localCount = basePerGroup + (groupIndex < remainder ? 1 : 0);
+                for (let localIndex = 0; localIndex < localCount; localIndex++) {
+                    const tLocal = localCount <= 1 ? 0.5 : localIndex / (localCount - 1);
+                    const tGlobal = count <= 1 ? 0 : configs.length / Math.max(1, count - 1);
+                    const angle = this.getTriangleLaunchAngle(origin, tLocal);
+                    configs.push({
+                        sPos: Physics.offsetRayStart(origin, angle, size),
+                        angle,
+                        t: tGlobal
+                    });
+                }
+            });
+            return configs;
+        }
+
+        for (let idx = 0; idx < count; idx++) {
+            const t = idx / Math.max(1, count - 1);
+            let sPos, angle;
+
+            if (this.lightSourceMode === 'parallel') {
+                const d = this.parallelRange.min + t * (this.parallelRange.max - this.parallelRange.min);
+                const cosR = Math.cos(this.sourceRotation);
+                const sinR = Math.sin(this.sourceRotation);
+                sPos = { x: this.sourcePos.x + d * cosR, y: this.sourcePos.y + d * sinR };
+                angle = this.sourceRotation + Math.PI / 2;
+            } else if (this.lightSourceMode === 'converge') {
+                const targetPos = this.sourcePos;
+                const baseAngle = aimAngle + this.sourceRotation + (t - 0.5) * this.spread;
+                const hit = Physics.getConvergeLaunchPoint(targetPos, baseAngle, this.shape, size);
+                if (hit) {
+                    sPos = { x: hit.x, y: hit.y };
+                    angle = baseAngle + Math.PI;
+                } else {
+                    sPos = { x: targetPos.x, y: targetPos.y };
+                    angle = baseAngle;
+                }
+            } else {
+                sPos = { x: this.sourcePos.x, y: this.sourcePos.y };
+                angle = aimAngle + this.sourceRotation + (t - 0.5) * this.spread;
+            }
+
+            configs.push({
+                sPos: Physics.offsetRayStart(sPos, angle, size),
+                angle,
+                t
+            });
+        }
+
+        return configs;
+    },
+
     sanitizeSourcePosition() {
         if (!this.canvas) return;
         const sizeMult = this.isWindowFull ? 0.45 : 0.35;
@@ -259,6 +388,10 @@ const App = {
             baseStyle: this.baseStyle,
             flowMode: this.flowMode,
             lightSourceMode: this.lightSourceMode,
+            triangleSourceMode: this.triangleSourceMode,
+            triangleDirectionMode: this.triangleDirectionMode,
+            trianglePointCount: this.trianglePointCount,
+            triangleVertexBias: this.triangleVertexBias,
             useTrail: this.useTrail,
             useTaper: this.useTaper,
             useBloom: this.useBloom,
@@ -310,6 +443,10 @@ const App = {
             this.baseStyle = saved.baseStyle ?? this.baseStyle;
             this.flowMode = saved.flowMode ?? this.flowMode;
             this.lightSourceMode = saved.lightSourceMode ?? 'point';
+            this.triangleSourceMode = saved.triangleSourceMode ?? this.triangleSourceMode;
+            this.triangleDirectionMode = saved.triangleDirectionMode ?? this.triangleDirectionMode;
+            this.trianglePointCount = saved.trianglePointCount ?? this.trianglePointCount;
+            this.triangleVertexBias = saved.triangleVertexBias ?? this.triangleVertexBias;
             this.normalizeLightSourceMode();
             this.useTrail = saved.useTrail ?? this.useTrail;
             this.useTaper = saved.useTaper ?? this.useTaper;

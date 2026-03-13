@@ -4,6 +4,138 @@
  */
 
 export const UI = {
+    shapePresets(app) {
+        const size = app.getShapeSize();
+        return {
+            circle: [
+                { label: 'Center Orbit', apply: () => ({ sourcePos: { x: 0, y: -size * 0.62 }, spread: 0.35, lightSourceMode: 'point' }) },
+                { label: 'Wide Sweep', apply: () => ({ sourcePos: { x: -size * 0.4, y: -size * 0.2 }, spread: 1.4, lightSourceMode: 'point' }) },
+                { label: 'Parallel Wash', apply: () => ({ sourcePos: { x: 0, y: -size * 0.75 }, sourceRotation: 0, lightSourceMode: 'parallel', spread: 0 }) }
+            ],
+            rect: [
+                { label: 'Top Bounce', apply: () => ({ sourcePos: { x: 0, y: -size * 0.9 }, spread: 0.2, lightSourceMode: 'point' }) },
+                { label: 'Side Scan', apply: () => ({ sourcePos: { x: -size * 0.62, y: 0 }, sourceRotation: -Math.PI / 2, spread: 0.8, lightSourceMode: 'parallel' }) },
+                { label: 'Corner Echo', apply: () => ({ sourcePos: { x: -size * 0.55, y: -size * 0.55 }, spread: 0.55, lightSourceMode: 'point' }) }
+            ],
+            'v-oval': [
+                { label: 'Upper Focus', apply: () => ({ sourcePos: { ...app.getShapeDefaults('v-oval').sourcePos }, spread: 0.35, lightSourceMode: 'point' }) },
+                { label: 'Tall Sweep', apply: () => ({ sourcePos: { x: 0, y: -size * 0.58 }, sourceRotation: 0, lightSourceMode: 'parallel', spread: 0 }) },
+                { label: 'Soft Fan', apply: () => ({ sourcePos: { x: size * 0.18, y: -size * 0.2 }, spread: 1.2, lightSourceMode: 'point' }) }
+            ],
+            'vv-oval': [
+                { label: 'Shared Foci', apply: () => ({ sourcePos: { ...app.getShapeDefaults('vv-oval').sourcePos }, spread: 0.35, lightSourceMode: 'point' }) },
+                { label: 'Split Sweep', apply: () => ({ sourcePos: { x: 0, y: -size * 0.54 }, sourceRotation: 0, lightSourceMode: 'parallel', spread: 0 }) },
+                { label: 'Inner Echo', apply: () => ({ sourcePos: { x: size * 0.14, y: -size * 0.08 }, spread: 1.0, lightSourceMode: 'point' }) }
+            ],
+            ellipse: [
+                { label: 'Focus Lock', apply: () => ({ sourcePos: { ...app.getShapeDefaults('ellipse').sourcePos }, spread: 0.45, lightSourceMode: 'point' }) },
+                { label: 'Cross Sweep', apply: () => ({ sourcePos: { x: 0, y: -size * 0.36 }, sourceRotation: Math.PI / 2, lightSourceMode: 'parallel', spread: 0 }) },
+                { label: 'Wide Return', apply: () => ({ sourcePos: { x: -size * 0.5, y: 0 }, spread: 1.2, lightSourceMode: 'point' }) }
+            ],
+            parabola: [
+                { label: 'Focus Beam', apply: () => ({ sourcePos: { ...app.getShapeDefaults('parabola').sourcePos }, spread: 0.35, lightSourceMode: 'point' }) },
+                { label: 'Broad Exit', apply: () => ({ sourcePos: { ...app.getShapeDefaults('parabola').sourcePos }, spread: 1.4, lightSourceMode: 'point' }) },
+                { label: 'Edge Skim', apply: () => ({ sourcePos: { x: size * 0.35, y: size * 0.4 }, spread: 0.5, lightSourceMode: 'point' }) }
+            ],
+            cardioid: [
+                { label: 'Left Fold', apply: () => ({ sourcePos: { x: -size * 0.24, y: 0 }, spread: 0.45, lightSourceMode: 'point' }) },
+                { label: 'Cusp Scan', apply: () => ({ sourcePos: { x: size * 0.08, y: -size * 0.12 }, spread: 1.1, lightSourceMode: 'point' }) },
+                { label: 'Paint Sweep', apply: () => ({ sourcePos: { x: -size * 0.16, y: size * 0.06 }, spread: 0.9, lightSourceMode: 'point', isPaint2Mode: true, isPaintMode: false, isLightMode: false }) }
+            ],
+            triangle: [
+                { label: 'Center Path', apply: () => ({ sourcePos: { x: 0, y: size * 0.12 }, spread: 0.3, lightSourceMode: 'point' }) },
+                { label: 'Edge Sweep', apply: () => ({ sourcePos: { x: -size * 0.3, y: size * 0.18 }, sourceRotation: -Math.PI / 3, lightSourceMode: 'parallel', spread: 0 }) },
+                { label: 'Vertex Scan', apply: () => ({ sourcePos: { x: -size * 0.18, y: -size * 0.22 }, spread: 0.8, lightSourceMode: 'point' }) }
+            ]
+        };
+    },
+
+    shapePanelContent(shape) {
+        const copy = {
+            circle: {
+                badge: 'Circle',
+                title: 'Circle Study',
+                description: 'Symmetric reflections keep the beam stable from nearly any launch angle.',
+                meta: 'Symmetry',
+                cardTitle: 'Closed Orbit',
+                cardCopy: 'Circular boundaries are ideal for clean repeating paths and stable echo-like motion.',
+                note: 'Tip: drag the source off-center, then rotate slowly to search for repeating loops.',
+                action: 'ANCHOR'
+            },
+            rect: {
+                badge: 'Rectangle',
+                title: 'Rectangle Study',
+                description: 'Straight walls make corner sensitivity obvious and easy to compare.',
+                meta: 'Corners',
+                cardTitle: 'Corner Bounce',
+                cardCopy: 'Small changes near an edge can redirect the beam into long alternating zigzags.',
+                note: 'Tip: place the source near one side and compare shallow versus steep launch angles.',
+                action: 'ANCHOR'
+            },
+            'v-oval': {
+                badge: 'V-Oval',
+                title: 'Vertical Oval',
+                description: 'The tall oval compresses rays vertically and highlights the major-axis bias.',
+                meta: 'Focus',
+                cardTitle: 'Focus Pair',
+                cardCopy: 'Use the focus anchor to see how reflections tighten along the vertical geometry.',
+                note: 'Tip: sync to the upper focus, then sweep the rotation slider through a narrow range.',
+                action: 'FOCI'
+            },
+            'vv-oval': {
+                badge: 'Double Oval',
+                title: 'Double Oval',
+                description: 'Two boundaries create a split cavity where rays can jump between shells.',
+                meta: 'Nested',
+                cardTitle: 'Shared Channel',
+                cardCopy: 'The outer and inner ovals create a clean demonstration of boundary transitions.',
+                note: 'Tip: run Paint 2 with moderate density to reveal the split caustic lanes.',
+                action: 'FOCI'
+            },
+            ellipse: {
+                badge: 'Ellipse',
+                title: 'Ellipse Study',
+                description: 'Ellipses are strongest when you emphasize the two foci and the returning paths between them.',
+                meta: 'Focal Pair',
+                cardTitle: 'Focus Return',
+                cardCopy: 'Launching from a focus shows the classic ellipse property with minimal setup.',
+                note: 'Tip: hit the focus button, then use a wider spread to show the shared return point.',
+                action: 'FOCI'
+            },
+            parabola: {
+                badge: 'Parabola',
+                title: 'Parabola Study',
+                description: 'The parabola is best used as a one-focus machine that straightens outgoing beams.',
+                meta: 'Focus Lock',
+                cardTitle: 'Parallel Exit',
+                cardCopy: 'A point source at the focus demonstrates why the reflected bundle aligns so cleanly.',
+                note: 'Tip: keep point source mode active and compare narrow spread versus broad spread.',
+                action: 'FOCUS'
+            },
+            cardioid: {
+                badge: 'Cardioid',
+                title: 'Cardioid Study',
+                description: 'The cusp makes this shape the most sensitive and dramatic under small perturbations.',
+                meta: 'Cusp',
+                cardTitle: 'Cusp Caustic',
+                cardCopy: 'Cardioids reward slow scanning because the beam structure changes sharply near the notch.',
+                note: 'Tip: move the source along the left side and accumulate with Paint 2 for dense folds.',
+                action: 'ANCHOR'
+            },
+            triangle: {
+                badge: 'Triangle',
+                title: 'Triangle Study',
+                description: 'The triangle is best for periodic paths, edge scans, and later multi-point source patterns.',
+                meta: 'Multi-Point',
+                cardTitle: 'Edge Sweep',
+                cardCopy: 'Parallel and paint-based accumulation can expose stripe families and periodic orbit bands.',
+                note: 'Tip: start near the center, then scan toward a vertex to compare stable and unstable regions.',
+                action: 'ANCHOR'
+            }
+        };
+        return copy[shape] || copy.circle;
+    },
+
     /**
      * Bind all DOM events to App actions
      */
@@ -149,6 +281,24 @@ export const UI = {
             };
         }
 
+        const rangeTriangleCount = document.getElementById('range-triangle-count');
+        if (rangeTriangleCount) {
+            rangeTriangleCount.oninput = (e) => {
+                app.trianglePointCount = parseInt(e.target.value, 10);
+                refreshIncrementalModes();
+                this.update(app);
+            };
+        }
+
+        const rangeTriangleBias = document.getElementById('range-triangle-bias');
+        if (rangeTriangleBias) {
+            rangeTriangleBias.oninput = (e) => {
+                app.triangleVertexBias = parseFloat(e.target.value);
+                refreshIncrementalModes();
+                this.update(app);
+            };
+        }
+
         const checkAxes = document.getElementById('check-axes');
         if (checkAxes) {
             checkAxes.onchange = (e) => {
@@ -164,6 +314,21 @@ export const UI = {
                 this.update(app);
             };
         }
+
+        document.querySelectorAll('[data-preset-slot]').forEach(btn => {
+            btn.onclick = () => {
+                const slot = parseInt(btn.dataset.presetSlot, 10);
+                this.applyShapePreset(app, slot);
+            };
+        });
+
+        document.querySelectorAll('[data-accordion-toggle]').forEach(btn => {
+            btn.onclick = () => {
+                const key = btn.dataset.accordionToggle;
+                const section = document.querySelector(`[data-accordion-section="${key}"]`);
+                if (section) section.classList.toggle('is-open');
+            };
+        });
 
         const selectNarrative = document.getElementById('select-narrative');
         if (selectNarrative) {
@@ -187,6 +352,22 @@ export const UI = {
         document.querySelectorAll('#group-flow .mini-tab').forEach(btn => {
             btn.onclick = (e) => {
                 app.flowMode = e.target.dataset.value;
+                this.update(app);
+            };
+        });
+
+        document.querySelectorAll('#group-triangle-source .mini-tab').forEach(btn => {
+            btn.onclick = (e) => {
+                app.triangleSourceMode = e.target.dataset.value;
+                refreshIncrementalModes();
+                this.update(app);
+            };
+        });
+
+        document.querySelectorAll('#group-triangle-direction .mini-tab').forEach(btn => {
+            btn.onclick = (e) => {
+                app.triangleDirectionMode = e.target.dataset.value;
+                refreshIncrementalModes();
                 this.update(app);
             };
         });
@@ -466,6 +647,8 @@ export const UI = {
      * Update DOM elements to match current state
      */
     update(app) {
+        this.syncShapePanel(app);
+
         const updateAutoLabel = (id, iconId, isActive) => {
             const el = document.getElementById(id);
             const icon = document.getElementById(iconId);
@@ -530,6 +713,16 @@ export const UI = {
         const alphaText = `${app.alphaIntensity.toFixed(2)}x`;
         if (valAlpha.textContent !== alphaText) valAlpha.textContent = alphaText;
 
+        const triangleCount = document.getElementById('range-triangle-count');
+        const triangleCountValue = document.getElementById('val-triangle-count');
+        if (triangleCount) triangleCount.value = app.trianglePointCount;
+        if (triangleCountValue) triangleCountValue.textContent = String(app.trianglePointCount);
+
+        const triangleBias = document.getElementById('range-triangle-bias');
+        const triangleBiasValue = document.getElementById('val-triangle-bias');
+        if (triangleBias) triangleBias.value = app.triangleVertexBias;
+        if (triangleBiasValue) triangleBiasValue.textContent = app.triangleVertexBias.toFixed(2);
+
         const btnLight = document.getElementById('btn-light');
         if (btnLight) {
             btnLight.classList.toggle('light-on', app.isLightVisible);
@@ -568,6 +761,20 @@ export const UI = {
         });
         document.querySelectorAll('#group-source-mode .mini-tab').forEach(btn => {
             const isActive = btn.dataset.value === app.lightSourceMode;
+            if (btn.classList.contains('active') !== isActive) {
+                btn.classList.toggle('active', isActive);
+            }
+        });
+
+        document.querySelectorAll('#group-triangle-source .mini-tab').forEach(btn => {
+            const isActive = btn.dataset.value === app.triangleSourceMode;
+            if (btn.classList.contains('active') !== isActive) {
+                btn.classList.toggle('active', isActive);
+            }
+        });
+
+        document.querySelectorAll('#group-triangle-direction .mini-tab').forEach(btn => {
+            const isActive = btn.dataset.value === app.triangleDirectionMode;
             if (btn.classList.contains('active') !== isActive) {
                 btn.classList.toggle('active', isActive);
             }
@@ -636,6 +843,71 @@ export const UI = {
         if (sNarrative) {
             sNarrative.value = app.currentNarrative || 'none';
         }
+    },
+
+    syncShapePanel(app) {
+        const content = this.shapePanelContent(app.shape);
+        const presetsByShape = this.shapePresets(app);
+        const presets = presetsByShape[app.shape] || presetsByShape.circle;
+        const badge = document.getElementById('shape-badge');
+        const title = document.getElementById('shape-options-title');
+        const copy = document.getElementById('shape-options-copy');
+        const meta = document.getElementById('shape-options-meta');
+        const cardTitle = document.getElementById('shape-option-card-title');
+        const cardCopy = document.getElementById('shape-option-card-copy');
+        const note = document.getElementById('shape-option-note');
+        const btnFoci = document.getElementById('btn-foci-sync');
+        const triangleSection = document.getElementById('triangle-source-section');
+        const triangleDirectionRow = document.getElementById('triangle-direction-row');
+
+        if (badge) badge.textContent = content.badge;
+        if (title) title.textContent = content.title;
+        if (copy) copy.textContent = content.description;
+        if (meta) meta.textContent = content.meta;
+        if (cardTitle) cardTitle.textContent = content.cardTitle;
+        if (cardCopy) cardCopy.textContent = content.cardCopy;
+        if (note) note.textContent = content.note;
+        if (btnFoci) {
+            btnFoci.textContent = content.action;
+            btnFoci.title = `Sync source to ${content.action.toLowerCase()} anchor`;
+        }
+        if (triangleSection) {
+            const isTriangle = app.shape === 'triangle';
+            triangleSection.classList.toggle('visible', isTriangle);
+            triangleSection.classList.toggle('is-open', isTriangle);
+        }
+        if (triangleDirectionRow) {
+            triangleDirectionRow.classList.toggle('hidden', app.triangleSourceMode === 'single');
+        }
+
+        presets.forEach((preset, index) => {
+            const button = document.getElementById(`shape-preset-${index}`);
+            if (button) button.textContent = preset.label;
+        });
+    },
+
+    applyShapePreset(app, slot) {
+        const presetsByShape = this.shapePresets(app);
+        const presets = presetsByShape[app.shape] || presetsByShape.circle;
+        const preset = presets[slot];
+        if (!preset) return;
+
+        const next = preset.apply();
+        if (next.sourcePos) app.sourcePos = { ...next.sourcePos };
+        if (typeof next.sourceRotation === 'number') app.sourceRotation = next.sourceRotation;
+        if (typeof next.spread === 'number') app.spread = next.spread;
+        if (typeof next.lightSourceMode === 'string') app.lightSourceMode = next.lightSourceMode;
+        if (typeof next.isPaintMode === 'boolean') app.isPaintMode = next.isPaintMode;
+        if (typeof next.isPaint2Mode === 'boolean') app.isPaint2Mode = next.isPaint2Mode;
+        if (typeof next.isLightMode === 'boolean') app.isLightMode = next.isLightMode;
+
+        app.autoModes.revolution = false;
+        app.autoModes.rotation = false;
+        app.normalizeLightSourceMode();
+        app.sanitizeSourcePosition();
+        app.recalcParallelRange();
+        if (app.isPaint2Mode || app.isLightMode) app.resetRays(false);
+        this.update(app);
     },
 
     setupApplePlayer(app) {
