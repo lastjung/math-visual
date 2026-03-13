@@ -159,7 +159,7 @@
                 <section class="shape-options-section shape-accordion is-open" data-accordion-section="shape">
                     <button class="shape-accordion-toggle" data-accordion-toggle="shape" type="button">
                         <div class="shape-options-header">
-                        <span class="shape-options-label">Shape Options</span>
+                        <span class="shape-options-label">Source Presets</span>
                         <span class="shape-options-meta" id="shape-options-meta">Symmetry</span>
                         </div>
                         <span class="shape-accordion-icon">+</span>
@@ -178,6 +178,9 @@
                             <button class="shape-preset-btn" id="shape-preset-0" data-preset-slot="0">Center Orbit</button>
                             <button class="shape-preset-btn" id="shape-preset-1" data-preset-slot="1">Wide Sweep</button>
                             <button class="shape-preset-btn" id="shape-preset-2" data-preset-slot="2">Dense Echo</button>
+                        </div>
+                        <div class="shape-preset-note" id="shape-preset-note">
+                            Preset note appears here.
                         </div>
                     </div>
                 </section>
@@ -202,12 +205,13 @@
 
                         <div class="setting-row-inline triangle-direction-row" id="triangle-direction-row" style="margin-bottom: 10px;">
                             <label class="setting-label">DIRECTION</label>
-                            <div class="mode-tabs-mini" id="group-triangle-direction" style="width: 180px;">
-                                <button class="mini-tab active" data-value="parallel">Parallel</button>
-                                <button class="mini-tab" data-value="inward">Inward</button>
-                                <button class="mini-tab" data-value="outward">Outward</button>
-                            </div>
+                        <div class="mode-tabs-mini" id="group-triangle-direction" style="width: 180px;">
+                            <button class="mini-tab active" data-value="parallel">Parallel</button>
+                            <button class="mini-tab" data-value="inward">Inward</button>
+                            <button class="mini-tab" data-value="outward">Outward</button>
+                            <button class="mini-tab" data-value="edge-normal">Edge</button>
                         </div>
+                    </div>
 
                         <div class="setting-row">
                             <div class="setting-label-group">

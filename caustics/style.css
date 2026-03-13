@@ -438,6 +438,11 @@ canvas {
   padding-left: 2px;
 }
 
+.shape-option-card.hidden,
+.shape-option-note.hidden {
+  display: none;
+}
+
 .shape-preset-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -464,6 +469,14 @@ canvas {
   transform: translateY(-1px);
   border-color: rgba(103, 232, 249, 0.32);
   background: rgba(6, 182, 210, 0.12);
+}
+
+.shape-preset-note {
+  margin-top: 10px;
+  font-size: 11px;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.58);
+  min-height: 34px;
 }
 
 .triangle-source-section {

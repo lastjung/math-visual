@@ -195,11 +195,7 @@ const App = {
         if (this.shape !== 'triangle' || this.lightSourceMode !== 'point') return [base];
 
         if (this.triangleSourceMode === 'triad') {
-            const mix = 0.14 + this.triangleVertexBias * 0.3;
-            return this.getTriangleVertices(size).map((vertex) => ({
-                x: base.x * (1 - mix) + vertex.x * mix,
-                y: base.y * (1 - mix) + vertex.y * mix
-            }));
+            return this.getTriangleVertices(size);
         }
 
         if (this.triangleSourceMode === 'strip') {
@@ -221,22 +217,29 @@ const App = {
         return [base];
     },
 
-    getTriangleLaunchAngle(origin, localT = 0.5) {
+    getTriangleLaunchAngle(origin, size, localT = 0.5) {
         const baseAngle = Math.PI / 2 + this.sourceRotation;
         const spreadOffset = (localT - 0.5) * this.spread;
+        const triangleCenter = { x: 0, y: size * 0.2 };
 
         if (this.triangleSourceMode === 'single') {
             return baseAngle + spreadOffset;
         }
 
         if (this.triangleDirectionMode === 'inward') {
-            const inwardAngle = Math.atan2(-origin.y, -origin.x);
+            const inwardAngle = Math.atan2(triangleCenter.y - origin.y, triangleCenter.x - origin.x);
             return inwardAngle + spreadOffset;
         }
 
         if (this.triangleDirectionMode === 'outward') {
-            const outwardAngle = Math.atan2(origin.y, origin.x);
+            const outwardAngle = Math.atan2(origin.y - triangleCenter.y, origin.x - triangleCenter.x);
             return outwardAngle + spreadOffset;
+        }
+
+        if (this.triangleDirectionMode === 'edge-normal') {
+            const inwardNormal = Physics.getNormal(origin.x, origin.y, 'triangle', size);
+            const normalAngle = Math.atan2(-inwardNormal.y, -inwardNormal.x);
+            return normalAngle + spreadOffset;
         }
 
         return baseAngle + spreadOffset;
@@ -258,7 +261,7 @@ const App = {
                 for (let localIndex = 0; localIndex < localCount; localIndex++) {
                     const tLocal = localCount <= 1 ? 0.5 : localIndex / (localCount - 1);
                     const tGlobal = count <= 1 ? 0 : configs.length / Math.max(1, count - 1);
-                    const angle = this.getTriangleLaunchAngle(origin, tLocal);
+                    const angle = this.getTriangleLaunchAngle(origin, size, tLocal);
                     configs.push({
                         sPos: Physics.offsetRayStart(origin, angle, size),
                         angle,

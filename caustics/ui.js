@@ -4,48 +4,88 @@
  */
 
 export const UI = {
+    trianglePanelContent(app, baseContent) {
+        const sourceLabels = {
+            single: 'Single Point',
+            triad: 'Vertex Triad',
+            strip: 'Source Strip'
+        };
+        const directionLabels = {
+            parallel: 'Parallel',
+            inward: 'Inward',
+            outward: 'Outward',
+            'edge-normal': 'Edge Normal'
+        };
+
+        if (app.triangleSourceMode === 'single') {
+            return {
+                ...baseContent,
+                meta: 'Single Point',
+                cardTitle: 'Single Emitter',
+                cardCopy: 'One source follows the main grip, so this is the cleanest mode for reading periodic paths.',
+                note: 'Tip: use the grip for angle tuning, then add spread to widen the family of reflections.'
+            };
+        }
+
+        return {
+            ...baseContent,
+            meta: `${sourceLabels[app.triangleSourceMode] || 'Multi Source'} / ${directionLabels[app.triangleDirectionMode] || 'Parallel'}`,
+            cardTitle: `${sourceLabels[app.triangleSourceMode] || 'Multi Source'} Layout`,
+            cardCopy: app.triangleDirectionMode === 'edge-normal'
+                ? 'Sources are aligned by the nearest edge normal, which usually gives the cleanest triangular caustic structure.'
+                : app.triangleDirectionMode === 'inward'
+                    ? 'Each source is aimed toward the triangle center, which emphasizes convergence and interior crossings.'
+                    : app.triangleDirectionMode === 'outward'
+                        ? 'Each source points away from the center, producing more explosive edge-first reflections.'
+                        : 'All sources share the same launch direction, so the whole pattern reads like one coordinated beam field.',
+            note: app.triangleSourceMode === 'triad'
+                ? 'Tip: triad is locked to the three vertices, so direction mode makes the biggest visual difference here.'
+                : 'Tip: strip uses point count and vertex bias together, so increase count first and then tune the spread.'
+        };
+    },
+
     shapePresets(app) {
         const size = app.getShapeSize();
         return {
             circle: [
-                { label: 'Center Orbit', apply: () => ({ sourcePos: { x: 0, y: -size * 0.62 }, spread: 0.35, lightSourceMode: 'point' }) },
-                { label: 'Wide Sweep', apply: () => ({ sourcePos: { x: -size * 0.4, y: -size * 0.2 }, spread: 1.4, lightSourceMode: 'point' }) },
-                { label: 'Parallel Wash', apply: () => ({ sourcePos: { x: 0, y: -size * 0.75 }, sourceRotation: 0, lightSourceMode: 'parallel', spread: 0 }) }
+                { label: 'Center Orbit', note: 'A compact point-source setup for finding stable circular loops.', apply: () => ({ sourcePos: { x: 0, y: -size * 0.62 }, spread: 0.35, lightSourceMode: 'point' }) },
+                { label: 'Wide Sweep', note: 'Push the source off-center and widen the fan to compare dense and sparse returns.', apply: () => ({ sourcePos: { x: -size * 0.4, y: -size * 0.2 }, spread: 1.4, lightSourceMode: 'point' }) },
+                { label: 'Parallel Wash', note: 'A clean parallel pass across the circle for smooth, even interference bands.', apply: () => ({ sourcePos: { x: 0, y: -size * 0.75 }, sourceRotation: 0, lightSourceMode: 'parallel', spread: 0 }) }
             ],
             rect: [
-                { label: 'Top Bounce', apply: () => ({ sourcePos: { x: 0, y: -size * 0.9 }, spread: 0.2, lightSourceMode: 'point' }) },
-                { label: 'Side Scan', apply: () => ({ sourcePos: { x: -size * 0.62, y: 0 }, sourceRotation: -Math.PI / 2, spread: 0.8, lightSourceMode: 'parallel' }) },
-                { label: 'Corner Echo', apply: () => ({ sourcePos: { x: -size * 0.55, y: -size * 0.55 }, spread: 0.55, lightSourceMode: 'point' }) }
+                { label: 'Top Bounce', note: 'A centered top shot that makes the rectangular rhythm easy to read.', apply: () => ({ sourcePos: { x: 0, y: -size * 0.9 }, spread: 0.2, lightSourceMode: 'point' }) },
+                { label: 'Side Scan', note: 'A lateral sweep that highlights alternating wall impacts and corridor patterns.', apply: () => ({ sourcePos: { x: -size * 0.62, y: 0 }, sourceRotation: -Math.PI / 2, spread: 0.8, lightSourceMode: 'parallel' }) },
+                { label: 'Corner Echo', note: 'Start near a corner to emphasize abrupt redirection and long zigzag returns.', apply: () => ({ sourcePos: { x: -size * 0.55, y: -size * 0.55 }, spread: 0.55, lightSourceMode: 'point' }) }
             ],
             'v-oval': [
-                { label: 'Upper Focus', apply: () => ({ sourcePos: { ...app.getShapeDefaults('v-oval').sourcePos }, spread: 0.35, lightSourceMode: 'point' }) },
-                { label: 'Tall Sweep', apply: () => ({ sourcePos: { x: 0, y: -size * 0.58 }, sourceRotation: 0, lightSourceMode: 'parallel', spread: 0 }) },
-                { label: 'Soft Fan', apply: () => ({ sourcePos: { x: size * 0.18, y: -size * 0.2 }, spread: 1.2, lightSourceMode: 'point' }) }
+                { label: 'Upper Focus', note: 'Lock to the top focus to show the vertical oval’s strongest return path.', apply: () => ({ sourcePos: { ...app.getShapeDefaults('v-oval').sourcePos }, spread: 0.35, lightSourceMode: 'point' }) },
+                { label: 'Tall Sweep', note: 'Parallel light down the long axis produces a clean column of reflections.', apply: () => ({ sourcePos: { x: 0, y: -size * 0.58 }, sourceRotation: 0, lightSourceMode: 'parallel', spread: 0 }) },
+                { label: 'Soft Fan', note: 'A wider fan exposes how the tall oval compresses vertical trajectories.', apply: () => ({ sourcePos: { x: size * 0.18, y: -size * 0.2 }, spread: 1.2, lightSourceMode: 'point' }) }
             ],
             'vv-oval': [
-                { label: 'Shared Foci', apply: () => ({ sourcePos: { ...app.getShapeDefaults('vv-oval').sourcePos }, spread: 0.35, lightSourceMode: 'point' }) },
-                { label: 'Split Sweep', apply: () => ({ sourcePos: { x: 0, y: -size * 0.54 }, sourceRotation: 0, lightSourceMode: 'parallel', spread: 0 }) },
-                { label: 'Inner Echo', apply: () => ({ sourcePos: { x: size * 0.14, y: -size * 0.08 }, spread: 1.0, lightSourceMode: 'point' }) }
+                { label: 'Shared Foci', note: 'Start from the shared focus line to reveal the dual-shell structure clearly.', apply: () => ({ sourcePos: { ...app.getShapeDefaults('vv-oval').sourcePos }, spread: 0.35, lightSourceMode: 'point' }) },
+                { label: 'Split Sweep', note: 'A parallel sweep helps separate the outer and inner channels visually.', apply: () => ({ sourcePos: { x: 0, y: -size * 0.54 }, sourceRotation: 0, lightSourceMode: 'parallel', spread: 0 }) },
+                { label: 'Inner Echo', note: 'Offset the source slightly to encourage jumps between the two boundaries.', apply: () => ({ sourcePos: { x: size * 0.14, y: -size * 0.08 }, spread: 1.0, lightSourceMode: 'point' }) }
             ],
             ellipse: [
-                { label: 'Focus Lock', apply: () => ({ sourcePos: { ...app.getShapeDefaults('ellipse').sourcePos }, spread: 0.45, lightSourceMode: 'point' }) },
-                { label: 'Cross Sweep', apply: () => ({ sourcePos: { x: 0, y: -size * 0.36 }, sourceRotation: Math.PI / 2, lightSourceMode: 'parallel', spread: 0 }) },
-                { label: 'Wide Return', apply: () => ({ sourcePos: { x: -size * 0.5, y: 0 }, spread: 1.2, lightSourceMode: 'point' }) }
+                { label: 'Focus Lock', note: 'Use the classic focus-to-focus property as the cleanest ellipse demonstration.', apply: () => ({ sourcePos: { ...app.getShapeDefaults('ellipse').sourcePos }, spread: 0.45, lightSourceMode: 'point' }) },
+                { label: 'Cross Sweep', note: 'A perpendicular sweep across the ellipse shows strong compression across the minor axis.', apply: () => ({ sourcePos: { x: 0, y: -size * 0.36 }, sourceRotation: Math.PI / 2, lightSourceMode: 'parallel', spread: 0 }) },
+                { label: 'Wide Return', note: 'A wider point source reveals how broad bundles still gather toward the paired focus.', apply: () => ({ sourcePos: { x: -size * 0.5, y: 0 }, spread: 1.2, lightSourceMode: 'point' }) }
             ],
             parabola: [
-                { label: 'Focus Beam', apply: () => ({ sourcePos: { ...app.getShapeDefaults('parabola').sourcePos }, spread: 0.35, lightSourceMode: 'point' }) },
-                { label: 'Broad Exit', apply: () => ({ sourcePos: { ...app.getShapeDefaults('parabola').sourcePos }, spread: 1.4, lightSourceMode: 'point' }) },
-                { label: 'Edge Skim', apply: () => ({ sourcePos: { x: size * 0.35, y: size * 0.4 }, spread: 0.5, lightSourceMode: 'point' }) }
+                { label: 'Focus Beam', note: 'The cleanest parabola scene: point source at the focus, tight outgoing bundle.', apply: () => ({ sourcePos: { ...app.getShapeDefaults('parabola').sourcePos }, spread: 0.35, lightSourceMode: 'point' }) },
+                { label: 'Broad Exit', note: 'Increase spread at the focus to show how the reflector straightens a larger family.', apply: () => ({ sourcePos: { ...app.getShapeDefaults('parabola').sourcePos }, spread: 1.4, lightSourceMode: 'point' }) },
+                { label: 'Edge Skim', note: 'Offset the source to compare clean focus behavior against skewed reflections.', apply: () => ({ sourcePos: { x: size * 0.35, y: size * 0.4 }, spread: 0.5, lightSourceMode: 'point' }) }
             ],
             cardioid: [
-                { label: 'Left Fold', apply: () => ({ sourcePos: { x: -size * 0.24, y: 0 }, spread: 0.45, lightSourceMode: 'point' }) },
-                { label: 'Cusp Scan', apply: () => ({ sourcePos: { x: size * 0.08, y: -size * 0.12 }, spread: 1.1, lightSourceMode: 'point' }) },
-                { label: 'Paint Sweep', apply: () => ({ sourcePos: { x: -size * 0.16, y: size * 0.06 }, spread: 0.9, lightSourceMode: 'point', isPaint2Mode: true, isPaintMode: false, isLightMode: false }) }
+                { label: 'Left Fold', note: 'A safe starting angle for reading the cardioid’s folded interior.', apply: () => ({ sourcePos: { x: -size * 0.24, y: 0 }, spread: 0.45, lightSourceMode: 'point' }) },
+                { label: 'Cusp Scan', note: 'Move toward the cusp to trigger sharper redirection and denser interior overlaps.', apply: () => ({ sourcePos: { x: size * 0.08, y: -size * 0.12 }, spread: 1.1, lightSourceMode: 'point' }) },
+                { label: 'Paint Sweep', note: 'A paint-focused setup that accumulates the folded caustic layers over time.', apply: () => ({ sourcePos: { x: -size * 0.16, y: size * 0.06 }, spread: 0.9, lightSourceMode: 'point', isPaint2Mode: true, isPaintMode: false, isLightMode: false }) }
             ],
             triangle: [
-                { label: 'Center Path', apply: () => ({ sourcePos: { x: 0, y: size * 0.12 }, spread: 0.3, lightSourceMode: 'point' }) },
-                { label: 'Edge Sweep', apply: () => ({ sourcePos: { x: -size * 0.3, y: size * 0.18 }, sourceRotation: -Math.PI / 3, lightSourceMode: 'parallel', spread: 0 }) },
-                { label: 'Vertex Scan', apply: () => ({ sourcePos: { x: -size * 0.18, y: -size * 0.22 }, spread: 0.8, lightSourceMode: 'point' }) }
+                { label: 'Center Path', note: 'A single point setup for hunting periodic triangular loops with the main grip.', apply: () => ({ sourcePos: { x: 0, y: size * 0.12 }, spread: 0.3, lightSourceMode: 'point', triangleSourceMode: 'single' }) },
+                { label: 'Edge Sweep', note: 'A parallel sweep across one side of the triangle that makes stripe families easy to read.', apply: () => ({ sourcePos: { x: -size * 0.3, y: size * 0.18 }, sourceRotation: -Math.PI / 3, lightSourceMode: 'parallel', spread: 0 }) },
+                { label: 'Triad Edge', note: 'Three sources at the vertices, each aligned by edge normals for a strong triangular caustic scene.', apply: () => ({ sourcePos: { x: 0, y: size * 0.12 }, spread: Math.PI / 3, lightSourceMode: 'point', triangleSourceMode: 'triad', triangleDirectionMode: 'edge-normal' }) }
             ]
         };
     },
@@ -846,7 +886,10 @@ export const UI = {
     },
 
     syncShapePanel(app) {
-        const content = this.shapePanelContent(app.shape);
+        let content = this.shapePanelContent(app.shape);
+        if (app.shape === 'triangle') {
+            content = this.trianglePanelContent(app, content);
+        }
         const presetsByShape = this.shapePresets(app);
         const presets = presetsByShape[app.shape] || presetsByShape.circle;
         const badge = document.getElementById('shape-badge');
@@ -856,9 +899,12 @@ export const UI = {
         const cardTitle = document.getElementById('shape-option-card-title');
         const cardCopy = document.getElementById('shape-option-card-copy');
         const note = document.getElementById('shape-option-note');
+        const card = document.getElementById('shape-option-card');
+        const presetNote = document.getElementById('shape-preset-note');
         const btnFoci = document.getElementById('btn-foci-sync');
         const triangleSection = document.getElementById('triangle-source-section');
         const triangleDirectionRow = document.getElementById('triangle-direction-row');
+        const isTriangle = app.shape === 'triangle';
 
         if (badge) badge.textContent = content.badge;
         if (title) title.textContent = content.title;
@@ -872,18 +918,23 @@ export const UI = {
             btnFoci.title = `Sync source to ${content.action.toLowerCase()} anchor`;
         }
         if (triangleSection) {
-            const isTriangle = app.shape === 'triangle';
             triangleSection.classList.toggle('visible', isTriangle);
             triangleSection.classList.toggle('is-open', isTriangle);
         }
         if (triangleDirectionRow) {
             triangleDirectionRow.classList.toggle('hidden', app.triangleSourceMode === 'single');
         }
+        if (card) card.classList.toggle('hidden', isTriangle);
+        if (note) note.classList.toggle('hidden', isTriangle);
 
         presets.forEach((preset, index) => {
             const button = document.getElementById(`shape-preset-${index}`);
             if (button) button.textContent = preset.label;
         });
+        const selectedPreset = presets[app.selectedSourcePresetSlot ?? 0] || presets[0];
+        if (presetNote && selectedPreset) {
+            presetNote.textContent = selectedPreset.note || '';
+        }
     },
 
     applyShapePreset(app, slot) {
@@ -891,12 +942,16 @@ export const UI = {
         const presets = presetsByShape[app.shape] || presetsByShape.circle;
         const preset = presets[slot];
         if (!preset) return;
+        app.selectedSourcePresetSlot = slot;
 
         const next = preset.apply();
+        const presetNote = document.getElementById('shape-preset-note');
         if (next.sourcePos) app.sourcePos = { ...next.sourcePos };
         if (typeof next.sourceRotation === 'number') app.sourceRotation = next.sourceRotation;
         if (typeof next.spread === 'number') app.spread = next.spread;
         if (typeof next.lightSourceMode === 'string') app.lightSourceMode = next.lightSourceMode;
+        if (typeof next.triangleSourceMode === 'string') app.triangleSourceMode = next.triangleSourceMode;
+        if (typeof next.triangleDirectionMode === 'string') app.triangleDirectionMode = next.triangleDirectionMode;
         if (typeof next.isPaintMode === 'boolean') app.isPaintMode = next.isPaintMode;
         if (typeof next.isPaint2Mode === 'boolean') app.isPaint2Mode = next.isPaint2Mode;
         if (typeof next.isLightMode === 'boolean') app.isLightMode = next.isLightMode;
@@ -907,6 +962,7 @@ export const UI = {
         app.sanitizeSourcePosition();
         app.recalcParallelRange();
         if (app.isPaint2Mode || app.isLightMode) app.resetRays(false);
+        if (presetNote) presetNote.textContent = preset.note || '';
         this.update(app);
     },
 
