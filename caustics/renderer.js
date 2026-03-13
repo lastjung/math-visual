@@ -180,10 +180,23 @@ export const Renderer = {
                     const sinR = Math.sin(sourceRotation);
                     sPos = { x: sourcePos.x + d * cosR, y: sourcePos.y + d * sinR }; 
                     angle = sourceRotation + Math.PI / 2;
+                } else if (state.lightSourceMode === 'converge') {
+                    const targetPos = sourcePos;
+                    const baseAngle = aimAngle + sourceRotation + (t - 0.5) * spread;
+                    const hit = Physics.getConvergeLaunchPoint(targetPos, baseAngle, shape, size);
+                    if (hit) {
+                        sPos = { x: hit.x, y: hit.y };
+                        angle = baseAngle + Math.PI; // Point back to center
+                    } else {
+                        sPos = { x: targetPos.x, y: targetPos.y };
+                        angle = baseAngle;
+                    }
                 } else {
                     sPos = { x: sourcePos.x, y: sourcePos.y };
                     angle = aimAngle + sourceRotation + (t - 0.5) * spread;
                 }
+
+                sPos = Physics.offsetRayStart(sPos, angle, size);
 
                 let baseHue;
                 if (colorMode === 'rainbow') baseHue = (t * 360 + flowOffset * 0.5) % 360;
@@ -335,10 +348,22 @@ export const Renderer = {
                     const cosR = Math.cos(sourceRotation); const sinR = Math.sin(sourceRotation);
                     sPos = { x: sourcePos.x + d * cosR, y: sourcePos.y + d * sinR }; 
                     angle = sourceRotation + Math.PI / 2;
+                } else if (state.lightSourceMode === 'converge') {
+                    const targetPos = sourcePos;
+                    const baseAngle = aimAngle + sourceRotation + (t - 0.5) * spread;
+                    const hit = Physics.getConvergeLaunchPoint(targetPos, baseAngle, shape, size);
+                    if (hit) {
+                        sPos = { x: hit.x, y: hit.y };
+                        angle = baseAngle + Math.PI;
+                    } else {
+                        sPos = { x: targetPos.x, y: targetPos.y };
+                        angle = baseAngle;
+                    }
                 } else {
                     sPos = { x: sourcePos.x, y: sourcePos.y };
                     angle = aimAngle + sourceRotation + (t - 0.5) * spread;
                 }
+                sPos = Physics.offsetRayStart(sPos, angle, size);
                 let baseHue;
                 if (colorMode === 'rainbow') baseHue = (t * 360 + flowOffset * 0.5) % 360;
                 else if (colorMode === 'cyan') baseHue = 180 + Math.sin(t * 5 + flowOffset * 0.1) * 20;
@@ -545,27 +570,56 @@ export const Renderer = {
 
         // Boundary Guide
         ctx.save();
-        ctx.beginPath();
         ctx.lineWidth = 2.0;
         ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
         ctx.shadowBlur = 10;
         ctx.shadowColor = 'rgba(255, 255, 255, 0.2)';
-        const steps = state.shape === 'parabola' ? 200 : 360;
-        for (let i = 0; i <= steps; i++) {
-            const rad = (i * Math.PI * 2) / steps;
-            let p = Physics.getShapePoint(rad, state.shape, size);
-            if (i === 0) ctx.moveTo(centerX + p.x, centerY + p.y); 
-            else ctx.lineTo(centerX + p.x, centerY + p.y);
+        if (state.shape === 'vv-oval') {
+            ctx.beginPath();
+            ctx.ellipse(
+                centerX,
+                centerY,
+                size * Physics.VV_OVAL_OUTER.rx,
+                size * Physics.VV_OVAL_OUTER.ry,
+                0,
+                0,
+                Math.PI * 2
+            );
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.strokeStyle = 'rgba(190, 196, 204, 0.5)';
+            ctx.shadowColor = 'rgba(190, 196, 204, 0.18)';
+            ctx.ellipse(
+                centerX,
+                centerY,
+                size * Physics.VV_OVAL_INNER.rx,
+                size * Physics.VV_OVAL_INNER.ry,
+                0,
+                0,
+                Math.PI * 2
+            );
+            ctx.stroke();
+        } else {
+            ctx.beginPath();
+            const steps = state.shape === 'parabola' ? 200 : 360;
+            for (let i = 0; i <= steps; i++) {
+                const rad = (i * Math.PI * 2) / steps;
+                let p = Physics.getShapePoint(rad, state.shape, size);
+                if (i === 0) ctx.moveTo(centerX + p.x, centerY + p.y); 
+                else ctx.lineTo(centerX + p.x, centerY + p.y);
+            }
+            ctx.stroke();
         }
-        ctx.stroke();
         ctx.restore();
 
         // Oval Foci
-        if (state.shape === 'ellipse' || state.shape === 'v-oval') {
-            const isVert = state.shape === 'v-oval';
-            const a = isVert ? 1.1 * size : 1.1 * size;
-            const b = isVert ? 0.9 * size : 0.66 * size;
-            const fDist = Math.sqrt(Math.abs(a*a - b*b));
+        if (state.shape === 'ellipse' || state.shape === 'v-oval' || state.shape === 'vv-oval') {
+            const isVert = state.shape === 'v-oval' || state.shape === 'vv-oval';
+            const rx = state.shape === 'ellipse' ? 1.1 : Physics.VV_OVAL_OUTER.rx;
+            const ry = state.shape === 'ellipse' ? 0.66 : Physics.VV_OVAL_OUTER.ry;
+            const major = Math.max(rx, ry) * size;
+            const minor = Math.min(rx, ry) * size;
+            const fDist = Math.sqrt(Math.abs(major * major - minor * minor));
             
             ctx.save();
             ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)'; ctx.lineWidth = 1;

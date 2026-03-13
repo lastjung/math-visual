@@ -36,6 +36,12 @@
                     <ellipse cx="12" cy="12" rx="6" ry="10"></ellipse>
                 </svg>
             </button>
+            <button class="shape-tab" data-shape="vv-oval" title="Double Vertical Oval">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <ellipse cx="12" cy="12" rx="7" ry="10" stroke-width="2"></ellipse>
+                    <ellipse cx="12" cy="12" rx="3" ry="6" stroke-width="1.5"></ellipse>
+                </svg>
+            </button>
             <button class="shape-tab" data-shape="ellipse" title="Ellipse">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                     <ellipse cx="12" cy="12" rx="10" ry="6"></ellipse>
@@ -196,9 +202,10 @@
                 <!-- 3. SOURCE Selection -->
                 <div class="setting-row-inline" style="margin-top: 8px;">
                     <label class="setting-label">SOURCE</label>
-                    <div class="mode-tabs-mini" id="group-source-mode" style="width: 180px;">
+                    <div class="mode-tabs-mini" id="group-source-mode" style="width: 240px;">
                         <button class="mini-tab active" data-value="point">Point</button>
                         <button class="mini-tab" data-value="parallel">Parallel</button>
+                        <button class="mini-tab" data-value="converge">Converge</button>
                     </div>
                 </div>
 
@@ -251,13 +258,14 @@
                         </button>
                     </div>
                     <select id="select-narrative" class="apple-select">
-                        <option value="none">None (No Subtitle)</option>
+                        <option value="none" selected>None (No Subtitle)</option>
                         <option value="The Secret Foci of Ovals">The Secret Foci of Ovals</option>
+                        <option value="Double Oval: Shared Foci, Split Light">Double Oval: Shared Foci, Split Light</option>
                         <option value="The Parabolic Point">The Parabolic Point</option>
                         <option value="Reflections of Order">Reflections of Order</option>
                         <option value="Circle of Infinite Light">Circle of Infinite Light</option>
                         <option value="The Radiant Pulse of Heart">The Radiant Pulse of Heart</option>
-                        <option value="The Hidden Soul of Beams" selected>The Hidden Soul of Beams</option>
+                        <option value="The Hidden Soul of Beams">The Hidden Soul of Beams</option>
                         <option value="Dance of the Photons">Dance of the Photons</option>
                     </select>
                 </div>

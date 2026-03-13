@@ -10,6 +10,9 @@ export const UI = {
     setupEvents(app) {
         window.addEventListener('resize', () => app.resize());
         this.setupApplePlayer(app);
+        const refreshIncrementalModes = () => {
+            if (app.isPaint2Mode || app.isLightMode) app.resetRays(false);
+        };
 
         // Shape Tabs
         document.querySelectorAll('.shape-tab').forEach(btn => {
@@ -86,12 +89,14 @@ export const UI = {
                 y: Math.sin(angle) * dist
             };
             app.autoModes.revolution = false;
+            refreshIncrementalModes();
             this.update(app);
         };
 
         const rangeRotation = document.getElementById('range-rotation');
         rangeRotation.oninput = (e) => {
             app.sourceRotation = parseFloat(e.target.value);
+            refreshIncrementalModes();
             this.update(app);
         };
 
@@ -100,6 +105,7 @@ export const UI = {
         rangeDensity.oninput = (e) => {
             app.rayNumber = parseInt(e.target.value);
             app.autoModes.density = false;
+            refreshIncrementalModes();
             this.update(app);
         };
 
@@ -122,6 +128,7 @@ export const UI = {
         rangeSpread.oninput = (e) => {
             app.spread = parseFloat(e.target.value);
             app.autoModes.spread = false;
+            refreshIncrementalModes();
             this.update(app);
         };
 
@@ -154,9 +161,14 @@ export const UI = {
         if (selectNarrative) {
             selectNarrative.onchange = (e) => {
                 app.currentNarrative = e.target.value;
-                app.saveToPersist(); // Force save immediately
+                app.persistState();
                 this.update(app);
             };
+        }
+
+        const btnSim = document.getElementById('btn-sim');
+        if (btnSim) {
+            btnSim.onclick = () => app.startNarrativeSimulation();
         }
 
         // Base Style Mini Tabs
@@ -179,9 +191,11 @@ export const UI = {
         document.querySelectorAll('#group-source-mode .mini-tab').forEach(btn => {
             btn.onclick = (e) => {
                 app.lightSourceMode = e.target.dataset.value;
+                app.normalizeLightSourceMode();
                 if (app.shape === 'parabola' && app.lightSourceMode === 'point') {
                     app.sourcePos = app.getShapeDefaults('parabola').sourcePos;
                 }
+                refreshIncrementalModes();
                 this.update(app);
             };
         });
@@ -214,14 +228,36 @@ export const UI = {
         const btnWindowFull = document.getElementById('apple-fullscreen');
         if (btnWindowFull) {
             btnWindowFull.onclick = () => {
+                const prevSize = app.getShapeSize();
+                const prevSourcePos = { ...app.sourcePos };
+                const prevDefault = app.getShapeDefaults(app.shape).sourcePos;
+                const distToPrevDefault = Math.hypot(
+                    prevSourcePos.x - prevDefault.x,
+                    prevSourcePos.y - prevDefault.y
+                );
                 document.body.classList.toggle('window-full');
                 app.isWindowFull = document.body.classList.contains('window-full');
-                
-                // Automatically re-align light source to New Foci positions
-                app.syncSourceToFoci();
-                
-                app.recalcParallelRange();
-                setTimeout(() => app.resize(), 50);
+
+                setTimeout(() => {
+                    app.resize();
+                    const nextSize = app.getShapeSize();
+                    const nextDefault = app.getShapeDefaults(app.shape).sourcePos;
+                    const scale = prevSize > 0 ? nextSize / prevSize : 1;
+                    const snapThreshold = Math.max(6, prevSize * 0.03);
+
+                    if (distToPrevDefault <= snapThreshold) {
+                        app.sourcePos = { ...nextDefault };
+                    } else {
+                        app.sourcePos = {
+                            x: prevSourcePos.x * scale,
+                            y: prevSourcePos.y * scale
+                        };
+                    }
+                    app.sanitizeSourcePosition();
+                    app.recalcParallelRange();
+                    refreshIncrementalModes();
+                    this.update(app);
+                }, 50);
             };
         }
 
@@ -277,6 +313,12 @@ export const UI = {
             if (aHeld && e.code === 'Digit4') {
                 e.preventDefault();
                 app["4_ray_mum_simm"]();
+                return;
+            }
+
+            if (sHeld && e.code === 'Digit0') {
+                e.preventDefault();
+                app.startNarrativeSimulation();
                 return;
             }
 
@@ -377,6 +419,7 @@ export const UI = {
                         app.sourceRotation = Math.atan2(dy, dx);
                     }
                 }
+                refreshIncrementalModes();
                 this.update(app);
             }
         };

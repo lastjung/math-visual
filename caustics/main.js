@@ -48,7 +48,7 @@ const App = {
     isWindowFull: false,
     preSimulationBounces: 10,
     MAX_BOUNCES: 1, // 반사 효과 끔 (기본 1회)
-    currentNarrative: 'The Hidden Soul of Beams',
+    currentNarrative: 'none',
     emitStartTime: null,
     overlayMessage: null,
     isSimRunning: false,
@@ -164,6 +164,10 @@ const App = {
             const fDist = size * 0.6324; // sqrt(1.1^2 - 0.9^2)
             defaults.sourcePos = { x: 0, y: -fDist };
             defaults.sourceRotation = 0;
+        } else if (shape === 'vv-oval') {
+            const fDist = size * 0.6324; // Shared with the outer vertical oval focus
+            defaults.sourcePos = { x: 0, y: -fDist };
+            defaults.sourceRotation = 0;
         }
 
         return defaults;
@@ -204,6 +208,7 @@ const App = {
         this.sourcePos = defaults.sourcePos;
         this.sanitizeSourcePosition();
         this.sourceRotation = defaults.sourceRotation;
+        this.normalizeLightSourceMode();
         if (nextShape === 'parabola') {
             this.lightSourceMode = 'point';
         }
@@ -219,6 +224,13 @@ const App = {
         this.sourcePos = defaults.sourcePos;
         this.recalcParallelRange();
     },
+
+    getShapeSize() {
+        const sizeMult = this.isWindowFull ? 0.45 : 0.35;
+        return Math.min(this.canvas?.width || window.innerWidth, this.canvas?.height || window.innerHeight) * sizeMult;
+    },
+
+    normalizeLightSourceMode() {},
 
     buildPersistedState() {
         return {
@@ -285,6 +297,7 @@ const App = {
             this.baseStyle = saved.baseStyle ?? this.baseStyle;
             this.flowMode = saved.flowMode ?? this.flowMode;
             this.lightSourceMode = saved.lightSourceMode ?? 'point';
+            this.normalizeLightSourceMode();
             this.useTrail = saved.useTrail ?? this.useTrail;
             this.useTaper = saved.useTaper ?? this.useTaper;
             this.useBloom = saved.useBloom ?? this.useBloom;
@@ -299,12 +312,12 @@ const App = {
             this.MAX_BOUNCES = saved.MAX_BOUNCES ?? this.MAX_BOUNCES;
             
             // Safety Validation for Narratives: Replace legacy/invalid strings with the default
-            const validNarratives = ['none', 'The Secret Foci of Ovals', 'The Parabolic Point', 'Reflections of Order', 'Circle of Infinite Light', 'The Hidden Soul of Beams', 'Dance of the Photons'];
+            const validNarratives = ['none', 'The Secret Foci of Ovals', 'Double Oval: Shared Foci, Split Light', 'The Parabolic Point', 'Reflections of Order', 'Circle of Infinite Light', 'The Radiant Pulse of Heart', 'The Hidden Soul of Beams', 'Dance of the Photons'];
             const restoredNarrative = saved.currentNarrative;
             if (validNarratives.includes(restoredNarrative)) {
                 this.currentNarrative = restoredNarrative;
             } else {
-                this.currentNarrative = 'The Hidden Soul of Beams'; // Reset to new default if legacy detected
+                this.currentNarrative = 'none';
             }
 
             this.lastPersistSnapshot = raw;
@@ -329,6 +342,7 @@ const App = {
         this.sourcePos = this.getDefaultSourcePos();
         this.restoreState();
         this.sanitizeSourcePosition();
+        this.normalizeLightSourceMode();
         if (this.shape === 'parabola' && this.lightSourceMode === 'point') {
             this.sourcePos = this.getShapeDefaults('parabola').sourcePos;
         }
@@ -381,6 +395,45 @@ const App = {
         UI.update(this);
     },
 
+    clearScene() {
+        if (!this.ctx) return;
+        this.ctx.fillStyle = '#050508';
+        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        Renderer.clearPaint();
+        Simulator.clear();
+        if (window.LightDensityModule) window.LightDensityModule.clear();
+    },
+
+    finishSimulation(finalHold = 4000) {
+        this.overlayMessage = "Simulation End";
+        UI.update(this);
+        const endTimer = setTimeout(() => {
+            this.overlayMessage = null;
+            this.isSimRunning = false;
+            this.isSimulationMode = false;
+            this.isLightVisible = false;
+            this.isFlowing = false;
+            UI.update(this);
+        }, finalHold);
+        this.simTimers.push(endTimer);
+    },
+
+    startNarrativeSimulation() {
+        if (this.isSimRunning) {
+            this.stopSimulation();
+            this.isSimulationMode = false;
+            UI.update(this);
+            return;
+        }
+
+        this.isSimulationMode = true;
+        if (this.currentNarrative === 'Double Oval: Shared Foci, Split Light') {
+            this["vv_oval_focus_simm"]();
+            return;
+        }
+        this["4_ray_mum_simm"]();
+    },
+
     stopSimulation() {
         if (!this.isSimRunning && !this.overlayMessage) return;
         
@@ -389,6 +442,7 @@ const App = {
         this.simTimers = [];
         
         this.isSimRunning = false;
+        this.isSimulationMode = false;
         this.overlayMessage = null;
         
         // Return to normal interactive state
@@ -410,6 +464,9 @@ const App = {
         this.isFlowing = !this.isFlowing;
         if (this.isFlowing) {
             this.isLightVisible = true;
+            if (this.isPaint2Mode) {
+                Simulator.initRays(this);
+            }
             if (!this.emitStartTime) {
                 this.emitStartTime = performance.now();
             }
@@ -435,6 +492,7 @@ const App = {
         const defaults = this.getShapeDefaults(this.shape);
         this.sourcePos = defaults.sourcePos;
         this.sanitizeSourcePosition();
+        this.normalizeLightSourceMode();
         // this.isPaintMode = false; // Preserve current mode
         // this.isPaint2Mode = true;
         // this.isLightMode = false;
@@ -481,28 +539,21 @@ const App = {
         const size = Math.min(this.canvas.width, this.canvas.height) * sizeMult;
         const y = this.sourcePos.y;
         
-        let minX = 0, maxX = 0;
-        let foundAny = false;
-
-        // Scan from center outwards
+        let minX = Infinity;
+        let maxX = -Infinity;
         const scanStep = 5; 
         const scanLimit = size * 2;
 
-        // Scan Right
-        for (let x = 0; x < scanLimit; x += scanStep) {
+        for (let x = -scanLimit; x <= scanLimit; x += scanStep) {
             if (Physics.isInside(x, y, this.shape, size)) {
-                maxX = x;
-                foundAny = true;
-            } else if (foundAny) break;
+                if (x < minX) minX = x;
+                if (x > maxX) maxX = x;
+            }
         }
-        
-        // Scan Left
-        let foundLeft = false;
-        for (let x = 0; x > -scanLimit; x -= scanStep) {
-            if (Physics.isInside(x, y, this.shape, size)) {
-                minX = x;
-                foundLeft = true;
-            } else if (foundLeft) break;
+
+        if (!Number.isFinite(minX) || !Number.isFinite(maxX)) {
+            this.parallelRange = { min: -100, max: 100 };
+            return;
         }
 
         // Apply a small "inner" margin (95% of width) per user request
@@ -681,6 +732,100 @@ const App = {
                 }, simTime);
                 this.simTimers.push(simTimer);
             }, textTime);
+            this.simTimers.push(textTimer);
+        };
+
+        runStage();
+    },
+
+    "vv_oval_focus_simm"() {
+        if (this.isSimRunning) return;
+        this.isSimRunning = true;
+
+        const sizeMult = this.isWindowFull ? 0.45 : 0.35;
+        const size = Math.min(this.canvas.width, this.canvas.height) * sizeMult;
+        const focusY = -size * 0.6324;
+        const shellMidY = -size * ((Physics.VV_OVAL_OUTER.ry + Physics.VV_OVAL_INNER.ry) * 0.5);
+
+        if (window.audioManager && window.audioManager.targetVolume > 0) {
+            window.audioManager.isMuted = false;
+            window.audioManager.resume();
+        }
+
+        const stages = [
+            {
+                subtitle: 'A point source fills the shared shell',
+                apply: () => {
+                    this.shape = 'vv-oval';
+                    this.lightSourceMode = 'point';
+                    this.sourcePos = { x: 0, y: shellMidY };
+                    this.spread = 0.7;
+                    this.rayNumber = 160;
+                    this.MAX_BOUNCES = 8;
+                    this.useTrail = true;
+                },
+                textTime: 2600,
+                simTime: 7000
+            },
+            {
+                subtitle: 'Converge drives the beam toward the common focus',
+                apply: () => {
+                    this.shape = 'vv-oval';
+                    this.lightSourceMode = 'converge';
+                    this.sourcePos = { x: 0, y: focusY };
+                    this.spread = 1.15;
+                    this.rayNumber = 240;
+                    this.MAX_BOUNCES = 10;
+                },
+                textTime: 2400,
+                simTime: 8000
+            },
+            {
+                subtitle: 'Off-focus target loosens the caustic and splits the flow',
+                apply: () => {
+                    this.shape = 'vv-oval';
+                    this.lightSourceMode = 'converge';
+                    this.sourcePos = { x: 0, y: focusY * 0.52 };
+                    this.spread = 1.15;
+                    this.rayNumber = 240;
+                    this.MAX_BOUNCES = 10;
+                },
+                textTime: 2400,
+                simTime: 8000
+            }
+        ];
+
+        let stageIndex = 0;
+        const runStage = () => {
+            if (stageIndex >= stages.length) {
+                this.finishSimulation();
+                return;
+            }
+
+            const stage = stages[stageIndex];
+            this.isLightVisible = false;
+            this.isFlowing = false;
+            this.clearScene();
+            stage.apply();
+            this.recalcParallelRange();
+            document.querySelectorAll('.shape-tab').forEach((b) => b.classList.toggle('active', b.dataset.shape === this.shape));
+            this.overlayMessage = ['Double Oval: Shared Foci, Split Light', stage.subtitle];
+            UI.update(this);
+
+            const textTimer = setTimeout(() => {
+                this.clearScene();
+                this.overlayMessage = null;
+                this.growth = 0;
+                this.isLightVisible = true;
+                this.isFlowing = true;
+                UI.update(this);
+
+                const simTimer = setTimeout(() => {
+                    stageIndex++;
+                    runStage();
+                }, stage.simTime);
+                this.simTimers.push(simTimer);
+            }, stage.textTime);
             this.simTimers.push(textTimer);
         };
 

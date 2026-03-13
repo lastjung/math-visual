@@ -8,6 +8,8 @@ export const Physics = {
     PARABOLA_OFFSET_V: 0.75,
     PARABOLA_U_MAX: 1.0,
     BOUNDARY_EPSILON: 0.1,
+    VV_OVAL_OUTER: { rx: 0.9, ry: 1.1 },
+    VV_OVAL_INNER: { rx: 0.52, ry: 0.81 },
 
     getParabolaAbsUMax() {
         return this.PARABOLA_U_MAX;
@@ -24,6 +26,80 @@ export const Physics = {
         return (r * r) + (a * cx) - (a * r);
     },
 
+    ellipseImplicit(x, y, rx, ry, size) {
+        return (x * x) / (size * size * rx * rx) + (y * y) / (size * size * ry * ry);
+    },
+
+    isInsideEllipse(px, py, rx, ry, size) {
+        return this.ellipseImplicit(px, py, rx, ry, size) < 1;
+    },
+
+    offsetRayStart(pos, angle, size, factor = 4) {
+        const step = Math.max(this.BOUNDARY_EPSILON * factor, size * 0.0025);
+        return {
+            x: pos.x + Math.cos(angle) * step,
+            y: pos.y + Math.sin(angle) * step
+        };
+    },
+
+    findEllipseRayIntersection(sx, sy, angle, rx, ry, size, pick = 'nearest') {
+        const dx = Math.cos(angle);
+        const dy = Math.sin(angle);
+        const a = size * rx;
+        const b = size * ry;
+        const qa = (dx * dx) / (a * a) + (dy * dy) / (b * b);
+        const qb = 2 * ((sx * dx) / (a * a) + (sy * dy) / (b * b));
+        const qc = (sx * sx) / (a * a) + (sy * sy) / (b * b) - 1;
+        const disc = qb * qb - 4 * qa * qc;
+
+        if (disc < 0 || Math.abs(qa) < 1e-10) return null;
+
+        const root = Math.sqrt(disc);
+        const t1 = (-qb - root) / (2 * qa);
+        const t2 = (-qb + root) / (2 * qa);
+        const ts = [t1, t2].filter((t) => t >= 0);
+        if (ts.length === 0) return null;
+
+        const t = pick === 'farthest' ? Math.max(...ts) : Math.min(...ts);
+        return { x: sx + dx * t, y: sy + dy * t, t };
+    },
+
+    getConvergeLaunchPoint(targetPos, angle, type, size) {
+        const directHit = type === 'vv-oval'
+            ? this.findEllipseRayIntersection(
+                targetPos.x,
+                targetPos.y,
+                angle,
+                this.VV_OVAL_OUTER.rx,
+                this.VV_OVAL_OUTER.ry,
+                size,
+                'farthest'
+            )
+            : this.findBoundaryIntersection(targetPos.x, targetPos.y, angle, type, size);
+
+        if (directHit) return directHit;
+
+        // Robust fallback for incremental modes: cast back from outside toward the target.
+        const reach = size * 4;
+        const outsideX = targetPos.x + Math.cos(angle) * reach;
+        const outsideY = targetPos.y + Math.sin(angle) * reach;
+        const reverseAngle = angle + Math.PI;
+
+        if (type === 'vv-oval') {
+            return this.findEllipseRayIntersection(
+                outsideX,
+                outsideY,
+                reverseAngle,
+                this.VV_OVAL_OUTER.rx,
+                this.VV_OVAL_OUTER.ry,
+                size,
+                'nearest'
+            );
+        }
+
+        return this.findBoundaryIntersection(outsideX, outsideY, reverseAngle, type, size);
+    },
+
     /**
      * Get a point on the boundary shape based on angle (rad)
      */
@@ -31,6 +107,7 @@ export const Physics = {
         switch(type) {
             case 'ellipse': return { x: Math.cos(rad) * size * 1.1, y: Math.sin(rad) * size * 1.1 * 0.6 };
             case 'v-oval': return { x: Math.cos(rad) * size * 0.9, y: Math.sin(rad) * size * 1.1 };
+            case 'vv-oval': return { x: Math.cos(rad) * size * this.VV_OVAL_OUTER.rx, y: Math.sin(rad) * size * this.VV_OVAL_OUTER.ry };
             case 'cardioid': 
                 const r = size * (1 - Math.cos(rad)) * 0.75;
                 return { x: r * Math.cos(rad) + size*0.5, y: r * Math.sin(rad) };
@@ -63,6 +140,16 @@ export const Physics = {
         if (type === 'circle') { nx = -x; ny = -y; }
         else if (type === 'ellipse') { nx = -x; ny = -y / (0.6 * 0.6); }
         else if (type === 'v-oval') { nx = -x / (0.9 * 0.9); ny = -y / (1.1 * 1.1); }
+        else if (type === 'vv-oval') {
+            const outerLevel = Math.abs(this.ellipseImplicit(x, y, this.VV_OVAL_OUTER.rx, this.VV_OVAL_OUTER.ry, size) - 1);
+            const innerLevel = Math.abs(this.ellipseImplicit(x, y, this.VV_OVAL_INNER.rx, this.VV_OVAL_INNER.ry, size) - 1);
+            const isInnerBoundary = innerLevel < outerLevel;
+            const sign = isInnerBoundary ? 1 : -1;
+            const rx = isInnerBoundary ? this.VV_OVAL_INNER.rx : this.VV_OVAL_OUTER.rx;
+            const ry = isInnerBoundary ? this.VV_OVAL_INNER.ry : this.VV_OVAL_OUTER.ry;
+            nx = sign * x / (rx * rx);
+            ny = sign * y / (ry * ry);
+        }
         else if (type === 'cardioid') {
             const a = size * 0.75;
             const cx = x - size * 0.5;
@@ -110,8 +197,12 @@ export const Physics = {
      */
     isInside(px, py, type, size) {
         if (type === 'circle') return (px*px + py*py) < size*size;
-        if (type === 'ellipse') return (px*px)/(size*size*1.21) + (py*py)/(size*size*1.21*0.36) < 1;
-        if (type === 'v-oval') return (px*px)/(size*size*0.81) + (py*py)/(size*size*1.21) < 1;
+        if (type === 'ellipse') return this.isInsideEllipse(px, py, 1.1, 0.66, size);
+        if (type === 'v-oval') return this.isInsideEllipse(px, py, 0.9, 1.1, size);
+        if (type === 'vv-oval') {
+            return this.isInsideEllipse(px, py, this.VV_OVAL_OUTER.rx, this.VV_OVAL_OUTER.ry, size) &&
+                !this.isInsideEllipse(px, py, this.VV_OVAL_INNER.rx, this.VV_OVAL_INNER.ry, size);
+        }
         if (type === 'parabola') {
             const u = px / size;
             const v = py / size;
@@ -160,7 +251,7 @@ export const Physics = {
 
         // Cardioid is non-convex near the cusp, so the binary-search exit logic
         // used for convex shapes can jump to a later crossing and appear to tunnel.
-        if (type === 'cardioid') {
+        if (type === 'cardioid' || type === 'vv-oval') {
             const startInside = this.isInside(sx, sy, type, size);
             const maxDist = size * 10;
             const step = Math.max(0.5, size * 0.01);
