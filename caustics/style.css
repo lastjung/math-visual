@@ -446,6 +446,31 @@ input[type=range]::-webkit-slider-thumb {
   color: #fff;
 }
 
+.apple-btn-shell {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  color: rgba(255, 255, 255, 0.6);
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(4px);
+}
+
+.apple-btn-shell:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.2);
+  color: #fff;
+  transform: translateY(-1px);
+}
+
+.apple-btn-shell:active {
+  transform: translateY(0) scale(0.96);
+  background: rgba(255, 255, 255, 0.08);
+}
+
 /* Action Buttons */
 .action-group {
   display: flex;

@@ -110,27 +110,6 @@
                     </div>
                 </div>
 
-                <!-- 3. SOURCE Selection -->
-                <div class="setting-row-inline" style="margin-top: 8px;">
-                    <label class="setting-label">SOURCE</label>
-                    <div class="mode-tabs-mini" id="group-source-mode" style="width: 180px;">
-                        <button class="mini-tab active" data-value="point">Point</button>
-                        <button class="mini-tab" data-value="parallel">Parallel</button>
-                        <button class="mini-tab" data-value="converge">Converge</button>
-                    </div>
-                </div>
-
-                <!-- 4. RENDER MODE Selection -->
-                <div class="setting-row-inline" style="margin-top: 8px;">
-                    <label class="setting-label">RENDER</label>
-                    <div class="mode-tabs-mini" id="group-render-mode" style="width: 180px;">
-                        <button class="mini-tab active" data-value="none">Norm</button>
-                        <button class="mini-tab" data-value="paint1">P1</button>
-                        <button class="mini-tab" data-value="paint2">P2</button>
-                        <button class="mini-tab" data-value="light">Lgt</button>
-                    </div>
-                </div>
-
                 <!-- 5. EFFECTS Selection -->
                 <div class="setting-row-inline" style="margin-top: 16px; justify-content: flex-start; gap: 12px;">
                     <label class="setting-label">EFFECTS</label>
@@ -150,44 +129,18 @@
                     </div>
                 </div>
 
-                <!-- 6. BOTTOM AXES -->
-                <div class="setting-row" style="margin-top: 16px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 16px;">
-                    <label class="toggle-option">
+                <!-- 6. BOTTOM AXES & TOOLS -->
+                <div class="setting-row" style="margin-top: 16px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 16px; display: flex; align-items: center; justify-content: space-between;">
+                    <label class="toggle-option" style="flex: 1;">
                         <input type="checkbox" id="check-axes">
                         <span class="toggle-track"></span>
-                        <span class="setting-label">SHOW GRID AXES</span>
+                        <span class="setting-label">AXES</span>
                     </label>
+                    <button id="btn-foci-sync" class="apple-btn-shell" title="Sync Source to Geometric Foci" style="margin-left: 12px; font-size: 10px; padding: 4px 10px;">
+                        FOCI
+                    </button>
                 </div>
 
-                <!-- 7. Simulation Narrative Selection -->
-                <div class="setting-row" style="margin-top: 8px;">
-                    <div class="setting-label-group">
-                        <label class="setting-label">JOURNEY</label>
-                        <button id="btn-sim" class="sim-toggle-btn" title="Start/Stop Automated Journey">
-                            <span id="sim-icon"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg></span>
-                            <span id="sim-text">Off</span>
-                        </button>
-                    </div>
-                    <select id="select-narrative" class="apple-select">
-                        <option value="none" selected>None (No Subtitle)</option>
-                        <option value="The Secret Foci of Ovals">The Secret Foci of Ovals</option>
-                        <option value="Double Oval: Shared Foci, Split Light">Double Oval: Shared Foci, Split Light</option>
-                        <option value="The Parabolic Point">The Parabolic Point</option>
-                        <option value="Reflections of Order">Reflections of Order</option>
-                        <option value="Circle of Infinite Light">Circle of Infinite Light</option>
-                        <option value="The Radiant Pulse of Heart">The Radiant Pulse of Heart</option>
-                        <option value="The Hidden Soul of Beams">The Hidden Soul of Beams</option>
-                        <option value="Dance of the Photons">Dance of the Photons</option>
-                    </select>
-                </div>
-
-
-                <!-- Color Modes -->
-                <div class="mode-tabs" style="margin-bottom: 0;">
-                    <button class="mode-tab" data-mode="cyan">Cyan</button>
-                    <button class="mode-tab active" data-mode="rainbow">Rainbow</button>
-                    <button class="mode-tab" data-mode="sunset">Sunset</button>
-                </div>
             </div>
         </aside>
 
@@ -294,6 +247,56 @@
                         <span class="setting-value value-alpha" id="val-alpha">1.00x</span>
                     </div>
                     <input type="range" id="range-alpha" min="0.2" max="3.0" step="0.05" value="1.0">
+                </div>
+
+                <!-- Separator -->
+                <div style="border-top: 1px solid rgba(255,255,255,0.05); margin-top: 16px; margin-bottom: 12px;"></div>
+
+
+                <!-- SOURCE Selection (Moved back to bottom) -->
+                <div class="setting-row-inline" style="margin-bottom: 8px;">
+                    <label class="setting-label">SOURCE</label>
+                    <div class="mode-tabs-mini" id="group-source-mode" style="width: 170px;">
+                        <button class="mini-tab active" data-value="point">Point</button>
+                        <button class="mini-tab" data-value="parallel">Parallel</button>
+                        <button class="mini-tab" data-value="converge">Converge</button>
+                    </div>
+                </div>
+
+                <!-- RENDER MODE Selection (Moved back to bottom) -->
+                <div class="setting-row-inline" style="margin-bottom: 12px;">
+                    <label class="setting-label">RENDER</label>
+                    <div class="mode-tabs-mini" id="group-render-mode" style="width: 170px;">
+                        <button class="mini-tab active" data-value="none">Norm</button>
+                        <button class="mini-tab" data-value="paint1">P1</button>
+                        <button class="mini-tab" data-value="paint2">P2</button>
+                        <button class="mini-tab" data-value="light">Lgt</button>
+                    </div>
+                </div>
+
+                <!-- Simulation Narrative (Moved back to bottom) -->
+                <div class="setting-row" style="margin-bottom: 12px;">
+                    <div class="setting-label-group">
+                        <label class="setting-label">JOURNEY</label>
+                    </div>
+                    <select id="select-narrative" class="apple-select">
+                        <option value="none" selected>None (No Subtitle)</option>
+                        <option value="The Secret Foci of Ovals">The Secret Foci of Ovals</option>
+                        <option value="Double Oval: Shared Foci, Split Light">Double Oval: Shared Foci, Split Light</option>
+                        <option value="The Parabolic Point">The Parabolic Point</option>
+                        <option value="Reflections of Order">Reflections of Order</option>
+                        <option value="Circle of Infinite Light">Circle of Infinite Light</option>
+                        <option value="The Radiant Pulse of Heart">The Radiant Pulse of Heart</option>
+                        <option value="The Hidden Soul of Beams">The Hidden Soul of Beams</option>
+                        <option value="Dance of the Photons">Dance of the Photons</option>
+                    </select>
+                </div>
+
+                <!-- Color Modes (Absolute Bottom) -->
+                <div class="mode-tabs" style="margin-top: 16px; margin-bottom: 0;">
+                    <button class="mode-tab" data-mode="cyan">Cyan</button>
+                    <button class="mode-tab active" data-mode="rainbow">Rainbow</button>
+                    <button class="mode-tab" data-mode="sunset">Sunset</button>
                 </div>
             </div>
         </aside>

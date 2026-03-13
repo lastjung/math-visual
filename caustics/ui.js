@@ -157,6 +157,14 @@ export const UI = {
             };
         }
 
+        const btnFoci = document.getElementById('btn-foci-sync');
+        if (btnFoci) {
+            btnFoci.onclick = () => {
+                app.syncSourceToFoci();
+                this.update(app);
+            };
+        }
+
         const selectNarrative = document.getElementById('select-narrative');
         if (selectNarrative) {
             selectNarrative.onchange = (e) => {
@@ -166,10 +174,6 @@ export const UI = {
             };
         }
 
-        const btnSim = document.getElementById('btn-sim');
-        if (btnSim) {
-            btnSim.onclick = () => app.startNarrativeSimulation();
-        }
 
         // Base Style Mini Tabs
         document.querySelectorAll('#group-base .mini-tab').forEach(btn => {
@@ -533,18 +537,6 @@ export const UI = {
             if (lightText && lightText.textContent !== 'Emit') lightText.textContent = 'Emit';
         }
 
-        const btnSim = document.getElementById('btn-sim');
-        const simIcon = document.getElementById('sim-icon');
-        const simText = document.getElementById('sim-text');
-        if (btnSim && simIcon && simText) {
-            btnSim.classList.toggle('active', app.isSimulationMode);
-            const simHtml = app.isSimulationMode
-                ? '<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>'
-                : '<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>';
-            if (simIcon.innerHTML !== simHtml) simIcon.innerHTML = simHtml;
-            const simLabel = app.isSimulationMode ? 'Sim On' : 'Sim Off';
-            if (simText.textContent !== simLabel) simText.textContent = simLabel;
-        }
 
         const checkAxes = document.getElementById('check-axes');
         if (checkAxes && checkAxes.checked !== app.showAxes) checkAxes.checked = app.showAxes;

@@ -574,7 +574,7 @@ export const Renderer = {
         ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
         ctx.shadowBlur = 10;
         ctx.shadowColor = 'rgba(255, 255, 255, 0.2)';
-        if (state.shape === 'vv-oval') {
+        if (state.shape === 'vv-oval' && state.showAxes) {
             ctx.beginPath();
             ctx.ellipse(
                 centerX,
@@ -599,7 +599,7 @@ export const Renderer = {
                 Math.PI * 2
             );
             ctx.stroke();
-        } else {
+        } else if (state.shape !== 'vv-oval') {
             ctx.beginPath();
             const steps = state.shape === 'parabola' ? 200 : 360;
             for (let i = 0; i <= steps; i++) {
@@ -612,8 +612,8 @@ export const Renderer = {
         }
         ctx.restore();
 
-        // Oval Foci
-        if (state.shape === 'ellipse' || state.shape === 'v-oval' || state.shape === 'vv-oval') {
+        // Oval Foci (Visible only when AXES is ON)
+        if (state.showAxes && (state.shape === 'ellipse' || state.shape === 'v-oval' || state.shape === 'vv-oval')) {
             const isVert = state.shape === 'v-oval' || state.shape === 'vv-oval';
             const rx = state.shape === 'ellipse' ? 1.1 : Physics.VV_OVAL_OUTER.rx;
             const ry = state.shape === 'ellipse' ? 0.66 : Physics.VV_OVAL_OUTER.ry;
@@ -636,14 +636,52 @@ export const Renderer = {
         // Light Source Guide
         const sX = centerX + state.sourcePos.x;
         const sY = centerY + state.sourcePos.y;
-        
+
+        // 1. Parallel handles and guide lines (Visible only when AXES is ON)
+        if (state.showAxes && state.lightSourceMode === 'parallel') {
+            ctx.save();
+            const cosR = Math.cos(state.sourceRotation);
+            const sinR = Math.sin(state.sourceRotation);
+            const { min, max } = state.parallelRange;
+            
+            const h1 = { x: sX + min * cosR, y: sY + min * sinR };
+            const h2 = { x: sX + max * cosR, y: sY + max * sinR };
+            
+            // Draw connecting line
+            ctx.beginPath();
+            ctx.setLineDash([4, 4]);
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+            ctx.moveTo(h1.x, h1.y);
+            ctx.lineTo(h2.x, h2.y);
+            ctx.stroke();
+            
+            // Draw endpoint handles
+            ctx.setLineDash([]);
+            [h1, h2].forEach((h, i) => {
+                ctx.beginPath();
+                ctx.arc(h.x, h.y, 8, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
+                ctx.fill();
+                ctx.beginPath();
+                ctx.arc(h.x, h.y, 3, 0, Math.PI * 2);
+                ctx.fillStyle = '#fff';
+                ctx.fill();
+            });
+            ctx.restore();
+        }
+
+        // 2. Main Light Source Dot (ALWAYS VISIBLE)
         ctx.save();
-        // Point source or center of parallel source
         ctx.beginPath(); ctx.arc(sX, sY, 10, 0, Math.PI * 2);
         ctx.fillStyle = 'rgba(255, 255, 255, 0.15)'; ctx.fill();
         ctx.beginPath(); ctx.arc(sX, sY, 4, 0, Math.PI * 2);
         ctx.fillStyle = '#fff'; ctx.fill();
         ctx.restore();
+
+        // 3. Additional Guides (Foci, etc. - respect showAxes)
+        if (state.showAxes && (state.shape === 'ellipse' || state.shape === 'v-oval' || state.shape === 'vv-oval')) {
+            // (Foci drawing logic is already above, this is just for structure clarity if needed)
+        }
     },
 
     clearPaint() {
