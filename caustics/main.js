@@ -168,6 +168,9 @@ const App = {
             const fDist = size * 0.6324; // Shared with the outer vertical oval focus
             defaults.sourcePos = { x: 0, y: -fDist };
             defaults.sourceRotation = 0;
+        } else if (shape === 'triangle') {
+            defaults.sourcePos = { x: 0, y: size * 0.2 };
+            defaults.sourceRotation = 0;
         }
 
         return defaults;
@@ -203,6 +206,11 @@ const App = {
     },
 
     applyShapeSwitchReset(nextShape) {
+        this.stopSimulation();
+        this.currentNarrative = 'none'; // Clear previous narrative on shape switch
+        if (typeof UI !== 'undefined' && UI.syncNarrativeSelect) {
+            UI.syncNarrativeSelect(this);
+        }
         // Reset only tab-specific values.
         const defaults = this.getShapeDefaults(nextShape);
         this.sourcePos = defaults.sourcePos;
@@ -230,7 +238,12 @@ const App = {
         return Math.min(this.canvas?.width || window.innerWidth, this.canvas?.height || window.innerHeight) * sizeMult;
     },
 
-    normalizeLightSourceMode() {},
+    normalizeLightSourceMode() {
+        if (this.isPaint2Mode && this.lightSourceMode === 'converge') {
+            this.lightSourceMode = 'point';
+            Simulator.clear();
+        }
+    },
 
     buildPersistedState() {
         return {
@@ -395,15 +408,6 @@ const App = {
         UI.update(this);
     },
 
-    clearScene() {
-        if (!this.ctx) return;
-        this.ctx.fillStyle = '#050508';
-        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-        Renderer.clearPaint();
-        Simulator.clear();
-        if (window.LightDensityModule) window.LightDensityModule.clear();
-    },
-
     finishSimulation(finalHold = 4000) {
         this.overlayMessage = "Simulation End";
         UI.update(this);
@@ -427,11 +431,15 @@ const App = {
         }
 
         this.isSimulationMode = true;
+        
+        // 1. Direct Mapping for established narratives
         if (this.currentNarrative === 'Double Oval: Shared Foci, Split Light') {
             this["vv_oval_focus_simm"]();
             return;
         }
-        this["4_ray_mum_simm"]();
+        
+        // 2. Default to Universal Journey
+        this.universal_journey_simm();
     },
 
     stopSimulation() {
@@ -455,6 +463,15 @@ const App = {
         UI.update(this);
     },
 
+    clearScene() {
+        if (!this.ctx) return;
+        this.ctx.fillStyle = '#050508';
+        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        Renderer.clearPaint();
+        Simulator.clear();
+        if (window.LightDensityModule) window.LightDensityModule.clear();
+    },
+
     toggleFlow() {
         if (this.isSimRunning) {
             this.stopSimulation();
@@ -463,6 +480,7 @@ const App = {
 
         this.isFlowing = !this.isFlowing;
         if (this.isFlowing) {
+            this.normalizeLightSourceMode();
             this.isLightVisible = true;
             if (this.isPaint2Mode) {
                 Simulator.initRays(this);
@@ -696,10 +714,7 @@ const App = {
             // B. SET MESSAGE (MANUAL SELECTION AS PRIMARY TITLE)
             if (currentIdx === 0) {
                 if (currentNarrative) {
-                    // Narrative becomes the main title, Journey becomes subtext with ray count
-                    this.overlayMessage = [currentNarrative, "Begin the Journey of Light (30 Rays)"];
-                } else {
-                    this.overlayMessage = "Begin the Journey of Light (30 Rays)";
+                    this.overlayMessage = "Simulation Ending...";
                 }
             } else {
                 this.overlayMessage = `${val} Rays`;
@@ -732,6 +747,102 @@ const App = {
                 }, simTime);
                 this.simTimers.push(simTimer);
             }, textTime);
+            this.simTimers.push(textTimer);
+        };
+
+        runStage();
+    },
+
+    universal_journey_simm() {
+        if (this.isSimRunning) return;
+        this.isSimRunning = true;
+
+        const size = this.getShapeSize();
+        const shapeName = this.shape.charAt(0).toUpperCase() + this.shape.slice(1);
+        const title = this.currentNarrative !== 'none' ? this.currentNarrative : `Journey of Light: ${shapeName}`;
+
+        if (window.audioManager && window.audioManager.targetVolume > 0) {
+            window.audioManager.isMuted = false;
+            window.audioManager.resume();
+        }
+
+        // Get geometry-specific points
+        const defaults = this.getShapeDefaults(this.shape);
+        const center = { x: 0, y: 0 };
+        if (this.shape === 'triangle') center.y = size * 0.2;
+
+        const stages = [
+            {
+                subtitle: 'Initial Contact: Point Source',
+                apply: () => {
+                    this.lightSourceMode = 'point';
+                    this.sourcePos = { ...defaults.sourcePos };
+                    this.spread = 0.5;
+                    this.rayNumber = 100;
+                    this.MAX_BOUNCES = 6;
+                    this.isPaint2Mode = false;
+                },
+                textTime: 2500,
+                simTime: 8000
+            },
+            {
+                subtitle: 'Parallel Expansion: Sweeping the Perimeter',
+                apply: () => {
+                    this.lightSourceMode = 'parallel';
+                    this.rayNumber = 200;
+                    this.MAX_BOUNCES = 12;
+                    this.autoModes.revolution = true;
+                    this.useTrail = true;
+                },
+                textTime: 2500,
+                simTime: 12000
+            },
+            {
+                subtitle: 'Geometric Convergence: Finding the Focus',
+                apply: () => {
+                    this.autoModes.revolution = false;
+                    this.lightSourceMode = 'converge';
+                    this.sourcePos = { ...defaults.sourcePos };
+                    this.spread = 1.2;
+                    this.rayNumber = 400;
+                    this.MAX_BOUNCES = 15;
+                    this.isPaint2Mode = true;
+                    Simulator.initRays(this);
+                },
+                textTime: 2500,
+                simTime: 15000
+            }
+        ];
+
+        let stageIndex = 0;
+        const runStage = () => {
+            if (stageIndex >= stages.length) {
+                this.finishSimulation();
+                return;
+            }
+
+            const stage = stages[stageIndex];
+            this.isLightVisible = false;
+            this.isFlowing = false;
+            this.clearScene();
+            stage.apply();
+            this.recalcParallelRange();
+            this.overlayMessage = [title, stage.subtitle];
+            UI.update(this);
+
+            const textTimer = setTimeout(() => {
+                this.overlayMessage = null;
+                this.growth = 0;
+                this.isLightVisible = true;
+                this.isFlowing = true;
+                UI.update(this);
+
+                const simTimer = setTimeout(() => {
+                    stageIndex++;
+                    runStage();
+                }, stage.simTime);
+                this.simTimers.push(simTimer);
+            }, stage.textTime);
             this.simTimers.push(textTimer);
         };
 
@@ -831,7 +942,6 @@ const App = {
 
         runStage();
     },
-
 
     startLoop() {
         let lastTime = performance.now();

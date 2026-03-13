@@ -49,31 +49,10 @@ export const Simulator = {
                 const sinR = Math.sin(sourceRotation);
                 sPos = { x: sourcePos.x + d * cosR, y: sourcePos.y + d * sinR };
                 angle = sourceRotation + Math.PI / 2;
-            } else if (lightSourceMode === 'converge') {
-                const targetPos = sourcePos;
-                const baseAngle = aimAngle + sourceRotation + (t - 0.5) * spread;
-                const hit = Physics.getConvergeLaunchPoint(targetPos, baseAngle, shape, size);
-                if (hit) {
-                    angle = Math.atan2(targetPos.y - hit.y, targetPos.x - hit.x);
-                    const stepIntoTarget = Math.max(size * 0.02, Physics.BOUNDARY_EPSILON * 12);
-                    sPos = {
-                        x: hit.x + Math.cos(angle) * stepIntoTarget,
-                        y: hit.y + Math.sin(angle) * stepIntoTarget
-                    };
-                } else {
-                    const backupDist = Math.max(size * 0.08, 8);
-                    angle = baseAngle + Math.PI;
-                    sPos = {
-                        x: targetPos.x - Math.cos(angle) * backupDist,
-                        y: targetPos.y - Math.sin(angle) * backupDist
-                    };
-                }
             } else {
                 sPos = { x: sourcePos.x, y: sourcePos.y };
                 angle = aimAngle + sourceRotation + (t - 0.5) * spread;
             }
-
-            sPos = Physics.offsetRayStart(sPos, angle, size);
 
             let baseHue;
             if (colorMode === 'rainbow') baseHue = (t * 360 + flowOffset * 0.5) % 360;

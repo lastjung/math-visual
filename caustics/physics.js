@@ -128,6 +128,24 @@ export const Physics = {
                 if (p < rw + rh) return { x: rw/2, y: -rh/2 + (p - rw) };
                 if (p < 2*rw + rh) return { x: rw/2 - (p - (rw + rh)), y: rh/2 };
                 return { x: -rw/2, y: rh/2 - (p - (2*rw + rh)) };
+            case 'triangle':
+                const tr = size * 1.17; // 10% reduced from 1.3
+                const toy = size * 0.2; // Shift down offset
+                const side = tr * Math.sqrt(3);
+                const tp = (rad / (2 * Math.PI)) * 3 * side;
+                const v1 = { x: 0, y: -tr + toy };
+                const v2 = { x: tr * Math.sqrt(3)/2, y: tr / 2 + toy };
+                const v3 = { x: -tr * Math.sqrt(3)/2, y: tr / 2 + toy };
+                if (tp < side) {
+                    const f = tp / side;
+                    return { x: v1.x + (v2.x - v1.x) * f, y: v1.y + (v2.y - v1.y) * f };
+                } else if (tp < 2 * side) {
+                    const f = (tp - side) / side;
+                    return { x: v2.x + (v3.x - v2.x) * f, y: v2.y + (v3.y - v2.y) * f };
+                } else {
+                    const f = (tp - 2 * side) / side;
+                    return { x: v3.x + (v1.x - v3.x) * f, y: v3.y + (v1.y - v3.y) * f };
+                }
             default: return { x: Math.cos(rad) * size, y: Math.sin(rad) * size };
         }
     },
@@ -183,6 +201,17 @@ export const Physics = {
             else if (m === dT) { nx = 0; ny = 1; }
             else { nx = 0; ny = -1; }
         }
+        else if (type === 'triangle') {
+            const tr = size * 1.17;
+            const ty = y - size * 0.2; // Relative y coordinate after inverse shift
+            const d1 = 1.5 * x - 0.866 * ty - 0.866 * tr;
+            const d2 = ty - tr * 0.5;
+            const d3 = -1.5 * x - 0.866 * ty - 0.866 * tr;
+            const m = Math.max(d1, d2, d3);
+            if (m === d1) { nx = -1.5; ny = 0.866; }
+            else if (m === d2) { nx = 0; ny = -1; }
+            else { nx = 1.5; ny = 0.866; }
+        }
         else { nx = -x; ny = -y; } 
         
         const len = Math.sqrt(nx * nx + ny * ny);
@@ -215,6 +244,14 @@ export const Physics = {
             const rw = size * 1.5;
             const rh = size * 2.1;
             return Math.abs(px) < rw/2 && Math.abs(py) < rh/2;
+        }
+        if (type === 'triangle') {
+            const tr = size * 1.17;
+            const ty = py - size * 0.2;
+            const d1 = 1.5 * px - 0.866 * ty - 0.866 * tr;
+            const d2 = ty - tr * 0.5;
+            const d3 = -1.5 * px - 0.866 * ty - 0.866 * tr;
+            return d1 < 0 && d2 < 0 && d3 < 0;
         }
         return false;
     },

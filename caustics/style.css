@@ -163,7 +163,6 @@ canvas {
 .controls-sidebar {
   position: absolute;
   top: 20px;
-  right: 20px;
   width: 298px; /* Slightly wider for better spacing */
   max-height: calc(100vh - 40px);
   display: flex;
@@ -178,6 +177,14 @@ canvas {
   /* Custom Slim Scrollbar (Apple Style) */
   scrollbar-width: thin;
   scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
+}
+
+.controls-sidebar.right {
+  right: 20px;
+}
+
+.controls-sidebar.left {
+  left: 20px;
 }
 
 .controls-sidebar::-webkit-scrollbar {
@@ -215,8 +222,14 @@ canvas {
   cursor: grabbing;
 }
 
-.controls-sidebar.hidden {
+.controls-sidebar.right.hidden {
   transform: translateX(340px);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.controls-sidebar.left.hidden {
+  transform: translateX(-340px);
   opacity: 0;
   pointer-events: none;
 }
@@ -688,7 +701,7 @@ input[type=range]::-webkit-slider-thumb {
 .hud-timer {
   position: absolute;
   top: 92px;  /* Position slightly below the header tabs */
-  left: 32px;
+  left: 338px;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
   font-size: 12px;
   font-weight: 500;
@@ -708,7 +721,7 @@ input[type=range]::-webkit-slider-thumb {
 .hud-speed {
   position: absolute;
   top: 112px; /* Fixed spacing from timer */
-  left: 32px;
+  left: 338px;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
   font-size: 11px;
   font-weight: 500;
@@ -728,7 +741,7 @@ input[type=range]::-webkit-slider-thumb {
 .hud-bounces {
   position: absolute;
   top: 132px; /* Fixed spacing from speed HUD */
-  left: 32px;
+  left: 338px;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
   font-size: 11px;
   font-weight: 500;

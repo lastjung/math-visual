@@ -220,55 +220,66 @@ export const UI = {
                 app.isPaintMode = (val === 'paint1');
                 app.isPaint2Mode = (val === 'paint2');
                 app.isLightMode = (val === 'light');
+                app.normalizeLightSourceMode();
                 if (app.isPaint2Mode || app.isLightMode) app.resetRays(false); 
                 this.update(app);
             };
         });
 
+        const toggleFullscreen = () => {
+            const prevSize = app.getShapeSize();
+            const prevSourcePos = { ...app.sourcePos };
+            const prevDefault = app.getShapeDefaults(app.shape).sourcePos;
+            const distToPrevDefault = Math.hypot(
+                prevSourcePos.x - prevDefault.x,
+                prevSourcePos.y - prevDefault.y
+            );
+
+            document.body.classList.toggle('window-full');
+            app.isWindowFull = document.body.classList.contains('window-full');
+
+            // Wait for DOM reflow to get accurate new dimensions
+            setTimeout(() => {
+                app.resize();
+                const nextSize = app.getShapeSize();
+                const nextDefault = app.getShapeDefaults(app.shape).sourcePos;
+                const scale = prevSize > 0 ? nextSize / prevSize : 1;
+                
+                // Adaptive Snap: If it was at a focus/default, keep it there. Else, scale it.
+                const snapThreshold = Math.max(8, prevSize * 0.04);
+                if (distToPrevDefault <= snapThreshold) {
+                    app.sourcePos = { ...nextDefault };
+                } else {
+                    app.sourcePos = {
+                        x: prevSourcePos.x * scale,
+                        y: prevSourcePos.y * scale
+                    };
+                }
+
+                app.sanitizeSourcePosition();
+                app.recalcParallelRange();
+                refreshIncrementalModes();
+                this.update(app);
+            }, 60);
+        };
+
         const btnWindowFull = document.getElementById('apple-fullscreen');
         if (btnWindowFull) {
-            btnWindowFull.onclick = () => {
-                const prevSize = app.getShapeSize();
-                const prevSourcePos = { ...app.sourcePos };
-                const prevDefault = app.getShapeDefaults(app.shape).sourcePos;
-                const distToPrevDefault = Math.hypot(
-                    prevSourcePos.x - prevDefault.x,
-                    prevSourcePos.y - prevDefault.y
-                );
-                document.body.classList.toggle('window-full');
-                app.isWindowFull = document.body.classList.contains('window-full');
-
-                setTimeout(() => {
-                    app.resize();
-                    const nextSize = app.getShapeSize();
-                    const nextDefault = app.getShapeDefaults(app.shape).sourcePos;
-                    const scale = prevSize > 0 ? nextSize / prevSize : 1;
-                    const snapThreshold = Math.max(6, prevSize * 0.03);
-
-                    if (distToPrevDefault <= snapThreshold) {
-                        app.sourcePos = { ...nextDefault };
-                    } else {
-                        app.sourcePos = {
-                            x: prevSourcePos.x * scale,
-                            y: prevSourcePos.y * scale
-                        };
-                    }
-                    app.sanitizeSourcePosition();
-                    app.recalcParallelRange();
-                    refreshIncrementalModes();
-                    this.update(app);
-                }, 50);
-            };
+            btnWindowFull.onclick = () => toggleFullscreen();
         }
 
         const btnSideToggle = document.getElementById('apple-sidebar-toggle');
         if (btnSideToggle) {
             btnSideToggle.onclick = () => {
-                const sidebar = document.querySelector('.controls-sidebar');
-                if (sidebar) {
-                    sidebar.style.display = sidebar.style.display === 'none' ? 'block' : 'none';
-                    app.resize();
+                const rightSidebar = document.getElementById('right-sidebar');
+                const leftSidebar = document.getElementById('left-sidebar');
+                if (rightSidebar) {
+                    rightSidebar.classList.toggle('hidden');
                 }
+                if (leftSidebar) {
+                    leftSidebar.classList.toggle('hidden');
+                }
+                app.resize();
             };
         }
 
@@ -294,6 +305,19 @@ export const UI = {
                  target.tagName === 'TEXTAREA' ||
                  target.isContentEditable);
             if (isTyping) return;
+
+            if (e.key === 'Escape') {
+                const rightSidebar = document.getElementById('right-sidebar');
+                const leftSidebar = document.getElementById('left-sidebar');
+                if (rightSidebar) rightSidebar.classList.remove('hidden');
+                if (leftSidebar) leftSidebar.classList.remove('hidden');
+
+                // Correctly exit Full Window mode on Esc with inverse scaling
+                if (document.body.classList.contains('window-full')) {
+                    toggleFullscreen();
+                }
+                return;
+            }
 
             if (e.code === 'KeyS') {
                 sHeld = true;
@@ -567,11 +591,7 @@ export const UI = {
         if (cTaper && cTaper.checked !== app.useTaper) cTaper.checked = app.useTaper;
         if (cBloom && cBloom.checked !== app.useBloom) cBloom.checked = app.useBloom;
 
-        const sNarrative = document.getElementById('select-narrative');
-        if (sNarrative) {
-            // Strong sync: make sure dropdown matches state
-            sNarrative.value = app.currentNarrative;
-        }
+        this.syncNarrativeSelect(app);
 
         // Sync Apple Player
         const applePlay = document.getElementById('apple-play');
@@ -616,6 +636,13 @@ export const UI = {
         const bgmIcon = document.getElementById('apple-bgm-icon');
         if (bgmIcon && window.audioManager) {
             bgmIcon.style.opacity = window.audioManager.isMuted ? '0.3' : '1';
+        }
+    },
+
+    syncNarrativeSelect(app) {
+        const sNarrative = document.getElementById('select-narrative');
+        if (sNarrative) {
+            sNarrative.value = app.currentNarrative || 'none';
         }
     },
 
@@ -742,55 +769,52 @@ export const UI = {
         }
 
         // Sidebar Drag Logic
-        const sidebar = document.querySelector('.controls-sidebar');
-        const sidebarGrip = document.getElementById('sidebar-grip');
-        let isSidebarDragging = false;
-        let sidebarStartX, sidebarStartY;
+        const setupSidebarDrag = (sidebarId, gripId) => {
+            const sidebar = document.getElementById(sidebarId);
+            const grip = document.getElementById(gripId);
+            let isDragging = false;
+            let startX, startY;
 
-        if (sidebarGrip && sidebar) {
-            sidebarGrip.onmousedown = (e) => {
-                isSidebarDragging = true;
-                sidebarStartX = e.clientX - sidebar.offsetLeft;
-                sidebarStartY = e.clientY - sidebar.offsetTop;
-                sidebar.style.transition = 'none';
-            };
+            if (grip && sidebar) {
+                grip.onmousedown = (e) => {
+                    isDragging = true;
+                    startX = e.clientX - sidebar.offsetLeft;
+                    startY = e.clientY - sidebar.offsetTop;
+                    sidebar.style.transition = 'none';
+                };
 
-            window.addEventListener('mousemove', (e) => {
-                if (!isSidebarDragging) return;
-                sidebar.style.left = (e.clientX - sidebarStartX) + 'px';
-                sidebar.style.top = (e.clientY - sidebarStartY) + 'px';
-                sidebar.style.right = 'auto'; // Reset initial right positioning
-            });
+                window.addEventListener('mousemove', (e) => {
+                    if (!isDragging) return;
+                    sidebar.style.left = (e.clientX - startX) + 'px';
+                    sidebar.style.top = (e.clientY - startY) + 'px';
+                    sidebar.style.right = 'auto';
+                });
 
-            window.addEventListener('mouseup', () => {
-                if (isSidebarDragging) {
-                    isSidebarDragging = false;
-                    sidebar.style.transition = 'opacity 0.6s, transform 0.6s cubic-bezier(0.16, 1, 0.3, 1)';
-                }
-            });
-        }
-
-        const btnSidebarClose = document.getElementById('sidebar-close');
-        if (btnSidebarClose && sidebar) {
-            btnSidebarClose.onclick = () => {
-                sidebar.classList.add('hidden');
-            };
-        }
-
-        window.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') {
-                if (sidebar) sidebar.classList.remove('hidden');
-
-                // Exit Full Window mode on Esc
-                if (document.body.classList.contains('window-full')) {
-                    document.body.classList.remove('window-full');
-                    app.isWindowFull = false;
-                    app.recalcParallelRange();
-                    setTimeout(() => app.resize(), 50);
-                    this.update(app);
-                }
+                window.addEventListener('mouseup', () => {
+                    if (isDragging) {
+                        isDragging = false;
+                        sidebar.style.transition = 'opacity 0.6s, transform 0.6s cubic-bezier(0.16, 1, 0.3, 1)';
+                    }
+                });
             }
-        });
+        };
+
+        setupSidebarDrag('left-sidebar', 'sidebar-grip-left');
+        setupSidebarDrag('right-sidebar', 'sidebar-grip-right');
+
+        const setupSidebarClose = (sidebarId, closeBtnId) => {
+            const sidebar = document.getElementById(sidebarId);
+            const btn = document.getElementById(closeBtnId);
+            if (sidebar && btn) {
+                btn.onclick = () => {
+                    sidebar.classList.add('hidden');
+                };
+            }
+        };
+
+        setupSidebarClose('left-sidebar', 'sidebar-close-left');
+        setupSidebarClose('right-sidebar', 'sidebar-close-right');
+
 
     }
 };
