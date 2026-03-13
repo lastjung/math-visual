@@ -393,26 +393,38 @@ export const Renderer = {
             ctx.save();
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
-            ctx.fillStyle = '#fcd34d'; // Premium Yellow for Narratives
+            
+            // Premium Glow Effect for Text
+            ctx.shadowColor = 'rgba(255, 255, 255, 0.3)';
+            ctx.shadowBlur = 15;
+            ctx.fillStyle = '#ffffff'; 
 
             if (Array.isArray(state.overlayMessage)) {
                 // Multi-line support
                 const mainText = state.overlayMessage[0];
                 const subText = state.overlayMessage[1];
 
-                // Main Title - Now uses the selected Narrative, smaller (26px) to prevent overflow
-                ctx.font = '900 26px Inter';
-                ctx.fillText(mainText, centerX, centerY - 20);
+                // Main Title - Large, Bold, Premium Yellow
+                ctx.shadowColor = 'rgba(252, 211, 77, 0.4)';
+                ctx.shadowBlur = 15;
+                ctx.fillStyle = '#fcd34d'; 
+                ctx.font = '900 42px Inter';
+                ctx.fillText(mainText, centerX, centerY - 30);
 
-                // Sub Title - "Begin the Journey of Light", even smaller
+                // Sub Title (White)
                 if (subText) {
-                    ctx.font = '700 20px Inter';
-                    ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
-                    ctx.fillText(subText, centerX, centerY + 40);
+                    ctx.shadowColor = 'rgba(255, 255, 255, 0.3)';
+                    ctx.shadowBlur = 8;
+                    ctx.font = '500 24px Inter';
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
+                    ctx.fillText(subText, centerX, centerY + 35);
                 }
             } else {
-                // Single line support - Also slightly smaller for safety
-                ctx.font = '900 32px Inter';
+                // Single line support - These are subsequent stage titles, so they should be WHITE
+                ctx.shadowColor = 'rgba(255, 255, 255, 0.3)';
+                ctx.shadowBlur = 10;
+                ctx.fillStyle = '#ffffff';
+                ctx.font = '700 32px Inter'; // Medium-Large for stage titles
                 ctx.fillText(state.overlayMessage, centerX, centerY);
             }
             ctx.restore();
@@ -526,7 +538,7 @@ export const Renderer = {
         ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
         ctx.shadowBlur = 10;
         ctx.shadowColor = 'rgba(255, 255, 255, 0.2)';
-        if (state.shape === 'vv-oval' && state.showAxes) {
+        if (state.shape === 'vv-oval') {
             ctx.beginPath();
             ctx.ellipse(
                 centerX,
@@ -565,7 +577,7 @@ export const Renderer = {
         ctx.restore();
 
         // Oval Foci (Visible only when AXES is ON)
-        if (state.showAxes && (state.shape === 'ellipse' || state.shape === 'v-oval' || state.shape === 'vv-oval')) {
+        if ((state.showAxes && state.shape === 'ellipse') || state.shape === 'v-oval' || state.shape === 'vv-oval') {
             const isVert = state.shape === 'v-oval' || state.shape === 'vv-oval';
             const rx = state.shape === 'ellipse' ? 1.1 : Physics.VV_OVAL_OUTER.rx;
             const ry = state.shape === 'ellipse' ? 0.66 : Physics.VV_OVAL_OUTER.ry;

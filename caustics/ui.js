@@ -53,9 +53,9 @@ export const UI = {
                 { label: 'Parallel Wash', note: 'A clean parallel pass across the circle for smooth, even interference bands.', apply: () => ({ sourcePos: { x: 0, y: -size * 0.75 }, sourceRotation: 0, lightSourceMode: 'parallel', spread: 0 }) }
             ],
             rect: [
-                { label: 'Top Bounce', note: 'A centered top shot that makes the rectangular rhythm easy to read.', apply: () => ({ sourcePos: { x: 0, y: -size * 0.9 }, spread: 0.2, lightSourceMode: 'point' }) },
-                { label: 'Side Scan', note: 'A lateral sweep that highlights alternating wall impacts and corridor patterns.', apply: () => ({ sourcePos: { x: -size * 0.62, y: 0 }, sourceRotation: -Math.PI / 2, spread: 0.8, lightSourceMode: 'parallel' }) },
-                { label: 'Corner Echo', note: 'Start near a corner to emphasize abrupt redirection and long zigzag returns.', apply: () => ({ sourcePos: { x: -size * 0.55, y: -size * 0.55 }, spread: 0.55, lightSourceMode: 'point' }) }
+                { label: 'Top Bounce', note: 'A narrow centered drop that reads as a clean vertical bounce ladder before the pattern spreads sideways.', apply: () => ({ sourcePos: { x: 0, y: -size * 0.96 }, sourceRotation: 0, spread: (40 * Math.PI) / 180, lightSourceMode: 'point' }) },
+                { label: 'Side Scan', note: 'A compact side-entry emitter positioned at the upper left for localized beam studies.', apply: () => ({ sourcePos: { x: -size * 0.5, y: -size * 0.4 }, sourceRotation: (-75 * Math.PI) / 180, parallelRange: { min: -size * 0.5, max: size * 0.5 }, spread: 0, lightSourceMode: 'parallel' }) },
+                { label: 'Corner Echo', note: 'A corner launch from the top-left vertex at a -45 degree angle with a wide 60 degree spread.', apply: () => ({ sourcePos: { x: -size * 0.75, y: -size * 1.05 }, sourceRotation: (-45 * Math.PI) / 180, spread: (60 * Math.PI) / 180, lightSourceMode: 'point' }) }
             ],
             'v-oval': [
                 { label: 'Upper Focus', note: 'Lock to the top focus to show the vertical oval’s strongest return path.', apply: () => ({ sourcePos: { ...app.getShapeDefaults('v-oval').sourcePos }, spread: 0.35, lightSourceMode: 'point' }) },
@@ -196,7 +196,6 @@ export const UI = {
                 button.classList.add('active');
 
                 app.applyShapeSwitchReset(nextShape);
-                app.recalcParallelRange(); // Calculate new range for Parallel mode
                 this.update(app);
             };
         });
@@ -482,7 +481,6 @@ export const UI = {
                 }
 
                 app.sanitizeSourcePosition();
-                app.recalcParallelRange();
                 refreshIncrementalModes();
                 this.update(app);
             }, 60);
@@ -565,11 +563,13 @@ export const UI = {
                 return;
             }
 
-            if (sHeld && e.code === 'Digit0') {
+            if (aHeld && e.code === 'Digit0') {
                 e.preventDefault();
-                app.startNarrativeSimulation();
+                app.startA0Simulation();
                 return;
             }
+
+
 
             // Space bar shortcut for Go / Hold
             if (e.code === 'Space') {
@@ -959,6 +959,9 @@ export const UI = {
         const presetNote = document.getElementById('shape-preset-note');
         if (next.sourcePos) app.sourcePos = { ...next.sourcePos };
         if (typeof next.sourceRotation === 'number') app.sourceRotation = next.sourceRotation;
+        if (next.parallelRange && typeof next.parallelRange.min === 'number' && typeof next.parallelRange.max === 'number') {
+            app.parallelRange = { ...next.parallelRange };
+        }
         if (typeof next.spread === 'number') app.spread = next.spread;
         if (typeof next.lightSourceMode === 'string') app.lightSourceMode = next.lightSourceMode;
         if (typeof next.triangleSourceMode === 'string') app.triangleSourceMode = next.triangleSourceMode;
@@ -971,7 +974,6 @@ export const UI = {
         app.autoModes.rotation = false;
         app.normalizeLightSourceMode();
         app.sanitizeSourcePosition();
-        app.recalcParallelRange();
         if (app.isPaint2Mode || app.isLightMode) app.resetRays(false);
         if (presetNote) presetNote.textContent = preset.note || '';
         this.update(app);
@@ -1025,7 +1027,13 @@ export const UI = {
         if (btnFullReset) {
             btnFullReset.onclick = () => {
                 app.reset();
-                app.recalcParallelRange();
+            };
+        }
+
+        const btnJourney = document.getElementById('btn-start-journey');
+        if (btnJourney) {
+            btnJourney.onclick = () => {
+                app.startNarrativeSimulation();
             };
         }
 

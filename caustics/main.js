@@ -321,32 +321,7 @@ const App = {
     },
 
     sanitizeSourcePosition() {
-        if (!this.canvas) return;
-        const sizeMult = this.isWindowFull ? 0.45 : 0.35;
-        const size = Math.min(this.canvas.width, this.canvas.height) * sizeMult;
-
-        if (this.shape === 'rect') {
-            const halfW = size * 1.5 * 0.5;
-            const halfH = size * 2.1 * 0.5;
-            const eps = Math.max(6, size * 0.03);
-            const insideOrNearRect =
-                Math.abs(this.sourcePos.x) <= halfW + eps &&
-                Math.abs(this.sourcePos.y) <= halfH + eps;
-
-            if (insideOrNearRect) {
-                const leftGap = Math.abs(this.sourcePos.x + halfW);
-                const rightGap = Math.abs(this.sourcePos.x - halfW);
-                const topGap = Math.abs(this.sourcePos.y + halfH);
-                const bottomGap = Math.abs(this.sourcePos.y - halfH);
-                const minGap = Math.min(leftGap, rightGap, topGap, bottomGap);
-                const inset = Math.max(12, eps);
-
-                if (minGap === topGap) this.sourcePos.y = -halfH + inset;
-                else if (minGap === bottomGap) this.sourcePos.y = halfH - inset;
-                else if (minGap === leftGap) this.sourcePos.x = -halfW + inset;
-                else this.sourcePos.x = halfW - inset;
-            }
-        }
+        // Removed auto-snap to wall logic to allow full control over source position.
     },
 
     applyShapeSwitchReset(nextShape) {
@@ -375,7 +350,6 @@ const App = {
     syncSourceToFoci() {
         const defaults = this.getShapeDefaults(this.shape);
         this.sourcePos = defaults.sourcePos;
-        this.recalcParallelRange();
     },
 
     getShapeSize() {
@@ -473,7 +447,6 @@ const App = {
             this.isLightMode = saved.isLightMode === true;
             this.parallelRange = saved.parallelRange ?? { min: -100, max: 100 };
             
-            this.recalcParallelRange(); // Ensure range is valid for current sourcePos.y
             this.isSimulationMode = false;
             this.MAX_BOUNCES = saved.MAX_BOUNCES ?? this.MAX_BOUNCES;
             
@@ -513,9 +486,6 @@ const App = {
             this.sourcePos = this.getShapeDefaults('parabola').sourcePos;
         }
 
-        // 1. Sync Parallel Range immediately after restore/positioning
-        this.recalcParallelRange();
-
         // 2. UI and Event Setup
         document.querySelectorAll('.shape-tab').forEach(b => b.classList.toggle('active', b.dataset.shape === this.shape));
         document.querySelectorAll('.mode-tab').forEach(b => b.classList.toggle('active', b.dataset.mode === this.colorMode));
@@ -539,16 +509,15 @@ const App = {
 
 
     resetRays(shouldStop = true) {
-        this.stopSimulation(); // ALWAYS stop any ongoing simulation on reset
         this.growth = 0;
         if (shouldStop) {
+            this.stopSimulation(); 
             this.isFlowing = false;
+            this.elapsedTime = 0; 
             if (window.audioManager) window.audioManager.pause();
         }
         this.isLightVisible = true;
-        this.emitStartTime = performance.now();
-        this.elapsedTime = 0; 
-        
+        this.emitStartTime = performance.now();        
         // Manual Clear: Even in Paint Mode, the Reset button should clear the canvas
         if (this.ctx) {
             this.ctx.fillStyle = '#050508';
@@ -575,24 +544,27 @@ const App = {
         this.simTimers.push(endTimer);
     },
 
-    startNarrativeSimulation() {
+    /**
+     * A0 Simulation Dispatcher
+     * Triggers shape-specific master journey (e.g., rect_A0_simm)
+     */
+    startA0Simulation() {
         if (this.isSimRunning) {
             this.stopSimulation();
-            this.isSimulationMode = false;
-            UI.update(this);
             return;
         }
+        
+        const method = `${this.shape}_A0_simm`;
+        if (typeof this[method] === 'function') {
+            this[method]();
+        } else {
+            console.warn(`No A0 simulation defined for ${this.shape}, falling back to universal.`);
+            this.universal_journey_simm();
+        }
+    },
 
-        this.isSimulationMode = true;
-        
-        // 1. Direct Mapping for established narratives
-        if (this.currentNarrative === 'Double Oval: Shared Foci, Split Light') {
-            this["vv_oval_focus_simm"]();
-            return;
-        }
-        
-        // 2. Default to Universal Journey
-        this.universal_journey_simm();
+    startNarrativeSimulation() {
+        this.startA0Simulation();
     },
 
     stopSimulation() {
@@ -697,7 +669,6 @@ const App = {
         this.sourceRotation = defaults.sourceRotation;
         UI.update(this);
         this.persistState();
-        this.recalcParallelRange();
     },
 
     /**
@@ -906,9 +877,64 @@ const App = {
         runStage();
     },
 
+    rect_A0_simm() {
+        if (this.isSimRunning) return;
+        this.isSimRunning = true;
+        this.isSimulationMode = true;
+
+        if (window.audioManager && window.audioManager.targetVolume > 0) {
+            window.audioManager.isMuted = false;
+            window.audioManager.resume();
+        }
+
+        const stages = [
+            { subtitle: 'Vertical Equilibrium: The Top Bounce', slot: 0, duration: 12000 },
+            { subtitle: 'Corner Geometry: The Vertex Echo', slot: 2, duration: 15000 },
+            { subtitle: 'Diagonal Sweep: The Side Scan', slot: 1, duration: 18000 }
+        ];
+
+        let idx = 0;
+        const runStage = () => {
+            if (idx >= stages.length) {
+                this.finishSimulation();
+                return;
+            }
+            const stage = stages[idx];
+            this.clearScene();
+            this.isLightVisible = false;
+            this.isFlowing = false;
+            
+            // Apply Preset via UI helper if possible, or direct
+            UI.applyShapePreset(this, stage.slot);
+            
+            this.overlayMessage = (idx === 0) 
+                ? ["Rectangle Master", stage.subtitle] 
+                : stage.subtitle;
+                
+            UI.update(this);
+
+            const timer1 = setTimeout(() => {
+                this.overlayMessage = null;
+                this.growth = 0;
+                this.isLightVisible = true;
+                this.isFlowing = true;
+                UI.update(this);
+
+                const timer2 = setTimeout(() => {
+                    idx++;
+                    runStage();
+                }, stage.duration);
+                this.simTimers.push(timer2);
+            }, 4000);
+            this.simTimers.push(timer1);
+        };
+        runStage();
+    },
+
     universal_journey_simm() {
         if (this.isSimRunning) return;
         this.isSimRunning = true;
+        this.isSimulationMode = true;
 
         const size = this.getShapeSize();
         const shapeName = this.shape.charAt(0).toUpperCase() + this.shape.slice(1);
