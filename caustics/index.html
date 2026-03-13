@@ -101,7 +101,7 @@
                     </p>
                 </section>
 
-                <section class="shape-accordion is-open" data-accordion-section="visual">
+                <section class="shape-accordion" data-accordion-section="visual">
                     <button class="shape-accordion-toggle" data-accordion-toggle="visual" type="button">
                         <span class="shape-options-label">Visual Controls</span>
                         <span class="shape-accordion-icon">+</span>
@@ -159,7 +159,7 @@
                 <section class="shape-options-section shape-accordion is-open" data-accordion-section="shape">
                     <button class="shape-accordion-toggle" data-accordion-toggle="shape" type="button">
                         <div class="shape-options-header">
-                        <span class="shape-options-label">Source Presets</span>
+                        <span class="shape-options-label" id="shape-section-label">Source Presets</span>
                         <span class="shape-options-meta" id="shape-options-meta">Symmetry</span>
                         </div>
                         <span class="shape-accordion-icon">+</span>
@@ -174,6 +174,51 @@
                         <div class="shape-option-note" id="shape-option-note">
                             Tip: drag the source off-center, then rotate slowly to search for repeating loops.
                         </div>
+                        <div class="triangle-panel-block" id="triangle-panel-block">
+                            <div class="triangle-panel-copy">
+                                Build the triangle scene from one source pattern, then refine the launch logic before applying a preset.
+                            </div>
+
+                            <div class="setting-row-inline triangle-row">
+                                <label class="setting-label">PATTERN</label>
+                                <div class="mode-tabs-mini" id="group-triangle-source">
+                                    <button class="mini-tab active" data-value="single">Single</button>
+                                    <button class="mini-tab" data-value="triad">Vertex</button>
+                                    <button class="mini-tab" data-value="strip">Strip</button>
+                                </div>
+                            </div>
+
+                            <div class="triangle-detail-block" id="triangle-detail-block">
+                                <div class="setting-row-inline triangle-row" id="triangle-direction-row">
+                                    <label class="setting-label">DIRECTION</label>
+                                    <div class="mode-tabs-mini" id="group-triangle-direction">
+                                        <button class="mini-tab active" data-value="parallel">Parallel</button>
+                                        <button class="mini-tab" data-value="inward">Inward</button>
+                                        <button class="mini-tab" data-value="outward">Outward</button>
+                                        <button class="mini-tab" data-value="edge-normal">Edge</button>
+                                    </div>
+                                </div>
+
+                                <div class="triangle-strip-controls" id="triangle-strip-controls">
+                                    <div class="setting-row triangle-row">
+                                        <div class="setting-label-group">
+                                            <label class="setting-label">POINT COUNT</label>
+                                            <span class="setting-value" id="val-triangle-count">5</span>
+                                        </div>
+                                        <input type="range" id="range-triangle-count" min="2" max="12" step="1" value="5">
+                                    </div>
+
+                                    <div class="setting-row triangle-row" style="margin-bottom: 0;">
+                                        <div class="setting-label-group">
+                                            <label class="setting-label">VERTEX BIAS</label>
+                                            <span class="setting-value" id="val-triangle-bias">0.60</span>
+                                        </div>
+                                        <input type="range" id="range-triangle-bias" min="0.1" max="1.0" step="0.05" value="0.6">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="shape-preset-grid" id="shape-preset-grid">
                             <button class="shape-preset-btn" id="shape-preset-0" data-preset-slot="0">Center Orbit</button>
                             <button class="shape-preset-btn" id="shape-preset-1" data-preset-slot="1">Wide Sweep</button>
@@ -181,52 +226,6 @@
                         </div>
                         <div class="shape-preset-note" id="shape-preset-note">
                             Preset note appears here.
-                        </div>
-                    </div>
-                </section>
-
-                <section class="shape-options-section triangle-source-section shape-accordion" id="triangle-source-section" data-accordion-section="triangle">
-                    <button class="shape-accordion-toggle" data-accordion-toggle="triangle" type="button">
-                        <div class="shape-options-header">
-                            <span class="shape-options-label">Triangle Sources</span>
-                            <span class="shape-options-meta">Point Only</span>
-                        </div>
-                        <span class="shape-accordion-icon">+</span>
-                    </button>
-                    <div class="shape-accordion-body">
-                        <div class="setting-row-inline" style="margin-bottom: 10px;">
-                            <label class="setting-label">PATTERN</label>
-                            <div class="mode-tabs-mini" id="group-triangle-source" style="width: 180px;">
-                                <button class="mini-tab active" data-value="single">Single</button>
-                                <button class="mini-tab" data-value="triad">Triad</button>
-                                <button class="mini-tab" data-value="strip">Strip</button>
-                            </div>
-                        </div>
-
-                        <div class="setting-row-inline triangle-direction-row" id="triangle-direction-row" style="margin-bottom: 10px;">
-                            <label class="setting-label">DIRECTION</label>
-                        <div class="mode-tabs-mini" id="group-triangle-direction" style="width: 180px;">
-                            <button class="mini-tab active" data-value="parallel">Parallel</button>
-                            <button class="mini-tab" data-value="inward">Inward</button>
-                            <button class="mini-tab" data-value="outward">Outward</button>
-                            <button class="mini-tab" data-value="edge-normal">Edge</button>
-                        </div>
-                    </div>
-
-                        <div class="setting-row">
-                            <div class="setting-label-group">
-                                <label class="setting-label">POINT COUNT</label>
-                                <span class="setting-value" id="val-triangle-count">5</span>
-                            </div>
-                            <input type="range" id="range-triangle-count" min="2" max="12" step="1" value="5">
-                        </div>
-
-                        <div class="setting-row" style="margin-bottom: 0;">
-                            <div class="setting-label-group">
-                                <label class="setting-label">VERTEX BIAS</label>
-                                <span class="setting-value" id="val-triangle-bias">0.60</span>
-                            </div>
-                            <input type="range" id="range-triangle-bias" min="0.1" max="1.0" step="0.05" value="0.6">
                         </div>
                     </div>
                 </section>
@@ -276,9 +275,9 @@
                             <span id="spread-icon-mini" style="margin-right: 4px;"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg></span>
                             3. BEAM SPREAD
                         </label>
-                        <span class="setting-value value-spread" id="val-spread">69°</span>
+                        <span class="setting-value value-spread" id="val-spread">60°</span>
                     </div>
-                    <input type="range" id="range-spread" min="0" max="6.28" step="0.01" value="0">
+                    <input type="range" id="range-spread" min="0" max="6.28" step="0.01" value="1.0472">
                 </div>
 
                 <!-- Ray Number Slider -->

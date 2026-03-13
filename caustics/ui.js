@@ -7,7 +7,7 @@ export const UI = {
     trianglePanelContent(app, baseContent) {
         const sourceLabels = {
             single: 'Single Point',
-            triad: 'Vertex Triad',
+            triad: 'Vertex',
             strip: 'Source Strip'
         };
         const directionLabels = {
@@ -895,6 +895,7 @@ export const UI = {
         const badge = document.getElementById('shape-badge');
         const title = document.getElementById('shape-options-title');
         const copy = document.getElementById('shape-options-copy');
+        const sectionLabel = document.getElementById('shape-section-label');
         const meta = document.getElementById('shape-options-meta');
         const cardTitle = document.getElementById('shape-option-card-title');
         const cardCopy = document.getElementById('shape-option-card-copy');
@@ -902,13 +903,18 @@ export const UI = {
         const card = document.getElementById('shape-option-card');
         const presetNote = document.getElementById('shape-preset-note');
         const btnFoci = document.getElementById('btn-foci-sync');
-        const triangleSection = document.getElementById('triangle-source-section');
+        const trianglePanelBlock = document.getElementById('triangle-panel-block');
+        const triangleDetailBlock = document.getElementById('triangle-detail-block');
         const triangleDirectionRow = document.getElementById('triangle-direction-row');
+        const triangleStripControls = document.getElementById('triangle-strip-controls');
         const isTriangle = app.shape === 'triangle';
+        const isTriangleSingle = app.triangleSourceMode === 'single';
+        const isTriangleStrip = app.triangleSourceMode === 'strip';
 
         if (badge) badge.textContent = content.badge;
         if (title) title.textContent = content.title;
         if (copy) copy.textContent = content.description;
+        if (sectionLabel) sectionLabel.textContent = isTriangle ? 'Triangle Studio' : 'Source Presets';
         if (meta) meta.textContent = content.meta;
         if (cardTitle) cardTitle.textContent = content.cardTitle;
         if (cardCopy) cardCopy.textContent = content.cardCopy;
@@ -917,12 +923,17 @@ export const UI = {
             btnFoci.textContent = content.action;
             btnFoci.title = `Sync source to ${content.action.toLowerCase()} anchor`;
         }
-        if (triangleSection) {
-            triangleSection.classList.toggle('visible', isTriangle);
-            triangleSection.classList.toggle('is-open', isTriangle);
+        if (trianglePanelBlock) {
+            trianglePanelBlock.classList.toggle('visible', isTriangle);
+        }
+        if (triangleDetailBlock) {
+            triangleDetailBlock.classList.toggle('hidden', !isTriangle || isTriangleSingle);
         }
         if (triangleDirectionRow) {
-            triangleDirectionRow.classList.toggle('hidden', app.triangleSourceMode === 'single');
+            triangleDirectionRow.classList.toggle('hidden', !isTriangle || isTriangleSingle);
+        }
+        if (triangleStripControls) {
+            triangleStripControls.classList.toggle('hidden', !isTriangle || !isTriangleStrip);
         }
         if (card) card.classList.toggle('hidden', isTriangle);
         if (note) note.classList.toggle('hidden', isTriangle);

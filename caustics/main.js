@@ -10,7 +10,7 @@ import { LightDensity } from './light-density.js';
 window.LightDensityModule = LightDensity; // Fix visibility
 
 const App = {
-    STORAGE_KEY: 'caustics:state:v1',
+    STORAGE_KEY: 'caustics:state:v2',
     canvas: null,
     ctx: null,
     isInitialized: false, // Singleton guard
@@ -31,7 +31,7 @@ const App = {
     growth: 0,
     colorMode: 'rainbow',
     beamWidth: 1.6,
-    spread: 0,
+    spread: Math.PI / 3,
     flowOffset: 0,
     baseStyle: 'line',
     flowMode: 'none',
@@ -195,7 +195,19 @@ const App = {
         if (this.shape !== 'triangle' || this.lightSourceMode !== 'point') return [base];
 
         if (this.triangleSourceMode === 'triad') {
-            return this.getTriangleVertices(size);
+            const triangleCenter = { x: 0, y: size * 0.2 };
+            const offset = {
+                x: base.x - triangleCenter.x,
+                y: base.y - triangleCenter.y
+            };
+
+            // Reuse the existing source position controls as a shared offset for the vertex group
+            // so the standard orbit/auto sliders can drive multi-source layouts too.
+            // Rotation is applied at launch-angle time, not by revolving the vertex anchors.
+            return this.getTriangleVertices(size).map((vertex) => ({
+                x: vertex.x + offset.x,
+                y: vertex.y + offset.y
+            }));
         }
 
         if (this.triangleSourceMode === 'strip') {
@@ -228,18 +240,18 @@ const App = {
 
         if (this.triangleDirectionMode === 'inward') {
             const inwardAngle = Math.atan2(triangleCenter.y - origin.y, triangleCenter.x - origin.x);
-            return inwardAngle + spreadOffset;
+            return inwardAngle + this.sourceRotation + spreadOffset;
         }
 
         if (this.triangleDirectionMode === 'outward') {
             const outwardAngle = Math.atan2(origin.y - triangleCenter.y, origin.x - triangleCenter.x);
-            return outwardAngle + spreadOffset;
+            return outwardAngle + this.sourceRotation + spreadOffset;
         }
 
         if (this.triangleDirectionMode === 'edge-normal') {
             const inwardNormal = Physics.getNormal(origin.x, origin.y, 'triangle', size);
             const normalAngle = Math.atan2(-inwardNormal.y, -inwardNormal.x);
-            return normalAngle + spreadOffset;
+            return normalAngle + this.sourceRotation + spreadOffset;
         }
 
         return baseAngle + spreadOffset;
@@ -348,6 +360,7 @@ const App = {
         this.sourcePos = defaults.sourcePos;
         this.sanitizeSourcePosition();
         this.sourceRotation = defaults.sourceRotation;
+        this.spread = Math.PI / 3;
         this.normalizeLightSourceMode();
         if (nextShape === 'parabola') {
             this.lightSourceMode = 'point';
@@ -656,7 +669,7 @@ const App = {
         // this.isLightMode = false;
         this.isSimulationMode = false;
         this.preSimulationBounces = 10;
-        this.spread = 1.2;
+        this.spread = Math.PI / 3;
         this.beamWidth = 1.6;
         this.MAX_BOUNCES = 10;
         
