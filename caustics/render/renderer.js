@@ -2,7 +2,7 @@
  * LIGHT FLOW LAB: Renderer Module
  * Handles canvas drawing and visual representation
  */
-import { Physics } from './physics.js';
+import { Physics } from '../sim/physics.js';
 
 export const Renderer = {
     paintCanvas1: null,
