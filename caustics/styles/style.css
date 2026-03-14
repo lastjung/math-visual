@@ -268,72 +268,60 @@ canvas {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-  padding-bottom: 12px;
-  margin-bottom: 20px;
-}
-
-.panel-title {
-  font-size: 10px;
-  font-weight: 700;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.2em;
-}
-
-.shape-focus-block {
-  margin-bottom: 18px;
-  padding: 16px 16px 14px;
-  border-radius: 22px;
-  background:
-    radial-gradient(circle at top left, rgba(34, 211, 238, 0.16), transparent 52%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02));
-  border: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.shape-focus-topline {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 10px;
-}
-
-.shape-focus-kicker,
-.shape-options-label,
-.shape-options-meta {
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-}
-
-.shape-focus-kicker,
-.shape-options-label {
-  color: rgba(255, 255, 255, 0.46);
+  padding-bottom: 4px; /* Reduced */
+  margin-bottom: 12px; /* Reduced */
 }
 
 .shape-badge {
-  padding: 4px 10px;
-  border-radius: 999px;
-  font-size: 10px;
-  font-weight: 700;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 800;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: #67e8f9;
-  background: rgba(6, 182, 210, 0.16);
-  border: 1px solid rgba(103, 232, 249, 0.22);
+  background: rgba(6, 182, 210, 0.12);
+  border: 1px solid rgba(103, 232, 249, 0.15);
+  white-space: nowrap;
+  position: relative;
+  cursor: help;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.shape-focus-title {
-  font-size: 20px;
-  font-weight: 800;
-  letter-spacing: -0.04em;
-  color: #f8fafc;
-  margin-bottom: 8px;
+.shape-badge:hover {
+  background: rgba(6, 182, 210, 0.2);
+  border-color: rgba(103, 232, 249, 0.4);
 }
 
-.shape-focus-copy,
+/* Premium Tooltip for Badge in Header */
+.shape-badge:hover::after {
+  content: attr(data-description);
+  position: absolute;
+  top: calc(100% + 12px);
+  left: 0;
+  width: 240px;
+  background: rgba(10, 10, 20, 0.98);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  padding: 16px 20px;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+  z-index: 2000;
+  pointer-events: none;
+  white-space: normal;
+  text-align: left;
+  animation: tooltipFadeInHeader 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes tooltipFadeInHeader {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
 .shape-option-card-copy,
 .shape-option-note {
   font-size: 12px;

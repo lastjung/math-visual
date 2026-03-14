@@ -175,8 +175,6 @@ export function syncShapePanel(app) {
     const presetsByShape = shapePresets(app);
     const presets = presetsByShape[app.shape] || presetsByShape.circle;
     const badge = UIElements.get('shape-badge');
-    const title = UIElements.get('shape-options-title');
-    const copy = UIElements.get('shape-options-copy');
     const sectionLabel = UIElements.get('shape-section-label');
     const meta = UIElements.get('shape-options-meta');
     const cardTitle = UIElements.get('shape-option-card-title');
@@ -192,10 +190,14 @@ export function syncShapePanel(app) {
     const isTriangle = app.shape === 'triangle';
     const isTriangleSingle = app.triangleSourceMode === 'single';
     const isTriangleStrip = app.triangleSourceMode === 'strip';
+    const title = UIElements.get('shape-options-title'); // For backward compatibility if needed else remove
 
-    if (badge) badge.textContent = content.badge;
+    if (badge) {
+        badge.textContent = content.badge;
+        badge.dataset.description = content.description;
+        badge.title = content.description;
+    }
     if (title) title.textContent = content.title;
-    if (copy) copy.textContent = content.description;
     if (sectionLabel) sectionLabel.textContent = isTriangle ? 'Triangle Studio' : 'Source Presets';
     if (meta) meta.textContent = content.meta;
     if (cardTitle) cardTitle.textContent = content.cardTitle;
