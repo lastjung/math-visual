@@ -16,7 +16,7 @@ const EuclidCase = {
     triOpacity: 0.5,
     triColor: "#ff7675", // var(--square-a)
     
-    musicTrack: '../visualization/assets/music/bgm/Math_03_Harmonic_Balance.mp3',
+    musicTrack: '../visualization/assets/music/bgm/math/Math_03_Euclidean_Polyrhythm.mp3',
 
     steps: [
         {

@@ -62,12 +62,12 @@ let resizeObserver = null;
 const audioState = {
   audio: new Audio(),
   tracks: [
-    "../visualization/assets/music/bgm/Math_01_Minimalist_Sine_Pulse.mp3",
-    "../visualization/assets/music/bgm/Math_03_Euclidean_Polyrhythm.mp3",
-    "../visualization/assets/music/bgm/Math_08_Geometric_Vector_Motion.mp3",
-    "../visualization/assets/music/bgm/Math_09_Fibonacci_Golden_Ratio.mp3",
-    "../visualization/assets/music/bgm/Math_15_Deep_Space_Topology.mp3",
-    "../visualization/assets/music/bgm/Math_16_Coordinate_Plane_Ambient.mp3"
+    "../visualization/assets/music/bgm/math/Math_01_Minimalist_Sine_Pulse.mp3",
+    "../visualization/assets/music/bgm/math/Math_03_Euclidean_Polyrhythm.mp3",
+    "../visualization/assets/music/bgm/math/Math_08_Geometric_Vector_Motion.mp3",
+    "../visualization/assets/music/bgm/math/Math_09_Fibonacci_Golden_Ratio.mp3",
+    "../visualization/assets/music/bgm/math/Math_15_Deep_Space_Topology.mp3",
+    "../visualization/assets/music/bgm/math/Math_16_Coordinate_Plane_Ambient.mp3"
   ],
   currentTrack: null,
   muted: true

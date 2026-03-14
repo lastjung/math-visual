@@ -10,7 +10,7 @@ const RearrangementCase = {
     rearrangementOverlayCall: null,
     colors: ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4'],
     
-    musicTrack: '../visualization/assets/music/bgm/Math_03_Harmonic_Balance.mp3',
+    musicTrack: '../visualization/assets/music/bgm/math/Math_03_Euclidean_Polyrhythm.mp3',
 
     steps: [
         {

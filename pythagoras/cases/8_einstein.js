@@ -8,7 +8,7 @@ const EinsteinCase = {
     // Triangle parameters: ta = a^2/c, tb = b^2/c, h = ab/c
     ta: 90, tb: 160, h: 120,
     
-    musicTrack: '../visualization/assets/music/bgm/Math_03_Harmonic_Balance.mp3',
+    musicTrack: '../visualization/assets/music/bgm/math/Math_03_Euclidean_Polyrhythm.mp3',
     colors: ['#0984e3', '#00b894', '#fdcb6e'],
 
     steps: [

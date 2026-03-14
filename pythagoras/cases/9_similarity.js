@@ -7,7 +7,7 @@ const SimilarityCase = {
     a: 150, b: 200, c: 250,
     // x = a^2/c = 90, y = b^2/c = 160, h = ab/c = 120
     
-    musicTrack: '../visualization/assets/music/bgm/Math_03_Harmonic_Balance.mp3',
+    musicTrack: '../visualization/assets/music/bgm/math/Math_03_Euclidean_Polyrhythm.mp3',
     colors: ['#0984e3', '#00b894', '#d63031'],
 
     steps: [

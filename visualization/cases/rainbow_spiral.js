@@ -17,7 +17,7 @@ const RainbowSpiralCase = {
     // Config State
     speed: 0.02,
     dotSize: 4,
-    musicTrack: 'assets/music/bgm/Math_02_Fractal_Recursive_Ambient.mp3',
+    musicTrack: 'assets/music/bgm/math/Math_02_Fractal_Recursive_Ambient.mp3',
     
     // The Golden Angle: 360 * (1 - 1/phi) ~= 137.50776 degrees
     goldenAngle: Math.PI * (3 - Math.sqrt(5)), 

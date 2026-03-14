@@ -20,7 +20,7 @@ const WavesCase = {
     speed: 0.02,
     amplitude: 80,
     frequency: 0.03,
-    musicTrack: 'assets/music/bgm/Math_01_Minimalist_Sine_Pulse.mp3',
+    musicTrack: 'assets/music/bgm/math/Math_01_Minimalist_Sine_Pulse.mp3',
 
     // Category State
     category: 'all',

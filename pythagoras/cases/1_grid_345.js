@@ -7,7 +7,7 @@ const Grid345Case = {
     aUnits: 3, bUnits: 4, cUnits: 5,
     gridCells: [],
     
-    musicTrack: '../visualization/assets/music/bgm/Math_03_Harmonic_Balance.mp3',
+    musicTrack: '../visualization/assets/music/bgm/math/Math_03_Euclidean_Polyrhythm.mp3',
 
     steps: [
         {

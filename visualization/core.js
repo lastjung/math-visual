@@ -12,60 +12,124 @@ const Core = {
     isRunning: true,
     currentCaseMode: 'display',
     lastSelectedTrack: null,
+    BGM_BASE: 'assets/music/bgm/',
     mathBgmTracks: [
-        'assets/music/bgm/Math_01_Minimalist_Sine_Pulse.mp3',
-        'assets/music/bgm/Math_02_Fractal_Recursive_Ambient.mp3',
-        'assets/music/bgm/Math_03_Euclidean_Polyrhythm.mp3',
-        'assets/music/bgm/Math_04_Cybernetic_Grid_Logic.mp3',
-        'assets/music/bgm/Math_05_Infinite_Series_Flow.mp3',
-        'assets/music/bgm/Math_06_Binary_Symphony.mp3',
-        'assets/music/bgm/Math_07_Quantum_Resonance.mp3',
-        'assets/music/bgm/Math_08_Geometric_Vector_Motion.mp3',
-        'assets/music/bgm/Math_09_Fibonacci_Golden_Ratio.mp3',
-        'assets/music/bgm/Math_10_Bitwise_Glitch_Architecture.mp3',
-        'assets/music/bgm/Math_11_Calculus_Flow.mp3',
-        'assets/music/bgm/Math_12_Neural_Network_Synapse.mp3',
-        'assets/music/bgm/Math_13_Retro_8-bit_Math.mp3',
-        'assets/music/bgm/Math_14_Primality_Test_Beat.mp3',
-        'assets/music/bgm/Math_15_Deep_Space_Topology.mp3',
-        'assets/music/bgm/Math_16_Coordinate_Plane_Ambient.mp3',
-        'assets/music/bgm/Math_17_Mathematical_Induction.mp3',
-        'assets/music/bgm/Math_18_Lo-fi_Coding_Marathon.mp3',
-        'assets/music/bgm/Math_19_Abstract_Set_Theory.mp3',
-        'assets/music/bgm/Math_20_Theorem_Q.E.D..mp3'
+        'math/Math_01_Minimalist_Sine_Pulse.mp3',
+        'math/Math_02_Fractal_Recursive_Ambient.mp3',
+        'math/Math_03_Euclidean_Polyrhythm.mp3',
+        'math/Math_04_Cybernetic_Grid_Logic.mp3',
+        'math/Math_05_Infinite_Series_Flow.mp3',
+        'math/Math_06_Binary_Symphony.mp3',
+        'math/Math_07_Quantum_Resonance.mp3',
+        'math/Math_08_Geometric_Vector_Motion.mp3',
+        'math/Math_09_Fibonacci_Golden_Ratio.mp3',
+        'math/Math_10_Bitwise_Glitch_Architecture.mp3',
+        'math/Math_11_Calculus_Flow.mp3',
+        'math/Math_12_Neural_Network_Synapse.mp3',
+        'math/Math_13_Retro_8-bit_Math.mp3',
+        'math/Math_14_Primality_Test_Beat.mp3',
+        'math/Math_15_Deep_Space_Topology.mp3',
+        'math/Math_16_Coordinate_Plane_Ambient.mp3',
+        'math/Math_17_Mathematical_Induction.mp3',
+        'math/Math_18_Lo-fi_Coding_Marathon.mp3',
+        'math/Math_19_Abstract_Set_Theory.mp3',
+        'math/Math_20_Theorem_Q.E.D..mp3'
     ],
     pianoBgmTracks: [
-        'assets/music/bgm/piano-shorts/Piano_Short_01_Nocturne_Full_HQ.mp3',
-        'assets/music/bgm/piano-shorts/Piano_Short_02_Moonlight_Full_HQ.mp3',
-        'assets/music/bgm/piano-shorts/Piano_Short_03_Claire_Full_HQ.mp3',
-        'assets/music/bgm/piano-shorts/Piano_Short_04_Liebestraum_Full_HQ.mp3',
-        'assets/music/bgm/piano-shorts/Piano_Short_05_Gymnopedie_Full_HQ.mp3',
-        'assets/music/bgm/piano-shorts/Piano_Short_06_Classical_Sonata_Full_HQ.mp3',
-        'assets/music/bgm/piano-shorts/Piano_Short_07_Rach_Grand_Full_HQ.mp3',
-        'assets/music/bgm/piano-shorts/Piano_Short_08_River_Flows_Full_HQ.mp3',
-        'assets/music/bgm/piano-shorts/Piano_Short_09_Hisaishi_Fantasy_Full_HQ.mp3',
-        'assets/music/bgm/piano-shorts/Piano_Short_10_Jazz_Mood_Full_HQ.mp3',
-        'assets/music/bgm/piano-shorts/Piano_Short_11_Ragtime_Fun_Full_HQ.mp3',
-        'assets/music/bgm/piano-shorts/Piano_Short_12_Minimal_Cycle_Full_HQ.mp3',
-        'assets/music/bgm/piano-shorts/Piano_Short_13_Cinematic_Tear_Full_HQ.mp3',
-        'assets/music/bgm/piano-shorts/Piano_Short_14_Pop_Vibe_Full_HQ.mp3',
-        'assets/music/bgm/piano-shorts/Piano_Short_15_Mystery_Night_Full_HQ.mp3',
-        'assets/music/bgm/piano-shorts/Piano_Short_16_Morning_Dew_Full_HQ.mp3',
-        'assets/music/bgm/piano-shorts/Piano_Short_17_Rainy_Window_Full_HQ.mp3',
-        'assets/music/bgm/piano-shorts/Piano_Short_18_Soulful_Touch_Full_HQ.mp3',
-        'assets/music/bgm/piano-shorts/Piano_Short_19_Wedding_Grace_Full_HQ.mp3',
-        'assets/music/bgm/piano-shorts/Piano_Short_20_Grand_Power_Full_HQ.mp3'
+        'piano-shorts/Piano_Short_01_Nocturne_Full_HQ.mp3',
+        'piano-shorts/Piano_Short_02_Moonlight_Full_HQ.mp3',
+        'piano-shorts/Piano_Short_03_Claire_Full_HQ.mp3',
+        'piano-shorts/Piano_Short_04_Liebestraum_Full_HQ.mp3',
+        'piano-shorts/Piano_Short_05_Gymnopedie_Full_HQ.mp3',
+        'piano-shorts/Piano_Short_06_Classical_Sonata_Full_HQ.mp3',
+        'piano-shorts/Piano_Short_07_Rach_Grand_Full_HQ.mp3',
+        'piano-shorts/Piano_Short_08_River_Flows_Full_HQ.mp3',
+        'piano-shorts/Piano_Short_09_Hisaishi_Fantasy_Full_HQ.mp3',
+        'piano-shorts/Piano_Short_10_Jazz_Mood_Full_HQ.mp3',
+        'piano-shorts/Piano_Short_11_Ragtime_Fun_Full_HQ.mp3',
+        'piano-shorts/Piano_Short_12_Minimal_Cycle_Full_HQ.mp3',
+        'piano-shorts/Piano_Short_13_Cinematic_Tear_Full_HQ.mp3',
+        'piano-shorts/Piano_Short_14_Pop_Vibe_Full_HQ.mp3',
+        'piano-shorts/Piano_Short_15_Mystery_Night_Full_HQ.mp3',
+        'piano-shorts/Piano_Short_16_Morning_Dew_Full_HQ.mp3',
+        'piano-shorts/Piano_Short_17_Rainy_Window_Full_HQ.mp3',
+        'piano-shorts/Piano_Short_18_Soulful_Touch_Full_HQ.mp3',
+        'piano-shorts/Piano_Short_19_Wedding_Grace_Full_HQ.mp3',
+        'piano-shorts/Piano_Short_20_Grand_Power_Full_HQ.mp3',
+        'piano-shorts/Piano_Short_21_Spring_Blossom_Full_HQ.mp3',
+        'piano-shorts/Piano_Short_22_Bossa_Cafe_Full_HQ.mp3',
+        'piano-shorts/Piano_Short_23_Tango_Full_HQ.mp3',
+        'piano-shorts/Piano_Short_24_Black_Keys_Full_HQ.mp3',
+        'piano-shorts/Piano_Short_25_Winter_Fire_Full_HQ.mp3',
+        'piano-shorts/Piano_Short_26_Space_Walk_Full_HQ.mp3',
+        'piano-shorts/Piano_Short_27_Music_Box_Full_HQ.mp3',
+        'piano-shorts/Piano_Short_28_French_Waltz_Full_HQ.mp3',
+        'piano-shorts/Piano_Short_29_Dark_Gothic_Full_HQ.mp3',
+        'piano-shorts/Piano_Short_30_Vlog_Loop_Full_HQ.mp3',
+        'piano-shorts/Piano_Short_31_Toy_March_Full_HQ.mp3',
+        'piano-shorts/Piano_Short_32_Sad_Elegy_Full_HQ.mp3',
+        'piano-shorts/Piano_Short_33_Summer_Sea_Full_HQ.mp3',
+        'piano-shorts/Piano_Short_34_Swing_Jazz_Full_HQ.mp3',
+        'piano-shorts/Piano_Short_35_Wedding_Full_HQ.mp3',
+        'piano-shorts/Piano_Short_36_Epic_Power_Full_HQ.mp3',
+        'piano-shorts/Piano_Short_37_Nostalgia_Full_HQ.mp3',
+        'piano-shorts/Piano_Short_38_Lofi_Chill_Full_HQ.mp3',
+        'piano-shorts/Piano_Short_39_Impromptu_Full_HQ.mp3',
+        'piano-shorts/Piano_Short_40_Lullaby_Full_HQ.mp3'
     ],
+    lofiBgmTracks: [
+        'lofi/EXO_Crown_Lofi_Remix_v2_Safe.mp3',
+        'lofi/LifeGoesOn_Lofi_Safe_V01.mp3',
+        'lofi/Lofi_80_Batch_01.mp3',
+        'lofi/Lofi_80_Batch_02.mp3',
+        'lofi/Lofi_80_Batch_03.mp3',
+        'lofi/Lofi_80_Batch_04.mp3',
+        'lofi/Lofi_80_Batch_05.mp3',
+        'lofi/Lofi_80_Batch_06.mp3',
+        'lofi/Lofi_80_Batch_07.mp3',
+        'lofi/Lofi_80_Batch_08.mp3',
+        'lofi/Lofi_80_Batch_09.mp3',
+        'lofi/Lofi_80_Batch_10.mp3',
+        'lofi/Lofi_80_Batch_11.mp3',
+        'lofi/Lofi_80_Batch_12.mp3',
+        'lofi/Lofi_80_Batch_13.mp3',
+        'lofi/Lofi_80_Batch_14.mp3',
+        'lofi/Lofi_80_Batch_15.mp3',
+        'lofi/Lofi_80_Batch_16.mp3',
+        'lofi/Lofi_80_Batch_17.mp3',
+        'lofi/Lofi_80_Batch_18.mp3',
+        'lofi/Lofi_80_Batch_19.mp3',
+        'lofi/Lofi_80_Batch_20.mp3',
+        'lofi/Lofi_80_Batch_21.mp3',
+        'lofi/Lofi_80_Batch_22.mp3',
+        'lofi/Lofi_80_Batch_23.mp3',
+        'lofi/Lofi_80_Batch_24.mp3',
+        'lofi/Lofi_80_Batch_25.mp3',
+        'lofi/Lofi_80_Batch_26.mp3',
+        'lofi/Lofi_80_Batch_27.mp3',
+        'lofi/Lofi_80_Batch_28.mp3',
+        'lofi/Lofi_80_Batch_29.mp3',
+        'lofi/Lofi_80_Batch_30.mp3',
+        'lofi/Lofi_80_Relaxing_V01_Full.mp3'
+    ],
+
+    getFullTrackPath(track) {
+        if (!track) return null;
+        if (track.startsWith('assets/')) return track; // Already full path
+        return this.BGM_BASE + track;
+    },
 
     getCurrentTrack() {
         if (!this.currentCase) return null;
-        return this.currentCase._selectedMusicTrack || this.currentCase.musicTrack || null;
+        const track = this.currentCase._selectedMusicTrack || this.currentCase.musicTrack || null;
+        return track;
     },
 
     getTrackPool(track) {
         if (typeof track !== 'string' || !track) return null;
         if (track.includes('/piano-shorts/')) return this.pianoBgmTracks;
-        if (track.includes('assets/music/bgm/Math_')) return this.mathBgmTracks;
+        if (track.includes('/math/Math_')) return this.mathBgmTracks;
+        if (track.includes('/lofi/')) return this.lofiBgmTracks;
         return null;
     },
 
@@ -73,7 +137,12 @@ const Core = {
         const pool = this.getTrackPool(track);
         if (pool === this.pianoBgmTracks) return 'piano';
         if (pool === this.mathBgmTracks) return 'math';
+        if (pool === this.lofiBgmTracks) return 'lofi';
         return null;
+    },
+
+    getAllTracks() {
+        return [...this.mathBgmTracks, ...this.pianoBgmTracks, ...this.lofiBgmTracks];
     },
 
     getPreferredTrackPool() {
@@ -90,19 +159,28 @@ const Core = {
         if (!activePool.length) return null;
         if (activePool.length === 1) return activePool[0];
 
-        const candidates = previousTrack
-            ? activePool.filter((track) => track !== previousTrack)
+        const prevShort = previousTrack ? (previousTrack.includes(this.BGM_BASE) ? previousTrack.split(this.BGM_BASE)[1] : previousTrack) : null;
+        const candidates = prevShort
+            ? activePool.filter((track) => track !== prevShort)
             : activePool;
         const safePool = candidates.length ? candidates : activePool;
         return safePool[Math.floor(Math.random() * safePool.length)];
     },
 
+    pickSequentialTrack(currentTrack) {
+        const pool = this.getTrackPool(currentTrack);
+        if (!pool || !pool.length) return this.pickRandomTrack();
+
+        const shortPath = currentTrack.includes(this.BGM_BASE) ? currentTrack.split(this.BGM_BASE)[1] : currentTrack;
+        const index = pool.indexOf(shortPath);
+        const nextIndex = (index + 1) % pool.length;
+        return pool[nextIndex];
+    },
+
     selectCaseTrack() {
-        const preferredPool = this.getPreferredTrackPool();
         const previousTrack = this.lastSelectedTrack || (window.audioManager ? window.audioManager.currentTrack : null);
-        const poolPreviousTrack = this.getTrackPool(previousTrack) === preferredPool ? previousTrack : null;
-        const randomTrack = this.pickRandomTrack(poolPreviousTrack, preferredPool);
-        this.currentCase._selectedMusicTrack = randomTrack || this.currentCase.musicTrack || null;
+        const randomTrack = this.pickRandomTrack(previousTrack);
+        this.currentCase._selectedMusicTrack = this.getFullTrackPath(randomTrack);
         this.lastSelectedTrack = this.currentCase._selectedMusicTrack;
     },
 
@@ -110,6 +188,18 @@ const Core = {
         this.setupUI();
         this.setupIdleSystem();
         this.setupGlobalEvents();
+
+        if (window.audioManager) {
+            window.audioManager.audio.onended = () => {
+                const all = this.getAllTracks();
+                const randomTrack = this.pickRandomTrack(null, all);
+                const fullPath = this.getFullTrackPath(randomTrack);
+                if (this.currentCase) this.currentCase._selectedMusicTrack = fullPath;
+                this.lastSelectedTrack = fullPath;
+                window.audioManager.play(fullPath, { forceSwitch: true });
+                this.updateControls();
+            };
+        }
         
         window.addEventListener('resize', () => {
             const settingsPanel = document.getElementById('settings-panel');
@@ -219,18 +309,19 @@ const Core = {
 
     changeMusicTrack() {
         if (!this.currentCase || !window.audioManager) return;
-        const previousTrack = this.getCurrentTrack() || this.lastSelectedTrack;
-        const preferredPool = this.getTrackPool(previousTrack) || this.getPreferredTrackPool();
-        const nextTrack = this.pickRandomTrack(previousTrack, preferredPool);
+        const currentPath = this.getCurrentTrack() || this.lastSelectedTrack;
+        const nextTrack = this.pickSequentialTrack(currentPath);
         if (!nextTrack) return;
 
-        this.currentCase._selectedMusicTrack = nextTrack;
-        this.lastSelectedTrack = nextTrack;
+        const fullPath = this.getFullTrackPath(nextTrack);
+        this.currentCase._selectedMusicTrack = fullPath;
+        this.lastSelectedTrack = fullPath;
         this.recordingStartMs = Date.now();
-        window.audioManager.play(nextTrack, { forceSwitch: true });
+        window.audioManager.play(fullPath, { forceSwitch: true });
         if (!this.isRunning) {
             window.audioManager.syncWithPlaybackState(false);
         }
+        this.updateControls();
     },
 
     getRecordingElapsedMs() {
@@ -280,7 +371,11 @@ const Core = {
             ? (this.currentCase.isCaseAudioMuted() ? 'OFF' : 'ON')
             : (window.audioManager && !window.audioManager.isMuted ? 'ON' : 'OFF');
         const trackPoolName = this.getTrackPoolName(this.getCurrentTrack());
-        const nextTrackLabel = trackPoolName === 'piano' ? 'Next Piano' : 'Next Random';
+        const nextTrackLabel = (() => {
+            if (trackPoolName === 'piano') return 'Next Piano';
+            if (trackPoolName === 'lofi') return 'Next Lofi';
+            return 'Next Math';
+        })();
         const volumeValue = window.audioManager && typeof window.audioManager.getTargetVolume === 'function'
             ? window.audioManager.getTargetVolume()
             : (window.audioManager ? window.audioManager.targetVolume : 0.5);

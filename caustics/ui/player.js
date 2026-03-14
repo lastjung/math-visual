@@ -91,13 +91,13 @@ export function setupPlayer(app, ui) {
         window.audioManager.resume();
     };
 
-    const btnNextTrack = UIElements.get('apple-next-track');
-    if (btnNextTrack) {
-        btnNextTrack.onclick = () => {
-            app.nextBGM();
-            ui.update(app);
-        };
-    }
+        const btnNextTrack = UIElements.get('apple-next-track');
+        if (btnNextTrack) {
+            btnNextTrack.onclick = () => {
+                app.nextBGM(true, true);
+                ui.update(app);
+            };
+        }
 
     const bgmIcon = UIElements.get('apple-bgm-icon');
     if (bgmIcon) {

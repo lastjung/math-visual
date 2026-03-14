@@ -23,7 +23,7 @@ const GoldenSpiralCase = {
     // Config
     maxSteps: Number.POSITIVE_INFINITY,
     speed: 0.006,
-    musicTrack: 'assets/music/bgm/Math_09_Fibonacci_Golden_Ratio.mp3',
+    musicTrack: 'assets/music/bgm/math/Math_09_Fibonacci_Golden_Ratio.mp3',
     
     // Expanded Pastel Palette (12 colors for variety)
     colors: [

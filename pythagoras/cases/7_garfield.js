@@ -7,7 +7,7 @@ const GarfieldCase = {
     a: 120, b: 160,
     triangles: [],
     
-    musicTrack: '../visualization/assets/music/bgm/Math_03_Harmonic_Balance.mp3',
+    musicTrack: '../visualization/assets/music/bgm/math/Math_03_Euclidean_Polyrhythm.mp3',
     colors: ['#0984e3', '#00b894', '#fdcb6e'],
 
     steps: [

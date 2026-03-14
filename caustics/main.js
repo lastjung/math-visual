@@ -97,8 +97,8 @@ const App = {
         return initAudio(this);
     },
 
-    nextBGM(autoPlay = true) {
-        return nextBGM(this, autoPlay);
+    nextBGM(autoPlay = true, manualSequential = false) {
+        return nextBGM(this, autoPlay, manualSequential);
     },
 
     formatTime(seconds) {
