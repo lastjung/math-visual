@@ -56,6 +56,8 @@ export function updateUI(app) {
     const valSpread = UIElements.get('val-spread');
     if (valSpread && valSpread.textContent !== spreadText) valSpread.textContent = spreadText;
 
+    const rangeBeamWidth = UIElements.get('range-beam-width');
+    if (rangeBeamWidth) rangeBeamWidth.value = String(app.beamWidth);
     const valBeamWidth = UIElements.get('val-beam-width');
     if (valBeamWidth) valBeamWidth.textContent = app.beamWidth.toFixed(1);
 
@@ -70,13 +72,13 @@ export function updateUI(app) {
     const alphaText = `${app.alphaIntensity.toFixed(2)}x`;
     if (valAlpha && valAlpha.textContent !== alphaText) valAlpha.textContent = alphaText;
 
-    const triangleCount = UIElements.get('range-triangle-count');
-    const triangleCountValue = UIElements.get('val-triangle-count');
+    const triangleCount = UIElements.get('range-source-count');
+    const triangleCountValue = UIElements.get('val-source-count');
     if (triangleCount) triangleCount.value = app.trianglePointCount;
     if (triangleCountValue) triangleCountValue.textContent = String(app.trianglePointCount);
 
-    const triangleBias = UIElements.get('range-triangle-bias');
-    const triangleBiasValue = UIElements.get('val-triangle-bias');
+    const triangleBias = UIElements.get('range-source-bias');
+    const triangleBiasValue = UIElements.get('val-source-bias');
     if (triangleBias) triangleBias.value = app.triangleVertexBias;
     if (triangleBiasValue) triangleBiasValue.textContent = app.triangleVertexBias.toFixed(2);
 
@@ -107,10 +109,11 @@ export function updateUI(app) {
     UIElements.queryAll('#group-source-mode .mini-tab').forEach((btn) => {
         btn.classList.toggle('active', btn.dataset.value === app.lightSourceMode);
     });
-    UIElements.queryAll('#group-triangle-source .mini-tab').forEach((btn) => {
-        btn.classList.toggle('active', btn.dataset.value === app.triangleSourceMode);
+    const activeSourceLayout = app.triangleSourceMode;
+    UIElements.queryAll('#group-source-layout .mini-tab').forEach((btn) => {
+        btn.classList.toggle('active', btn.dataset.value === activeSourceLayout);
     });
-    UIElements.queryAll('#group-triangle-direction .mini-tab').forEach((btn) => {
+    UIElements.queryAll('#group-source-direction .mini-tab').forEach((btn) => {
         btn.classList.toggle('active', btn.dataset.value === app.triangleDirectionMode);
     });
 
@@ -183,12 +186,11 @@ export function syncShapePanel(app) {
     const card = UIElements.get('shape-option-card');
     const presetNote = UIElements.get('shape-preset-note');
     const btnFoci = UIElements.get('btn-foci-sync');
-    const trianglePanelBlock = UIElements.get('triangle-panel-block');
-    const triangleDetailBlock = UIElements.get('triangle-detail-block');
-    const triangleDirectionRow = UIElements.get('triangle-direction-row');
-    const triangleStripControls = UIElements.get('triangle-strip-controls');
+    const trianglePanelBlock = UIElements.get('source-layout-panel');
+    const triangleDetailBlock = UIElements.get('source-layout-detail-block');
+    const triangleDirectionRow = UIElements.get('source-direction-row');
+    const triangleStripControls = UIElements.get('source-strip-controls');
     const badgeSub = UIElements.get('shape-badge-sub');
-    const isTriangle = app.shape === 'triangle';
     const isTriangleSingle = app.triangleSourceMode === 'single';
     const isTriangleStrip = app.triangleSourceMode === 'strip';
 
@@ -198,7 +200,9 @@ export function syncShapePanel(app) {
         badge.title = content.description;
     }
     if (badgeSub) {
-        badgeSub.textContent = isTriangle ? (content.meta || 'Point') : (app.lightSourceMode === 'parallel' ? 'Parallel' : (app.lightSourceMode === 'converge' ? 'Converge' : 'Point'));
+        badgeSub.textContent = app.shape === 'triangle'
+            ? (content.meta || 'Point')
+            : (app.lightSourceMode === 'parallel' ? 'Parallel' : (app.lightSourceMode === 'converge' ? 'Converge' : 'Point'));
         badgeSub.style.display = 'inline-block';
     }
     
@@ -211,10 +215,10 @@ export function syncShapePanel(app) {
         btnFoci.textContent = content.action;
         btnFoci.title = `Sync source to ${content.action.toLowerCase()} anchor`;
     }
-    if (trianglePanelBlock) trianglePanelBlock.classList.toggle('visible', isTriangle);
-    if (triangleDetailBlock) triangleDetailBlock.classList.toggle('hidden', !isTriangle || isTriangleSingle);
-    if (triangleDirectionRow) triangleDirectionRow.classList.toggle('hidden', !isTriangle || isTriangleSingle);
-    if (triangleStripControls) triangleStripControls.classList.toggle('hidden', !isTriangle || !isTriangleStrip);
+    if (trianglePanelBlock) trianglePanelBlock.classList.toggle('visible', true);
+    if (triangleDetailBlock) triangleDetailBlock.classList.toggle('hidden', isTriangleSingle);
+    if (triangleDirectionRow) triangleDirectionRow.classList.toggle('hidden', isTriangleSingle);
+    if (triangleStripControls) triangleStripControls.classList.toggle('hidden', !isTriangleStrip);
     if (card) card.classList.toggle('hidden', false); // Always show card
     if (note) note.classList.toggle('hidden', false); // Always show note
 

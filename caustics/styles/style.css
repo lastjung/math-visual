@@ -336,11 +336,11 @@ canvas {
   white-space: nowrap;
 }
 
-.triangle-panel-block {
+.source-layout-panel {
   display: none;
 }
 
-.triangle-panel-block.visible {
+.source-layout-panel.visible {
   display: block;
 }
 
@@ -489,7 +489,7 @@ canvas {
   min-height: 34px;
 }
 
-.triangle-panel-block {
+.source-layout-panel {
   display: none;
   margin-top: 14px;
   padding: 14px;
@@ -500,28 +500,28 @@ canvas {
   border: 1px solid rgba(103, 232, 249, 0.12);
 }
 
-.triangle-panel-block.visible {
+.source-layout-panel.visible {
   display: block;
 }
 
-.triangle-panel-copy {
+.source-layout-copy {
   font-size: 11px;
   line-height: 1.65;
   color: rgba(255, 255, 255, 0.62);
   margin-bottom: 14px;
 }
 
-.triangle-detail-block {
+.source-layout-detail-block {
   margin-top: 2px;
 }
 
-.triangle-row {
+.source-layout-row {
   margin-bottom: 12px;
 }
 
-.triangle-detail-block.hidden,
-.triangle-strip-controls.hidden,
-.triangle-direction-row.hidden {
+.source-layout-detail-block.hidden,
+.source-strip-controls.hidden,
+.source-direction-row.hidden {
   display: none;
 }
 

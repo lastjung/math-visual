@@ -146,7 +146,7 @@ export function setupControls(app, ui) {
         };
     }
 
-    const rangeTriangleCount = UIElements.get('range-triangle-count');
+    const rangeTriangleCount = UIElements.get('range-source-count');
     if (rangeTriangleCount) {
         rangeTriangleCount.oninput = (e) => {
             app.trianglePointCount = parseInt(e.target.value, 10);
@@ -155,7 +155,7 @@ export function setupControls(app, ui) {
         };
     }
 
-    const rangeTriangleBias = UIElements.get('range-triangle-bias');
+    const rangeTriangleBias = UIElements.get('range-source-bias');
     if (rangeTriangleBias) {
         rangeTriangleBias.oninput = (e) => {
             app.triangleVertexBias = parseFloat(e.target.value);
@@ -218,16 +218,20 @@ export function setupControls(app, ui) {
         };
     });
 
-    UIElements.queryAll('#group-triangle-source .mini-tab').forEach((btn) => {
+    UIElements.queryAll('#group-source-layout .mini-tab').forEach((btn) => {
         btn.onclick = (e) => {
-            app.triangleSourceMode = e.target.dataset.value;
+            const nextLayout = e.target.dataset.value;
+            app.triangleSourceMode = nextLayout;
             app.resetTriangleSourceOffsets();
+            if (app.shape === 'rect' && nextLayout === 'triad') {
+                app.sourcePos = { x: 0, y: 0 };
+            }
             refreshIncrementalModes();
             ui.update(app);
         };
     });
 
-    UIElements.queryAll('#group-triangle-direction .mini-tab').forEach((btn) => {
+    UIElements.queryAll('#group-source-direction .mini-tab').forEach((btn) => {
         btn.onclick = (e) => {
             app.triangleDirectionMode = e.target.dataset.value;
             refreshIncrementalModes();

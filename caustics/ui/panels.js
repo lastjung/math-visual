@@ -10,14 +10,15 @@ export function trianglePanelContent(app, baseContent) {
         outward: 'Outward',
         'edge-normal': 'Edge Normal'
     };
+    const isSingle = app.triangleSourceMode === 'single';
 
-    if (app.triangleSourceMode === 'single') {
+    if (isSingle) {
         return {
             ...baseContent,
             meta: 'Single Point',
             cardTitle: 'Single Emitter',
             cardCopy: 'One source follows the main grip, so this is the cleanest mode for reading periodic paths.',
-            note: 'Tip: use the grip for angle tuning, then add spread to widen the family of reflections.'
+            note: 'Tip: use the main grip for placement, then widen spread to open the reflection family.'
         };
     }
 

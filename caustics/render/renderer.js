@@ -636,19 +636,25 @@ export const Renderer = {
 
         // 2. Main Light Source Dot (ALWAYS VISIBLE)
         ctx.save();
-        if (state.shape === 'triangle' && state.triangleSourceMode !== 'single') {
-            const origins = state.getTriangleSourceOrigins(size);
+        const origins = state.getTriangleSourceOrigins(size);
+        const isSingleSource = origins.length === 1
+            && Math.abs(origins[0].x - state.sourcePos.x) < 0.001
+            && Math.abs(origins[0].y - state.sourcePos.y) < 0.001;
+
+        if (origins.length > 0) {
             ctx.fillStyle = 'rgba(103, 232, 249, 0.78)';
             origins.forEach((origin) => {
                 ctx.beginPath();
-                ctx.arc(centerX + origin.x, centerY + origin.y, 3, 0, Math.PI * 2);
+                ctx.arc(centerX + origin.x, centerY + origin.y, isSingleSource ? 4 : 3, 0, Math.PI * 2);
                 ctx.fill();
             });
         }
-        ctx.beginPath(); ctx.arc(sX, sY, 10, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.15)'; ctx.fill();
-        ctx.beginPath(); ctx.arc(sX, sY, 4, 0, Math.PI * 2);
-        ctx.fillStyle = '#fff'; ctx.fill();
+        if (!isSingleSource) {
+            ctx.beginPath(); ctx.arc(sX, sY, 10, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.15)'; ctx.fill();
+            ctx.beginPath(); ctx.arc(sX, sY, 4, 0, Math.PI * 2);
+            ctx.fillStyle = '#fff'; ctx.fill();
+        }
         ctx.restore();
 
         // 3. Additional Guides (Foci, etc. - respect showAxes)

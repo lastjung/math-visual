@@ -43,18 +43,46 @@ export function getTriangleVertices(size) {
     ];
 }
 
+export function getShapeLayoutCenter(shape, size) {
+    if (shape === 'triangle') return { x: 0, y: size * 0.2 };
+    if (shape === 'cardioid') return { x: size * 0.5, y: 0 };
+    return { x: 0, y: 0 };
+}
+
+export function getRectVertices(size) {
+    const rw = size * 1.5;
+    const rh = size * 2.1;
+    const hw = rw / 2;
+    const hh = rh / 2;
+    return [
+        { x: -hw, y: -hh },
+        { x: hw, y: -hh },
+        { x: hw, y: hh },
+        { x: -hw, y: hh }
+    ];
+}
+
+export function getVertexLayoutPoints(shape, size) {
+    if (shape === 'triangle') return getTriangleVertices(size);
+    if (shape === 'rect') return getRectVertices(size);
+    if (shape === 'parabola') {
+        return [0, Math.PI, Math.PI * 2].map((rad) => Physics.getShapePoint(rad, shape, size));
+    }
+    return [-Math.PI / 2, -Math.PI / 2 + (Math.PI * 2) / 3, -Math.PI / 2 + (Math.PI * 4) / 3]
+        .map((rad) => Physics.getShapePoint(rad, shape, size));
+}
+
 export function getTriangleBaseOrigins(app, size) {
     const base = { ...app.sourcePos };
-    if (app.shape !== 'triangle') return [base];
 
     if (app.triangleSourceMode === 'triad') {
-        const triangleCenter = { x: 0, y: size * 0.2 };
+        const layoutCenter = getShapeLayoutCenter(app.shape, size);
         const offset = {
-            x: base.x - triangleCenter.x,
-            y: base.y - triangleCenter.y
+            x: base.x - layoutCenter.x,
+            y: base.y - layoutCenter.y
         };
 
-        return getTriangleVertices(size).map((vertex) => ({
+        return getVertexLayoutPoints(app.shape, size).map((vertex) => ({
             x: vertex.x + offset.x,
             y: vertex.y + offset.y
         }));
@@ -100,28 +128,24 @@ export function getTriangleSourceOrigins(app, size) {
 export function getTriangleLaunchAngle(app, origin, size, localT = 0.5) {
     const baseAngle = Math.PI / 2 + app.sourceRotation;
     const spreadOffset = (localT - 0.5) * app.spread;
-    const triangleCenter = { x: 0, y: size * 0.2 };
-
-    if (app.triangleSourceMode === 'single') {
-        return baseAngle + spreadOffset;
-    }
+    const layoutCenter = getShapeLayoutCenter(app.shape, size);
 
     if (app.triangleDirectionMode === 'parallel') {
         return baseAngle + spreadOffset;
     }
 
     if (app.triangleDirectionMode === 'inward') {
-        const inwardAngle = Math.atan2(triangleCenter.y - origin.y, triangleCenter.x - origin.x);
+        const inwardAngle = Math.atan2(layoutCenter.y - origin.y, layoutCenter.x - origin.x);
         return inwardAngle + app.sourceRotation + spreadOffset;
     }
 
     if (app.triangleDirectionMode === 'outward') {
-        const outwardAngle = Math.atan2(origin.y - triangleCenter.y, origin.x - triangleCenter.x);
+        const outwardAngle = Math.atan2(origin.y - layoutCenter.y, origin.x - layoutCenter.x);
         return outwardAngle + app.sourceRotation + spreadOffset;
     }
 
     if (app.triangleDirectionMode === 'edge-normal') {
-        const inwardNormal = Physics.getNormal(origin.x, origin.y, 'triangle', size);
+        const inwardNormal = Physics.getNormal(origin.x, origin.y, app.shape, size);
         const normalAngle = Math.atan2(-inwardNormal.y, -inwardNormal.x);
         return normalAngle + app.sourceRotation + spreadOffset;
     }
