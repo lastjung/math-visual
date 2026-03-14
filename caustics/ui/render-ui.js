@@ -118,6 +118,18 @@ export function updateUI(app) {
         btn.classList.toggle('active', btn.dataset.value === app.triangleDirectionMode);
     });
 
+    UIElements.queryAll('#group-source-single-option .mini-tab').forEach((btn) => {
+        const val = btn.dataset.value;
+        if (val === 'center') {
+            const isCenter = Math.abs(app.sourcePos.x) < 1 && Math.abs(app.sourcePos.y) < 1;
+            btn.classList.toggle('active', isCenter);
+        } else if (val === 'basic') {
+            const defaults = app.getShapeDefaults(app.shape);
+            const isBasic = Math.abs(app.sourcePos.x - defaults.sourcePos.x) < 1 && Math.abs(app.sourcePos.y - defaults.sourcePos.y) < 1;
+            btn.classList.toggle('active', isBasic);
+        }
+    });
+
     const cTrail = UIElements.get('check-trail');
     const cTaper = UIElements.get('check-taper');
     const cBloom = UIElements.get('check-bloom');
@@ -190,6 +202,7 @@ export function syncShapePanel(app) {
     const trianglePanelBlock = UIElements.get('source-layout-panel');
     const triangleDetailBlock = UIElements.get('source-layout-detail-block');
     const triangleDirectionRow = UIElements.get('source-direction-row');
+    const triangleSingleOptionRow = UIElements.get('source-single-option-row');
     const triangleStripControls = UIElements.get('source-strip-controls');
     const badgeSub = UIElements.get('shape-badge-sub');
     const isTriangleSingle = app.triangleSourceMode === 'single';
@@ -217,8 +230,9 @@ export function syncShapePanel(app) {
         btnFoci.title = `Sync source to ${content.action.toLowerCase()} anchor`;
     }
     if (trianglePanelBlock) trianglePanelBlock.classList.toggle('visible', true);
-    if (triangleDetailBlock) triangleDetailBlock.classList.toggle('hidden', isTriangleSingle);
+    if (triangleDetailBlock) triangleDetailBlock.classList.toggle('hidden', false); // Always show details if panel is open
     if (triangleDirectionRow) triangleDirectionRow.classList.toggle('hidden', isTriangleSingle);
+    if (triangleSingleOptionRow) triangleSingleOptionRow.classList.toggle('hidden', !isTriangleSingle);
     if (triangleStripControls) triangleStripControls.classList.toggle('hidden', !isTriangleStrip);
     if (card) card.classList.toggle('hidden', false); // Always show card
     if (note) note.classList.toggle('hidden', false); // Always show note

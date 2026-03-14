@@ -246,6 +246,20 @@ export function setupControls(app, ui) {
         };
     });
 
+    UIElements.queryAll('#group-source-single-option .mini-tab').forEach((btn) => {
+        btn.onclick = (e) => {
+            const val = e.target.dataset.value;
+            if (val === 'basic') {
+                app.syncSourceToFoci();
+            } else if (val === 'center') {
+                app.sourcePos = { x: 0, y: 0 };
+                app.sourceAnchorPos = { x: 0, y: 0 };
+            }
+            refreshIncrementalModes();
+            ui.update(app);
+        };
+    });
+
     UIElements.queryAll('#group-source-mode .mini-tab').forEach((btn) => {
         btn.onclick = (e) => {
             app.lightSourceMode = e.target.dataset.value;

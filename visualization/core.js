@@ -574,6 +574,7 @@ const Core = {
     resetCase() {
         if (this.currentCase && this.currentCase.reset) {
             this.currentCase.reset();
+            this.selectCaseTrack(); // Pick a new random track on reset
             this.recordingStartMs = Date.now();
             // Auto-play on reset unless case forbids it
             if (!this.isRunning && this.currentCase.autoPlayOnReset !== false) {

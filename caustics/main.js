@@ -415,6 +415,7 @@ const App = {
         
         // Use resetRays for consistent behavior (timer reset, HUD visibility, canvas clearing)
         this.resetRays(true);
+        this.nextBGM(false, false); // Pick a new random track on reset
 
         // Reset auto modes and phases
         this.autoModes = {
