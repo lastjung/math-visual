@@ -187,18 +187,22 @@ export function syncShapePanel(app) {
     const triangleDetailBlock = UIElements.get('triangle-detail-block');
     const triangleDirectionRow = UIElements.get('triangle-direction-row');
     const triangleStripControls = UIElements.get('triangle-strip-controls');
+    const badgeSub = UIElements.get('shape-badge-sub');
     const isTriangle = app.shape === 'triangle';
     const isTriangleSingle = app.triangleSourceMode === 'single';
     const isTriangleStrip = app.triangleSourceMode === 'strip';
-    const title = UIElements.get('shape-options-title'); // For backward compatibility if needed else remove
 
     if (badge) {
         badge.textContent = content.badge;
         badge.dataset.description = content.description;
         badge.title = content.description;
     }
-    if (title) title.textContent = content.title;
-    if (sectionLabel) sectionLabel.textContent = isTriangle ? 'Triangle Studio' : 'Source Presets';
+    if (badgeSub) {
+        badgeSub.textContent = isTriangle ? (content.meta || 'Point') : (app.lightSourceMode === 'parallel' ? 'Parallel' : (app.lightSourceMode === 'converge' ? 'Converge' : 'Point'));
+        badgeSub.style.display = 'inline-block';
+    }
+    
+    if (sectionLabel) sectionLabel.textContent = 'Source Presets';
     if (meta) meta.textContent = content.meta;
     if (cardTitle) cardTitle.textContent = content.cardTitle;
     if (cardCopy) cardCopy.textContent = content.cardCopy;
@@ -211,8 +215,8 @@ export function syncShapePanel(app) {
     if (triangleDetailBlock) triangleDetailBlock.classList.toggle('hidden', !isTriangle || isTriangleSingle);
     if (triangleDirectionRow) triangleDirectionRow.classList.toggle('hidden', !isTriangle || isTriangleSingle);
     if (triangleStripControls) triangleStripControls.classList.toggle('hidden', !isTriangle || !isTriangleStrip);
-    if (card) card.classList.toggle('hidden', isTriangle);
-    if (note) note.classList.toggle('hidden', isTriangle);
+    if (card) card.classList.toggle('hidden', false); // Always show card
+    if (note) note.classList.toggle('hidden', false); // Always show note
 
     presets.forEach((preset, index) => {
         const button = UIElements.get(`shape-preset-${index}`);

@@ -322,6 +322,28 @@ canvas {
   from { opacity: 0; transform: translateY(-8px); }
   to { opacity: 1; transform: translateY(0); }
 }
+
+.shape-badge-sub {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #94a3b8;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 3px 8px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  white-space: nowrap;
+}
+
+.triangle-panel-block {
+  display: none;
+}
+
+.triangle-panel-block.visible {
+  display: block;
+}
+
 .shape-option-card-copy,
 .shape-option-note {
   font-size: 12px;
