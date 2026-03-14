@@ -636,7 +636,7 @@ export const Renderer = {
 
         // 2. Main Light Source Dot (ALWAYS VISIBLE)
         ctx.save();
-        if (state.shape === 'triangle' && state.lightSourceMode === 'point' && state.triangleSourceMode !== 'single') {
+        if (state.shape === 'triangle' && state.triangleSourceMode !== 'single') {
             const origins = state.getTriangleSourceOrigins(size);
             ctx.fillStyle = 'rgba(103, 232, 249, 0.78)';
             origins.forEach((origin) => {

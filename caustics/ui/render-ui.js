@@ -238,6 +238,7 @@ export function applyShapePreset(app) {
         const next = preset.apply();
         const presetNote = UIElements.get('shape-preset-note');
         if (next.sourcePos) app.sourcePos = { ...next.sourcePos };
+        app.resetTriangleSourceOffsets();
         if (typeof next.sourceRotation === 'number') app.sourceRotation = next.sourceRotation;
         if (next.parallelRange && typeof next.parallelRange.min === 'number' && typeof next.parallelRange.max === 'number') {
             app.parallelRange = { ...next.parallelRange };

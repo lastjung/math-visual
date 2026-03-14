@@ -28,6 +28,7 @@ export function buildPersistedState(app) {
         triangleDirectionMode: app.triangleDirectionMode,
         trianglePointCount: app.trianglePointCount,
         triangleVertexBias: app.triangleVertexBias,
+        triangleSourceOffsets: app.triangleSourceOffsets,
         useTrail: app.useTrail,
         useTaper: app.useTaper,
         useBloom: app.useBloom,
@@ -84,6 +85,11 @@ export function restoreState(app) {
         app.triangleDirectionMode = saved.triangleDirectionMode ?? app.triangleDirectionMode;
         app.trianglePointCount = saved.trianglePointCount ?? app.trianglePointCount;
         app.triangleVertexBias = saved.triangleVertexBias ?? app.triangleVertexBias;
+        app.triangleSourceOffsets = Array.isArray(saved.triangleSourceOffsets)
+            ? saved.triangleSourceOffsets
+                .filter((offset) => offset && typeof offset.x === 'number' && typeof offset.y === 'number')
+                .map((offset) => ({ x: offset.x, y: offset.y }))
+            : [];
         app.normalizeLightSourceMode();
         app.useTrail = saved.useTrail ?? app.useTrail;
         app.useTaper = saved.useTaper ?? app.useTaper;

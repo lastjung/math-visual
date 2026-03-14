@@ -10,6 +10,7 @@ import { LightDensity } from './render/light-density.js';
 import { BGM_BASE_PATH, BGM_TRACKS, formatTime, initAudio, nextBGM } from './core/audio-controller.js';
 import {
     getDefaultSourcePos,
+    getTriangleBaseOrigins,
     getShapeDefaults,
     getTriangleLaunchAngle,
     getTriangleSourceOrigins,
@@ -60,11 +61,13 @@ const App = {
     flowOffset: 0,
     baseStyle: 'line',
     flowMode: 'none',
+    lightPattern: 'single', // New: 'single', 'multi', or 'strip'
     lightSourceMode: 'point', // 'point' or 'parallel'
     triangleSourceMode: 'single',
     triangleDirectionMode: 'parallel',
     trianglePointCount: 5,
     triangleVertexBias: 0.6,
+    triangleSourceOffsets: [],
     parallelRange: { min: -100, max: 100 }, // Cached range for Parallel rays
     useTrail: true,
     useTaper: false,
@@ -133,6 +136,10 @@ const App = {
         return getTriangleVertices(size);
     },
 
+    getTriangleBaseOrigins(size) {
+        return getTriangleBaseOrigins(this, size);
+    },
+
     getTriangleSourceOrigins(size) {
         return getTriangleSourceOrigins(this, size);
     },
@@ -141,65 +148,57 @@ const App = {
         return getTriangleLaunchAngle(this, origin, size, localT);
     },
 
+    resetTriangleSourceOffsets() {
+        this.triangleSourceOffsets = [];
+    },
+
     buildLaunchRayConfigs(rayCount, size, flowOffset = this.flowOffset) {
-        const count = Math.max(1, Math.floor(rayCount));
+        const totalCount = Math.max(1, Math.floor(rayCount));
         const aimAngle = Math.PI / 2;
         const configs = [];
         const origins = this.getTriangleSourceOrigins(size);
+        const groupCount = origins.length;
 
-        if (this.shape === 'triangle' && this.lightSourceMode === 'point' && origins.length > 1) {
-            const groupCount = origins.length;
-            const basePerGroup = Math.floor(count / groupCount);
-            const remainder = count % groupCount;
+        const basePerGroup = Math.floor(totalCount / groupCount);
+        const remainder = totalCount % groupCount;
 
-            origins.forEach((origin, groupIndex) => {
-                const localCount = basePerGroup + (groupIndex < remainder ? 1 : 0);
-                for (let localIndex = 0; localIndex < localCount; localIndex++) {
-                    const tLocal = localCount <= 1 ? 0.5 : localIndex / (localCount - 1);
-                    const tGlobal = count <= 1 ? 0 : configs.length / Math.max(1, count - 1);
-                    const angle = this.getTriangleLaunchAngle(origin, size, tLocal);
-                    configs.push({
-                        sPos: Physics.offsetRayStart(origin, angle, size),
-                        angle,
-                        t: tGlobal
-                    });
-                }
-            });
-            return configs;
-        }
+        origins.forEach((origin, groupIndex) => {
+            const localCount = basePerGroup + (groupIndex < remainder ? 1 : 0);
+            for (let localIndex = 0; localIndex < localCount; localIndex++) {
+                const t = localCount <= 1 ? 0.5 : localIndex / (localCount - 1);
+                const tGlobal = totalCount <= 1 ? 0 : configs.length / (totalCount - 1);
+                
+                let sPos, angle;
 
-        for (let idx = 0; idx < count; idx++) {
-            const t = idx / Math.max(1, count - 1);
-            let sPos, angle;
-
-            if (this.lightSourceMode === 'parallel') {
-                const d = this.parallelRange.min + t * (this.parallelRange.max - this.parallelRange.min);
-                const cosR = Math.cos(this.sourceRotation);
-                const sinR = Math.sin(this.sourceRotation);
-                sPos = { x: this.sourcePos.x + d * cosR, y: this.sourcePos.y + d * sinR };
-                angle = this.sourceRotation + Math.PI / 2;
-            } else if (this.lightSourceMode === 'converge') {
-                const targetPos = this.sourcePos;
-                const baseAngle = aimAngle + this.sourceRotation + (t - 0.5) * this.spread;
-                const hit = Physics.getConvergeLaunchPoint(targetPos, baseAngle, this.shape, size);
-                if (hit) {
-                    sPos = { x: hit.x, y: hit.y };
-                    angle = baseAngle + Math.PI;
+                if (this.lightSourceMode === 'parallel') {
+                    const d = this.parallelRange.min + t * (this.parallelRange.max - this.parallelRange.min);
+                    const cosR = Math.cos(this.sourceRotation);
+                    const sinR = Math.sin(this.sourceRotation);
+                    sPos = { x: origin.x + d * cosR, y: origin.y + d * sinR };
+                    angle = this.sourceRotation + Math.PI / 2;
+                } else if (this.lightSourceMode === 'converge') {
+                    const targetPos = origin;
+                    const baseAngle = aimAngle + this.sourceRotation + (t - 0.5) * this.spread;
+                    const hit = Physics.getConvergeLaunchPoint(targetPos, baseAngle, this.shape, size);
+                    if (hit) {
+                        sPos = { x: hit.x, y: hit.y };
+                        angle = baseAngle + Math.PI;
+                    } else {
+                        sPos = { x: targetPos.x, y: targetPos.y };
+                        angle = baseAngle;
+                    }
                 } else {
-                    sPos = { x: targetPos.x, y: targetPos.y };
-                    angle = baseAngle;
+                    angle = this.getTriangleLaunchAngle(origin, size, t);
+                    sPos = { x: origin.x, y: origin.y };
                 }
-            } else {
-                sPos = { x: this.sourcePos.x, y: this.sourcePos.y };
-                angle = aimAngle + this.sourceRotation + (t - 0.5) * this.spread;
-            }
 
-            configs.push({
-                sPos: Physics.offsetRayStart(sPos, angle, size),
-                angle,
-                t
-            });
-        }
+                configs.push({
+                    sPos: Physics.offsetRayStart(sPos, angle, size),
+                    angle,
+                    t: tGlobal
+                });
+            }
+        });
 
         return configs;
     },
@@ -217,6 +216,7 @@ const App = {
         // Reset only tab-specific values.
         const defaults = this.getShapeDefaults(nextShape);
         this.sourcePos = defaults.sourcePos;
+        this.resetTriangleSourceOffsets();
         this.sanitizeSourcePosition();
         this.sourceRotation = defaults.sourceRotation;
         this.spread = Math.PI / 3;
@@ -234,6 +234,7 @@ const App = {
     syncSourceToFoci() {
         const defaults = this.getShapeDefaults(this.shape);
         this.sourcePos = defaults.sourcePos;
+        this.resetTriangleSourceOffsets();
     },
 
     getShapeSize() {
@@ -385,6 +386,7 @@ const App = {
         this.raySpeed = 20;
         const defaults = this.getShapeDefaults(this.shape);
         this.sourcePos = defaults.sourcePos;
+        this.resetTriangleSourceOffsets();
         this.sanitizeSourcePosition();
         this.normalizeLightSourceMode();
         // this.isPaintMode = false; // Preserve current mode

@@ -4,6 +4,18 @@ export function setupControls(app, ui) {
     window.addEventListener('resize', () => app.resize());
     ui.setupApplePlayer(app);
 
+    const distanceToSegment = (point, start, end) => {
+        const dx = end.x - start.x;
+        const dy = end.y - start.y;
+        const lenSq = dx * dx + dy * dy;
+        if (lenSq === 0) return Math.hypot(point.x - start.x, point.y - start.y);
+
+        const t = Math.max(0, Math.min(1, ((point.x - start.x) * dx + (point.y - start.y) * dy) / lenSq));
+        const projX = start.x + dx * t;
+        const projY = start.y + dy * t;
+        return Math.hypot(point.x - projX, point.y - projY);
+    };
+
     const refreshIncrementalModes = () => {
         if (app.isPaint2Mode || app.isLightMode) app.resetRays(false);
     };
@@ -209,6 +221,7 @@ export function setupControls(app, ui) {
     UIElements.queryAll('#group-triangle-source .mini-tab').forEach((btn) => {
         btn.onclick = (e) => {
             app.triangleSourceMode = e.target.dataset.value;
+            app.resetTriangleSourceOffsets();
             refreshIncrementalModes();
             ui.update(app);
         };
@@ -285,6 +298,13 @@ export function setupControls(app, ui) {
                     x: prevSourcePos.x * scale,
                     y: prevSourcePos.y * scale
                 };
+            }
+
+            if (Array.isArray(app.triangleSourceOffsets)) {
+                app.triangleSourceOffsets = app.triangleSourceOffsets.map((offset) => ({
+                    x: offset.x * scale,
+                    y: offset.y * scale
+                }));
             }
 
             app.sanitizeSourcePosition();
@@ -387,6 +407,8 @@ export function setupControls(app, ui) {
 
     let isDragging = false;
     let dragTarget = 'center';
+    let dragSourceIndex = -1;
+    let pendingIncrementalRefresh = false;
 
     const handleInteraction = (e) => {
         const rect = app.canvas.getBoundingClientRect();
@@ -398,65 +420,113 @@ export function setupControls(app, ui) {
         const y = clientY - rect.top - (rect.height / 2 - 60);
 
         if (e.type === 'mousedown' || e.type === 'touchstart') {
-            const sX = app.sourcePos.x;
-            const sY = app.sourcePos.y;
+            const sX = app.sourcePos.x, sY = app.sourcePos.y;
+            const distToCenter = Math.sqrt((x - sX) ** 2 + (y - sY) ** 2);
+            
+            // 1. Check for Move Handles
+            if (distToCenter < 40) {
+                isDragging = true; dragTarget = 'center';
+            } else {
+                // 2. Check for Vertex Bias Handles (Blue points)
+                const size = app.getShapeSize();
+                const origins = app.getTriangleSourceOrigins(size);
+                for (let i = 0; i < origins.length; i++) {
+                    const o = origins[i];
+                    if (Math.sqrt((x - o.x) ** 2 + (y - o.y) ** 2) < 40) {
+                        isDragging = true;
+                        dragTarget = 'bias';
+                        dragSourceIndex = i;
+                        break;
+                    }
+                }
+            }
 
-            if (app.lightSourceMode === 'parallel') {
-                const cosR = Math.cos(app.sourceRotation);
-                const sinR = Math.sin(app.sourceRotation);
+            // 3. Check for Parallel side handles
+            if (!isDragging && app.lightSourceMode === 'parallel') {
+                const cosR = Math.cos(app.sourceRotation), sinR = Math.sin(app.sourceRotation);
                 const { min, max } = app.parallelRange;
                 const h1 = { x: sX + min * cosR, y: sY + min * sinR };
                 const h2 = { x: sX + max * cosR, y: sY + max * sinR };
-                const d0 = Math.sqrt((x - sX) ** 2 + (y - sY) ** 2);
-                const d1 = Math.sqrt((x - h1.x) ** 2 + (y - h1.y) ** 2);
-                const d2 = Math.sqrt((x - h2.x) ** 2 + (y - h2.y) ** 2);
-
-                if (d1 < 30) {
+                if (Math.sqrt((x - h1.x) ** 2 + (y - h1.y) ** 2) < 35) {
                     isDragging = true;
                     dragTarget = 'min';
-                } else if (d2 < 30) {
+                } else if (Math.sqrt((x - h2.x) ** 2 + (y - h2.y) ** 2) < 35) {
                     isDragging = true;
                     dragTarget = 'max';
-                } else if (d0 < 40) {
-                    isDragging = true;
-                    dragTarget = 'center';
                 }
-            } else {
-                const d0 = Math.sqrt((x - sX) ** 2 + (y - sY) ** 2);
-                if (d0 < 50) {
+            }
+
+            // 4. Direct Beam Interaction
+            if (!isDragging && app.isLightVisible && !app.isFlowing && app.lightSourceMode !== 'parallel') {
+                const beamLength = Math.max(120, app.getShapeSize() * 0.85);
+                const centerAngle = app.sourceRotation + Math.PI / 2;
+                const edgeA = centerAngle - app.spread / 2;
+                const edgeB = centerAngle + app.spread / 2;
+                const tipA = { x: sX + Math.cos(edgeA) * beamLength, y: sY + Math.sin(edgeA) * beamLength };
+                const tipB = { x: sX + Math.cos(edgeB) * beamLength, y: sY + Math.sin(edgeB) * beamLength };
+
+                if (Math.hypot(x - tipA.x, y - tipA.y) < 28 || Math.hypot(x - tipB.x, y - tipB.y) < 28) {
                     isDragging = true;
-                    dragTarget = 'center';
+                    dragTarget = 'beam';
                 }
             }
 
             if (isDragging) {
-                app.autoModes.revolution = false;
-                app.autoModes.rotation = false;
+                app.autoModes.revolution = app.autoModes.rotation = false;
                 if (e.cancelable) e.preventDefault();
             }
         } else if (isDragging && (e.type === 'mousemove' || e.type === 'touchmove')) {
+            const sX = app.sourcePos.x, sY = app.sourcePos.y;
             if (dragTarget === 'center') {
                 app.sourcePos = { x, y };
+            } else if (dragTarget === 'bias') {
+                const size = app.getShapeSize();
+                const baseOrigins = app.getTriangleBaseOrigins(size);
+                const baseOrigin = baseOrigins[dragSourceIndex];
+                if (baseOrigin) {
+                    const nextOffsets = Array.from({ length: baseOrigins.length }, (_, index) => {
+                        const offset = app.triangleSourceOffsets[index];
+                        return offset && typeof offset.x === 'number' && typeof offset.y === 'number'
+                            ? { x: offset.x, y: offset.y }
+                            : { x: 0, y: 0 };
+                    });
+                    nextOffsets[dragSourceIndex] = {
+                        x: x - baseOrigin.x,
+                        y: y - baseOrigin.y
+                    };
+                    app.triangleSourceOffsets = nextOffsets;
+                }
+            } else if (dragTarget === 'beam') {
+                const mouseAngle = Math.atan2(y - sY, x - sX);
+                let diff = mouseAngle - (app.sourceRotation + Math.PI / 2);
+                while (diff > Math.PI) diff -= Math.PI * 2;
+                while (diff < -Math.PI) diff += Math.PI * 2;
+                app.spread = Math.max(0.02, Math.min(Math.PI * 2, Math.abs(diff) * 2));
             } else {
-                const dx = x - app.sourcePos.x;
-                const dy = y - app.sourcePos.y;
+                const dx = x - sX, dy = y - sY;
                 const dist = Math.sqrt(dx * dx + dy * dy);
-
+                const angle = Math.atan2(dy, dx);
                 if (dragTarget === 'min') {
                     app.parallelRange.min = -dist;
-                    app.sourceRotation = Math.atan2(-dy, -dx);
+                    app.sourceRotation = angle + Math.PI;
                 } else if (dragTarget === 'max') {
                     app.parallelRange.max = dist;
-                    app.sourceRotation = Math.atan2(dy, dx);
+                    app.sourceRotation = angle;
                 }
             }
-            refreshIncrementalModes();
+            pendingIncrementalRefresh = true;
             ui.update(app);
+            app.persistState();
         }
     };
 
     const stopDragging = () => {
+        if (pendingIncrementalRefresh) {
+            refreshIncrementalModes();
+            pendingIncrementalRefresh = false;
+        }
         isDragging = false;
+        dragSourceIndex = -1;
     };
 
     app.canvas.addEventListener('mousedown', handleInteraction);

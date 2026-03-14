@@ -43,9 +43,9 @@ export function getTriangleVertices(size) {
     ];
 }
 
-export function getTriangleSourceOrigins(app, size) {
+export function getTriangleBaseOrigins(app, size) {
     const base = { ...app.sourcePos };
-    if (app.shape !== 'triangle' || app.lightSourceMode !== 'point') return [base];
+    if (app.shape !== 'triangle') return [base];
 
     if (app.triangleSourceMode === 'triad') {
         const triangleCenter = { x: 0, y: size * 0.2 };
@@ -80,12 +80,33 @@ export function getTriangleSourceOrigins(app, size) {
     return [base];
 }
 
+export function getTriangleSourceOrigins(app, size) {
+    const baseOrigins = getTriangleBaseOrigins(app, size);
+    const offsets = Array.isArray(app.triangleSourceOffsets) ? app.triangleSourceOffsets : [];
+
+    return baseOrigins.map((origin, index) => {
+        const offset = offsets[index];
+        if (!offset || typeof offset.x !== 'number' || typeof offset.y !== 'number') {
+            return origin;
+        }
+
+        return {
+            x: origin.x + offset.x,
+            y: origin.y + offset.y
+        };
+    });
+}
+
 export function getTriangleLaunchAngle(app, origin, size, localT = 0.5) {
     const baseAngle = Math.PI / 2 + app.sourceRotation;
     const spreadOffset = (localT - 0.5) * app.spread;
     const triangleCenter = { x: 0, y: size * 0.2 };
 
     if (app.triangleSourceMode === 'single') {
+        return baseAngle + spreadOffset;
+    }
+
+    if (app.triangleDirectionMode === 'parallel') {
         return baseAngle + spreadOffset;
     }
 
