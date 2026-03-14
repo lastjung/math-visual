@@ -195,9 +195,9 @@ export function runRectA0Simulation(app) {
     resumeAudioIfAvailable();
 
     const stages = [
-        { subtitle: 'Vertical Equilibrium: The Top Bounce', slot: 0, duration: 12000 },
-        { subtitle: 'Corner Geometry: The Vertex Echo', slot: 2, duration: 15000 },
-        { subtitle: 'Diagonal Sweep: The Side Scan', slot: 1, duration: 18000 }
+        { subtitle: 'Side Scan', slot: 1, duration: 25000, speed: 20 },
+        { subtitle: 'Vertical Equilibrium: The Top Bounce', slot: 0, duration: 10000, speed: 15 },
+        { subtitle: 'Corner Geometry: The Vertex Echo', slot: 2, duration: 10000, speed: 15 }
     ];
 
     let idx = 0;
@@ -212,6 +212,7 @@ export function runRectA0Simulation(app) {
         app.isLightVisible = false;
         app.isFlowing = false;
         UI.applyShapePreset(app, stage.slot);
+        app.raySpeed = stage.speed;
         app.overlayMessage = idx === 0 ? ['Rectangle Master', stage.subtitle] : stage.subtitle;
         UI.update(app);
 
