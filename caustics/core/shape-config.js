@@ -65,6 +65,17 @@ export function getRectVertices(size) {
 export function getVertexLayoutPoints(shape, size) {
     if (shape === 'triangle') return getTriangleVertices(size);
     if (shape === 'rect') return getRectVertices(size);
+    if (shape === 'cardioid') {
+        const center = getShapeLayoutCenter(shape, size);
+        return [Math.PI, Math.PI / 3, (Math.PI * 5) / 3].map((rad, index) => {
+            const point = Physics.getShapePoint(rad, shape, size);
+            if (index === 0) return point;
+            return {
+                x: center.x + (point.x - center.x) * 0.40,
+                y: center.y + (point.y - center.y) * 2
+            };
+        });
+    }
     if (shape === 'parabola') {
         return [0, Math.PI, Math.PI * 2].map((rad) => Physics.getShapePoint(rad, shape, size));
     }
@@ -73,7 +84,11 @@ export function getVertexLayoutPoints(shape, size) {
 }
 
 export function getTriangleBaseOrigins(app, size) {
-    const base = { ...app.sourcePos };
+    const base = app.triangleSourceMode === 'single'
+        ? { ...app.sourcePos }
+        : (app.sourceAnchorPos && typeof app.sourceAnchorPos.x === 'number' && typeof app.sourceAnchorPos.y === 'number'
+            ? { ...app.sourceAnchorPos }
+            : getShapeLayoutCenter(app.shape, size));
 
     if (app.triangleSourceMode === 'triad') {
         const layoutCenter = getShapeLayoutCenter(app.shape, size);

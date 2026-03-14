@@ -30,7 +30,10 @@ export function setupControls(app, ui) {
     };
 
     const config = {
-        revolution: { speed: 0.1, min: -Math.PI, max: Math.PI, get: () => Math.atan2(app.sourcePos.y, app.sourcePos.x) },
+        revolution: { speed: 0.1, min: -Math.PI, max: Math.PI, get: () => {
+            const anchor = app.getActiveSourceAnchor();
+            return Math.atan2(anchor.y, anchor.x);
+        } },
         rotation: { speed: 0.15, min: -Math.PI, max: Math.PI, get: () => app.sourceRotation },
         density: { speed: 0.2, min: 20, max: 1000, get: () => app.rayNumber },
         speed: { speed: 0.1, min: 0, max: 100, get: () => app.raySpeed },
@@ -81,11 +84,14 @@ export function setupControls(app, ui) {
     const rangeSource = UIElements.get('range-source');
     rangeSource.oninput = (e) => {
         const angle = parseFloat(e.target.value);
-        const dist = Math.sqrt(app.sourcePos.x ** 2 + app.sourcePos.y ** 2);
-        app.sourcePos = {
+        const anchor = app.getActiveSourceAnchor();
+        const dist = Math.sqrt(anchor.x ** 2 + anchor.y ** 2);
+        const nextPos = {
             x: Math.cos(angle) * dist,
             y: Math.sin(angle) * dist
         };
+        if (app.triangleSourceMode === 'single') app.sourcePos = nextPos;
+        else app.sourceAnchorPos = nextPos;
         app.autoModes.revolution = false;
         refreshIncrementalModes();
         ui.update(app);
@@ -221,11 +227,12 @@ export function setupControls(app, ui) {
     UIElements.queryAll('#group-source-layout .mini-tab').forEach((btn) => {
         btn.onclick = (e) => {
             const nextLayout = e.target.dataset.value;
+            const prevLayout = app.triangleSourceMode;
             app.triangleSourceMode = nextLayout;
-            app.resetTriangleSourceOffsets();
-            if (app.shape === 'rect' && nextLayout === 'triad') {
-                app.sourcePos = { x: 0, y: 0 };
+            if (prevLayout === 'single' && nextLayout !== 'single') {
+                app.sourceAnchorPos = app.getShapeLayoutCenter(app.shape);
             }
+            app.resetTriangleSourceOffsets();
             refreshIncrementalModes();
             ui.update(app);
         };
@@ -279,6 +286,7 @@ export function setupControls(app, ui) {
     const toggleFullscreen = () => {
         const prevSize = app.getShapeSize();
         const prevSourcePos = { ...app.sourcePos };
+        const prevAnchorPos = { ...app.sourceAnchorPos };
         const prevDefault = app.getShapeDefaults(app.shape).sourcePos;
         const distToPrevDefault = Math.hypot(
             prevSourcePos.x - prevDefault.x,
@@ -303,6 +311,11 @@ export function setupControls(app, ui) {
                     y: prevSourcePos.y * scale
                 };
             }
+
+            app.sourceAnchorPos = {
+                x: prevAnchorPos.x * scale,
+                y: prevAnchorPos.y * scale
+            };
 
             if (Array.isArray(app.triangleSourceOffsets)) {
                 app.triangleSourceOffsets = app.triangleSourceOffsets.map((offset) => ({
@@ -424,7 +437,8 @@ export function setupControls(app, ui) {
         const y = clientY - rect.top - (rect.height / 2 - 60);
 
         if (e.type === 'mousedown' || e.type === 'touchstart') {
-            const sX = app.sourcePos.x, sY = app.sourcePos.y;
+            const anchor = app.getActiveSourceAnchor();
+            const sX = anchor.x, sY = anchor.y;
             const distToCenter = Math.sqrt((x - sX) ** 2 + (y - sY) ** 2);
             
             // 1. Check for Move Handles
@@ -480,9 +494,11 @@ export function setupControls(app, ui) {
                 if (e.cancelable) e.preventDefault();
             }
         } else if (isDragging && (e.type === 'mousemove' || e.type === 'touchmove')) {
-            const sX = app.sourcePos.x, sY = app.sourcePos.y;
+            const anchor = app.getActiveSourceAnchor();
+            const sX = anchor.x, sY = anchor.y;
             if (dragTarget === 'center') {
-                app.sourcePos = { x, y };
+                if (app.triangleSourceMode === 'single') app.sourcePos = { x, y };
+                else app.sourceAnchorPos = { x, y };
             } else if (dragTarget === 'bias') {
                 const size = app.getShapeSize();
                 const baseOrigins = app.getTriangleBaseOrigins(size);

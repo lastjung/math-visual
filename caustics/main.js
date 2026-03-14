@@ -11,6 +11,7 @@ import { BGM_BASE_PATH, BGM_TRACKS, formatTime, initAudio, nextBGM } from './cor
 import {
     getDefaultSourcePos,
     getTriangleBaseOrigins,
+    getShapeLayoutCenter,
     getShapeDefaults,
     getTriangleLaunchAngle,
     getTriangleSourceOrigins,
@@ -50,6 +51,7 @@ const App = {
     rayNumber: 30,
     raySpeed: 20,
     sourcePos: { x: 0, y: -250 }, 
+    sourceAnchorPos: { x: 0, y: 0 },
     sourceRotation: 0,
     isFlowing: false, 
     isLightVisible: false,
@@ -132,6 +134,10 @@ const App = {
         return getShapeDefaults(this, shape);
     },
 
+    getShapeLayoutCenter(shape = this.shape) {
+        return getShapeLayoutCenter(shape, this.getShapeSize());
+    },
+
     getTriangleVertices(size) {
         return getTriangleVertices(size);
     },
@@ -150,6 +156,11 @@ const App = {
 
     resetTriangleSourceOffsets() {
         this.triangleSourceOffsets = [];
+    },
+
+    getActiveSourceAnchor() {
+        if (this.triangleSourceMode === 'single') return { ...this.sourcePos };
+        return { ...this.sourceAnchorPos };
     },
 
     buildLaunchRayConfigs(rayCount, size, flowOffset = this.flowOffset) {
@@ -216,6 +227,7 @@ const App = {
         // Reset only tab-specific values.
         const defaults = this.getShapeDefaults(nextShape);
         this.sourcePos = defaults.sourcePos;
+        this.sourceAnchorPos = this.getShapeLayoutCenter(nextShape);
         this.resetTriangleSourceOffsets();
         this.sanitizeSourcePosition();
         this.sourceRotation = defaults.sourceRotation;
@@ -234,6 +246,7 @@ const App = {
     syncSourceToFoci() {
         const defaults = this.getShapeDefaults(this.shape);
         this.sourcePos = defaults.sourcePos;
+        this.sourceAnchorPos = this.getShapeLayoutCenter(this.shape);
         this.resetTriangleSourceOffsets();
     },
 
@@ -274,6 +287,7 @@ const App = {
 
         this.resize();
         this.sourcePos = this.getDefaultSourcePos();
+        this.sourceAnchorPos = this.getShapeLayoutCenter(this.shape);
         this.restoreState();
         this.sanitizeSourcePosition();
         this.normalizeLightSourceMode();
@@ -386,6 +400,7 @@ const App = {
         this.raySpeed = 20;
         const defaults = this.getShapeDefaults(this.shape);
         this.sourcePos = defaults.sourcePos;
+        this.sourceAnchorPos = this.getShapeLayoutCenter(this.shape);
         this.resetTriangleSourceOffsets();
         this.sanitizeSourcePosition();
         this.normalizeLightSourceMode();
@@ -500,11 +515,14 @@ const App = {
                 // Revolution (Orbit)
                 if (this.autoModes.revolution) {
                     const angle = oscillate('revolution', 0.1) * Math.PI * 2 - Math.PI; 
-                    const dist = Math.sqrt(this.sourcePos.x**2 + this.sourcePos.y**2);
-                    this.sourcePos = {
+                    const anchor = this.getActiveSourceAnchor();
+                    const dist = Math.sqrt(anchor.x**2 + anchor.y**2);
+                    const nextPos = {
                         x: Math.cos(angle) * dist,
                         y: Math.sin(angle) * dist
                     };
+                    if (this.triangleSourceMode === 'single') this.sourcePos = nextPos;
+                    else this.sourceAnchorPos = nextPos;
                 }
 
                 // Rotation (Spin)

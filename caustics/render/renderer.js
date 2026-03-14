@@ -598,8 +598,9 @@ export const Renderer = {
         }
 
         // Light Source Guide
-        const sX = centerX + state.sourcePos.x;
-        const sY = centerY + state.sourcePos.y;
+        const anchor = state.getActiveSourceAnchor();
+        const sX = centerX + anchor.x;
+        const sY = centerY + anchor.y;
 
         // 1. Parallel handles and guide lines (Visible only when AXES is ON)
         if (state.showAxes && state.lightSourceMode === 'parallel') {
@@ -638,8 +639,8 @@ export const Renderer = {
         ctx.save();
         const origins = state.getTriangleSourceOrigins(size);
         const isSingleSource = origins.length === 1
-            && Math.abs(origins[0].x - state.sourcePos.x) < 0.001
-            && Math.abs(origins[0].y - state.sourcePos.y) < 0.001;
+            && Math.abs(origins[0].x - anchor.x) < 0.001
+            && Math.abs(origins[0].y - anchor.y) < 0.001;
 
         if (origins.length > 0) {
             ctx.fillStyle = 'rgba(103, 232, 249, 0.78)';

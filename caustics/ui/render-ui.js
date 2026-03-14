@@ -24,7 +24,8 @@ export function updateUI(app) {
     updateAutoLabel('label-spread', 'spread-icon-mini', app.autoModes.spread);
     updateAutoLabel('label-reflections', 'reflections-icon-mini', app.autoModes.reflections);
 
-    const angle = Math.atan2(app.sourcePos.y, app.sourcePos.x);
+    const activeAnchor = app.getActiveSourceAnchor();
+    const angle = Math.atan2(activeAnchor.y, activeAnchor.x);
     const rangeSource = UIElements.get('range-source');
     if (rangeSource && Math.abs(parseFloat(rangeSource.value) - angle) > 0.02) rangeSource.value = angle;
 
@@ -241,7 +242,10 @@ export function applyShapePreset(app) {
         app.selectedSourcePresetSlot = slot;
         const next = preset.apply();
         const presetNote = UIElements.get('shape-preset-note');
-        if (next.sourcePos) app.sourcePos = { ...next.sourcePos };
+        if (next.sourcePos) {
+            app.sourcePos = { ...next.sourcePos };
+            app.sourceAnchorPos = { ...next.sourcePos };
+        }
         app.resetTriangleSourceOffsets();
         if (typeof next.sourceRotation === 'number') app.sourceRotation = next.sourceRotation;
         if (next.parallelRange && typeof next.parallelRange.min === 'number' && typeof next.parallelRange.max === 'number') {

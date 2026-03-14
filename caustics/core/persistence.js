@@ -16,6 +16,7 @@ export function buildPersistedState(app) {
         rayNumber: app.rayNumber,
         raySpeed: app.raySpeed,
         sourcePos: app.sourcePos,
+        sourceAnchorPos: app.sourceAnchorPos,
         sourceRotation: app.sourceRotation,
         showAxes: app.showAxes,
         colorMode: app.colorMode,
@@ -67,6 +68,11 @@ export function restoreState(app) {
         app.raySpeed = saved.raySpeed ?? app.raySpeed;
         if (saved.sourcePos && typeof saved.sourcePos.x === 'number' && typeof saved.sourcePos.y === 'number') {
             app.sourcePos = { x: saved.sourcePos.x, y: saved.sourcePos.y };
+        }
+        if (saved.sourceAnchorPos && typeof saved.sourceAnchorPos.x === 'number' && typeof saved.sourceAnchorPos.y === 'number') {
+            app.sourceAnchorPos = { x: saved.sourceAnchorPos.x, y: saved.sourceAnchorPos.y };
+        } else {
+            app.sourceAnchorPos = app.getShapeLayoutCenter(app.shape);
         }
         app.sanitizeSourcePosition();
         app.sourceRotation = saved.sourceRotation ?? app.sourceRotation;
