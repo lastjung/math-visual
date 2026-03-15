@@ -16,9 +16,6 @@ export function setupControls(app, ui) {
         return Math.hypot(point.x - projX, point.y - projY);
     };
 
-    const refreshIncrementalModes = () => {
-        if (app.isPaint2Mode || app.isLightMode) app.resetRays(false, false);
-    };
 
     const autoLabels = {
         'label-revolution': 'revolution',
@@ -42,7 +39,7 @@ export function setupControls(app, ui) {
     };
 
     const setAutoMode = (key, enabled) => {
-        app.autoModes[key] = enabled;
+        app.updateOption('autoMode', { key, value: enabled });
         if (!enabled) return;
         const cfg = config[key];
         const current = cfg.get();
@@ -55,10 +52,9 @@ export function setupControls(app, ui) {
         btn.onclick = (e) => {
             const button = e.currentTarget;
             const nextShape = button.dataset.shape;
-            app.shape = nextShape;
+            app.updateOption('shape', nextShape); // Assuming we add 'shape' to updateOption
             UIElements.queryAll('.shape-tab').forEach((b) => b.classList.remove('active'));
             button.classList.add('active');
-            app.applyShapeSwitchReset(nextShape);
             ui.update(app);
         };
     });
@@ -66,7 +62,7 @@ export function setupControls(app, ui) {
     UIElements.queryAll('.mode-tab').forEach((btn) => {
         btn.onclick = (e) => {
             const button = e.currentTarget;
-            app.colorMode = button.dataset.mode;
+            app.updateOption('colorMode', button.dataset.mode);
             UIElements.queryAll('.mode-tab').forEach((b) => b.classList.remove('active'));
             button.classList.add('active');
         };
@@ -85,61 +81,54 @@ export function setupControls(app, ui) {
     rangeSource.oninput = (e) => {
         const angle = parseFloat(e.target.value);
         const anchor = app.getActiveSourceAnchor();
-        const dist = Math.sqrt(anchor.x ** 2 + anchor.y ** 2);
+        const dist = Math.hypot(anchor.x, anchor.y);
         const nextPos = {
             x: Math.cos(angle) * dist,
             y: Math.sin(angle) * dist
         };
-        if (app.triangleSourceMode === 'single') app.sourcePos = nextPos;
-        else app.sourceAnchorPos = nextPos;
-        app.autoModes.revolution = false;
-        refreshIncrementalModes();
+        if (app.triangleSourceMode === 'single') app.updatePointer({ sourcePos: nextPos });
+        else app.updatePointer({ sourceAnchorPos: nextPos });
+        
+        app.updateOption('autoMode', { key: 'revolution', value: false });
         ui.update(app);
     };
 
     const rangeRotation = UIElements.get('range-rotation');
     rangeRotation.oninput = (e) => {
-        app.sourceRotation = parseFloat(e.target.value);
-        refreshIncrementalModes();
+        app.updateSlider('sourceRotation', parseFloat(e.target.value));
         ui.update(app);
     };
 
     const rangeDensity = UIElements.get('range-density');
     rangeDensity.oninput = (e) => {
-        app.rayNumber = parseInt(e.target.value, 10);
-        app.autoModes.density = false;
-        refreshIncrementalModes();
+        app.updateSlider('rayNumber', parseInt(e.target.value, 10));
         ui.update(app);
     };
 
     const rangeSpeed = UIElements.get('range-speed');
     rangeSpeed.oninput = (e) => {
-        app.raySpeed = parseFloat(e.target.value);
-        app.autoModes.speed = false;
+        app.updateSlider('raySpeed', parseFloat(e.target.value));
         ui.update(app);
     };
 
     const rangeBeamWidth = UIElements.get('range-beam-width');
     if (rangeBeamWidth) {
         rangeBeamWidth.oninput = (e) => {
-            app.beamWidth = parseFloat(e.target.value);
+            app.updateSlider('beamWidth', parseFloat(e.target.value));
             ui.update(app);
         };
     }
 
     const rangeSpread = UIElements.get('range-spread');
     rangeSpread.oninput = (e) => {
-        app.spread = parseFloat(e.target.value);
-        app.autoModes.spread = false;
-        refreshIncrementalModes();
+        app.updateSlider('spread', parseFloat(e.target.value));
         ui.update(app);
     };
 
     const rangeReflections = UIElements.get('range-reflections');
     if (rangeReflections) {
         rangeReflections.oninput = (e) => {
-            app.MAX_BOUNCES = parseInt(e.target.value, 10);
-            app.autoModes.reflections = false;
+            app.updateSlider('maxBounces', parseInt(e.target.value, 10));
             ui.update(app);
         };
     }
@@ -147,7 +136,7 @@ export function setupControls(app, ui) {
     const rangeAlpha = UIElements.get('range-alpha');
     if (rangeAlpha) {
         rangeAlpha.oninput = (e) => {
-            app.alphaIntensity = parseFloat(e.target.value);
+            app.updateSlider('alphaIntensity', parseFloat(e.target.value));
             ui.update(app);
         };
     }
@@ -155,8 +144,7 @@ export function setupControls(app, ui) {
     const rangeTriangleCount = UIElements.get('range-source-count');
     if (rangeTriangleCount) {
         rangeTriangleCount.oninput = (e) => {
-            app.trianglePointCount = parseInt(e.target.value, 10);
-            refreshIncrementalModes();
+            app.updateSlider('trianglePointCount', parseInt(e.target.value, 10));
             ui.update(app);
         };
     }
@@ -164,8 +152,7 @@ export function setupControls(app, ui) {
     const rangeTriangleBias = UIElements.get('range-source-bias');
     if (rangeTriangleBias) {
         rangeTriangleBias.oninput = (e) => {
-            app.triangleVertexBias = parseFloat(e.target.value);
-            refreshIncrementalModes();
+            app.updateSlider('triangleVertexBias', parseFloat(e.target.value));
             ui.update(app);
         };
     }
@@ -173,7 +160,7 @@ export function setupControls(app, ui) {
     const checkAxes = UIElements.get('check-axes');
     if (checkAxes) {
         checkAxes.onchange = (e) => {
-            app.showAxes = e.target.checked;
+            app.updateOption('showAxes', e.target.checked);
             ui.update(app);
         };
     }
@@ -204,44 +191,35 @@ export function setupControls(app, ui) {
     const selectNarrative = UIElements.get('select-narrative');
     if (selectNarrative) {
         selectNarrative.onchange = (e) => {
-            app.currentNarrative = e.target.value;
-            app.persistState();
+            app.updateOption('currentNarrative', e.target.value);
             ui.update(app);
         };
     }
 
     UIElements.queryAll('#group-base .mini-tab').forEach((btn) => {
         btn.onclick = (e) => {
-            app.baseStyle = e.target.dataset.value;
+            app.updateOption('baseStyle', e.target.dataset.value);
             ui.update(app);
         };
     });
 
     UIElements.queryAll('#group-flow .mini-tab').forEach((btn) => {
         btn.onclick = (e) => {
-            app.flowMode = e.target.dataset.value;
+            app.updateOption('flowMode', e.target.dataset.value);
             ui.update(app);
         };
     });
 
     UIElements.queryAll('#group-source-layout .mini-tab').forEach((btn) => {
         btn.onclick = (e) => {
-            const nextLayout = e.target.dataset.value;
-            const prevLayout = app.triangleSourceMode;
-            app.triangleSourceMode = nextLayout;
-            if (prevLayout === 'single' && nextLayout !== 'single') {
-                app.sourceAnchorPos = app.getShapeLayoutCenter(app.shape);
-            }
-            app.resetTriangleSourceOffsets();
-            refreshIncrementalModes();
+            app.updateOption('sourceLayout', e.target.dataset.value);
             ui.update(app);
         };
     });
 
     UIElements.queryAll('#group-source-direction .mini-tab').forEach((btn) => {
         btn.onclick = (e) => {
-            app.triangleDirectionMode = e.target.dataset.value;
-            refreshIncrementalModes();
+            app.updateOption('sourceDirection', e.target.dataset.value);
             ui.update(app);
         };
     });
@@ -253,56 +231,42 @@ export function setupControls(app, ui) {
                 app.syncSourceToFoci();
             } else if (val === 'center') {
                 const center = app.getShapeLayoutCenter(app.shape);
-                app.sourcePos = { ...center };
-                app.sourceAnchorPos = { ...center };
-                app.spread = Math.PI * 2;
-                app.autoModes.spread = false;
-                app.triangleSourceMode = 'single';
-                app.triangleDirectionMode = 'outward';
+                app.updatePointer({ sourcePos: center, sourceAnchorPos: center });
+                app.updateSlider('spread', Math.PI * 2);
+                app.updateOption('sourceLayout', 'single');
+                app.updateOption('sourceDirection', 'outward');
             } else if (val === 'online') {
                 const size = app.getShapeSize();
                 const pos = app.shape === 'triangle' ? { x: 0, y: -size * 1.17 + size * 0.2 } : { x: 0, y: -size };
-                app.sourcePos = { ...pos };
-                app.sourceAnchorPos = { ...pos };
+                app.updatePointer({ sourcePos: pos, sourceAnchorPos: pos });
             }
-            refreshIncrementalModes();
             ui.update(app);
         };
     });
 
     UIElements.queryAll('#group-source-mode .mini-tab').forEach((btn) => {
         btn.onclick = (e) => {
-            app.lightSourceMode = e.target.dataset.value;
-            app.normalizeLightSourceMode();
-            if (app.shape === 'parabola' && app.lightSourceMode === 'point') {
-                app.sourcePos = app.getShapeDefaults('parabola').sourcePos;
-            }
-            refreshIncrementalModes();
+            app.updateOption('lightSourceMode', e.target.dataset.value);
             ui.update(app);
         };
     });
 
     UIElements.get('check-trail').onchange = (e) => {
-        app.useTrail = e.target.checked;
+        app.updateOption('useTrail', e.target.checked);
         ui.update(app);
     };
     UIElements.get('check-taper').onchange = (e) => {
-        app.useTaper = e.target.checked;
+        app.updateOption('useTaper', e.target.checked);
         ui.update(app);
     };
     UIElements.get('check-bloom').onchange = (e) => {
-        app.useBloom = e.target.checked;
+        app.updateOption('useBloom', e.target.checked);
         ui.update(app);
     };
 
     UIElements.queryAll('#group-render-mode .mini-tab').forEach((btn) => {
         btn.onclick = (e) => {
-            const val = e.target.dataset.value;
-            app.isPaintMode = val === 'paint1';
-            app.isPaint2Mode = val === 'paint2';
-            app.isLightMode = val === 'light';
-            app.normalizeLightSourceMode();
-            if (app.isPaint2Mode || app.isLightMode) app.resetRays(false);
+            app.updateOption('renderMode', e.target.dataset.value);
             ui.update(app);
         };
     });
@@ -318,7 +282,7 @@ export function setupControls(app, ui) {
         );
 
         document.body.classList.toggle('window-full');
-        app.isWindowFull = document.body.classList.contains('window-full');
+        app.updateOption('isWindowFull', document.body.classList.contains('window-full'));
 
         setTimeout(() => {
             app.resize();
@@ -326,30 +290,26 @@ export function setupControls(app, ui) {
             const nextDefault = app.getShapeDefaults(app.shape).sourcePos;
             const scale = prevSize > 0 ? nextSize / prevSize : 1;
             const snapThreshold = Math.max(8, prevSize * 0.04);
-
-            if (distToPrevDefault <= snapThreshold) {
-                app.sourcePos = { ...nextDefault };
-            } else {
-                app.sourcePos = {
-                    x: prevSourcePos.x * scale,
-                    y: prevSourcePos.y * scale
-                };
-            }
-
-            app.sourceAnchorPos = {
-                x: prevAnchorPos.x * scale,
-                y: prevAnchorPos.y * scale
+            const nextSourcePos = (distToPrevDefault <= snapThreshold) 
+                ? { ...nextDefault } 
+                : { x: prevSourcePos.x * scale, y: prevSourcePos.y * scale };
+            
+            const pointerUpdate = {
+                sourcePos: nextSourcePos,
+                sourceAnchorPos: { x: prevAnchorPos.x * scale, y: prevAnchorPos.y * scale }
             };
 
             if (Array.isArray(app.triangleSourceOffsets)) {
-                app.triangleSourceOffsets = app.triangleSourceOffsets.map((offset) => ({
+                pointerUpdate.sourceOffsets = app.triangleSourceOffsets.map((offset) => ({
                     x: offset.x * scale,
                     y: offset.y * scale
                 }));
             }
 
+            app.updatePointer(pointerUpdate);
+
             app.sanitizeSourcePosition();
-            refreshIncrementalModes();
+            if (app.isPaint2Mode || app.isLightMode) app.resetRays(false, false);
             ui.update(app);
         }, 60);
     };
@@ -429,8 +389,9 @@ export function setupControls(app, ui) {
         const autoKey = keyMap[e.code];
         if (autoKey && sHeld) {
             e.preventDefault();
-            app.autoModes[autoKey] = !app.autoModes[autoKey];
-            setAutoMode(autoKey, app.autoModes[autoKey]);
+            const nextVal = !app.autoModes[autoKey];
+            app.updateOption('autoMode', { key: autoKey, value: nextVal });
+            setAutoMode(autoKey, nextVal);
             ui.update(app);
             return;
         }
@@ -514,15 +475,16 @@ export function setupControls(app, ui) {
             }
 
             if (isDragging) {
-                app.autoModes.revolution = app.autoModes.rotation = false;
+                app.updateOption('autoMode', { key: 'revolution', value: false });
+                app.updateOption('autoMode', { key: 'rotation', value: false });
                 if (e.cancelable) e.preventDefault();
             }
         } else if (isDragging && (e.type === 'mousemove' || e.type === 'touchmove')) {
             const anchor = app.getActiveSourceAnchor();
             const sX = anchor.x, sY = anchor.y;
             if (dragTarget === 'center') {
-                if (app.triangleSourceMode === 'single') app.sourcePos = { x, y };
-                else app.sourceAnchorPos = { x, y };
+                if (app.triangleSourceMode === 'single') app.updatePointer({ sourcePos: { x, y } });
+                else app.updatePointer({ sourceAnchorPos: { x, y } });
             } else if (dragTarget === 'bias') {
                 const size = app.getShapeSize();
                 const baseOrigins = app.getTriangleBaseOrigins(size);
@@ -538,37 +500,36 @@ export function setupControls(app, ui) {
                         x: x - baseOrigin.x,
                         y: y - baseOrigin.y
                     };
-                    app.triangleSourceOffsets = nextOffsets;
+                    app.updatePointer({ sourceOffsets: nextOffsets });
                 }
             } else if (dragTarget === 'beam') {
                 const mouseAngle = Math.atan2(y - sY, x - sX);
                 let diff = mouseAngle - (app.sourceRotation + Math.PI / 2);
                 while (diff > Math.PI) diff -= Math.PI * 2;
                 while (diff < -Math.PI) diff += Math.PI * 2;
-                app.spread = Math.max(0.02, Math.min(Math.PI * 2, Math.abs(diff) * 2));
+                app.updateSlider('spread', Math.max(0.02, Math.min(Math.PI * 2, Math.abs(diff) * 2)));
             } else {
                 const dx = x - sX, dy = y - sY;
                 const dist = Math.sqrt(dx * dx + dy * dy);
                 const angle = Math.atan2(dy, dx);
                 if (dragTarget === 'min') {
-                    app.parallelRange.min = -dist;
-                    app.sourceRotation = angle + Math.PI;
+                    app.updatePointer({ 
+                        parallelRange: { ...app.parallelRange, min: -dist } 
+                    });
+                    app.updateSlider('sourceRotation', angle + Math.PI);
                 } else if (dragTarget === 'max') {
-                    app.parallelRange.max = dist;
-                    app.sourceRotation = angle;
+                    app.updatePointer({ 
+                        parallelRange: { ...app.parallelRange, max: dist } 
+                    });
+                    app.updateSlider('sourceRotation', angle);
                 }
             }
-            pendingIncrementalRefresh = true;
             ui.update(app);
-            app.persistState();
+            if (typeof app.persistState === 'function') app.persistState();
         }
     };
 
     const stopDragging = () => {
-        if (pendingIncrementalRefresh) {
-            refreshIncrementalModes();
-            pendingIncrementalRefresh = false;
-        }
         isDragging = false;
         dragSourceIndex = -1;
     };
@@ -580,3 +541,4 @@ export function setupControls(app, ui) {
     window.addEventListener('touchmove', handleInteraction, { passive: false });
     window.addEventListener('touchend', stopDragging);
 }
+

@@ -22,7 +22,9 @@ import {
     persistState,
     restoreState
 } from './core/persistence.js';
-import { readCurrentScene, applyScene } from './core/state-mapper.js';
+import { readCurrentScene, applyScene, applyPattern, updateOption, updateSlider, updatePointer } from './core/state-mapper.js';
+
+
 
 import {
     clearScene,
@@ -306,6 +308,22 @@ const App = {
 
     applyScene(scene) {
         return applyScene(this, scene);
+    },
+
+    applyPattern(patternId) {
+        return applyPattern(this, patternId);
+    },
+
+    updateOption(key, value) {
+        return updateOption(this, key, value);
+    },
+
+    updateSlider(key, value, disableAuto = true) {
+        return updateSlider(this, key, value, disableAuto);
+    },
+
+    updatePointer(pointerUpdate) {
+        return updatePointer(this, pointerUpdate);
     },
 
     init() {

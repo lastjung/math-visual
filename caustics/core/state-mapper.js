@@ -1,7 +1,5 @@
-/**
- * State Mapper (Phase 0)
- * Translates between flattened App state and structured Scene schema.
- */
+import { SHAPE_REGISTRY } from '../config/shape-registry.js';
+import { resolvePattern } from '../config/pattern-resolver.js';
 
 /**
  * Capture current application state into a structured Scene object.
@@ -25,7 +23,8 @@ export function readCurrentScene(app) {
         pointer: {
             sourcePos: { x: app.sourcePos.x, y: app.sourcePos.y },
             sourceAnchorPos: { x: app.sourceAnchorPos.x, y: app.sourceAnchorPos.y },
-            sourceOffsets: app.triangleSourceOffsets ? app.triangleSourceOffsets.map(o => ({ x: o.x, y: o.y })) : []
+            sourceOffsets: app.triangleSourceOffsets ? app.triangleSourceOffsets.map(o => ({ x: o.x, y: o.y })) : [],
+            parallelRange: app.parallelRange ? { min: app.parallelRange.min, max: app.parallelRange.max } : null
         },
         sliders: {
             rayNumber: app.rayNumber,
@@ -67,14 +66,17 @@ export function applyScene(app, scene) {
         if (o.isLightMode !== undefined) app.isLightMode = !!o.isLightMode;
     }
 
-
     // 3. Pointer
     if (scene.pointer) {
         const p = scene.pointer;
         if (p.sourcePos) app.sourcePos = { x: p.sourcePos.x, y: p.sourcePos.y };
         if (p.sourceAnchorPos) app.sourceAnchorPos = { x: p.sourceAnchorPos.x, y: p.sourceAnchorPos.y };
         if (Array.isArray(p.sourceOffsets)) {
+
             app.triangleSourceOffsets = p.sourceOffsets.map(o => ({ x: o.x, y: o.y }));
+        }
+        if (p.parallelRange) {
+            app.parallelRange = { min: p.parallelRange.min, max: p.parallelRange.max };
         }
     }
 
@@ -99,5 +101,181 @@ export function applyScene(app, scene) {
     // Explicitly reset rays to apply the new state visually
     if (typeof app.resetRays === 'function') {
         app.resetRays(true);
+    }
+}
+
+/**
+ * Apply a specific pattern to the app. 
+ * This is the official path for pattern application.
+ * @param {Object} app - The main App object
+ * @param {string} patternId - Pattern ID from registry
+ * @param {string} shapeId - Shape ID (defaults to current app shape)
+ */
+export function applyPattern(app, patternId, shapeId = app.shape) {
+    const shapeData = SHAPE_REGISTRY[shapeId];
+    if (!shapeData || !shapeData.patterns) return;
+    
+    const pattern = shapeData.patterns[patternId];
+    if (!pattern) return;
+
+    // Resolve pattern settings (units, tokens, and bridge/mapping)
+    const resolvedState = resolvePattern(app, shapeId, pattern);
+
+    // Record patternId
+    app.patternId = patternId;
+
+    // Apply resolved state directly to app
+    Object.assign(app, resolvedState);
+
+    // Side effect: Disable common auto-modes on pattern apply
+    if (app.autoModes) {
+        app.autoModes.revolution = false;
+        app.autoModes.rotation = false;
+    }
+
+    // Visual Reset
+    if (typeof app.resetRays === 'function') {
+        app.resetRays(true);
+    }
+}
+
+/**
+ * Update an option on the app state.
+ * @param {Object} app - The main App object
+ * @param {string} key - The option key (New Schema)
+ * @param {any} value - The next value
+ */
+export function updateOption(app, key, value) {
+    let appKey = key;
+    
+    // Remapping
+    if (key === 'sourceLayout') appKey = 'triangleSourceMode';
+    if (key === 'sourceDirection') appKey = 'triangleDirectionMode';
+    
+    if (key === 'renderMode') {
+        app.isPaintMode = value === 'paint1';
+        app.isPaint2Mode = value === 'paint2';
+        app.isLightMode = value === 'light';
+        if (typeof app.normalizeLightSourceMode === 'function') app.normalizeLightSourceMode();
+        if (app.isPaint2Mode || app.isLightMode) app.resetRays(false);
+        return;
+    }
+
+    if (key === 'shape') {
+        if (typeof app.applyShapeSwitchReset === 'function') {
+            app.shape = value;
+            app.applyShapeSwitchReset(value);
+        } else {
+            app.shape = value;
+        }
+        return;
+    }
+
+    if (key === 'colorMode') {
+        app.colorMode = value;
+        return;
+    }
+
+    if (['showAxes', 'useTrail', 'useTaper', 'useBloom', 'isWindowFull'].includes(key)) {
+        app[key] = !!value;
+        return;
+    }
+
+    if (key === 'currentNarrative') {
+        app.currentNarrative = value;
+        if (typeof app.persistState === 'function') app.persistState();
+        return;
+    }
+
+    if (key === 'autoMode') {
+        // value expected to be { key: string, value: boolean }
+        if (app.autoModes && value.key) {
+            app.autoModes[value.key] = !!value.value;
+        }
+        return;
+    }
+
+    const prevValue = app[appKey];
+
+    app[appKey] = value;
+
+    // Side Effects
+    if (key === 'sourceLayout') {
+        if (prevValue === 'single' && value !== 'single') {
+            app.sourceAnchorPos = app.getShapeLayoutCenter(app.shape);
+        }
+        if (typeof app.resetTriangleSourceOffsets === 'function') app.resetTriangleSourceOffsets();
+    }
+
+    if (key === 'lightSourceMode') {
+        if (typeof app.normalizeLightSourceMode === 'function') app.normalizeLightSourceMode();
+        if (app.shape === 'parabola' && value === 'point') {
+            app.sourcePos = app.getShapeDefaults('parabola').sourcePos;
+        }
+    }
+
+    // Explicit reset for incremental modes
+    if (app.isPaint2Mode || app.isLightMode) app.resetRays(false, false);
+}
+
+/**
+ * Update a slider on the app state.
+ * @param {Object} app - The main App object
+ * @param {string} key - The slider key (New Schema)
+ * @param {number} value - The next value
+ * @param {boolean} disableAuto - Whether to disable auto modes
+ */
+export function updateSlider(app, key, value, disableAuto = true) {
+    let appKey = key;
+    
+    // Remapping
+    if (key === 'maxBounces') appKey = 'MAX_BOUNCES';
+
+    app[appKey] = value;
+
+    // Disabling Auto Modes
+    if (disableAuto && app.autoModes) {
+        if (key === 'sourceRotation') app.autoModes.rotation = false;
+        if (key === 'rayNumber') app.autoModes.density = false;
+        if (key === 'raySpeed') app.autoModes.speed = false;
+        if (key === 'spread') app.autoModes.spread = false;
+        if (key === 'maxBounces') app.autoModes.reflections = false;
+    }
+
+    // Reset rays for incremental rendering
+    if (app.isPaint2Mode || app.isLightMode) {
+        // Alpha or Speed changes shouldn't necessarily reset the accumulation buffer
+        // but density/spread/reflections definitely should.
+        const shouldResetBuffer = [
+            'rayNumber', 'spread', 'maxBounces', 'sourceRotation', 
+            'trianglePointCount', 'triangleVertexBias'
+        ].includes(key);
+        if (shouldResetBuffer) app.resetRays(false, false);
+    }
+}
+
+
+/**
+ * Update pointer positions.
+ * @param {Object} app - The main App object
+ * @param {Object} pointerUpdate - The pointer fields to update
+ */
+export function updatePointer(app, pointerUpdate) {
+    if (pointerUpdate.sourcePos) {
+        app.sourcePos = { ...pointerUpdate.sourcePos };
+    }
+    if (pointerUpdate.sourceAnchorPos) {
+        app.sourceAnchorPos = { ...pointerUpdate.sourceAnchorPos };
+    }
+    if (pointerUpdate.sourceOffsets) {
+        app.triangleSourceOffsets = pointerUpdate.sourceOffsets.map(o => ({ ...o }));
+    }
+    if (pointerUpdate.parallelRange) {
+        app.parallelRange = { ...pointerUpdate.parallelRange };
+    }
+
+    // Reset rays for incremental rendering
+    if (app.isPaint2Mode || app.isLightMode) {
+        app.resetRays(false, false);
     }
 }

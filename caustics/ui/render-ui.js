@@ -254,31 +254,15 @@ export function applyShapePreset(app) {
         if (!preset) return;
 
         app.selectedSourcePresetSlot = slot;
-        const next = preset.apply();
-        const presetNote = UIElements.get('shape-preset-note');
-        if (next.sourcePos) {
-            app.sourcePos = { ...next.sourcePos };
-            app.sourceAnchorPos = { ...next.sourcePos };
-        }
-        app.resetTriangleSourceOffsets();
-        if (typeof next.sourceRotation === 'number') app.sourceRotation = next.sourceRotation;
-        if (next.parallelRange && typeof next.parallelRange.min === 'number' && typeof next.parallelRange.max === 'number') {
-            app.parallelRange = { ...next.parallelRange };
-        }
-        if (typeof next.spread === 'number') app.spread = next.spread;
-        if (typeof next.lightSourceMode === 'string') app.lightSourceMode = next.lightSourceMode;
-        if (typeof next.triangleSourceMode === 'string') app.triangleSourceMode = next.triangleSourceMode;
-        if (typeof next.triangleDirectionMode === 'string') app.triangleDirectionMode = next.triangleDirectionMode;
-        if (typeof next.isPaintMode === 'boolean') app.isPaintMode = next.isPaintMode;
-        if (typeof next.isPaint2Mode === 'boolean') app.isPaint2Mode = next.isPaint2Mode;
-        if (typeof next.isLightMode === 'boolean') app.isLightMode = next.isLightMode;
+        
+        // Execute application (now handled by app.applyPattern)
+        preset.apply();
 
-        app.autoModes.revolution = false;
-        app.autoModes.rotation = false;
-        app.normalizeLightSourceMode();
-        app.sanitizeSourcePosition();
-        if (app.isPaint2Mode || app.isLightMode) app.resetRays(false);
+        // UI Feedback
+        const presetNote = UIElements.get('shape-preset-note');
         if (presetNote) presetNote.textContent = preset.note || '';
+        
         updateUI(app);
     };
 }
+
