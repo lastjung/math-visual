@@ -8,6 +8,7 @@ export const GLOBAL_DEFAULTS = {
         lightSourceMode: 'point',
         sourceLayout: 'single',      // Formerly triangleSourceMode
         sourceDirection: 'parallel',    // Formerly triangleDirectionMode
+        colorDistribution: 'frequency',
         baseStyle: 'line',
         flowMode: 'none',
         renderMode: 'flow'           // Proposed unified render mode

@@ -117,6 +117,9 @@ export function updateUI(app) {
     UIElements.queryAll('#group-source-direction .mini-tab').forEach((btn) => {
         btn.classList.toggle('active', btn.dataset.value === app.triangleDirectionMode);
     });
+    UIElements.queryAll('#group-color-distribution .mini-tab').forEach((btn) => {
+        btn.classList.toggle('active', btn.dataset.value === app.colorDistribution);
+    });
 
     UIElements.queryAll('#group-source-single-option .mini-tab').forEach((btn) => {
         const val = btn.dataset.value;
@@ -202,11 +205,13 @@ export function syncShapePanel(app) {
     const trianglePanelBlock = UIElements.get('source-layout-panel');
     const triangleDetailBlock = UIElements.get('source-layout-detail-block');
     const triangleDirectionRow = UIElements.get('source-direction-row');
+    const triangleColorDistRow = UIElements.get('source-color-dist-row');
     const triangleSingleOptionRow = UIElements.get('source-single-option-row');
     const triangleStripControls = UIElements.get('source-strip-controls');
     const badgeSub = UIElements.get('shape-badge-sub');
     const isTriangleSingle = app.triangleSourceMode === 'single';
     const isTriangleStrip = app.triangleSourceMode === 'strip';
+    const showTriangleColorDist = app.shape === 'triangle' && !isTriangleSingle;
 
     if (badge) {
         badge.textContent = content.badge;
@@ -232,6 +237,7 @@ export function syncShapePanel(app) {
     if (trianglePanelBlock) trianglePanelBlock.classList.toggle('visible', true);
     if (triangleDetailBlock) triangleDetailBlock.classList.toggle('hidden', false); // Always show details if panel is open
     if (triangleDirectionRow) triangleDirectionRow.classList.toggle('hidden', isTriangleSingle);
+    if (triangleColorDistRow) triangleColorDistRow.classList.toggle('hidden', !showTriangleColorDist);
     if (triangleSingleOptionRow) triangleSingleOptionRow.classList.toggle('hidden', !isTriangleSingle);
     if (triangleStripControls) triangleStripControls.classList.toggle('hidden', !isTriangleStrip);
     if (card) card.classList.toggle('hidden', false); // Always show card
@@ -267,4 +273,3 @@ export function applyShapePreset(app) {
         updateUI(app);
     };
 }
-

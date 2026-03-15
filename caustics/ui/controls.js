@@ -227,6 +227,13 @@ export function setupControls(app, ui) {
         };
     });
 
+    UIElements.queryAll('#group-color-distribution .mini-tab').forEach((btn) => {
+        btn.onclick = (e) => {
+            app.updateOption('colorDistribution', e.target.dataset.value);
+            ui.update(app);
+        };
+    });
+
     UIElements.queryAll('#group-source-single-option .mini-tab').forEach((btn) => {
         btn.onclick = (e) => {
             const val = e.target.dataset.value;

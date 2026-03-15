@@ -171,10 +171,7 @@ export const Renderer = {
             const rayPaths = [];
             for (let idx = 0; idx < launchConfigs.length; idx++) {
                 const config = launchConfigs[idx];
-                let baseHue;
-                if (colorMode === 'rainbow') baseHue = (config.t * 360 + flowOffset * 0.5) % 360;
-                else if (colorMode === 'cyan') baseHue = 180 + Math.sin(config.t * 5 + flowOffset * 0.1) * 20;
-                else if (colorMode === 'sunset') baseHue = 10 + Math.sin(config.t * 3 + flowOffset * 0.1) * 30;
+                const baseHue = state.getLaunchHue(config, flowOffset);
 
                 rayPaths.push({
                     rx: centerX + config.sPos.x,
@@ -318,10 +315,7 @@ export const Renderer = {
             const rayPaths = [];
             for (let idx = 0; idx < launchConfigs.length; idx++) {
                 const config = launchConfigs[idx];
-                let baseHue;
-                if (colorMode === 'rainbow') baseHue = (config.t * 360 + flowOffset * 0.5) % 360;
-                else if (colorMode === 'cyan') baseHue = 180 + Math.sin(config.t * 5 + flowOffset * 0.1) * 20;
-                else if (colorMode === 'sunset') baseHue = 10 + Math.sin(config.t * 3 + flowOffset * 0.1) * 30;
+                const baseHue = state.getLaunchHue(config, flowOffset);
 
                 rayPaths.push({ rx: centerX + config.sPos.x, ry: centerY + config.sPos.y, ra: config.angle, baseHue: baseHue, accDist: 0, active: true });
             }

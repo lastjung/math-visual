@@ -33,7 +33,7 @@ export const Simulator = {
      * Initialize or reset ray states for incremental simulation
      */
     initRays(app) {
-        const { rayNumber, colorMode, flowOffset } = app;
+        const { rayNumber, flowOffset } = app;
         this.rayStates = [];
         const count = Math.max(1, Math.floor(rayNumber));
         const size = app.getShapeSize();
@@ -41,10 +41,7 @@ export const Simulator = {
 
         for (let i = 0; i < launchConfigs.length; i++) {
             const config = launchConfigs[i];
-            let baseHue;
-            if (colorMode === 'rainbow') baseHue = (config.t * 360 + flowOffset * 0.5) % 360;
-            else if (colorMode === 'cyan') baseHue = 180 + Math.sin(config.t * 5 + flowOffset * 0.1) * 20;
-            else if (colorMode === 'sunset') baseHue = 10 + Math.sin(config.t * 3 + flowOffset * 0.1) * 30;
+            const baseHue = app.getLaunchHue(config, flowOffset);
 
             this.rayStates.push({
                 x: config.sPos.x,

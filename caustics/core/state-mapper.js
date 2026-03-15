@@ -14,6 +14,7 @@ export function readCurrentScene(app) {
             lightSourceMode: app.lightSourceMode,
             sourceLayout: app.triangleSourceMode,
             sourceDirection: app.triangleDirectionMode,
+            colorDistribution: app.colorDistribution,
             baseStyle: app.baseStyle,
             flowMode: app.flowMode,
             isPaintMode: app.isPaintMode,
@@ -78,6 +79,7 @@ export function applyScene(app, scene) {
         if (o.lightSourceMode !== undefined) app.lightSourceMode = o.lightSourceMode;
         if (o.sourceLayout !== undefined) app.triangleSourceMode = o.sourceLayout;
         if (o.sourceDirection !== undefined) app.triangleDirectionMode = o.sourceDirection;
+        if (o.colorDistribution !== undefined) app.colorDistribution = o.colorDistribution;
         if (o.baseStyle !== undefined) app.baseStyle = o.baseStyle;
         if (o.flowMode !== undefined) app.flowMode = o.flowMode;
         if (o.isPaintMode !== undefined) app.isPaintMode = !!o.isPaintMode;

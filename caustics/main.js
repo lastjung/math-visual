@@ -71,6 +71,7 @@ const App = {
     lightSourceMode: 'point', // 'point' or 'parallel'
     triangleSourceMode: 'single',
     triangleDirectionMode: 'parallel',
+    colorDistribution: 'frequency',
     trianglePointCount: 5,
     triangleVertexBias: 0.6,
     triangleSourceOffsets: [],
@@ -166,6 +167,31 @@ const App = {
         return { ...this.sourceAnchorPos };
     },
 
+    getLaunchHue(config, flowOffset = this.flowOffset) {
+        const groupCount = Math.max(1, config.groupCount || 1);
+        const isMultiPoint = groupCount > 1;
+        let distributionT = config.t;
+
+        if (this.colorDistribution === 'uniform' && isMultiPoint) {
+            distributionT = (config.groupIndex % groupCount) / groupCount;
+        } else if (this.colorDistribution === 'source-rainbow') {
+            distributionT = config.localCount <= 1
+                ? 0.5
+                : config.localIndex / (config.localCount - 1);
+        }
+
+        if (this.colorMode === 'rainbow') {
+            return (distributionT * 360 + flowOffset * 0.5) % 360;
+        }
+        if (this.colorMode === 'cyan') {
+            return 180 + Math.sin(distributionT * 5 + flowOffset * 0.1) * 20;
+        }
+        if (this.colorMode === 'sunset') {
+            return 10 + Math.sin(distributionT * 3 + flowOffset * 0.1) * 30;
+        }
+        return 200;
+    },
+
     buildLaunchRayConfigs(rayCount, size, flowOffset = this.flowOffset) {
         const totalCount = Math.max(1, Math.floor(rayCount));
         const aimAngle = Math.PI / 2;
@@ -209,7 +235,11 @@ const App = {
                 configs.push({
                     sPos: Physics.offsetRayStart(sPos, angle, size),
                     angle,
-                    t: tGlobal
+                    t: tGlobal,
+                    groupIndex,
+                    groupCount,
+                    localIndex,
+                    localCount
                 });
             }
         });

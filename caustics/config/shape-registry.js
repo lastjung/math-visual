@@ -299,6 +299,13 @@ export const SHAPE_REGISTRY = {
                 pointer: { sourcePos: { x: { unit: 'size', value: -0.3 }, y: { unit: 'size', value: 0.18 } } },
                 sliders: { spread: 0, sourceRotation: -Math.PI / 3 }
             },
+            'vertex-graze': {
+                label: 'Vertex Graze',
+                note: 'A near-corner launch that reveals how quickly a triangle becomes unstable when a path approaches a vertex.',
+                options: { lightSourceMode: 'point', sourceLayout: 'single', sourceDirection: 'parallel' },
+                pointer: { sourcePos: { x: { unit: 'size', value: -0.12 }, y: { unit: 'size', value: -0.38 } } },
+                sliders: { spread: 0.16, sourceRotation: -0.82 }
+            },
             'triad-edge': {
                 label: 'Triad Edge',
                 note: 'Three sources at the vertices, each aligned by edge normals for a strong triangular caustic scene.',
