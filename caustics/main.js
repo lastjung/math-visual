@@ -22,6 +22,8 @@ import {
     persistState,
     restoreState
 } from './core/persistence.js';
+import { readCurrentScene, applyScene } from './core/state-mapper.js';
+
 import {
     clearScene,
     finishSimulation,
@@ -296,6 +298,14 @@ const App = {
 
     restoreState() {
         return restoreState(this);
+    },
+
+    readCurrentScene() {
+        return readCurrentScene(this);
+    },
+
+    applyScene(scene) {
+        return applyScene(this, scene);
     },
 
     init() {

@@ -1,3 +1,5 @@
+import { readCurrentScene, applyScene } from './state-mapper.js';
+
 const VALID_NARRATIVES = [
     'none',
     'The Secret Foci of Ovals',
@@ -11,7 +13,7 @@ const VALID_NARRATIVES = [
 ];
 
 export function buildPersistedState(app) {
-    return {
+    const flatState = {
         shape: app.shape,
         rayNumber: app.rayNumber,
         raySpeed: app.raySpeed,
@@ -41,6 +43,12 @@ export function buildPersistedState(app) {
         currentNarrative: app.currentNarrative,
         parallelRange: app.parallelRange
     };
+
+    // Phase 0: Include the structured scene schema
+    return {
+        ...flatState,
+        scene: readCurrentScene(app)
+    };
 }
 
 export function persistState(app) {
@@ -63,6 +71,13 @@ export function restoreState(app) {
         const saved = JSON.parse(raw);
         if (!saved || typeof saved !== 'object') return false;
 
+        // Phase 0: If modern scene schema exists, use it first
+        if (saved.scene) {
+            applyScene(app, saved.scene);
+            // We still proceed with the old restoration for any potential missing fields 
+            // from the new schema in this hybrid phase.
+        }
+
         app.shape = saved.shape ?? app.shape;
         app.rayNumber = saved.rayNumber ?? app.rayNumber;
         app.raySpeed = saved.raySpeed ?? app.raySpeed;
@@ -72,7 +87,10 @@ export function restoreState(app) {
         if (saved.sourceAnchorPos && typeof saved.sourceAnchorPos.x === 'number' && typeof saved.sourceAnchorPos.y === 'number') {
             app.sourceAnchorPos = { x: saved.sourceAnchorPos.x, y: saved.sourceAnchorPos.y };
         } else {
-            app.sourceAnchorPos = app.getShapeLayoutCenter(app.shape);
+            // Only recalculate if not restored by scene or flat state
+            if (!saved.scene && !saved.sourceAnchorPos) {
+              app.sourceAnchorPos = app.getShapeLayoutCenter(app.shape);
+            }
         }
         app.sanitizeSourcePosition();
         app.sourceRotation = saved.sourceRotation ?? app.sourceRotation;
@@ -118,3 +136,4 @@ export function restoreState(app) {
         return false;
     }
 }
+
