@@ -252,8 +252,14 @@ export function setupControls(app, ui) {
             if (val === 'basic') {
                 app.syncSourceToFoci();
             } else if (val === 'center') {
-                app.sourcePos = { x: 0, y: 0 };
-                app.sourceAnchorPos = { x: 0, y: 0 };
+                const center = app.getShapeLayoutCenter(app.shape);
+                app.sourcePos = { ...center };
+                app.sourceAnchorPos = { ...center };
+            } else if (val === 'online') {
+                const size = app.getShapeSize();
+                const pos = app.shape === 'triangle' ? { x: 0, y: -size * 1.17 + size * 0.2 } : { x: 0, y: -size };
+                app.sourcePos = { ...pos };
+                app.sourceAnchorPos = { ...pos };
             }
             refreshIncrementalModes();
             ui.update(app);

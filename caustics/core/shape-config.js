@@ -27,7 +27,7 @@ export function getShapeDefaults(app, shape) {
         const fDist = size * 0.6324;
         defaults.sourcePos = { x: 0, y: -fDist };
     } else if (shape === 'triangle') {
-        defaults.sourcePos = { x: 0, y: size * 0.2 };
+        defaults.sourcePos = { x: 0, y: size * -0.4 };
     }
 
     return defaults;
