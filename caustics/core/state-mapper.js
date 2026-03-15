@@ -9,17 +9,32 @@ import { resolvePattern } from '../config/pattern-resolver.js';
 export function readCurrentScene(app) {
     return {
         shape: app.shape,
-        patternId: null, // Phase 0 default
+        patternId: app.patternId || null,
         options: {
             lightSourceMode: app.lightSourceMode,
-            sourceLayout: app.triangleSourceMode,      // Rename from triangleSourceMode
-            sourceDirection: app.triangleDirectionMode, // Rename from triangleDirectionMode
+            sourceLayout: app.triangleSourceMode,
+            sourceDirection: app.triangleDirectionMode,
             baseStyle: app.baseStyle,
             flowMode: app.flowMode,
             isPaintMode: app.isPaintMode,
             isPaint2Mode: app.isPaint2Mode,
-            isLightMode: app.isLightMode
+            isLightMode: app.isLightMode,
+            colorMode: app.colorMode,
+            showAxes: app.showAxes,
+            useTrail: app.useTrail,
+            useTaper: app.useTaper,
+            useBloom: app.useBloom,
+            isWindowFull: app.isWindowFull,
+            currentNarrative: app.currentNarrative
         },
+        auto: app.autoModes ? {
+            revolution: !!app.autoModes.revolution,
+            rotation: !!app.autoModes.rotation,
+            density: !!app.autoModes.density,
+            speed: !!app.autoModes.speed,
+            spread: !!app.autoModes.spread,
+            reflections: !!app.autoModes.reflections
+        } : null,
         pointer: {
             sourcePos: { x: app.sourcePos.x, y: app.sourcePos.y },
             sourceAnchorPos: { x: app.sourceAnchorPos.x, y: app.sourceAnchorPos.y },
@@ -35,10 +50,11 @@ export function readCurrentScene(app) {
             alphaIntensity: app.alphaIntensity,
             trianglePointCount: app.trianglePointCount,
             triangleVertexBias: app.triangleVertexBias,
-            maxBounces: app.MAX_BOUNCES // Rename to lowercase in schema
+            maxBounces: app.MAX_BOUNCES
         }
     };
 }
+
 
 /**
  * Apply a structured Scene object back to the application state.
@@ -52,6 +68,9 @@ export function applyScene(app, scene) {
     if (scene.shape) {
         app.shape = scene.shape;
     }
+    if (scene.patternId) {
+        app.patternId = scene.patternId;
+    }
 
     // 2. Options
     if (scene.options) {
@@ -64,15 +83,33 @@ export function applyScene(app, scene) {
         if (o.isPaintMode !== undefined) app.isPaintMode = !!o.isPaintMode;
         if (o.isPaint2Mode !== undefined) app.isPaint2Mode = !!o.isPaint2Mode;
         if (o.isLightMode !== undefined) app.isLightMode = !!o.isLightMode;
+        
+        if (o.colorMode !== undefined) app.colorMode = o.colorMode;
+        if (o.showAxes !== undefined) app.showAxes = !!o.showAxes;
+        if (o.useTrail !== undefined) app.useTrail = !!o.useTrail;
+        if (o.useTaper !== undefined) app.useTaper = !!o.useTaper;
+        if (o.useBloom !== undefined) app.useBloom = !!o.useBloom;
+        if (o.isWindowFull !== undefined) app.isWindowFull = !!o.isWindowFull;
+        if (o.currentNarrative !== undefined) app.currentNarrative = o.currentNarrative;
     }
 
-    // 3. Pointer
+    // 3. Auto
+    if (scene.auto && app.autoModes) {
+        const a = scene.auto;
+        if (a.revolution !== undefined) app.autoModes.revolution = !!a.revolution;
+        if (a.rotation !== undefined) app.autoModes.rotation = !!a.rotation;
+        if (a.density !== undefined) app.autoModes.density = !!a.density;
+        if (a.speed !== undefined) app.autoModes.speed = !!a.speed;
+        if (a.spread !== undefined) app.autoModes.spread = !!a.spread;
+        if (a.reflections !== undefined) app.autoModes.reflections = !!a.reflections;
+    }
+
+    // 4. Pointer
     if (scene.pointer) {
         const p = scene.pointer;
         if (p.sourcePos) app.sourcePos = { x: p.sourcePos.x, y: p.sourcePos.y };
         if (p.sourceAnchorPos) app.sourceAnchorPos = { x: p.sourceAnchorPos.x, y: p.sourceAnchorPos.y };
         if (Array.isArray(p.sourceOffsets)) {
-
             app.triangleSourceOffsets = p.sourceOffsets.map(o => ({ x: o.x, y: o.y }));
         }
         if (p.parallelRange) {
@@ -80,7 +117,7 @@ export function applyScene(app, scene) {
         }
     }
 
-    // 4. Sliders
+    // 5. Sliders
     if (scene.sliders) {
         const s = scene.sliders;
         if (s.rayNumber !== undefined) app.rayNumber = s.rayNumber;
@@ -93,6 +130,7 @@ export function applyScene(app, scene) {
         if (s.triangleVertexBias !== undefined) app.triangleVertexBias = s.triangleVertexBias;
         if (s.maxBounces !== undefined) app.MAX_BOUNCES = s.maxBounces;
     }
+
 
     // 5. Normalization & Sanitization (Logic preserved from App)
     if (typeof app.sanitizeSourcePosition === 'function') app.sanitizeSourcePosition();
@@ -118,22 +156,29 @@ export function applyPattern(app, patternId, shapeId = app.shape) {
     const pattern = shapeData.patterns[patternId];
     if (!pattern) return;
 
-    // Resolve pattern settings (units, tokens, and bridge/mapping)
-    const resolvedState = resolvePattern(app, shapeId, pattern);
+    // Resolve abstract pattern settings (units, tokens)
+    // We expect resolvePattern to return a structured state matching the new schema
+    const resolved = resolvePattern(app, shapeId, pattern);
 
     // Record patternId
     app.patternId = patternId;
 
-    // Apply resolved state directly to app
-    Object.assign(app, resolvedState);
-
-    // Side effect: Disable common auto-modes on pattern apply
-    if (app.autoModes) {
-        app.autoModes.revolution = false;
-        app.autoModes.rotation = false;
+    // Apply resolved state through centralized paths to handle remapping and side effects
+    if (resolved.options) {
+        for (const [key, val] of Object.entries(resolved.options)) {
+            updateOption(app, key, val);
+        }
+    }
+    if (resolved.sliders) {
+        for (const [key, val] of Object.entries(resolved.sliders)) {
+            updateSlider(app, key, val, false); // Don't disable auto for slider presets
+        }
+    }
+    if (resolved.pointer) {
+        updatePointer(app, resolved.pointer);
     }
 
-    // Visual Reset
+    // Explicit reset for full pattern application
     if (typeof app.resetRays === 'function') {
         app.resetRays(true);
     }

@@ -103,7 +103,7 @@
 - `finishSimulation`, `startA0Simulation`, `startNarrativeSimulation`, `stopSimulation`, `clearScene` 분리
 - 아래 narrative/simulation 함수 분리
   - `3_beam_spread_simm`
-  - `4_ray_mum_simm`
+  - `4_ray_num_simm`
   - `rect_A0_simm`
   - `universal_journey_simm`
   - `vv_oval_focus_simm`

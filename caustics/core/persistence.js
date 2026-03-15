@@ -9,44 +9,14 @@ const VALID_NARRATIVES = [
     'Circle of Infinite Light',
     'The Radiant Pulse of Heart',
     'The Hidden Soul of Beams',
-    'Dance of the Photons'
+    'Dance of the Photons',
+    'The Triple Symmetry of Light'
 ];
 
 export function buildPersistedState(app) {
-    const flatState = {
-        shape: app.shape,
-        rayNumber: app.rayNumber,
-        raySpeed: app.raySpeed,
-        sourcePos: app.sourcePos,
-        sourceAnchorPos: app.sourceAnchorPos,
-        sourceRotation: app.sourceRotation,
-        showAxes: app.showAxes,
-        colorMode: app.colorMode,
-        beamWidth: app.beamWidth,
-        spread: app.spread,
-        baseStyle: app.baseStyle,
-        flowMode: app.flowMode,
-        lightSourceMode: app.lightSourceMode,
-        triangleSourceMode: app.triangleSourceMode,
-        triangleDirectionMode: app.triangleDirectionMode,
-        trianglePointCount: app.trianglePointCount,
-        triangleVertexBias: app.triangleVertexBias,
-        triangleSourceOffsets: app.triangleSourceOffsets,
-        useTrail: app.useTrail,
-        useTaper: app.useTaper,
-        useBloom: app.useBloom,
-        alphaIntensity: app.alphaIntensity,
-        isPaintMode: app.isPaintMode,
-        isPaint2Mode: app.isPaint2Mode,
-        isLightMode: app.isLightMode,
-        MAX_BOUNCES: app.MAX_BOUNCES,
-        currentNarrative: app.currentNarrative,
-        parallelRange: app.parallelRange
-    };
-
-    // Phase 0: Include the structured scene schema
     return {
-        ...flatState,
+        // We still wrap it in a 'scene' key to match the previous version's structure
+        // and allow for any future metadata outside the scene.
         scene: readCurrentScene(app)
     };
 }
@@ -59,7 +29,7 @@ export function persistState(app) {
     try {
         localStorage.setItem(app.STORAGE_KEY, snapshot);
     } catch (_) {
-        // Ignore storage failures and continue rendering.
+        // Ignore storage failures
     }
 }
 
@@ -71,64 +41,17 @@ export function restoreState(app) {
         const saved = JSON.parse(raw);
         if (!saved || typeof saved !== 'object') return false;
 
-        // Phase 0: If modern scene schema exists, use it first
+        // Use structured scene schema if available
         if (saved.scene) {
             applyScene(app, saved.scene);
-            // We still proceed with the old restoration for any potential missing fields 
-            // from the new schema in this hybrid phase.
         }
 
-        app.shape = saved.shape ?? app.shape;
-        app.rayNumber = saved.rayNumber ?? app.rayNumber;
-        app.raySpeed = saved.raySpeed ?? app.raySpeed;
-        if (saved.sourcePos && typeof saved.sourcePos.x === 'number' && typeof saved.sourcePos.y === 'number') {
-            app.sourcePos = { x: saved.sourcePos.x, y: saved.sourcePos.y };
-        }
-        if (saved.sourceAnchorPos && typeof saved.sourceAnchorPos.x === 'number' && typeof saved.sourceAnchorPos.y === 'number') {
-            app.sourceAnchorPos = { x: saved.sourceAnchorPos.x, y: saved.sourceAnchorPos.y };
-        } else {
-            // Only recalculate if not restored by scene or flat state
-            if (!saved.scene && !saved.sourceAnchorPos) {
-              app.sourceAnchorPos = app.getShapeLayoutCenter(app.shape);
-            }
-        }
-        app.sanitizeSourcePosition();
-        app.sourceRotation = saved.sourceRotation ?? app.sourceRotation;
+        // Common UI resettables
         app.isFlowing = false;
         app.isLightVisible = false;
-        app.showAxes = saved.showAxes ?? app.showAxes;
         app.growth = 0;
-        app.colorMode = saved.colorMode ?? app.colorMode;
-        app.beamWidth = saved.beamWidth ?? app.beamWidth;
-        app.spread = saved.spread ?? app.spread;
         app.flowOffset = 0;
-        app.baseStyle = saved.baseStyle ?? app.baseStyle;
-        app.flowMode = saved.flowMode ?? app.flowMode;
-        app.lightSourceMode = saved.lightSourceMode ?? 'point';
-        app.triangleSourceMode = saved.triangleSourceMode ?? app.triangleSourceMode;
-        app.triangleDirectionMode = saved.triangleDirectionMode ?? app.triangleDirectionMode;
-        app.trianglePointCount = saved.trianglePointCount ?? app.trianglePointCount;
-        app.triangleVertexBias = saved.triangleVertexBias ?? app.triangleVertexBias;
-        app.triangleSourceOffsets = Array.isArray(saved.triangleSourceOffsets)
-            ? saved.triangleSourceOffsets
-                .filter((offset) => offset && typeof offset.x === 'number' && typeof offset.y === 'number')
-                .map((offset) => ({ x: offset.x, y: offset.y }))
-            : [];
-        app.normalizeLightSourceMode();
-        app.useTrail = saved.useTrail ?? app.useTrail;
-        app.useTaper = saved.useTaper ?? app.useTaper;
-        app.useBloom = saved.useBloom ?? app.useBloom;
-        app.alphaIntensity = saved.alphaIntensity ?? app.alphaIntensity;
-        app.isPaintMode = saved.isPaintMode === true;
-        app.isPaint2Mode = saved.isPaint2Mode === true;
-        app.isLightMode = saved.isLightMode === true;
-        app.parallelRange = saved.parallelRange ?? { min: -100, max: 100 };
         app.isSimulationMode = false;
-        app.MAX_BOUNCES = saved.MAX_BOUNCES ?? app.MAX_BOUNCES;
-
-        app.currentNarrative = VALID_NARRATIVES.includes(saved.currentNarrative)
-            ? saved.currentNarrative
-            : 'none';
 
         app.lastPersistSnapshot = raw;
         return true;
@@ -136,4 +59,3 @@ export function restoreState(app) {
         return false;
     }
 }
-

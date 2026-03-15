@@ -42,6 +42,35 @@ export const Physics = {
         };
     },
 
+    getTriangleVertices(size) {
+        const tr = size * 1.17;
+        const toy = size * 0.2;
+        return [
+            { x: 0, y: -tr + toy },
+            { x: tr * Math.sqrt(3) / 2, y: tr / 2 + toy },
+            { x: -tr * Math.sqrt(3) / 2, y: tr / 2 + toy }
+        ];
+    },
+
+    raySegmentIntersection(sx, sy, dx, dy, a, b, epsilon = 1e-6) {
+        const ex = b.x - a.x;
+        const ey = b.y - a.y;
+        const denom = dx * ey - dy * ex;
+        if (Math.abs(denom) < epsilon) return null;
+
+        const qx = a.x - sx;
+        const qy = a.y - sy;
+        const t = (qx * ey - qy * ex) / denom;
+        const u = (qx * dy - qy * dx) / denom;
+        if (t <= epsilon || u < -epsilon || u > 1 + epsilon) return null;
+
+        return {
+            x: sx + dx * t,
+            y: sy + dy * t,
+            t
+        };
+    },
+
     findEllipseRayIntersection(sx, sy, angle, rx, ry, size, pick = 'nearest') {
         const dx = Math.cos(angle);
         const dy = Math.sin(angle);
@@ -205,7 +234,6 @@ export const Physics = {
             const tr = size * 1.17;
             const ty = y - size * 0.2;
             const s32 = 0.86602540378; // sqrt(3)/2
-            // Use precise plane equations
             const d1 = 1.5 * x - s32 * ty - s32 * tr;
             const d2 = ty - tr * 0.5;
             const d3 = -1.5 * x - s32 * ty - s32 * tr;
@@ -254,8 +282,8 @@ export const Physics = {
             const d1 = 1.5 * px - s32 * ty - s32 * tr;
             const d2 = ty - tr * 0.5;
             const d3 = -1.5 * px - s32 * ty - s32 * tr;
-            // Add a tiny tolerance to prevent leaks at vertices
-            return d1 < 0.01 && d2 < 0.01 && d3 < 0.01;
+            const tolerance = 0.01;
+            return d1 < tolerance && d2 < tolerance && d3 < tolerance;
         }
         return false;
     },
@@ -277,6 +305,17 @@ export const Physics = {
         };
     },
 
+    isNearTriangleVertex(x, y, size) {
+        const vertices = this.getTriangleVertices(size);
+        const killRadius = Math.max(6, size * 0.018);
+        const killRadiusSq = killRadius * killRadius;
+        return vertices.some((vertex) => {
+            const dx = x - vertex.x;
+            const dy = y - vertex.y;
+            return (dx * dx + dy * dy) <= killRadiusSq;
+        });
+    },
+
     /**
      * Find where the ray hits the boundary
      * Uses fast binary search for internal rays, raymarch only for external
@@ -289,6 +328,33 @@ export const Physics = {
         const distSq = sx*sx + sy*sy;
         const maxRadiusSq = (size * 5) ** 2;
         if (distSq > maxRadiusSq) return null;
+
+        if (type === 'triangle') {
+            const vertices = this.getTriangleVertices(size);
+            const edges = [
+                [vertices[0], vertices[1]],
+                [vertices[1], vertices[2]],
+                [vertices[2], vertices[0]]
+            ];
+            let bestHit = null;
+            const epsilon = Math.max(1e-5, this.BOUNDARY_EPSILON * 0.05);
+            const tieEpsilon = Math.max(1e-4, size * 0.0002);
+
+            edges.forEach(([a, b], edgeIndex) => {
+                const hit = this.raySegmentIntersection(sx, sy, dx, dy, a, b, epsilon);
+                if (!hit) return;
+                if (!bestHit || hit.t < bestHit.t - tieEpsilon) {
+                    bestHit = { ...hit, edgeIndex };
+                    return;
+                }
+
+                if (Math.abs(hit.t - bestHit.t) <= tieEpsilon && edgeIndex < bestHit.edgeIndex) {
+                    bestHit = { ...hit, edgeIndex };
+                }
+            });
+
+            return bestHit;
+        }
 
         // Cardioid is non-convex near the cusp, so the binary-search exit logic
         // used for convex shapes can jump to a later crossing and appear to tunnel.

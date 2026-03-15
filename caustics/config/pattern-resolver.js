@@ -65,44 +65,9 @@ export function resolvePointer(app, shapeId, pointerData) {
  * @returns {Object} Resolved state updates
  */
 export function resolvePattern(app, shapeId, pattern) {
-    const result = {};
-
-    // 1. Simple Options (direct map)
-    if (pattern.options) Object.assign(result, pattern.options);
-
-    // 2. Pointer resolution (Tokens/Units)
-    const resolvedPointer = resolvePointer(app, shapeId, pattern.pointer);
-    Object.assign(result, resolvedPointer);
-
-    // 3. Sliders (direct map)
-    if (pattern.sliders) Object.assign(result, pattern.sliders);
-
-    // 4. Bridge / Remapping (New Schema names -> Current App State names)
-    // This maintains compatibility until the entire App state is refactored.
-    const remapped = { ...result };
-
-    if (remapped.sourceLayout !== undefined) {
-        remapped.triangleSourceMode = remapped.sourceLayout;
-        delete remapped.sourceLayout;
-    }
-    if (remapped.sourceDirection !== undefined) {
-        remapped.triangleDirectionMode = remapped.sourceDirection;
-        delete remapped.sourceDirection;
-    }
-    if (remapped.maxBounces !== undefined) {
-        remapped.MAX_BOUNCES = remapped.maxBounces;
-        delete remapped.maxBounces;
-    }
-    if (remapped.sourceOffsets !== undefined) {
-        remapped.triangleSourceOffsets = remapped.sourceOffsets;
-        delete remapped.sourceOffsets;
-    }
-    if (remapped.renderMode !== undefined) {
-        remapped.isPaintMode = remapped.renderMode === 'paint';
-        remapped.isPaint2Mode = remapped.renderMode === 'paint2';
-        remapped.isLightMode = remapped.renderMode === 'light';
-        delete remapped.renderMode;
-    }
-
-    return remapped;
+    return {
+        options: pattern.options || {},
+        sliders: pattern.sliders || {},
+        pointer: resolvePointer(app, shapeId, pattern.pointer)
+    };
 }

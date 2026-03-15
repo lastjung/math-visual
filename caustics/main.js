@@ -34,6 +34,7 @@ import {
     runRectA0Simulation,
     runUniversalJourneySimulation,
     runVvOvalFocusSimulation,
+    runTriangleA0Simulation,
     startA0Simulation,
     startNarrativeSimulation,
     stopSimulation
@@ -67,7 +68,6 @@ const App = {
     flowOffset: 0,
     baseStyle: 'line',
     flowMode: 'none',
-    lightPattern: 'single', // New: 'single', 'multi', or 'strip'
     lightSourceMode: 'point', // 'point' or 'parallel'
     triangleSourceMode: 'single',
     triangleDirectionMode: 'parallel',
@@ -84,7 +84,6 @@ const App = {
     isLightMode: false,  
     isSimulationMode: false,
     isWindowFull: false,
-    preSimulationBounces: 10,
     MAX_BOUNCES: 10, // 반사 효과 켬 (기본 10회)
     currentNarrative: 'none',
     emitStartTime: null,
@@ -340,7 +339,7 @@ const App = {
         this.resize();
         this.sourcePos = this.getDefaultSourcePos();
         this.sourceAnchorPos = this.getShapeLayoutCenter(this.shape);
-        // this.restoreState(); // Disabled to allow clean start on refresh
+        this.restoreState();
         this.sanitizeSourcePosition();
         this.normalizeLightSourceMode();
         if (this.shape === 'parabola' && this.lightSourceMode === 'point') {
@@ -393,6 +392,22 @@ const App = {
 
     finishSimulation(finalHold = 4000) {
         return finishSimulation(this, finalHold);
+    },
+
+    triangle_A0_simm() {
+        return runTriangleA0Simulation(this);
+    },
+
+    "3_beam_spread_simm"() {
+        return runBeamSpreadSimulation(this);
+    },
+
+    "4_ray_num_simm"() {
+        return runRayCountSimulation(this);
+    },
+
+    universal_journey_simm() {
+        return runUniversalJourneySimulation(this);
     },
 
     /**
@@ -460,7 +475,6 @@ const App = {
         // this.isPaint2Mode = true;
         // this.isLightMode = false;
         this.isSimulationMode = false;
-        this.preSimulationBounces = 10;
         this.spread = Math.PI / 3;
         this.beamWidth = 1.6;
         this.MAX_BOUNCES = 10;
@@ -525,14 +539,6 @@ const App = {
             min: (minX * margin) - this.sourcePos.x,
             max: (maxX * margin) - this.sourcePos.x
         };
-    },
-
-    "3_beam_spread_simm"() {
-        return runBeamSpreadSimulation(this);
-    },
-
-    "4_ray_mum_simm"() {
-        return runRayCountSimulation(this);
     },
 
     rect_A0_simm() {

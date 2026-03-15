@@ -80,16 +80,40 @@
 **목표**: `controls.js` 내의 모든 직접적인 state 조작을 `updateOption`, `updateSlider`, `updatePointer` 등의 공통 API로 추상화 완료.
 
 ### 1. 주요 산출물
-- **`caustics/core/state-mapper.js` 확장**:
-    - `updateOption`, `updateSlider`, `updatePointer` 구현 완료.
-    - `isWindowFull`, `currentNarrative`, `autoMode`, `parallelRange` 등 누락되었던 모든 경로 수용 가능하도록 채널 확장.
-- **`caustics/ui/controls.js` 전면 리팩토링**:
-    - `beamWidth`, Fullscreen 토글, 키보드 단축키, 마우스 드래그를 포함한 **모든** 입력 경로에서 직접 대입 제거.
-    - 사이드 이펙트(autoMode 해제, resetRays 등)가 API 내부로 통합되어 이벤트 핸들러 코드 간결화.
-- **`caustics/ui/render-ui.js` 정제**:
-    - 프리셋 적용 로직을 `app.applyPattern()`으로 대체하여 하드코딩 중복 제거.
+- **`caustics/core/state-mapper.js` 확장**: `parallelRange`를 포함한 모든 입력 경로를 수용하는 공통 API 완성.
+- **`caustics/ui/controls.js` 리팩토링**: 모든 UI 입력 및 드래그 로직에서 직접 대입 제거.
 
 ---
 
-## 🟡 6단계: Simulation 로직 및 Persistent 통합 (대기 중)
-- **다음 작업**: 시뮬레이션 코드(`core/simulator.js` 등) 및 `persistence.js`의 완전한 Scene Schema 통합 작업 진행.
+## 🟢 6단계: Simulation 로직 및 Persistence 통합 (완료)
+**작성일**: 2026-03-15
+**목표**: Flat state 직접 참조를 줄이고 Scene Schema 중심으로 통합.
+
+### 1. 주요 산출물
+- [x] **영속성(Persistence) 완전 전환**: `readCurrentScene` / `applyScene` 기반으로 저장/복원 로직 단일화 완료.
+- [x] **시뮬레이션 참조 경로 API화**: `simulation-runner.js` 내부의 직접 속성 조작을 `updateSlider`, `updateOption`, `updatePointer` 등으로 치환 완료.
+- [x] **Pattern 기반 전환 완료**: 시뮬레이션과 UI에서 숫자 `slot` 대신 `patternId`를 직접 사용하도록 정리 완료.
+- [x] **UI Preset 버튼 정규화**: `data-pattern-id`를 기준으로 `app.applyPattern()`이 호출되도록 경로 통일 완료.
+
+## 🟢 7단계: 최종 정리 및 레거시 제거 (완료)
+- **달성 현황**:
+    - [x] **레거시 참조 완전 제거**: `selectedSourcePresetSlot` 및 `data-preset-slot` 기반 로직 삭제 완료.
+    - [x] **UI 통로 단일화**: 프리셋 버튼을 `data-pattern-id`와 `shape-preset-index-N` ID 구조로 정리 완료.
+    - [x] **브릿지 로직 중앙화**: `pattern-resolver.js`의 파편화된 리매핑 코드를 제거하고 `state-mapper.js`의 공통 API(`updateOption` 등)로 통합 완료.
+    - [x] **영속성 데이터 정제**: 하이브리드 복원 로직을 제거하고 Scene Schema 전용 복원 경로로 확정 완료.
+- **제거된 항목 리스트**:
+    - `App.selectedSourcePresetSlot` 속성
+    - `persistence.js`의 Flat state fallback 로직
+    - `controls.js`의 `data-preset-slot` 처리 루프
+    - `pattern-resolver.js`의 `remapped` 브릿지 블록
+
+## ✅ 최종 요약
+Caustics 앱의 상태 관리와 UI 제어 경로는 중앙 집중형 Scene Schema 구조로 정리되었다. 모든 주요 설정 변경은 공통 API를 거치고, 영속성 및 프리셋 시스템은 같은 데이터 규격을 공유한다.
+
+## 후속 작업 규칙
+
+이후 `caustics` 설정 관련 변경은 아래 스킬을 기준으로 진행한다.
+
+- [caustics-settings-governor](/Users/eric/PG/math-visual/caustics/skills/caustics-settings-governor/SKILL.md)
+
+이 스킬은 설정을 `shape / patternId / options / auto / pointer / sliders`로 분류하고, 각 변경이 어느 파일과 경로를 통해 들어가야 하는지 고정한다.

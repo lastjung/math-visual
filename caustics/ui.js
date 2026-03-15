@@ -37,8 +37,8 @@ export const UI = {
         return syncShapePanel(app);
     },
 
-    applyShapePreset(app, slot) {
-        return applyShapePreset(app)(slot);
+    applyShapePreset(app, patternId) {
+        return applyShapePreset(app)(patternId);
     },
 
     setupApplePlayer(app) {

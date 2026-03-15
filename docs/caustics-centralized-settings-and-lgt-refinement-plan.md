@@ -663,6 +663,22 @@ pattern화 후에는 slot 기반 참조를 `patternId` 기반으로 바꿔야 �
 
 이 순서로 가야 범위를 통제하면서도 나중에 확장 가능한 기반이 생긴다.
 
+## 14. 운영 규칙
+
+앞으로 `caustics` 설정 구조를 수정할 때는 아래 스킬을 기준 규칙으로 사용한다.
+
+- [caustics-settings-governor](/Users/eric/PG/math-visual/caustics/skills/caustics-settings-governor/SKILL.md)
+
+적용 대상:
+
+- preset / pattern 추가 및 수정
+- slider / pointer / option 추가 및 수정
+- scene schema 변경
+- persistence 경로 변경
+- simulation에서 설정 적용 방식 변경
+
+즉, 이후 설정 관련 작업은 ad-hoc으로 하지 않고 이 스킬의 분류 규칙과 변경 절차를 따른다.
+
 ---
 **작성일**: 2026-03-15
 **작성 기준**: `/caustics` 현재 코드 구조

@@ -76,6 +76,7 @@ function resumeAudioIfAvailable() {
 export function runBeamSpreadSimulation(app) {
     if (app.isSimRunning) return;
     app.isSimRunning = true;
+    app.isSimulationMode = true;
     const currentNarrative = app.currentNarrative === 'none' ? null : app.currentNarrative;
     resumeAudioIfAvailable();
 
@@ -116,7 +117,7 @@ export function runBeamSpreadSimulation(app) {
         registerTimer(app, setTimeout(() => {
             clearScene(app);
             app.overlayMessage = null;
-            app.spread = radVal;
+            app.updateSlider('spread', radVal, false);
             app.growth = 0;
             app.isLightVisible = true;
             app.isFlowing = true;
@@ -135,6 +136,7 @@ export function runBeamSpreadSimulation(app) {
 export function runRayCountSimulation(app) {
     if (app.isSimRunning) return;
     app.isSimRunning = true;
+    app.isSimulationMode = true;
     const currentNarrative = app.currentNarrative === 'none' ? null : app.currentNarrative;
     resumeAudioIfAvailable();
 
@@ -160,8 +162,10 @@ export function runRayCountSimulation(app) {
         app.isFlowing = false;
         clearScene(app);
 
-        if (currentIdx === 0 && currentNarrative) {
-            app.overlayMessage = 'Simulation Ending...';
+        if (currentIdx === 0) {
+            app.overlayMessage = currentNarrative
+                ? [currentNarrative, `Ray Num Study (${val} Rays)`]
+                : `Ray Num Study (${val} Rays)`;
         } else {
             app.overlayMessage = `${val} Rays`;
         }
@@ -171,7 +175,7 @@ export function runRayCountSimulation(app) {
         registerTimer(app, setTimeout(() => {
             clearScene(app);
             app.overlayMessage = null;
-            app.rayNumber = val;
+            app.updateSlider('rayNumber', val, false);
             app.growth = 0;
             app.isLightVisible = true;
             app.isFlowing = true;
@@ -195,9 +199,9 @@ export function runRectA0Simulation(app) {
     resumeAudioIfAvailable();
 
     const stages = [
-        { subtitle: 'Side Scan', slot: 1, duration: 25000, speed: 20 },
-        { subtitle: 'Vertical Equilibrium: The Top Bounce', slot: 0, duration: 10000, speed: 15 },
-        { subtitle: 'Corner Geometry: The Vertex Echo', slot: 2, duration: 10000, speed: 15 }
+        { subtitle: 'Side Scan', patternId: 'side-scan', duration: 25000, speed: 20 },
+        { subtitle: 'Vertical Equilibrium: The Top Bounce', patternId: 'top-bounce', duration: 10000, speed: 15 },
+        { subtitle: 'Corner Geometry: The Vertex Echo', patternId: 'corner-echo', duration: 10000, speed: 15 }
     ];
 
     let idx = 0;
@@ -211,8 +215,8 @@ export function runRectA0Simulation(app) {
         clearScene(app);
         app.isLightVisible = false;
         app.isFlowing = false;
-        UI.applyShapePreset(app, stage.slot);
-        app.raySpeed = stage.speed;
+        app.applyPattern(stage.patternId);
+        app.updateSlider('raySpeed', stage.speed, false);
         app.overlayMessage = idx === 0 ? ['Rectangle Master', stage.subtitle] : stage.subtitle;
         UI.update(app);
 
@@ -247,12 +251,12 @@ export function runUniversalJourneySimulation(app) {
         {
             subtitle: 'Initial Contact: Point Source',
             apply: () => {
-                app.lightSourceMode = 'point';
-                app.sourcePos = { ...defaults.sourcePos };
-                app.spread = 0.5;
-                app.rayNumber = 100;
-                app.MAX_BOUNCES = 6;
-                app.isPaint2Mode = false;
+                app.updateOption('lightSourceMode', 'point');
+                app.updatePointer({ sourcePos: { ...defaults.sourcePos } });
+                app.updateSlider('spread', 0.5, false);
+                app.updateSlider('rayNumber', 100, false);
+                app.updateSlider('maxBounces', 6, false);
+                app.updateOption('renderMode', 'paint1');
             },
             textTime: 2500,
             simTime: 8000
@@ -260,11 +264,11 @@ export function runUniversalJourneySimulation(app) {
         {
             subtitle: 'Parallel Expansion: Sweeping the Perimeter',
             apply: () => {
-                app.lightSourceMode = 'parallel';
-                app.rayNumber = 200;
-                app.MAX_BOUNCES = 12;
-                app.autoModes.revolution = true;
-                app.useTrail = true;
+                app.updateOption('lightSourceMode', 'parallel');
+                app.updateSlider('rayNumber', 200, false);
+                app.updateSlider('maxBounces', 12, false);
+                app.updateOption('autoMode', { key: 'revolution', value: true });
+                app.updateOption('useTrail', true);
             },
             textTime: 2500,
             simTime: 12000
@@ -272,13 +276,13 @@ export function runUniversalJourneySimulation(app) {
         {
             subtitle: 'Geometric Convergence: Finding the Focus',
             apply: () => {
-                app.autoModes.revolution = false;
-                app.lightSourceMode = 'converge';
-                app.sourcePos = { ...defaults.sourcePos };
-                app.spread = 1.2;
-                app.rayNumber = 400;
-                app.MAX_BOUNCES = 15;
-                app.isPaint2Mode = true;
+                app.updateOption('autoMode', { key: 'revolution', value: false });
+                app.updateOption('lightSourceMode', 'converge');
+                app.updatePointer({ sourcePos: { ...defaults.sourcePos } });
+                app.updateSlider('spread', 1.2, false);
+                app.updateSlider('rayNumber', 400, false);
+                app.updateSlider('maxBounces', 15, false);
+                app.updateOption('renderMode', 'paint2');
                 Simulator.initRays(app);
             },
             textTime: 2500,
@@ -333,13 +337,13 @@ export function runVvOvalFocusSimulation(app) {
         {
             subtitle: 'A point source fills the shared shell',
             apply: () => {
-                app.shape = 'vv-oval';
-                app.lightSourceMode = 'point';
-                app.sourcePos = { x: 0, y: shellMidY };
-                app.spread = 0.7;
-                app.rayNumber = 160;
-                app.MAX_BOUNCES = 8;
-                app.useTrail = true;
+                app.updateOption('shape', 'vv-oval');
+                app.updateOption('lightSourceMode', 'point');
+                app.updatePointer({ sourcePos: { x: 0, y: shellMidY } });
+                app.updateSlider('spread', 0.7, false);
+                app.updateSlider('rayNumber', 160, false);
+                app.updateSlider('maxBounces', 8, false);
+                app.updateOption('useTrail', true);
             },
             textTime: 2600,
             simTime: 7000
@@ -347,12 +351,12 @@ export function runVvOvalFocusSimulation(app) {
         {
             subtitle: 'Converge drives the beam toward the common focus',
             apply: () => {
-                app.shape = 'vv-oval';
-                app.lightSourceMode = 'converge';
-                app.sourcePos = { x: 0, y: focusY };
-                app.spread = 1.15;
-                app.rayNumber = 240;
-                app.MAX_BOUNCES = 10;
+                app.updateOption('shape', 'vv-oval');
+                app.updateOption('lightSourceMode', 'converge');
+                app.updatePointer({ sourcePos: { x: 0, y: focusY } });
+                app.updateSlider('spread', 1.15, false);
+                app.updateSlider('rayNumber', 240, false);
+                app.updateSlider('maxBounces', 10, false);
             },
             textTime: 2400,
             simTime: 8000
@@ -360,12 +364,12 @@ export function runVvOvalFocusSimulation(app) {
         {
             subtitle: 'Off-focus target loosens the caustic and splits the flow',
             apply: () => {
-                app.shape = 'vv-oval';
-                app.lightSourceMode = 'converge';
-                app.sourcePos = { x: 0, y: focusY * 0.52 };
-                app.spread = 1.15;
-                app.rayNumber = 240;
-                app.MAX_BOUNCES = 10;
+                app.updateOption('shape', 'vv-oval');
+                app.updateOption('lightSourceMode', 'converge');
+                app.updatePointer({ sourcePos: { x: 0, y: focusY * 0.52 } });
+                app.updateSlider('spread', 1.15, false);
+                app.updateSlider('rayNumber', 240, false);
+                app.updateSlider('maxBounces', 10, false);
             },
             textTime: 2400,
             simTime: 8000
@@ -402,6 +406,82 @@ export function runVvOvalFocusSimulation(app) {
                 runStage();
             }, stage.simTime));
         }, stage.textTime));
+    };
+
+    runStage();
+}
+
+export function runTriangleA0Simulation(app) {
+    if (app.isSimRunning) return;
+    app.isSimRunning = true;
+    app.isSimulationMode = true;
+    resumeAudioIfAvailable();
+
+    const stages = [
+        {
+            subtitle: 'Periodic Orbit: The Center Path',
+            apply: () => {
+                app.applyPattern('center-path');
+                app.updateOption('renderMode', 'flow');
+                app.updateSlider('rayNumber', 90, false);
+                app.updateSlider('spread', 0.22, false);
+                app.updateSlider('raySpeed', 10, false);
+                app.updateSlider('maxBounces', 14, false);
+            },
+            duration: 12000
+        },
+        {
+            subtitle: 'Stripe Family: The Edge Sweep',
+            apply: () => {
+                app.applyPattern('edge-sweep');
+                app.updateOption('renderMode', 'paint1');
+                app.updateSlider('rayNumber', 260, false);
+                app.updateSlider('raySpeed', 18, false);
+                app.updateSlider('maxBounces', 10, false);
+            },
+            duration: 15000
+        },
+        {
+            subtitle: 'Triangular Symmetry: The Triad Edge',
+            apply: () => {
+                app.applyPattern('triad-edge');
+                app.updateOption('renderMode', 'paint2');
+                app.updateSlider('rayNumber', 180, false);
+                app.updateSlider('spread', Math.PI / 4, false);
+                app.updateSlider('raySpeed', 14, false);
+                app.updateSlider('maxBounces', 8, false);
+            },
+            duration: 15000
+        }
+    ];
+
+    let idx = 0;
+    const runStage = () => {
+        if (idx >= stages.length) {
+            finishSimulation(app);
+            return;
+        }
+
+        const stage = stages[idx];
+        clearScene(app);
+        app.isLightVisible = false;
+        app.isFlowing = false;
+        stage.apply();
+        app.overlayMessage = idx === 0 ? ['Triangle A0', stage.subtitle] : stage.subtitle;
+        UI.update(app);
+
+        registerTimer(app, setTimeout(() => {
+            app.overlayMessage = null;
+            app.growth = 0;
+            app.isLightVisible = true;
+            app.isFlowing = true;
+            UI.update(app);
+
+            registerTimer(app, setTimeout(() => {
+                idx++;
+                runStage();
+            }, stage.duration));
+        }, 4000));
     };
 
     runStage();

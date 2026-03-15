@@ -173,10 +173,13 @@ export function setupControls(app, ui) {
         };
     }
 
-    UIElements.queryAll('[data-preset-slot]').forEach((btn) => {
+    UIElements.queryAll('.shape-preset-btn').forEach((btn) => {
         btn.onclick = () => {
-            const slot = parseInt(btn.dataset.presetSlot, 10);
-            ui.applyShapePreset(app, slot);
+            const patternId = btn.dataset.patternId;
+            if (patternId) {
+                app.applyPattern(patternId);
+                ui.update(app);
+            }
         };
     });
 
@@ -371,7 +374,7 @@ export function setupControls(app, ui) {
         }
         if (aHeld && e.code === 'Digit4') {
             e.preventDefault();
-            app['4_ray_mum_simm']();
+            app['4_ray_num_simm']();
             return;
         }
         if (aHeld && e.code === 'Digit0') {
@@ -541,4 +544,3 @@ export function setupControls(app, ui) {
     window.addEventListener('touchmove', handleInteraction, { passive: false });
     window.addEventListener('touchend', stopDragging);
 }
-

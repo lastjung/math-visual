@@ -238,25 +238,27 @@ export function syncShapePanel(app) {
     if (note) note.classList.toggle('hidden', false); // Always show note
 
     presets.forEach((preset, index) => {
-        const button = UIElements.get(`shape-preset-${index}`);
-        if (button) button.textContent = preset.label;
+        const btn = UIElements.get(`shape-preset-index-${index}`);
+        if (btn) {
+            btn.textContent = preset.label;
+            btn.dataset.patternId = preset.patternId;
+            btn.classList.toggle('active', app.patternId === preset.patternId);
+        }
     });
 
-    const selectedPreset = presets[app.selectedSourcePresetSlot ?? 0] || presets[0];
-    if (presetNote && selectedPreset) presetNote.textContent = selectedPreset.note || '';
+    const currentPreset = presets.find(p => p.patternId === app.patternId) || presets[0];
+    if (presetNote && currentPreset) presetNote.textContent = currentPreset.note || '';
 }
 
 export function applyShapePreset(app) {
-    return (slot) => {
+    return (patternId) => {
         const presetsByShape = shapePresets(app);
         const presets = presetsByShape[app.shape] || presetsByShape.circle;
-        const preset = presets[slot];
+        const preset = presets.find(p => p.patternId === patternId);
         if (!preset) return;
 
-        app.selectedSourcePresetSlot = slot;
-        
-        // Execute application (now handled by app.applyPattern)
-        preset.apply();
+        // Execute application
+        app.applyPattern(patternId);
 
         // UI Feedback
         const presetNote = UIElements.get('shape-preset-note');

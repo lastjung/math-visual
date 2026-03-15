@@ -282,6 +282,8 @@ export const Renderer = {
 
                     if (!hit || isLast) {
                         ray.active = false;
+                    } else if (shape === 'triangle' && Physics.isNearTriangleVertex(hit.x, hit.y, size)) {
+                        ray.active = false;
                     } else {
                         ray.accDist += segDist;
                         ray.rx = nextX; ray.ry = nextY;
@@ -362,6 +364,7 @@ export const Renderer = {
                     if (LD) LD.recordDensityAlongLine(ray.rx, ray.ry, dX, dY, DEPOSIT);
 
                     if (!hit || isLast) { ray.active = false; } 
+                    else if (shape === 'triangle' && Physics.isNearTriangleVertex(hit.x, hit.y, size)) { ray.active = false; }
                     else {
                         ray.accDist += sd; ray.rx = nx; ray.ry = ny;
                         const normal = Physics.getNormal(hit.x, hit.y, shape, size);

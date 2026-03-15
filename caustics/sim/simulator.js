@@ -132,6 +132,8 @@ export const Simulator = {
 
                         if (ray.bounces >= maxBounces) {
                             ray.active = false;
+                        } else if (app.shape === 'triangle' && Physics.isNearTriangleVertex(transition.x, transition.y, size)) {
+                            ray.active = false;
                         } else {
                             const normal = Physics.getNormal(transition.x, transition.y, app.shape, size);
                             const inX = Math.cos(ray.angle);
@@ -180,6 +182,8 @@ export const Simulator = {
                         if (!hit && distToHit > size * 2) {
                              ray.x = ray.x; // Keep at last valid
                         }
+                    } else if (app.shape === 'triangle' && Physics.isNearTriangleVertex(hit.x, hit.y, size)) {
+                        ray.active = false;
                     } else {
                         // Reflect
                         const normal = Physics.getNormal(hit.x, hit.y, app.shape, size);

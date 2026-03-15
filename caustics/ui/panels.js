@@ -49,6 +49,7 @@ export function shapePresets(app) {
             return {
                 label: pattern.label,
                 note: pattern.note,
+                patternId: patternId,
                 apply: () => app.applyPattern(patternId)
             };
 
