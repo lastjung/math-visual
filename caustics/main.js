@@ -17,12 +17,8 @@ import {
     getTriangleSourceOrigins,
     getTriangleVertices
 } from './core/shape-config.js';
-import {
-    buildPersistedState,
-    persistState,
-    restoreState
-} from './core/persistence.js';
-import { readCurrentScene, applyScene, applyPattern, updateOption, updateSlider, updatePointer } from './core/state-mapper.js';
+import { buildPersistedState, persistState, restoreState } from './core/persistence.js';
+import { readCurrentScene, applyScene, applyPattern, applySubPreset, updateOption, updateSlider, updatePointer } from './core/state-mapper.js';
 
 
 
@@ -263,31 +259,16 @@ const App = {
         const prevOnLineY = this.shape === 'triangle' ? -prevSize * 1.17 + prevSize * 0.2 : -prevSize;
         
         // Detect if we were in 'Center' or 'OnLine' mode
-        const isCenter = Math.hypot(this.sourcePos.x - prevCenter.x, this.sourcePos.y - prevCenter.y) < 1.0;
-        const isOnLine = Math.abs(this.sourcePos.y - prevOnLineY) < 2.0 && Math.abs(this.sourcePos.x) < 1.0;
+        const isCenter = Math.hypot(this.sourcePos.x - prevCenter.x, this.sourcePos.y - prevCenter.y) < 2.0;
+        const isOnLine = Math.abs(this.sourcePos.y - prevOnLineY) < 4.0 && Math.abs(this.sourcePos.x) < 4.0;
 
-        const defaults = this.getShapeDefaults(nextShape);
-        const nextSize = this.getShapeSize();
-        const nextCenter = this.getShapeLayoutCenter(nextShape);
-
+        // Apply detected sub-preset or default to 'basic'
         if (isCenter) {
-            this.sourcePos = { ...nextCenter };
-            // Keep spread 360 if it was already 360
+            this.applySubPreset('center');
         } else if (isOnLine) {
-            const nextOnLineY = nextShape === 'triangle' ? -nextSize * 1.17 + nextSize * 0.2 : -nextSize;
-            this.sourcePos = { x: 0, y: nextOnLineY };
+            this.applySubPreset('online');
         } else {
-            // Default to 'Basic' only if not in special modes
-            this.sourcePos = defaults.sourcePos;
-        }
-
-        this.sourceAnchorPos = nextCenter;
-        this.resetTriangleSourceOffsets();
-        this.sourceRotation = defaults.sourceRotation;
-        
-        // Only reset spread if it wasn't already at a special state (like 360)
-        if (this.spread < Math.PI * 1.9) {
-            this.spread = Math.PI / 3;
+            this.applySubPreset('basic');
         }
 
         this.normalizeLightSourceMode();
@@ -341,6 +322,10 @@ const App = {
 
     applyPattern(patternId) {
         return applyPattern(this, patternId);
+    },
+
+    applySubPreset(presetId) {
+        return applySubPreset(this, presetId);
     },
 
     updateOption(key, value) {
@@ -491,27 +476,46 @@ const App = {
     },
 
     reset() {
-        this.stopSimulation(); // Kill any simulation ghost chains first
-        // this.shape = 'circle'; // Keep current shape
-        this.rayNumber = 30;
-        this.raySpeed = 20;
-        const defaults = this.getShapeDefaults(this.shape);
-        this.sourcePos = defaults.sourcePos;
-        this.sourceAnchorPos = this.getShapeLayoutCenter(this.shape);
-        this.resetTriangleSourceOffsets();
-        this.sanitizeSourcePosition();
-        this.normalizeLightSourceMode();
-        // this.isPaintMode = false; // Preserve current mode
-        // this.isPaint2Mode = true;
-        // this.isLightMode = false;
+        this.stopSimulation();
         this.isSimulationMode = false;
-        this.spread = Math.PI / 3;
-        this.beamWidth = 1.6;
-        this.MAX_BOUNCES = 10;
+
+        // 1. Reset to Global & Shape-specific Defaults
+        const shapeData = SHAPE_REGISTRY[this.shape];
+        if (shapeData && shapeData.defaults) {
+            // Apply shape-specific options/pointer if they exist
+            if (shapeData.defaults.options) {
+                for (const [k, v] of Object.entries(shapeData.defaults.options)) {
+                    this.updateOption(k, v);
+                }
+            }
+        }
+
+        // 2. Apply the 'basic' sub-preset (Position, Spread, Direction)
+        this.applySubPreset('basic');
+
+        // 3. Reset common sliders and options to global defaults
+        this.rayNumber = GLOBAL_DEFAULTS.sliders.rayNumber;
+        this.raySpeed = GLOBAL_DEFAULTS.sliders.raySpeed;
+        this.beamWidth = GLOBAL_DEFAULTS.sliders.beamWidth;
+        this.MAX_BOUNCES = GLOBAL_DEFAULTS.sliders.maxBounces;
+        this.alphaIntensity = GLOBAL_DEFAULTS.sliders.alphaIntensity;
+        this.sourceRotation = GLOBAL_DEFAULTS.sliders.sourceRotation;
         
-        // Use resetRays for consistent behavior (timer reset, HUD visibility, canvas clearing)
+        this.renderMode = 'none';
+        this.isPaintMode = false;
+        this.isPaint2Mode = false;
+        this.isLightMode = false;
+        
+        // 4. Reset Audio
+        if (window.audioManager) {
+            window.audioManager.stop();
+            this.nextBGM(true, false); // Start a fresh track
+        }
+        
+        // 5. Clear Rays and Canvas
         this.resetRays(true);
-        this.nextBGM(false, false); // Pick a new random track on reset
+        this.isFlowing = false;
+        this.patternId = null;
 
         // Reset auto modes and phases
         this.autoModes = {

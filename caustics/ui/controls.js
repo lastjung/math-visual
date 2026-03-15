@@ -237,19 +237,7 @@ export function setupControls(app, ui) {
     UIElements.queryAll('#group-source-single-option .mini-tab').forEach((btn) => {
         btn.onclick = (e) => {
             const val = e.target.dataset.value;
-            if (val === 'basic') {
-                app.syncSourceToFoci();
-            } else if (val === 'center') {
-                const center = app.getShapeLayoutCenter(app.shape);
-                app.updatePointer({ sourcePos: center, sourceAnchorPos: center });
-                app.updateSlider('spread', Math.PI * 2);
-                app.updateOption('sourceLayout', 'single');
-                app.updateOption('sourceDirection', 'outward');
-            } else if (val === 'online') {
-                const size = app.getShapeSize();
-                const pos = app.shape === 'triangle' ? { x: 0, y: -size * 1.17 + size * 0.2 } : { x: 0, y: -size };
-                app.updatePointer({ sourcePos: pos, sourceAnchorPos: pos });
-            }
+            app.applySubPreset(val);
             ui.update(app);
         };
     });

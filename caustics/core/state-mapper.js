@@ -187,6 +187,38 @@ export function applyPattern(app, patternId, shapeId = app.shape) {
 }
 
 /**
+ * Apply a sub-preset (e.g., basic, center, online) from the registry.
+ * @param {Object} app - The main App object
+ * @param {string} presetId - Sub-preset ID (basic, center, online)
+ */
+export function applySubPreset(app, presetId) {
+    const shapeData = SHAPE_REGISTRY[app.shape];
+    if (!shapeData || !shapeData.subPresets) return;
+
+    const preset = shapeData.subPresets[presetId];
+    if (!preset) return;
+
+    const resolved = resolvePattern(app, app.shape, preset);
+
+    if (resolved.options) {
+        for (const [key, val] of Object.entries(resolved.options)) {
+            updateOption(app, key, val);
+        }
+    }
+    if (resolved.sliders) {
+        for (const [key, val] of Object.entries(resolved.sliders)) {
+            updateSlider(app, key, val, false);
+        }
+    }
+    if (resolved.pointer) {
+        updatePointer(app, resolved.pointer);
+    }
+
+    app.patternId = null;
+    if (typeof app.resetRays === 'function') app.resetRays(true);
+}
+
+/**
  * Update an option on the app state.
  * @param {Object} app - The main App object
  * @param {string} key - The option key (New Schema)

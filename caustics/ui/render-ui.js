@@ -1,5 +1,7 @@
 import { UIElements } from './elements.js';
 import { shapePanelContent, shapePresets, trianglePanelContent } from './panels.js';
+import { SHAPE_REGISTRY } from '../config/shape-registry.js';
+import { resolvePattern } from '../config/pattern-resolver.js';
 
 export function updateUI(app) {
     syncShapePanel(app);
@@ -122,14 +124,30 @@ export function updateUI(app) {
     });
 
     UIElements.queryAll('#group-source-single-option .mini-tab').forEach((btn) => {
-        const val = btn.dataset.value;
-        if (val === 'center') {
-            const isCenter = Math.abs(app.sourcePos.x) < 1 && Math.abs(app.sourcePos.y) < 1;
-            btn.classList.toggle('active', isCenter);
-        } else if (val === 'basic') {
-            const defaults = app.getShapeDefaults(app.shape);
-            const isBasic = Math.abs(app.sourcePos.x - defaults.sourcePos.x) < 1 && Math.abs(app.sourcePos.y - defaults.sourcePos.y) < 1;
-            btn.classList.toggle('active', isBasic);
+        const presetId = btn.dataset.value;
+        const shapeData = SHAPE_REGISTRY[app.shape];
+        if (!shapeData || !shapeData.subPresets) return;
+        
+        const preset = shapeData.subPresets[presetId];
+        if (!preset) return;
+
+        const resolved = resolvePattern(app, app.shape, preset);
+        if (resolved.pointer && resolved.pointer.sourcePos) {
+            const posMatch = Math.hypot(app.sourcePos.x - resolved.pointer.sourcePos.x, app.sourcePos.y - resolved.pointer.sourcePos.y) < 2;
+            let slidersMatch = true;
+            if (resolved.sliders && resolved.sliders.spread !== undefined) {
+                slidersMatch = Math.abs(app.spread - resolved.sliders.spread) < 0.01;
+            }
+            let optionsMatch = true;
+            if (resolved.options) {
+                if (resolved.options.sourceDirection !== undefined) {
+                    optionsMatch = optionsMatch && (app.triangleDirectionMode === resolved.options.sourceDirection);
+                }
+                if (resolved.options.sourceLayout !== undefined) {
+                    optionsMatch = optionsMatch && (app.triangleSourceMode === resolved.options.sourceLayout);
+                }
+            }
+            btn.classList.toggle('active', posMatch && slidersMatch && optionsMatch);
         }
     });
 

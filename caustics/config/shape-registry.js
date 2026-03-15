@@ -48,6 +48,23 @@ export const SHAPE_REGISTRY = {
                 pointer: { sourcePos: { x: 0, y: { unit: 'size', value: -0.75 } } },
                 sliders: { spread: 0, sourceRotation: 0 }
             }
+        },
+        subPresets: {
+            'basic': {
+                pointer: { sourcePreset: 'shape-focus' },
+                sliders: { spread: 1.0472 },
+                options: { sourceDirection: 'inward', sourceLayout: 'single' }
+            },
+            'center': {
+                pointer: { anchorPreset: 'shape-center', sourcePos: { x: 0, y: 0 } },
+                sliders: { spread: 6.2832 },
+                options: { sourceDirection: 'outward', sourceLayout: 'single' }
+            },
+            'online': {
+                pointer: { sourcePos: { x: 0, y: { unit: 'size', value: -1.0 } } },
+                sliders: { spread: 1.0472 },
+                options: { sourceDirection: 'inward', sourceLayout: 'single' }
+            }
         }
     },
     rect: {
@@ -90,6 +107,23 @@ export const SHAPE_REGISTRY = {
                 pointer: { sourcePos: { x: { unit: 'size', value: -0.75 }, y: { unit: 'size', value: -1.05 } } },
                 sliders: { spread: (60 * Math.PI) / 180, sourceRotation: (-45 * Math.PI) / 180 }
             }
+        },
+        subPresets: {
+            'basic': {
+                pointer: { sourcePreset: 'shape-focus' },
+                sliders: { spread: 1.0472 },
+                options: { sourceDirection: 'inward', sourceLayout: 'single' }
+            },
+            'center': {
+                pointer: { anchorPreset: 'shape-center', sourcePos: { x: 0, y: 0 } },
+                sliders: { spread: 6.2832 },
+                options: { sourceDirection: 'outward', sourceLayout: 'single' }
+            },
+            'online': {
+                pointer: { sourcePos: { x: 0, y: { unit: 'size', value: -1.0 } } },
+                sliders: { spread: 1.0472 },
+                options: { sourceDirection: 'inward', sourceLayout: 'single' }
+            }
         }
     },
     'v-oval': {
@@ -103,6 +137,12 @@ export const SHAPE_REGISTRY = {
             cardCopy: 'Use the focus anchor to see how reflections tighten along the vertical geometry.',
             note: 'Tip: sync to the upper focus, then sweep the rotation slider through a narrow range.',
             action: 'FOCI'
+        },
+        defaults: {
+            options: {
+                lightSourceMode: 'point',
+                sourceLayout: 'single'
+            }
         },
         patterns: {
             'upper-focus': {
@@ -126,6 +166,23 @@ export const SHAPE_REGISTRY = {
                 pointer: { sourcePos: { x: { unit: 'size', value: 0.18 }, y: { unit: 'size', value: -0.2 } } },
                 sliders: { spread: 1.2 }
             }
+        },
+        subPresets: {
+            'basic': {
+                pointer: { sourcePreset: 'shape-focus' },
+                sliders: { spread: 1.0472 },
+                options: { sourceDirection: 'inward', sourceLayout: 'single' }
+            },
+            'center': {
+                pointer: { anchorPreset: 'shape-center', sourcePos: { x: 0, y: 0 } },
+                sliders: { spread: 6.2832 },
+                options: { sourceDirection: 'outward', sourceLayout: 'single' }
+            },
+            'online': {
+                pointer: { sourcePos: { x: 0, y: { unit: 'size', value: -1.0 } } },
+                sliders: { spread: 1.0472 },
+                options: { sourceDirection: 'inward', sourceLayout: 'single' }
+            }
         }
     },
     'vv-oval': {
@@ -139,6 +196,12 @@ export const SHAPE_REGISTRY = {
             cardCopy: 'The outer and inner ovals create a clean demonstration of boundary transitions.',
             note: 'Tip: run Paint 2 with moderate density to reveal the split caustic lanes.',
             action: 'FOCI'
+        },
+        defaults: {
+            options: {
+                lightSourceMode: 'point',
+                sourceLayout: 'single'
+            }
         },
         patterns: {
             'shared-foci': {
@@ -162,6 +225,23 @@ export const SHAPE_REGISTRY = {
                 pointer: { sourcePos: { x: { unit: 'size', value: 0.14 }, y: { unit: 'size', value: -0.08 } } },
                 sliders: { spread: 1.0 }
             }
+        },
+        subPresets: {
+            'basic': {
+                pointer: { sourcePreset: 'shape-focus' },
+                sliders: { spread: 1.0472 },
+                options: { sourceDirection: 'inward', sourceLayout: 'single' }
+            },
+            'center': {
+                pointer: { anchorPreset: 'shape-center', sourcePos: { x: 0, y: 0 } },
+                sliders: { spread: 6.2832 },
+                options: { sourceDirection: 'outward', sourceLayout: 'single' }
+            },
+            'online': {
+                pointer: { sourcePos: { x: 0, y: { unit: 'size', value: -0.86 } } },
+                sliders: { spread: 1.0472 },
+                options: { sourceDirection: 'inward', sourceLayout: 'single' }
+            }
         }
     },
     ellipse: {
@@ -175,6 +255,12 @@ export const SHAPE_REGISTRY = {
             cardCopy: 'Launching from a focus shows the classic ellipse property with minimal setup.',
             note: 'Tip: hit the focus button, then use a wider spread to show the shared return point.',
             action: 'FOCI'
+        },
+        defaults: {
+            options: {
+                lightSourceMode: 'point',
+                sourceLayout: 'single'
+            }
         },
         patterns: {
             'focus-lock': {
@@ -197,6 +283,23 @@ export const SHAPE_REGISTRY = {
                 options: { lightSourceMode: 'point' },
                 pointer: { sourcePos: { x: { unit: 'size', value: -0.5 }, y: 0 } },
                 sliders: { spread: 1.2 }
+            }
+        },
+        subPresets: {
+            'basic': {
+                pointer: { sourcePreset: 'shape-focus' },
+                sliders: { spread: 1.0472 },
+                options: { sourceDirection: 'inward', sourceLayout: 'single' }
+            },
+            'center': {
+                pointer: { anchorPreset: 'shape-center', sourcePos: { x: 0, y: 0 } },
+                sliders: { spread: 6.2832 },
+                options: { sourceDirection: 'outward', sourceLayout: 'single' }
+            },
+            'online': {
+                pointer: { sourcePos: { x: { unit: 'size', value: -1.0 }, y: 0 } },
+                sliders: { spread: 1.0472 },
+                options: { sourceDirection: 'inward', sourceLayout: 'single' }
             }
         }
     },
@@ -234,6 +337,23 @@ export const SHAPE_REGISTRY = {
                 pointer: { sourcePos: { x: { unit: 'size', value: 0.35 }, y: { unit: 'size', value: 0.4 } } },
                 sliders: { spread: 0.5 }
             }
+        },
+        subPresets: {
+            'basic': {
+                pointer: { sourcePreset: 'shape-focus' },
+                sliders: { spread: 3.1416 },
+                options: { sourceDirection: 'outward', sourceLayout: 'single' } // Special case: Parabola Out
+            },
+            'center': {
+                pointer: { anchorPreset: 'shape-center', sourcePos: { x: 0, y: { unit: 'size', value: 0.25 } } },
+                sliders: { spread: 6.2832 },
+                options: { sourceDirection: 'outward', sourceLayout: 'single' }
+            },
+            'online': {
+                pointer: { sourcePos: { x: 0, y: { unit: 'size', value: 0.75 } } },
+                sliders: { spread: 1.0472 },
+                options: { sourceDirection: 'inward', sourceLayout: 'single' }
+            }
         }
     },
     cardioid: {
@@ -247,6 +367,12 @@ export const SHAPE_REGISTRY = {
             cardCopy: 'Cardioids reward slow scanning because the beam structure changes sharply near the notch.',
             note: 'Tip: move the source along the left side and accumulate with Paint 2 for dense folds.',
             action: 'ANCHOR'
+        },
+        defaults: {
+            options: {
+                lightSourceMode: 'point',
+                sourceLayout: 'single'
+            }
         },
         patterns: {
             'left-fold': {
@@ -270,6 +396,23 @@ export const SHAPE_REGISTRY = {
                 pointer: { sourcePos: { x: { unit: 'size', value: -0.16 }, y: { unit: 'size', value: 0.06 } } },
                 sliders: { spread: 0.9 }
             }
+        },
+        subPresets: {
+            'basic': {
+                pointer: { sourcePos: { x: { unit: 'size', value: -0.4 }, y: 0 } },
+                sliders: { spread: 1.0472 },
+                options: { sourceDirection: 'inward', sourceLayout: 'single' }
+            },
+            'center': {
+                pointer: { anchorPreset: 'shape-center', sourcePos: { x: { unit: 'size', value: 0.5 }, y: 0 } },
+                sliders: { spread: 6.2832 },
+                options: { sourceDirection: 'outward', sourceLayout: 'single' }
+            },
+            'online': {
+                pointer: { sourcePos: { x: { unit: 'size', value: -0.24 }, y: 0 } },
+                sliders: { spread: 1.0472 },
+                options: { sourceDirection: 'inward', sourceLayout: 'single' }
+            }
         }
     },
     triangle: {
@@ -283,6 +426,12 @@ export const SHAPE_REGISTRY = {
             cardCopy: 'Parallel and paint-based accumulation can expose stripe families and periodic orbit bands.',
             note: 'Tip: start near the center, then scan toward a vertex to compare stable and unstable regions.',
             action: 'ANCHOR'
+        },
+        defaults: {
+            options: {
+                lightSourceMode: 'point',
+                sourceLayout: 'single'
+            }
         },
         patterns: {
             'center-path': {
@@ -312,6 +461,23 @@ export const SHAPE_REGISTRY = {
                 options: { lightSourceMode: 'point', sourceLayout: 'triad', sourceDirection: 'edge-normal' },
                 pointer: { sourcePos: { x: 0, y: { unit: 'size', value: 0.12 } } },
                 sliders: { spread: Math.PI / 3 }
+            }
+        },
+        subPresets: {
+            'basic': {
+                pointer: { sourcePos: { x: 0, y: { unit: 'size', value: -0.4 } } },
+                sliders: { spread: 1.0472 },
+                options: { sourceDirection: 'inward', sourceLayout: 'single' }
+            },
+            'center': {
+                pointer: { anchorPreset: 'shape-center', sourcePos: { x: 0, y: { unit: 'size', value: 0.2 } } },
+                sliders: { spread: 6.2832 },
+                options: { sourceDirection: 'outward', sourceLayout: 'single' }
+            },
+            'online': {
+                pointer: { sourcePos: { x: 0, y: { unit: 'size', value: -0.97 } } },
+                sliders: { spread: 1.0472 },
+                options: { sourceDirection: 'inward', sourceLayout: 'single' }
             }
         }
     }
