@@ -18,7 +18,7 @@ import {
     getTriangleVertices
 } from './core/shape-config.js';
 import { buildPersistedState, persistState, restoreState } from './core/persistence.js';
-import { readCurrentScene, applyScene, applyPattern, applySubPreset, updateOption, updateSlider, updatePointer } from './core/state-mapper.js';
+import { readCurrentScene, applyScene, applyPattern, applySourceOption, updateOption, updateSlider, updatePointer } from './core/state-mapper.js';
 
 
 
@@ -65,8 +65,8 @@ const App = {
     baseStyle: 'line',
     flowMode: 'none',
     lightSourceMode: 'point', // 'point' or 'parallel'
-    triangleSourceMode: 'single',
-    triangleDirectionMode: 'parallel',
+    sourcePattern: 'single',
+    sourceDirection: 'parallel',
     colorDistribution: 'frequency',
     trianglePointCount: 5,
     triangleVertexBias: 0.6,
@@ -159,7 +159,7 @@ const App = {
     },
 
     getActiveSourceAnchor() {
-        if (this.triangleSourceMode === 'single') return { ...this.sourcePos };
+        if (this.sourcePattern === 'single') return { ...this.sourcePos };
         return { ...this.sourceAnchorPos };
     },
 
@@ -248,36 +248,36 @@ const App = {
     },
 
     applyShapeSwitchReset(nextShape) {
+        // 1. Preserve: Temporarily store current critical settings
+        const snapshot = {
+            sourcePattern: this.sourcePattern,
+            sourceOption: 'basic'
+        };
+        
+        const optionBtn = document.querySelector('#group-source-single-option .mini-tab.active');
+        if (optionBtn) snapshot.sourceOption = optionBtn.dataset.value;
+
+        // 2. Switch: Stop interactions and change shape
         this.stopSimulation();
         this.currentNarrative = 'none'; 
         if (typeof UI !== 'undefined' && UI.syncNarrativeSelect) {
             UI.syncNarrativeSelect(this);
         }
 
-        const prevSize = this.getShapeSize();
-        const prevCenter = this.getShapeLayoutCenter(this.shape);
-        const prevOnLineY = this.shape === 'triangle' ? -prevSize * 1.17 + prevSize * 0.2 : -prevSize;
-        
-        // Detect if we were in 'Center' or 'OnLine' mode
-        const isCenter = Math.hypot(this.sourcePos.x - prevCenter.x, this.sourcePos.y - prevCenter.y) < 2.0;
-        const isOnLine = Math.abs(this.sourcePos.y - prevOnLineY) < 4.0 && Math.abs(this.sourcePos.x) < 4.0;
+        this.shape = nextShape;
 
-        // Apply detected sub-preset or default to 'basic'
-        if (isCenter) {
-            this.applySubPreset('center');
-        } else if (isOnLine) {
-            this.applySubPreset('online');
-        } else {
-            this.applySubPreset('basic');
-        }
+        // 3. Apply: Re-apply the stored settings to the new shape
+        this.sourcePattern = snapshot.sourcePattern;
+        this.applySourceOption(snapshot.sourceOption);
 
         this.normalizeLightSourceMode();
-        if (nextShape === 'parabola') {
+        if (this.shape === 'parabola') {
             this.lightSourceMode = 'point';
         }
         this.autoModes.revolution = false;
         this.autoModes.rotation = false;
 
+        // 4. Finalize
         this.resetRays(true);
     },
 
@@ -324,8 +324,8 @@ const App = {
         return applyPattern(this, patternId);
     },
 
-    applySubPreset(presetId) {
-        return applySubPreset(this, presetId);
+    applySourceOption(presetId) {
+        return applySourceOption(this, presetId);
     },
 
     updateOption(key, value) {
@@ -491,7 +491,7 @@ const App = {
         }
 
         // 2. Apply the 'basic' sub-preset (Position, Spread, Direction)
-        this.applySubPreset('basic');
+        this.applySourceOption('basic');
 
         // 3. Reset common sliders and options to global defaults
         this.rayNumber = GLOBAL_DEFAULTS.sliders.rayNumber;
@@ -546,32 +546,39 @@ const App = {
      */
     recalcParallelRange() {
         if (!this.canvas) return;
-        const sizeMult = this.isWindowFull ? 0.45 : 0.35;
-        const size = Math.min(this.canvas.width, this.canvas.height) * sizeMult;
-        const y = this.sourcePos.y;
+        const size = this.getShapeSize();
+        const origin = this.sourcePos;
+        const cosR = Math.cos(this.sourceRotation);
+        const sinR = Math.sin(this.sourceRotation);
         
-        let minX = Infinity;
-        let maxX = -Infinity;
-        const scanStep = 5; 
-        const scanLimit = size * 2;
+        let minD = Infinity;
+        let maxD = -Infinity;
+        const scanStep = 2; // Finer scan for precision
+        const scanLimit = size * 3; 
 
-        for (let x = -scanLimit; x <= scanLimit; x += scanStep) {
-            if (Physics.isInside(x, y, this.shape, size)) {
-                if (x < minX) minX = x;
-                if (x > maxX) maxX = x;
+        // Scan along the rotated axis to find intersections with the shape
+        for (let d = -scanLimit; d <= scanLimit; d += scanStep) {
+            const px = origin.x + d * cosR;
+            const py = origin.y + d * sinR;
+            if (Physics.isInside(px, py, this.shape, size)) {
+                if (d < minD) minD = d;
+                if (d > maxD) maxD = d;
             }
         }
 
-        if (!Number.isFinite(minX) || !Number.isFinite(maxX)) {
-            this.parallelRange = { min: -100, max: 100 };
+        if (!Number.isFinite(minD) || !Number.isFinite(maxD)) {
+            this.parallelRange = { min: -size * 0.5, max: size * 0.5 };
             return;
         }
 
         // Apply a small "inner" margin (95% of width) per user request
         const margin = 0.95;
+        const halfWidth = (maxD - minD) * 0.5;
+        const centerD = (minD + maxD) * 0.5;
+        
         this.parallelRange = {
-            min: (minX * margin) - this.sourcePos.x,
-            max: (maxX * margin) - this.sourcePos.x
+            min: centerD - (halfWidth * margin),
+            max: centerD + (halfWidth * margin)
         };
     },
 
@@ -614,7 +621,7 @@ const App = {
                         x: Math.cos(angle) * dist,
                         y: Math.sin(angle) * dist
                     };
-                    if (this.triangleSourceMode === 'single') this.sourcePos = nextPos;
+                    if (this.sourcePattern === 'single') this.sourcePos = nextPos;
                     else this.sourceAnchorPos = nextPos;
                 }
 

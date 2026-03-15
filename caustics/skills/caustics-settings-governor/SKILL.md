@@ -134,6 +134,15 @@ When changing settings, follow this order:
 - Do not introduce a second schema for the same setting.
 - Do not revive slot-based preset application if `patternId` can be used.
 
+## Shape Switch Governance
+
+When changing shapes (`applyShapeSwitchReset`), follow the "Preserve-Switch-Apply" pattern:
+
+1.  **Preserve**: Temporarily store current critical settings (e.g., sourcePattern, sourceOption, or specific slider overrides) before modifying `app.shape`.
+2.  **Switch**: Update `app.shape` and reset environment-dependent variables.
+3.  **Apply**: Re-apply the stored settings to the new shape to ensure continuity.
+4.  **Finalize**: Trigger UI updates and ray resets only after the new state is fully settled.
+
 ## Review checklist
 
 Before finishing, verify all relevant items:

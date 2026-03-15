@@ -12,7 +12,7 @@ export function trianglePanelContent(app, baseContent) {
         outward: 'Outward',
         'edge-normal': 'Edge Normal'
     };
-    const isSingle = app.triangleSourceMode === 'single';
+    const isSingle = app.sourcePattern === 'single';
 
     if (isSingle) {
         return {
@@ -26,16 +26,16 @@ export function trianglePanelContent(app, baseContent) {
 
     return {
         ...baseContent,
-        meta: `${sourceLabels[app.triangleSourceMode] || 'Multi Source'} / ${directionLabels[app.triangleDirectionMode] || 'Parallel'}`,
-        cardTitle: `${sourceLabels[app.triangleSourceMode] || 'Multi Source'} Layout`,
-        cardCopy: app.triangleDirectionMode === 'edge-normal'
+        meta: `${sourceLabels[app.sourcePattern] || 'Multi Source'} / ${directionLabels[app.sourceDirection] || 'Parallel'}`,
+        cardTitle: `${sourceLabels[app.sourcePattern] || 'Multi Source'} Layout`,
+        cardCopy: app.sourceDirection === 'edge-normal'
             ? 'Sources are aligned by the nearest edge normal, which usually gives the cleanest triangular caustic structure.'
-            : app.triangleDirectionMode === 'inward'
+            : app.sourceDirection === 'inward'
                 ? 'Each source is aimed toward the triangle center, which emphasizes convergence and interior crossings.'
-                : app.triangleDirectionMode === 'outward'
+                : app.sourceDirection === 'outward'
                     ? 'Each source points away from the center, producing more explosive edge-first reflections.'
                     : 'All sources share the same launch direction, so the whole pattern reads like one coordinated beam field.',
-        note: app.triangleSourceMode === 'triad'
+        note: app.sourcePattern === 'triad'
             ? 'Tip: triad is locked to the three vertices, so direction mode makes the biggest visual difference here.'
             : 'Tip: strip uses point count and vertex bias together, so increase count first and then tune the spread.'
     };

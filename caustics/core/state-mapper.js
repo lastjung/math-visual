@@ -12,8 +12,8 @@ export function readCurrentScene(app) {
         patternId: app.patternId || null,
         options: {
             lightSourceMode: app.lightSourceMode,
-            sourceLayout: app.triangleSourceMode,
-            sourceDirection: app.triangleDirectionMode,
+            sourcePattern: app.sourcePattern,
+            sourceDirection: app.sourceDirection,
             colorDistribution: app.colorDistribution,
             baseStyle: app.baseStyle,
             flowMode: app.flowMode,
@@ -77,8 +77,8 @@ export function applyScene(app, scene) {
     if (scene.options) {
         const o = scene.options;
         if (o.lightSourceMode !== undefined) app.lightSourceMode = o.lightSourceMode;
-        if (o.sourceLayout !== undefined) app.triangleSourceMode = o.sourceLayout;
-        if (o.sourceDirection !== undefined) app.triangleDirectionMode = o.sourceDirection;
+        if (o.sourcePattern !== undefined) app.sourcePattern = o.sourcePattern;
+        if (o.sourceDirection !== undefined) app.sourceDirection = o.sourceDirection;
         if (o.colorDistribution !== undefined) app.colorDistribution = o.colorDistribution;
         if (o.baseStyle !== undefined) app.baseStyle = o.baseStyle;
         if (o.flowMode !== undefined) app.flowMode = o.flowMode;
@@ -191,11 +191,11 @@ export function applyPattern(app, patternId, shapeId = app.shape) {
  * @param {Object} app - The main App object
  * @param {string} presetId - Sub-preset ID (basic, center, online)
  */
-export function applySubPreset(app, presetId) {
+export function applySourceOption(app, presetId) {
     const shapeData = SHAPE_REGISTRY[app.shape];
-    if (!shapeData || !shapeData.subPresets) return;
+    if (!shapeData || !shapeData.sourceOptions) return;
 
-    const preset = shapeData.subPresets[presetId];
+    const preset = shapeData.sourceOptions[presetId];
     if (!preset) return;
 
     const resolved = resolvePattern(app, app.shape, preset);
@@ -228,8 +228,6 @@ export function updateOption(app, key, value) {
     let appKey = key;
     
     // Remapping
-    if (key === 'sourceLayout') appKey = 'triangleSourceMode';
-    if (key === 'sourceDirection') appKey = 'triangleDirectionMode';
     
     if (key === 'renderMode') {
         app.isPaintMode = value === 'paint1';
@@ -279,7 +277,7 @@ export function updateOption(app, key, value) {
     app[appKey] = value;
 
     // Side Effects
-    if (key === 'sourceLayout') {
+    if (key === 'sourcePattern') {
         if (prevValue === 'single' && value !== 'single') {
             app.sourceAnchorPos = app.getShapeLayoutCenter(app.shape);
         }
@@ -290,6 +288,10 @@ export function updateOption(app, key, value) {
         if (typeof app.normalizeLightSourceMode === 'function') app.normalizeLightSourceMode();
         if (app.shape === 'parabola' && value === 'point') {
             app.sourcePos = app.getShapeDefaults('parabola').sourcePos;
+        }
+        // One-time auto-calculation of parallel range when switching to parallel mode
+        if (value === 'parallel' && typeof app.recalcParallelRange === 'function') {
+            app.recalcParallelRange();
         }
     }
 

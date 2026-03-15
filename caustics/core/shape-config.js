@@ -84,13 +84,13 @@ export function getVertexLayoutPoints(shape, size) {
 }
 
 export function getTriangleBaseOrigins(app, size) {
-    const base = app.triangleSourceMode === 'single'
+    const base = app.sourcePattern === 'single'
         ? { ...app.sourcePos }
         : (app.sourceAnchorPos && typeof app.sourceAnchorPos.x === 'number' && typeof app.sourceAnchorPos.y === 'number'
             ? { ...app.sourceAnchorPos }
             : getShapeLayoutCenter(app.shape, size));
 
-    if (app.triangleSourceMode === 'triad') {
+    if (app.sourcePattern === 'triad') {
         const layoutCenter = getShapeLayoutCenter(app.shape, size);
         const offset = {
             x: base.x - layoutCenter.x,
@@ -103,7 +103,7 @@ export function getTriangleBaseOrigins(app, size) {
         }));
     }
 
-    if (app.triangleSourceMode === 'strip') {
+    if (app.sourcePattern === 'strip') {
         const count = Math.max(2, Math.floor(app.trianglePointCount));
         const halfWidth = size * (0.12 + app.triangleVertexBias * 0.42);
         const axisAngle = app.sourceRotation;
@@ -145,7 +145,7 @@ export function getTriangleLaunchAngle(app, origin, size, localT = 0.5) {
     const spreadOffset = (localT - 0.5) * app.spread;
     const layoutCenter = getShapeLayoutCenter(app.shape, size);
 
-    if (app.triangleDirectionMode === 'parallel') {
+    if (app.sourceDirection === 'parallel') {
         return baseAngle + spreadOffset;
     }
 
@@ -153,17 +153,17 @@ export function getTriangleLaunchAngle(app, origin, size, localT = 0.5) {
     const dy = layoutCenter.y - origin.y;
     const dist = Math.hypot(dx, dy);
 
-    if (app.triangleDirectionMode === 'inward') {
+    if (app.sourceDirection === 'inward') {
         const inwardAngle = dist < 0.1 ? Math.PI : Math.atan2(dy, dx);
         return inwardAngle + app.sourceRotation + spreadOffset;
     }
 
-    if (app.triangleDirectionMode === 'outward') {
+    if (app.sourceDirection === 'outward') {
         const outwardAngle = dist < 0.1 ? 0 : Math.atan2(-dy, -dx);
         return outwardAngle + app.sourceRotation + spreadOffset;
     }
 
-    if (app.triangleDirectionMode === 'edge-normal') {
+    if (app.sourceDirection === 'edge-normal') {
         const inwardNormal = Physics.getNormal(origin.x, origin.y, app.shape, size);
         const normalAngle = Math.atan2(-inwardNormal.y, -inwardNormal.x);
         return normalAngle + app.sourceRotation + spreadOffset;

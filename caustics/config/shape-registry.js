@@ -19,7 +19,7 @@ export const SHAPE_REGISTRY = {
         defaults: {
             options: {
                 lightSourceMode: 'point',
-                sourceLayout: 'single'
+                
             },
             pointer: {
                 sourcePreset: 'shape-default',
@@ -49,21 +49,21 @@ export const SHAPE_REGISTRY = {
                 sliders: { spread: 0, sourceRotation: 0 }
             }
         },
-        subPresets: {
+        sourceOptions: {
             'basic': {
                 pointer: { sourcePreset: 'shape-focus' },
                 sliders: { spread: 1.0472 },
-                options: { sourceDirection: 'inward', sourceLayout: 'single' }
+                options: { sourceDirection: 'inward',  }
             },
             'center': {
                 pointer: { anchorPreset: 'shape-center', sourcePos: { x: 0, y: 0 } },
                 sliders: { spread: 6.2832 },
-                options: { sourceDirection: 'outward', sourceLayout: 'single' }
+                options: { sourceDirection: 'outward',  }
             },
             'online': {
                 pointer: { sourcePos: { x: 0, y: { unit: 'size', value: -1.0 } } },
                 sliders: { spread: 1.0472 },
-                options: { sourceDirection: 'inward', sourceLayout: 'single' }
+                options: { sourceDirection: 'inward',  }
             }
         }
     },
@@ -82,7 +82,7 @@ export const SHAPE_REGISTRY = {
         defaults: {
             options: {
                 lightSourceMode: 'point',
-                sourceLayout: 'single'
+                
             }
         },
         patterns: {
@@ -108,21 +108,21 @@ export const SHAPE_REGISTRY = {
                 sliders: { spread: (60 * Math.PI) / 180, sourceRotation: (-45 * Math.PI) / 180 }
             }
         },
-        subPresets: {
+        sourceOptions: {
             'basic': {
                 pointer: { sourcePreset: 'shape-focus' },
                 sliders: { spread: 1.0472 },
-                options: { sourceDirection: 'inward', sourceLayout: 'single' }
+                options: { sourceDirection: 'inward',  }
             },
             'center': {
                 pointer: { anchorPreset: 'shape-center', sourcePos: { x: 0, y: 0 } },
                 sliders: { spread: 6.2832 },
-                options: { sourceDirection: 'outward', sourceLayout: 'single' }
+                options: { sourceDirection: 'outward',  }
             },
             'online': {
                 pointer: { sourcePos: { x: 0, y: { unit: 'size', value: -1.0 } } },
                 sliders: { spread: 1.0472 },
-                options: { sourceDirection: 'inward', sourceLayout: 'single' }
+                options: { sourceDirection: 'inward',  }
             }
         }
     },
@@ -141,7 +141,7 @@ export const SHAPE_REGISTRY = {
         defaults: {
             options: {
                 lightSourceMode: 'point',
-                sourceLayout: 'single'
+                
             }
         },
         patterns: {
@@ -167,21 +167,21 @@ export const SHAPE_REGISTRY = {
                 sliders: { spread: 1.2 }
             }
         },
-        subPresets: {
+        sourceOptions: {
             'basic': {
                 pointer: { sourcePreset: 'shape-focus' },
                 sliders: { spread: 1.0472 },
-                options: { sourceDirection: 'inward', sourceLayout: 'single' }
+                options: { sourceDirection: 'inward',  }
             },
             'center': {
                 pointer: { anchorPreset: 'shape-center', sourcePos: { x: 0, y: 0 } },
                 sliders: { spread: 6.2832 },
-                options: { sourceDirection: 'outward', sourceLayout: 'single' }
+                options: { sourceDirection: 'outward',  }
             },
             'online': {
                 pointer: { sourcePos: { x: 0, y: { unit: 'size', value: -1.0 } } },
                 sliders: { spread: 1.0472 },
-                options: { sourceDirection: 'inward', sourceLayout: 'single' }
+                options: { sourceDirection: 'inward',  }
             }
         }
     },
@@ -200,7 +200,7 @@ export const SHAPE_REGISTRY = {
         defaults: {
             options: {
                 lightSourceMode: 'point',
-                sourceLayout: 'single'
+                
             }
         },
         patterns: {
@@ -226,21 +226,21 @@ export const SHAPE_REGISTRY = {
                 sliders: { spread: 1.0 }
             }
         },
-        subPresets: {
+        sourceOptions: {
             'basic': {
                 pointer: { sourcePreset: 'shape-focus' },
                 sliders: { spread: 1.0472 },
-                options: { sourceDirection: 'inward', sourceLayout: 'single' }
+                options: { sourceDirection: 'inward',  }
             },
             'center': {
                 pointer: { anchorPreset: 'shape-center', sourcePos: { x: 0, y: 0 } },
                 sliders: { spread: 6.2832 },
-                options: { sourceDirection: 'outward', sourceLayout: 'single' }
+                options: { sourceDirection: 'outward',  }
             },
             'online': {
                 pointer: { sourcePos: { x: 0, y: { unit: 'size', value: -0.86 } } },
                 sliders: { spread: 1.0472 },
-                options: { sourceDirection: 'inward', sourceLayout: 'single' }
+                options: { sourceDirection: 'inward',  }
             }
         }
     },
@@ -259,7 +259,7 @@ export const SHAPE_REGISTRY = {
         defaults: {
             options: {
                 lightSourceMode: 'point',
-                sourceLayout: 'single'
+                
             }
         },
         patterns: {
@@ -285,21 +285,21 @@ export const SHAPE_REGISTRY = {
                 sliders: { spread: 1.2 }
             }
         },
-        subPresets: {
+        sourceOptions: {
             'basic': {
                 pointer: { sourcePreset: 'shape-focus' },
                 sliders: { spread: 1.0472 },
-                options: { sourceDirection: 'inward', sourceLayout: 'single' }
+                options: { sourceDirection: 'inward',  }
             },
             'center': {
                 pointer: { anchorPreset: 'shape-center', sourcePos: { x: 0, y: 0 } },
                 sliders: { spread: 6.2832 },
-                options: { sourceDirection: 'outward', sourceLayout: 'single' }
+                options: { sourceDirection: 'outward',  }
             },
             'online': {
                 pointer: { sourcePos: { x: { unit: 'size', value: -1.0 }, y: 0 } },
                 sliders: { spread: 1.0472 },
-                options: { sourceDirection: 'inward', sourceLayout: 'single' }
+                options: { sourceDirection: 'inward',  }
             }
         }
     },
@@ -338,21 +338,21 @@ export const SHAPE_REGISTRY = {
                 sliders: { spread: 0.5 }
             }
         },
-        subPresets: {
+        sourceOptions: {
             'basic': {
                 pointer: { sourcePreset: 'shape-focus' },
                 sliders: { spread: 3.1416 },
-                options: { sourceDirection: 'outward', sourceLayout: 'single' } // Special case: Parabola Out
+                options: { sourceDirection: 'outward',  } // Special case: Parabola Out
             },
             'center': {
                 pointer: { anchorPreset: 'shape-center', sourcePos: { x: 0, y: { unit: 'size', value: 0.25 } } },
                 sliders: { spread: 6.2832 },
-                options: { sourceDirection: 'outward', sourceLayout: 'single' }
+                options: { sourceDirection: 'outward',  }
             },
             'online': {
                 pointer: { sourcePos: { x: 0, y: { unit: 'size', value: 0.75 } } },
                 sliders: { spread: 1.0472 },
-                options: { sourceDirection: 'inward', sourceLayout: 'single' }
+                options: { sourceDirection: 'inward',  }
             }
         }
     },
@@ -371,7 +371,7 @@ export const SHAPE_REGISTRY = {
         defaults: {
             options: {
                 lightSourceMode: 'point',
-                sourceLayout: 'single'
+                
             }
         },
         patterns: {
@@ -397,21 +397,21 @@ export const SHAPE_REGISTRY = {
                 sliders: { spread: 0.9 }
             }
         },
-        subPresets: {
+        sourceOptions: {
             'basic': {
                 pointer: { sourcePos: { x: { unit: 'size', value: -0.4 }, y: 0 } },
                 sliders: { spread: 1.0472 },
-                options: { sourceDirection: 'inward', sourceLayout: 'single' }
+                options: { sourceDirection: 'inward',  }
             },
             'center': {
                 pointer: { anchorPreset: 'shape-center', sourcePos: { x: { unit: 'size', value: 0.5 }, y: 0 } },
                 sliders: { spread: 6.2832 },
-                options: { sourceDirection: 'outward', sourceLayout: 'single' }
+                options: { sourceDirection: 'outward',  }
             },
             'online': {
                 pointer: { sourcePos: { x: { unit: 'size', value: -0.24 }, y: 0 } },
                 sliders: { spread: 1.0472 },
-                options: { sourceDirection: 'inward', sourceLayout: 'single' }
+                options: { sourceDirection: 'inward',  }
             }
         }
     },
@@ -430,14 +430,14 @@ export const SHAPE_REGISTRY = {
         defaults: {
             options: {
                 lightSourceMode: 'point',
-                sourceLayout: 'single'
+                
             }
         },
         patterns: {
             'center-path': {
                 label: 'Center Path',
                 note: 'A single point setup for hunting periodic triangular loops with the main grip.',
-                options: { lightSourceMode: 'point', sourceLayout: 'single' },
+                options: { lightSourceMode: 'point',  },
                 pointer: { sourcePos: { x: 0, y: { unit: 'size', value: 0.12 } } },
                 sliders: { spread: 0.3 }
             },
@@ -451,33 +451,33 @@ export const SHAPE_REGISTRY = {
             'vertex-graze': {
                 label: 'Vertex Graze',
                 note: 'A near-corner launch that reveals how quickly a triangle becomes unstable when a path approaches a vertex.',
-                options: { lightSourceMode: 'point', sourceLayout: 'single', sourceDirection: 'parallel' },
+                options: { lightSourceMode: 'point',  sourceDirection: 'parallel' },
                 pointer: { sourcePos: { x: { unit: 'size', value: -0.12 }, y: { unit: 'size', value: -0.38 } } },
                 sliders: { spread: 0.16, sourceRotation: -0.82 }
             },
             'triad-edge': {
                 label: 'Triad Edge',
                 note: 'Three sources at the vertices, each aligned by edge normals for a strong triangular caustic scene.',
-                options: { lightSourceMode: 'point', sourceLayout: 'triad', sourceDirection: 'edge-normal' },
+                options: { lightSourceMode: 'point', sourcePattern: 'triad', sourceDirection: 'edge-normal' },
                 pointer: { sourcePos: { x: 0, y: { unit: 'size', value: 0.12 } } },
                 sliders: { spread: Math.PI / 3 }
             }
         },
-        subPresets: {
+        sourceOptions: {
             'basic': {
                 pointer: { sourcePos: { x: 0, y: { unit: 'size', value: -0.4 } } },
                 sliders: { spread: 1.0472 },
-                options: { sourceDirection: 'inward', sourceLayout: 'single' }
+                options: { sourceDirection: 'inward',  }
             },
             'center': {
                 pointer: { anchorPreset: 'shape-center', sourcePos: { x: 0, y: { unit: 'size', value: 0.2 } } },
                 sliders: { spread: 6.2832 },
-                options: { sourceDirection: 'outward', sourceLayout: 'single' }
+                options: { sourceDirection: 'outward',  }
             },
             'online': {
                 pointer: { sourcePos: { x: 0, y: { unit: 'size', value: -0.97 } } },
                 sliders: { spread: 1.0472 },
-                options: { sourceDirection: 'inward', sourceLayout: 'single' }
+                options: { sourceDirection: 'inward',  }
             }
         }
     }

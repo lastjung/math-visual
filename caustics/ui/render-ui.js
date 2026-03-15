@@ -112,12 +112,12 @@ export function updateUI(app) {
     UIElements.queryAll('#group-source-mode .mini-tab').forEach((btn) => {
         btn.classList.toggle('active', btn.dataset.value === app.lightSourceMode);
     });
-    const activeSourceLayout = app.triangleSourceMode;
-    UIElements.queryAll('#group-source-layout .mini-tab').forEach((btn) => {
+    const activeSourceLayout = app.sourcePattern;
+    UIElements.queryAll('#group-source-pattern .mini-tab').forEach((btn) => {
         btn.classList.toggle('active', btn.dataset.value === activeSourceLayout);
     });
     UIElements.queryAll('#group-source-direction .mini-tab').forEach((btn) => {
-        btn.classList.toggle('active', btn.dataset.value === app.triangleDirectionMode);
+        btn.classList.toggle('active', btn.dataset.value === app.sourceDirection);
     });
     UIElements.queryAll('#group-color-distribution .mini-tab').forEach((btn) => {
         btn.classList.toggle('active', btn.dataset.value === app.colorDistribution);
@@ -126,9 +126,9 @@ export function updateUI(app) {
     UIElements.queryAll('#group-source-single-option .mini-tab').forEach((btn) => {
         const presetId = btn.dataset.value;
         const shapeData = SHAPE_REGISTRY[app.shape];
-        if (!shapeData || !shapeData.subPresets) return;
+        if (!shapeData || !shapeData.sourceOptions) return;
         
-        const preset = shapeData.subPresets[presetId];
+        const preset = shapeData.sourceOptions[presetId];
         if (!preset) return;
 
         const resolved = resolvePattern(app, app.shape, preset);
@@ -138,16 +138,10 @@ export function updateUI(app) {
             if (resolved.sliders && resolved.sliders.spread !== undefined) {
                 slidersMatch = Math.abs(app.spread - resolved.sliders.spread) < 0.01;
             }
-            let optionsMatch = true;
-            if (resolved.options) {
-                if (resolved.options.sourceDirection !== undefined) {
-                    optionsMatch = optionsMatch && (app.triangleDirectionMode === resolved.options.sourceDirection);
-                }
-                if (resolved.options.sourceLayout !== undefined) {
-                    optionsMatch = optionsMatch && (app.triangleSourceMode === resolved.options.sourceLayout);
-                }
-            }
-            btn.classList.toggle('active', posMatch && slidersMatch && optionsMatch);
+            
+            // Only position and spread are used to determine if the location-based option is active.
+            // Direction and pattern changes are treated as child updates and won't turn off the parent option light.
+            btn.classList.toggle('active', posMatch && slidersMatch);
         }
     });
 
@@ -227,8 +221,8 @@ export function syncShapePanel(app) {
     const triangleSingleOptionRow = UIElements.get('source-single-option-row');
     const triangleStripControls = UIElements.get('source-strip-controls');
     const badgeSub = UIElements.get('shape-badge-sub');
-    const isTriangleSingle = app.triangleSourceMode === 'single';
-    const isTriangleStrip = app.triangleSourceMode === 'strip';
+    const isTriangleSingle = app.sourcePattern === 'single';
+    const isTriangleStrip = app.sourcePattern === 'strip';
     const showTriangleColorDist = app.shape === 'triangle' && !isTriangleSingle;
 
     if (badge) {
@@ -256,7 +250,7 @@ export function syncShapePanel(app) {
     if (triangleDetailBlock) triangleDetailBlock.classList.toggle('hidden', false); // Always show details if panel is open
     if (triangleDirectionRow) triangleDirectionRow.classList.toggle('hidden', isTriangleSingle);
     if (triangleColorDistRow) triangleColorDistRow.classList.toggle('hidden', !showTriangleColorDist);
-    if (triangleSingleOptionRow) triangleSingleOptionRow.classList.toggle('hidden', !isTriangleSingle);
+    if (triangleSingleOptionRow) triangleSingleOptionRow.classList.toggle('hidden', false); // Always show
     if (triangleStripControls) triangleStripControls.classList.toggle('hidden', !isTriangleStrip);
     if (card) card.classList.toggle('hidden', false); // Always show card
     if (note) note.classList.toggle('hidden', false); // Always show note

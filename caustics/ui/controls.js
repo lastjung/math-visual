@@ -86,7 +86,7 @@ export function setupControls(app, ui) {
             x: Math.cos(angle) * dist,
             y: Math.sin(angle) * dist
         };
-        if (app.triangleSourceMode === 'single') app.updatePointer({ sourcePos: nextPos });
+        if (app.sourcePattern === 'single') app.updatePointer({ sourcePos: nextPos });
         else app.updatePointer({ sourceAnchorPos: nextPos });
         
         app.updateOption('autoMode', { key: 'revolution', value: false });
@@ -213,9 +213,17 @@ export function setupControls(app, ui) {
         };
     });
 
-    UIElements.queryAll('#group-source-layout .mini-tab').forEach((btn) => {
+    UIElements.queryAll('#group-source-pattern .mini-tab').forEach((btn) => {
         btn.onclick = (e) => {
-            app.updateOption('sourceLayout', e.target.dataset.value);
+            const nextPattern = e.currentTarget.dataset.value;
+            app.updateOption('sourcePattern', nextPattern);
+            
+            // If no option is active after pattern change, default to basic
+            const hasActiveOption = [...document.querySelectorAll('#group-source-single-option .mini-tab')].some(b => b.classList.contains('active'));
+            if (!hasActiveOption) {
+                app.applySourceOption('basic');
+            }
+            
             ui.update(app);
         };
     });
@@ -237,7 +245,7 @@ export function setupControls(app, ui) {
     UIElements.queryAll('#group-source-single-option .mini-tab').forEach((btn) => {
         btn.onclick = (e) => {
             const val = e.target.dataset.value;
-            app.applySubPreset(val);
+            app.applySourceOption(val);
             ui.update(app);
         };
     });
@@ -481,7 +489,7 @@ export function setupControls(app, ui) {
             const anchor = app.getActiveSourceAnchor();
             const sX = anchor.x, sY = anchor.y;
             if (dragTarget === 'center') {
-                if (app.triangleSourceMode === 'single') app.updatePointer({ sourcePos: { x, y } });
+                if (app.sourcePattern === 'single') app.updatePointer({ sourcePos: { x, y } });
                 else app.updatePointer({ sourceAnchorPos: { x, y } });
             } else if (dragTarget === 'bias') {
                 const size = app.getShapeSize();
