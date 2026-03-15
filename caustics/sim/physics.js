@@ -203,14 +203,16 @@ export const Physics = {
         }
         else if (type === 'triangle') {
             const tr = size * 1.17;
-            const ty = y - size * 0.2; // Relative y coordinate after inverse shift
-            const d1 = 1.5 * x - 0.866 * ty - 0.866 * tr;
+            const ty = y - size * 0.2;
+            const s32 = 0.86602540378; // sqrt(3)/2
+            // Use precise plane equations
+            const d1 = 1.5 * x - s32 * ty - s32 * tr;
             const d2 = ty - tr * 0.5;
-            const d3 = -1.5 * x - 0.866 * ty - 0.866 * tr;
+            const d3 = -1.5 * x - s32 * ty - s32 * tr;
             const m = Math.max(d1, d2, d3);
-            if (m === d1) { nx = -1.5; ny = 0.866; }
+            if (m === d1) { nx = -1.5; ny = s32; }
             else if (m === d2) { nx = 0; ny = -1; }
-            else { nx = 1.5; ny = 0.866; }
+            else { nx = 1.5; ny = s32; }
         }
         else { nx = -x; ny = -y; } 
         
@@ -243,15 +245,17 @@ export const Physics = {
         if (type === 'rect') {
             const rw = size * 1.5;
             const rh = size * 2.1;
-            return Math.abs(px) < rw/2 && Math.abs(py) < rh/2;
+            return Math.abs(px) < (rw/2 + 0.01) && Math.abs(py) < (rh/2 + 0.01);
         }
         if (type === 'triangle') {
             const tr = size * 1.17;
             const ty = py - size * 0.2;
-            const d1 = 1.5 * px - 0.866 * ty - 0.866 * tr;
+            const s32 = 0.86602540378; 
+            const d1 = 1.5 * px - s32 * ty - s32 * tr;
             const d2 = ty - tr * 0.5;
-            const d3 = -1.5 * px - 0.866 * ty - 0.866 * tr;
-            return d1 < 0 && d2 < 0 && d3 < 0;
+            const d3 = -1.5 * px - s32 * ty - s32 * tr;
+            // Add a tiny tolerance to prevent leaks at vertices
+            return d1 < 0.01 && d2 < 0.01 && d3 < 0.01;
         }
         return false;
     },

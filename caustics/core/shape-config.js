@@ -149,13 +149,17 @@ export function getTriangleLaunchAngle(app, origin, size, localT = 0.5) {
         return baseAngle + spreadOffset;
     }
 
+    const dx = layoutCenter.x - origin.x;
+    const dy = layoutCenter.y - origin.y;
+    const dist = Math.hypot(dx, dy);
+
     if (app.triangleDirectionMode === 'inward') {
-        const inwardAngle = Math.atan2(layoutCenter.y - origin.y, layoutCenter.x - origin.x);
+        const inwardAngle = dist < 0.1 ? Math.PI : Math.atan2(dy, dx);
         return inwardAngle + app.sourceRotation + spreadOffset;
     }
 
     if (app.triangleDirectionMode === 'outward') {
-        const outwardAngle = Math.atan2(origin.y - layoutCenter.y, origin.x - layoutCenter.x);
+        const outwardAngle = dist < 0.1 ? 0 : Math.atan2(-dy, -dx);
         return outwardAngle + app.sourceRotation + spreadOffset;
     }
 

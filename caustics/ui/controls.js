@@ -17,7 +17,7 @@ export function setupControls(app, ui) {
     };
 
     const refreshIncrementalModes = () => {
-        if (app.isPaint2Mode || app.isLightMode) app.resetRays(false);
+        if (app.isPaint2Mode || app.isLightMode) app.resetRays(false, false);
     };
 
     const autoLabels = {
@@ -255,6 +255,10 @@ export function setupControls(app, ui) {
                 const center = app.getShapeLayoutCenter(app.shape);
                 app.sourcePos = { ...center };
                 app.sourceAnchorPos = { ...center };
+                app.spread = Math.PI * 2;
+                app.autoModes.spread = false;
+                app.triangleSourceMode = 'single';
+                app.triangleDirectionMode = 'outward';
             } else if (val === 'online') {
                 const size = app.getShapeSize();
                 const pos = app.shape === 'triangle' ? { x: 0, y: -size * 1.17 + size * 0.2 } : { x: 0, y: -size };

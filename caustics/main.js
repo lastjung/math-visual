@@ -81,7 +81,7 @@ const App = {
     isSimulationMode: false,
     isWindowFull: false,
     preSimulationBounces: 10,
-    MAX_BOUNCES: 1, // 반사 효과 끔 (기본 1회)
+    MAX_BOUNCES: 10, // 반사 효과 켬 (기본 10회)
     currentNarrative: 'none',
     emitStartTime: null,
     overlayMessage: null,
@@ -220,18 +220,43 @@ const App = {
 
     applyShapeSwitchReset(nextShape) {
         this.stopSimulation();
-        this.currentNarrative = 'none'; // Clear previous narrative on shape switch
+        this.currentNarrative = 'none'; 
         if (typeof UI !== 'undefined' && UI.syncNarrativeSelect) {
             UI.syncNarrativeSelect(this);
         }
-        // Reset only tab-specific values.
+
+        const prevSize = this.getShapeSize();
+        const prevCenter = this.getShapeLayoutCenter(this.shape);
+        const prevOnLineY = this.shape === 'triangle' ? -prevSize * 1.17 + prevSize * 0.2 : -prevSize;
+        
+        // Detect if we were in 'Center' or 'OnLine' mode
+        const isCenter = Math.hypot(this.sourcePos.x - prevCenter.x, this.sourcePos.y - prevCenter.y) < 1.0;
+        const isOnLine = Math.abs(this.sourcePos.y - prevOnLineY) < 2.0 && Math.abs(this.sourcePos.x) < 1.0;
+
         const defaults = this.getShapeDefaults(nextShape);
-        this.sourcePos = defaults.sourcePos;
-        this.sourceAnchorPos = this.getShapeLayoutCenter(nextShape);
+        const nextSize = this.getShapeSize();
+        const nextCenter = this.getShapeLayoutCenter(nextShape);
+
+        if (isCenter) {
+            this.sourcePos = { ...nextCenter };
+            // Keep spread 360 if it was already 360
+        } else if (isOnLine) {
+            const nextOnLineY = nextShape === 'triangle' ? -nextSize * 1.17 + nextSize * 0.2 : -nextSize;
+            this.sourcePos = { x: 0, y: nextOnLineY };
+        } else {
+            // Default to 'Basic' only if not in special modes
+            this.sourcePos = defaults.sourcePos;
+        }
+
+        this.sourceAnchorPos = nextCenter;
         this.resetTriangleSourceOffsets();
-        this.sanitizeSourcePosition();
         this.sourceRotation = defaults.sourceRotation;
-        this.spread = Math.PI / 3;
+        
+        // Only reset spread if it wasn't already at a special state (like 360)
+        if (this.spread < Math.PI * 1.9) {
+            this.spread = Math.PI / 3;
+        }
+
         this.normalizeLightSourceMode();
         if (nextShape === 'parabola') {
             this.lightSourceMode = 'point';
@@ -239,7 +264,6 @@ const App = {
         this.autoModes.revolution = false;
         this.autoModes.rotation = false;
 
-        // Use Partial Reset to handle timer, HUD, and clearing
         this.resetRays(true);
     },
 
@@ -288,7 +312,7 @@ const App = {
         this.resize();
         this.sourcePos = this.getDefaultSourcePos();
         this.sourceAnchorPos = this.getShapeLayoutCenter(this.shape);
-        this.restoreState();
+        // this.restoreState(); // Disabled to allow clean start on refresh
         this.sanitizeSourcePosition();
         this.normalizeLightSourceMode();
         if (this.shape === 'parabola' && this.lightSourceMode === 'point') {
@@ -317,8 +341,8 @@ const App = {
     },
 
 
-    resetRays(shouldStop = true) {
-        this.growth = 0;
+    resetRays(shouldStop = true, resetGrowth = true) {
+        if (resetGrowth) this.growth = 0;
         if (shouldStop) {
             this.stopSimulation(); 
             this.isFlowing = false;
