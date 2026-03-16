@@ -21,8 +21,17 @@ function init() {
     // 3. Lucide Icons
     lucide.createIcons();
     
-    // Start Animation Loop (stopped by default)
-    loop();
+    // Start Animation Loop
+    requestAnimationFrame(loop);
+
+    // Initial UI Sync for Auto-play
+    if (state.isPlaying) {
+        const playBtn = document.getElementById('playBtn');
+        if (playBtn) {
+            playBtn.innerHTML = '<i data-lucide="square" class="icon-lg fill-current"></i>';
+            playBtn.classList.add('playing');
+        }
+    }
 }
 
 function setupEventListeners() {

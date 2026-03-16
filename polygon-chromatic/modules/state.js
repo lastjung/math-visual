@@ -9,7 +9,7 @@ export const state = {
     analyser: null,
 
     // Animation & Logic
-    isPlaying: false,
+    isPlaying: true,
     animationId: null,
     rotation: 0,
     speed: 1.0,
