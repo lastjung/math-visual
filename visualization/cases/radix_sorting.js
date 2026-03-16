@@ -494,7 +494,7 @@ const RadixSortingCase = {
             const pos = this.getArrayPos(i, this.inputItems.length, yPos[0]);
             this.drawCard(item, pos.x, pos.y, { 
                 focusDigit: this.getDigit(item.value, 0),
-                highlightIndex: 2, // 1s digit
+                highlightIndex: -1, // No highlight for Input
                 sweepProgress: this.levelSweep[0]
             });
         });
@@ -503,7 +503,7 @@ const RadixSortingCase = {
         for (let l = 0; l < this.maxDigits; l++) {
             const totalWidth = this.base * bucketW;
             const startX = (w - totalWidth) / 2;
-            const hlIdx = l === 0 ? 1 : (l === 1 ? 0 : -1); // 1층:10s(1), 2층:100s(0)
+            const hlIdx = l === 0 ? 2 : (l === 1 ? 1 : 0); // 0:1s(idx2), 1:10s(idx1), 2:100s(idx0)
             
             for (let d = 0; d < this.base; d++) {
                 const x = startX + d * bucketW + 6;
