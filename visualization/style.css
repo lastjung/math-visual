@@ -681,11 +681,19 @@ body.hide-ui .controls {
     display: none !important;
 }
 
+body.hide-ui {
+    overflow: hidden !important;
+    position: fixed;
+    width: 100%;
+    height: 100%;
+}
+
 body.hide-ui .container {
     max-width: 100%;
     padding: 0;
     margin: 0;
-    height: 100vh;
+    height: 100dvh;
+    gap: 0;
 }
 
 body.hide-ui main.dashboard-card {
@@ -693,14 +701,15 @@ body.hide-ui main.dashboard-card {
     border: none;
     box-shadow: none;
     padding: 0;
-    height: 100vh;
+    height: 100dvh;
     width: 100vw;
     display: block; /* Override grid */
+    overflow: hidden;
 }
 
 body.hide-ui .canvas-container {
     width: 100vw;
-    height: 100vh;
+    height: 100dvh;
     border-radius: 0;
     border: none;
     margin: 0;
