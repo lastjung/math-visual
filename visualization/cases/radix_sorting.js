@@ -201,10 +201,11 @@ const RadixSortingCase = {
             }
         }
 
-        // Piano wave on finish
+        // Piano wave on finish (Play once)
         if (this.phase === 'done') {
-            this.finishSweep += dt * 1.5;
-            if (this.finishSweep > 2.0) this.finishSweep = 0; // Loop the wave
+            if (this.finishSweep < 1.5) {
+                this.finishSweep += dt * 1.5;
+            }
         }
 
         if (this.activeMove) {
@@ -401,7 +402,7 @@ const RadixSortingCase = {
         if (waveProgress > 0 && cardIndex >= 0) {
             const cardPos = cardIndex / totalCards;
             // Normalize waveProgress to cover 0..1 range with some width
-            const dist = Math.abs((waveProgress % 1.5) - cardPos);
+            const dist = Math.abs(waveProgress - cardPos);
             if (dist < 0.15) {
                 const factor = 1 - (dist / 0.15);
                 offsetY = -15 * factor;
