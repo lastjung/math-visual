@@ -679,12 +679,38 @@ const RadixSortingCase = {
             });
         }
 
-        // Final Ribbon
-        if (this.phase === 'done') {
-            ctx.fillStyle = 'rgba(34, 197, 94, 0.8)';
-            ctx.font = 'bold 24px Inter';
+        // Final Ribbon (Centered & Yellow)
+        if (this.phase === 'done' && this.narrative.timer <= 0) {
+            ctx.save();
+            const centerX = w / 2;
+            const centerY = h / 2;
+            const msg = "Radix Sort Complete!";
+            
+            ctx.font = 'bold 32px Inter, system-ui';
+            const textMetrics = ctx.measureText(msg);
+            const rectW = textMetrics.width + 80;
+            const rectH = 80;
+
+            // Glass Box
+            ctx.fillStyle = 'rgba(15, 23, 42, 0.95)';
+            ctx.shadowColor = 'rgba(0,0,0,0.5)';
+            ctx.shadowBlur = 30;
+            ctx.beginPath();
+            ctx.roundRect(centerX - rectW / 2, centerY - rectH / 2, rectW, rectH, 20);
+            ctx.fill();
+            
+            ctx.strokeStyle = '#fbbf24'; // Amber/Yellow border
+            ctx.lineWidth = 3;
+            ctx.stroke();
+
+            // Yellow Text
+            ctx.shadowBlur = 0;
+            ctx.fillStyle = '#fbbf24'; // Amber/Yellow text
             ctx.textAlign = 'center';
-            ctx.fillText("Radix Sort Complete!", w/2, yPos[4] + 60);
+            ctx.textBaseline = 'middle';
+            ctx.fillText(msg, centerX, centerY);
+            
+            ctx.restore();
         }
 
         this.drawNarrative(ctx, w, h);
