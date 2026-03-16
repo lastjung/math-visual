@@ -203,8 +203,8 @@ p.subtitle {
     box-shadow: 0 12px 48px rgba(0, 0, 0, 0.22);
     border-radius: 50%;
     z-index: 10001; /* Must be higher than any other UI toggle */
-    width: 56px; /* Slightly larger for better touch */
-    height: 56px;
+    width: 46px; /* Reduced from 56px */
+    height: 46px;
     outline: none;
     -webkit-tap-highlight-color: transparent;
   }
@@ -220,7 +220,7 @@ p.subtitle {
 
   .top-tabs-group {
     position: fixed;
-    bottom: 96px; /* Higher gap from larger button */
+    bottom: 80px; /* Adjusted gap for smaller button */
     right: 24px;
     top: auto;
     left: auto;
@@ -1042,6 +1042,10 @@ body.hide-ui #ui-toggle-btn:hover {
     transform: scale(1.05);
 }
 
+#btn-settings {
+    display: none !important; /* Turned off as requested */
+}
+
 .icon-btn.active-rec {
     background: rgba(255, 82, 82, 0.28);
     color: #ff9f9f;
@@ -1122,8 +1126,19 @@ body.hide-ui #ui-toggle-btn:hover {
         width: max-content;
         max-width: calc(100vw - 16px);
         justify-content: center;
-        gap: 8px;
-        padding: 10px 12px;
+        gap: 6px; /* Reduced gap */
+        padding: 8px 10px; /* Reduced padding */
+    }
+
+    #floating-dock-container .icon-btn {
+        width: 34px;  /* Reduced from 40px */
+        height: 34px;
+    }
+
+    #floating-dock-container .play-btn {
+        height: 34px; /* Reduced from 44px */
+        padding: 0 16px;
+        font-size: 0.85rem;
     }
 }
 
