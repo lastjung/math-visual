@@ -267,7 +267,7 @@ const RadixSortingCase = {
                 this.currentLevel = 1;
                 this.currentSourceBucket = 0;
                 this.currentSourceIndex = 0;
-                this.showNarrative("Ones sorted. Next, sorting by the tens place.");
+                this.showNarrative("Ones sorted.\nNext, sorting by the tens place.");
                 return;
             }
             const item = this.inputItems[this.currentSourceIndex];
@@ -302,9 +302,9 @@ const RadixSortingCase = {
                 this.currentSourceBucket = 0;
                 this.currentSourceIndex = 0;
                 if (this.currentLevel === 2) {
-                    this.showNarrative("Tens sorted. Next, sorting by the hundreds place.");
+                    this.showNarrative("Tens sorted.\nNext, sorting by the hundreds place.");
                 } else if (this.currentLevel === 3) {
-                    this.showNarrative("Almost done! Collecting the final sorted numbers.");
+                    this.showNarrative("Almost done!\nCollecting the final sorted numbers.");
                 }
                 return;
             }
