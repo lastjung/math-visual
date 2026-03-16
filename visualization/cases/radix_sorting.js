@@ -200,7 +200,7 @@ const RadixSortingCase = {
             Core.updateControls();
         }
 
-        this.showNarrative("Welcome! Let's examine the 3-digit Radix Sort. First, sorting by the ones place.", 3.5);
+        this.showNarrative("Welcome! Let's examine the 3-digit Radix Sort.\nFirst, sorting by the ones place.", 4.0);
     },
 
     showNarrative(text, duration = 2.5) {
@@ -696,23 +696,37 @@ const RadixSortingCase = {
         ctx.save();
         ctx.globalAlpha = this.narrative.opacity;
         
-        // Background bar (Overlay)
-        const barH = 60;
-        ctx.fillStyle = 'rgba(2, 6, 23, 0.85)';
-        ctx.fillRect(0, 20, w, barH);
+        const lines = this.narrative.text.split('\n');
+        const lineHeight = 30;
+        const barH = lines.length * lineHeight + 40;
+        const centerX = w / 2;
+        const centerY = h / 2;
+        
+        // Blurred Glass Background
+        ctx.fillStyle = 'rgba(15, 23, 42, 0.95)';
+        ctx.shadowColor = 'rgba(0,0,0,0.5)';
+        ctx.shadowBlur = 30;
+        
+        const rectW = Math.min(w * 0.8, 600);
+        ctx.beginPath();
+        ctx.roundRect(centerX - rectW / 2, centerY - barH / 2, rectW, barH, 16);
+        ctx.fill();
         
         ctx.strokeStyle = 'rgba(59, 130, 246, 0.5)';
         ctx.lineWidth = 2;
-        ctx.strokeRect(0, 20, w, barH);
+        ctx.stroke();
         
         // Text
+        ctx.shadowBlur = 0;
         ctx.fillStyle = '#fff';
-        ctx.font = 'bold 20px Inter, system-ui';
+        ctx.font = 'bold 22px Inter, system-ui';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.shadowColor = 'rgba(0,0,0,1)';
-        ctx.shadowBlur = 10;
-        ctx.fillText(this.narrative.text, w / 2, 20 + barH / 2);
+        
+        lines.forEach((line, i) => {
+            const lineY = centerY - ((lines.length - 1) * lineHeight) / 2 + i * lineHeight;
+            ctx.fillText(line, centerX, lineY);
+        });
         
         ctx.restore();
     },
