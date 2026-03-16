@@ -15,21 +15,27 @@
     <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
   </head>
-  <body>
-    <button id="mobile-tabs-btn" aria-label="Toggle cases">☰ Cases</button>
-    <div id="mobile-tabs-backdrop"></div>
+  <body data-active-case="radix-sorting">
     <div class="container">
         <!-- Tab Selection -->
-        <nav class="top-tabs" aria-label="Visualization cases">
-            <div class="top-tabs-group">
-                <span class="top-tabs-label">Visual</span>
+        <nav class="top-tabs" id="visualization-case-tabs" aria-label="Visualization cases">
+            <button class="menu-toggle" id="menu-toggle" aria-label="Toggle menu" onclick="toggleMobileMenu()">
+                <div class="hamburger">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+            </button>
+            <div class="top-tabs-group" id="tabs-group">
+                <span class="top-tabs-label">Visual Experiments</span>
                 <div class="top-tabs-row">
                     <button class="top-tab" data-case="golden" type="button" onclick="switchCase('golden', this)">Golden Spiral</button>
                     <button class="top-tab" data-case="rainbow" type="button" onclick="switchCase('rainbow', this)">Rainbow Spiral</button>
                     <button class="top-tab" data-case="waves" type="button" onclick="switchCase('waves', this)">Waves</button>
                     <button class="top-tab" data-case="hexagon" type="button" onclick="switchCase('hexagon', this)">Hex Grid</button>
                     <button class="top-tab" data-case="damage" type="button" onclick="switchCase('damage', this)">Damage Rolls</button>
-                    <button class="top-tab active" data-case="modulo-circle" type="button" onclick="switchCase('modulo-circle', this)">Cardioid Circle</button>
+                    <button class="top-tab" data-case="modulo-circle" type="button" onclick="switchCase('modulo-circle', this)">Cardioid Circle</button>
+                    <button class="top-tab active" data-case="radix-sorting" type="button" onclick="switchCase('radix-sorting', this)">Radix Sorting</button>
                     <button class="top-tab" data-case="orbit-spirograph" type="button" onclick="switchCase('orbit-spirograph', this)">Orbit Spirograph</button>
                     <button class="top-tab" data-case="sphere-voronoi" type="button" onclick="switchCase('sphere-voronoi', this)">Sphere Voronoi</button>
                     <button class="top-tab" data-case="face-generator" type="button" onclick="switchCase('face-generator', this)">Face Generator</button>
@@ -38,8 +44,8 @@
         </nav>
 
         <header id="header">
-            <h1 id="main-title">The Geometry of Waves</h1>
-            <p class="subtitle" id="main-subtitle">Mathematical waves turning into geometric patterns.</p>
+            <h1 id="main-title">Modern Math Visualizer</h1>
+            <p class="subtitle" id="main-subtitle">Interactive mathematical simulations with premium aesthetics.</p>
         </header>
 
         <main class="dashboard-card">
@@ -66,9 +72,9 @@
     <!-- Sleep Mode Overlay -->
     <div id="sleep-overlay">
         <div class="sleep-content">
-            <h2>Deep Sleep Mode</h2>
-            <p>System paused due to inactivity.<br>Move mouse or click to resume.</p>
-            <div class="btn-primary" onclick="Core.resetIdleTimer()">Resume Activity</div>
+            <h2>System Standby</h2>
+            <p>Paused for energy efficiency.<br>Any movement will resume simulation.</p>
+            <div class="btn-primary" onclick="Core.resetIdleTimer()">Resume Simulation</div>
         </div>
     </div>
 
@@ -81,12 +87,49 @@
     <script src="cases/hexagon_grid.js"></script>
     <script src="cases/damage_rolls.js"></script>
     <script src="cases/cardioid_circle.js"></script>
+    <script src="cases/radix_sorting.js"></script>
     <script src="cases/orbit_spirograph.js"></script>
     <script src="cases/sphere_voronoi.js"></script>
     <script src="cases/face_generator.js"></script>
     <script>
+        // Menu Toggle Logic
+        window.toggleMobileMenu = (e) => {
+            if (e) e.stopPropagation();
+            const group = document.getElementById('tabs-group');
+            const btn = document.getElementById('menu-toggle');
+            const isOpen = group.classList.contains('is-open');
+            
+            if (isOpen) {
+                group.classList.remove('is-open');
+                btn.classList.remove('is-active');
+            } else {
+                group.classList.add('is-open');
+                btn.classList.add('is-active');
+            }
+        };
+
         // Tab Management (delegated for robustness)
         window.switchCase = (caseName, el) => {
+            console.log("Switching to:", caseName);
+            const targetTab = el || document.querySelector(`.top-tab[data-case="${caseName}"]`);
+            
+            // Close mobile menu
+            const group = document.getElementById('tabs-group');
+            const btn = document.getElementById('menu-toggle');
+            group.classList.remove('is-open');
+            btn.classList.remove('is-active');
+
+            // Reset UI state
+            document.querySelectorAll('.top-tab').forEach(t => t.classList.remove('active'));
+            if (targetTab) {
+                targetTab.classList.add('active');
+            } else {
+                // Fallback: try to find the tab again if it wasn't passed or found
+                const fallbackTab = document.querySelector(`.top-tab[data-case="${caseName}"]`);
+                if (fallbackTab) fallbackTab.classList.add('active');
+            }
+
+            // Load logic
             if (caseName === 'waves') {
                 document.getElementById('main-title').textContent = 'The Geometry of Waves';
                 document.getElementById('main-subtitle').textContent = 'Mathematical waves turning into geometric patterns.';
@@ -111,6 +154,10 @@
                 document.getElementById('main-title').textContent = 'Cardioid Circle';
                 document.getElementById('main-subtitle').textContent = 'Animated times-table modulo patterns on a circle.';
                 Core.loadCase(CardioidCircleCase, { mode: 'display' });
+            } else if (caseName === 'radix-sorting') {
+                document.getElementById('main-title').textContent = 'Radix Sorting';
+                document.getElementById('main-subtitle').textContent = 'LSD radix sort with bucket distribution and stable collection passes.';
+                Core.loadCase(RadixSortingCase, { mode: 'display' });
             } else if (caseName === 'orbit-spirograph') {
                 document.getElementById('main-title').textContent = 'Orbit Spirograph';
                 document.getElementById('main-subtitle').textContent = 'Center Body vs Orbiting Body trajectory in orbital time.';
@@ -121,36 +168,30 @@
                 Core.loadCase(SphereVoronoiCase, { mode: 'display' });
             } else if (caseName === 'face-generator') {
                 document.getElementById('main-title').textContent = 'Face Generator';
-                document.getElementById('main-subtitle').textContent = 'Red Blob style m,p,q,r,s mouth controls with brow/eye interpolation and shareable URL state.';
+                document.getElementById('main-subtitle').textContent = 'Red Blob style mouth controls with dynamic interpolation.';
                 Core.loadCase(FaceGeneratorCase, { mode: 'display' });
             }
-            document.querySelectorAll('.top-tab').forEach(t => t.classList.remove('active'));
-            if (el) el.classList.add('active');
-            document.body.classList.remove('mobile-tabs-open');
+            
+            document.body.dataset.activeCase = caseName;
         };
+
+        // Outer Click closer
+        document.addEventListener('click', (e) => {
+            const group = document.getElementById('tabs-group');
+            const btn = document.getElementById('menu-toggle');
+            if (group.classList.contains('is-open') && !group.contains(e.target) && !btn.contains(e.target)) {
+                group.classList.remove('is-open');
+                btn.classList.remove('is-active');
+            }
+        });
 
         // Load Default Case
         window.onload = () => {
-            if (typeof CardioidCircleCase !== 'undefined') {
-                const defaultTab = document.querySelector('.top-tab[data-case="modulo-circle"]');
-                window.switchCase('modulo-circle', defaultTab);
-            } else {
-                console.error("CardioidCircleCase failed to load!");
+            const fallbackCase = 'radix-sorting';
+            if (typeof RadixSortingCase !== 'undefined') {
+                window.switchCase(fallbackCase);
             }
         };
-
-        // Mobile top-tabs toggle
-        (() => {
-            const btn = document.getElementById('mobile-tabs-btn');
-            const backdrop = document.getElementById('mobile-tabs-backdrop');
-            if (!btn || !backdrop) return;
-            btn.addEventListener('click', () => {
-                document.body.classList.toggle('mobile-tabs-open');
-            });
-            backdrop.addEventListener('click', () => {
-                document.body.classList.remove('mobile-tabs-open');
-            });
-        })();
 
     </script>
   </body>
