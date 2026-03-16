@@ -104,8 +104,8 @@ p.subtitle {
 }
 
 .hamburger {
-  width: 20px;
-  height: 14px;
+  width: 16px; /* Reduced from 20px */
+  height: 12px; /* Reduced from 14px */
   position: relative;
   display: flex;
   flex-direction: column;
@@ -122,13 +122,13 @@ p.subtitle {
 }
 
 .menu-toggle.is-active .hamburger span:nth-child(1) {
-  transform: translateY(6px) rotate(45deg);
+  transform: translateY(5px) rotate(45deg);
 }
 .menu-toggle.is-active .hamburger span:nth-child(2) {
   opacity: 0;
 }
 .menu-toggle.is-active .hamburger span:nth-child(3) {
-  transform: translateY(-6px) rotate(-45deg);
+  transform: translateY(-5px) rotate(-45deg);
 }
 
 .top-tabs-group {
@@ -203,10 +203,13 @@ p.subtitle {
     box-shadow: 0 12px 48px rgba(0, 0, 0, 0.22);
     border-radius: 50%;
     z-index: 10001; /* Must be higher than any other UI toggle */
-    width: 46px; /* Reduced from 56px */
-    height: 46px;
+    width: 40px; /* Reduced further from 46px */
+    height: 40px;
+    pointer-events: auto; /* CRITICAL: Override parent's pointer-events: none */
     outline: none;
     -webkit-tap-highlight-color: transparent;
+    justify-content: center;
+    align-items: center;
   }
 
   .top-tabs {
