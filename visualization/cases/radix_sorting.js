@@ -679,7 +679,7 @@ const RadixSortingCase = {
             });
         }
 
-        // Final Ribbon (Centered & Yellow)
+        // Final Ribbon (Centered & Red)
         if (this.phase === 'done' && this.narrative.timer <= 0) {
             ctx.save();
             const centerX = w / 2;
@@ -699,13 +699,13 @@ const RadixSortingCase = {
             ctx.roundRect(centerX - rectW / 2, centerY - rectH / 2, rectW, rectH, 20);
             ctx.fill();
             
-            ctx.strokeStyle = '#fbbf24'; // Amber/Yellow border
+            ctx.strokeStyle = '#ff4d4d'; // Red border
             ctx.lineWidth = 3;
             ctx.stroke();
 
-            // Yellow Text
+            // Red Text
             ctx.shadowBlur = 0;
-            ctx.fillStyle = '#fbbf24'; // Amber/Yellow text
+            ctx.fillStyle = '#ff4d4d'; // Red text
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
             ctx.fillText(msg, centerX, centerY);
@@ -738,13 +738,13 @@ const RadixSortingCase = {
         ctx.roundRect(centerX - rectW / 2, centerY - barH / 2, rectW, barH, 16);
         ctx.fill();
         
-        ctx.strokeStyle = 'rgba(59, 130, 246, 0.5)';
+        ctx.strokeStyle = '#fbbf24'; // Amber/Yellow border
         ctx.lineWidth = 2;
         ctx.stroke();
         
         // Text
         ctx.shadowBlur = 0;
-        ctx.fillStyle = '#fff';
+        ctx.fillStyle = '#fbbf24'; // Amber/Yellow text
         ctx.font = 'bold 22px Inter, system-ui';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
