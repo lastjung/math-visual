@@ -709,11 +709,37 @@ body.hide-ui main.dashboard-card {
 
 body.hide-ui .canvas-container {
     width: 100vw;
-    height: 100dvh;
+    height: 100dvh; /* Default for desktop */
     border-radius: 0;
     border: none;
     margin: 0;
     max-height: none; 
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #000;
+}
+
+/* Mobile landscape/portrait adjustments for cinematic mode */
+@media (max-width: 768px) {
+    body.hide-ui .canvas-container {
+        height: auto;
+        aspect-ratio: 1 / 1;
+        width: 100vw;
+        max-height: 100dvh;
+    }
+    
+    body.hide-ui main.dashboard-card {
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        background: #000;
+    }
+
+    body.hide-ui .container {
+        justify-content: flex-start;
+        background: #000;
+    }
 }
 
 /* Floating Toggle Button */
