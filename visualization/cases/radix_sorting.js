@@ -220,6 +220,9 @@ const RadixSortingCase = {
         // 1. Level 0 -> Level 1 (Input to 1s Buckets)
         if (this.currentLevel === 0) {
             if (this.currentSourceIndex >= this.inputItems.length) {
+                // Wait for sweep to finish before moving to next level
+                if (this.levelComplete[0] && this.levelSweep[0] < 1.0) return;
+
                 this.currentLevel = 1;
                 this.currentSourceBucket = 0;
                 this.currentSourceIndex = 0;
@@ -250,6 +253,9 @@ const RadixSortingCase = {
             }
 
             if (this.currentSourceBucket >= this.base) {
+                // Wait for sweep to finish
+                if (this.levelComplete[this.currentLevel] && this.levelSweep[this.currentLevel] < 1.0) return;
+
                 this.currentLevel++;
                 this.currentSourceBucket = 0;
                 this.currentSourceIndex = 0;
@@ -328,6 +334,8 @@ const RadixSortingCase = {
         }
 
         this.activeMove = null;
+        // Optimization: trigger a draw call
+        this.draw();
     },
 
     // --- Rendering ---
@@ -540,7 +548,7 @@ const RadixSortingCase = {
 
         // Draw Active Move item with path
         if (this.activeMove) {
-            const { item, type, progress, from } = this.activeMove;
+            const { item, type, progress, from, level } = this.activeMove;
             let to;
             
             if (type === 'to_bucket') {
