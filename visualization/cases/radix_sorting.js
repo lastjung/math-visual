@@ -33,6 +33,7 @@ const RadixSortingCase = {
     // Sweep Effect State
     levelSweep: [0, 0, 0, 0], // progress 0 to 1 for each row
     levelComplete: [false, false, false, false],
+    finishSweep: 0, // Final piano wave
 
     guideText: [
         '[Radix Sorting 폭포수 모드]',
@@ -181,9 +182,9 @@ const RadixSortingCase = {
         this.currentSourceIndex = 0;
         this.currentSourceBucket = 0;
         this.activeMove = null;
-        this.levelStatus = [false, false, false, false];
         this.levelSweep = [0, 0, 0, 0];
         this.levelComplete = [false, false, false, false];
+        this.finishSweep = 0;
         this.draw();
     },
 
@@ -198,6 +199,12 @@ const RadixSortingCase = {
             if (this.levelComplete[i] && this.levelSweep[i] < 1.2) {
                 this.levelSweep[i] += dt * 1.5;
             }
+        }
+
+        // Piano wave on finish
+        if (this.phase === 'done') {
+            this.finishSweep += dt * 1.5;
+            if (this.finishSweep > 2.0) this.finishSweep = 0; // Loop the wave
         }
 
         if (this.activeMove) {
@@ -383,10 +390,30 @@ const RadixSortingCase = {
         const ctx = this.ctx;
         
         ctx.save();
-        ctx.translate(x, y);
+        
+        // Piano Wave Effect (Lift and Glow)
+        const waveProgress = options.waveProgress || 0;
+        const cardIndex = options.cardIndex !== undefined ? options.cardIndex : -1;
+        const totalCards = options.totalCards || 1;
+        
+        let offsetY = 0;
+        let glow = 0;
+        if (waveProgress > 0 && cardIndex >= 0) {
+            const cardPos = cardIndex / totalCards;
+            // Normalize waveProgress to cover 0..1 range with some width
+            const dist = Math.abs((waveProgress % 1.5) - cardPos);
+            if (dist < 0.15) {
+                const factor = 1 - (dist / 0.15);
+                offsetY = -15 * factor;
+                glow = factor;
+            }
+        }
+
+        ctx.translate(x, y + offsetY);
 
         // Shadow
-        ctx.fillStyle = 'rgba(0,0,0,0.25)';
+        ctx.shadowColor = glow > 0 ? `hsla(200, 100%, 70%, ${glow})` : 'transparent';
+        ctx.shadowBlur = glow * 20;
         ctx.beginPath();
         ctx.roundRect(2, 4, cardW, cardH, 8);
         ctx.fill();
@@ -561,7 +588,12 @@ const RadixSortingCase = {
         // Draw Output Row
         this.outputItems.forEach((item, i) => {
             const pos = this.getArrayPos(i, this.itemCount, yPos[4]);
-            this.drawCard(item, pos.x, pos.y, { focusDigit: this.getDigit(item.value, this.maxDigits - 1) });
+            this.drawCard(item, pos.x, pos.y, { 
+                focusDigit: this.getDigit(item.value, this.maxDigits - 1),
+                waveProgress: this.finishSweep,
+                cardIndex: i,
+                totalCards: this.itemCount
+            });
         });
 
         // Draw Active Move item with path
