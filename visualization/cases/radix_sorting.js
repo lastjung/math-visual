@@ -30,6 +30,10 @@ const RadixSortingCase = {
     phase: 'animating', // animating | done
     itemIdSeed: 0,
 
+    // Sweep Effect State
+    levelSweep: [0, 0, 0, 0], // progress 0 to 1 for each row
+    levelComplete: [false, false, false, false],
+
     guideText: [
         '[Radix Sorting 폭포수 모드]',
         '- 카드가 위에서 아래로 흐르며 정렬되는 방식입니다.',
@@ -177,7 +181,9 @@ const RadixSortingCase = {
         this.currentSourceIndex = 0;
         this.currentSourceBucket = 0;
         this.activeMove = null;
-        this.phase = 'animating';
+        this.levelStatus = [false, false, false, false];
+        this.levelSweep = [0, 0, 0, 0];
+        this.levelComplete = [false, false, false, false];
         this.draw();
     },
 
@@ -187,6 +193,13 @@ const RadixSortingCase = {
     },
 
     updateSimulation(dt) {
+        // Update sweeps
+        for (let i = 0; i < 4; i++) {
+            if (this.levelComplete[i] && this.levelSweep[i] < 1.2) {
+                this.levelSweep[i] += dt * 1.5;
+            }
+        }
+
         if (this.activeMove) {
             const duration = Math.max(0.1, 0.6 / this.animationSpeed);
             this.activeMove.progress = Math.min(1, this.activeMove.progress + dt / duration);
@@ -202,6 +215,7 @@ const RadixSortingCase = {
 
     advanceState() {
         if (this.phase === 'done' || this.activeMove) return;
+        const { yPos } = this.getLayout();
 
         // 1. Level 0 -> Level 1 (Input to 1s Buckets)
         if (this.currentLevel === 0) {
@@ -286,20 +300,30 @@ const RadixSortingCase = {
         if (!this.activeMove) return;
 
         const item = this.activeMove.item;
+        const type = this.activeMove.type;
+        const level = this.activeMove.level;
 
-        if (this.activeMove.type === 'to_bucket') {
-            const level = this.activeMove.level;
-            const digit = this.activeMove.digit;
-            
+        if (type === 'to_bucket') {
             if (level === 0) {
                 this.inputItems = this.inputItems.filter(i => i.id !== item.id);
+                if (this.inputItems.length === 0) {
+                    this.levelComplete[0] = true; // Sweep starts AFTER last card of input arrives
+                }
             } else {
                 this.levelBuckets[level - 1][this.currentSourceBucket].shift();
+                const prevLevelEmpty = this.levelBuckets[level - 1].every(b => b.length === 0);
+                if (prevLevelEmpty) {
+                    this.levelComplete[level] = true; // Sweep starts AFTER last card of level arrives
+                }
             }
-            this.levelBuckets[level][digit].push(item);
+            this.levelBuckets[level][this.activeMove.digit].push(item);
 
-        } else if (this.activeMove.type === 'to_output') {
+        } else if (type === 'to_output') {
             this.levelBuckets[this.maxDigits - 1][this.currentSourceBucket].shift();
+            const lastLevelEmpty = this.levelBuckets[this.maxDigits - 1].every(b => b.length === 0);
+            if (lastLevelEmpty) {
+                this.levelComplete[this.maxDigits] = true;
+            }
             this.outputItems.push(item);
         }
 
@@ -347,7 +371,7 @@ const RadixSortingCase = {
     },
 
     drawCard(item, x, y, options = {}) {
-        const { cardW, cardH } = this.getLayout();
+        const { cardW, cardH, w } = this.getLayout();
         const ctx = this.ctx;
         
         ctx.save();
@@ -359,32 +383,69 @@ const RadixSortingCase = {
         ctx.roundRect(2, 4, cardW, cardH, 8);
         ctx.fill();
 
+        // Base Hue logic
+        let hVal = 0;
+        let sVal = 70;
+        let lVal = 55;
+
         // Color based on digit at level
         const digit = options.focusDigit !== undefined ? options.focusDigit : 0;
-        const hue = (digit / this.base) * 320 + 20; // Dynamic hue based on digit
+        const hueBase = (digit / this.base) * 320 + 20;
+
+        // Sweep Color Change logic
+        const sweepProgress = options.sweepProgress || 0;
+        // Map card x to 0..1 range across screen width to check against sweep
+        const screenX = x / w;
+        const isSwept = sweepProgress > screenX;
+
+        if (isSwept) {
+            hVal = (item.value % 360);
+            sVal = 80;
+            lVal = 60;
+        } else {
+            hVal = hueBase;
+            sVal = 60;
+            lVal = 45;
+        }
         
         const grad = ctx.createLinearGradient(0, 0, 0, cardH);
-        grad.addColorStop(0, `hsl(${hue}, 80%, 65%)`);
-        grad.addColorStop(1, `hsl(${hue}, 70%, 45%)`);
+        grad.addColorStop(0, `hsl(${hVal}, ${sVal}%, 65%)`);
+        grad.addColorStop(1, `hsl(${hVal}, ${sVal - 10}%, 45%)`);
         
         ctx.fillStyle = grad;
-        ctx.strokeStyle = 'rgba(255,255,255,0.6)';
-        ctx.lineWidth = 1.5;
+        ctx.strokeStyle = isSwept ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.4)';
+        ctx.lineWidth = isSwept ? 2 : 1;
         
         ctx.beginPath();
         ctx.roundRect(0, 0, cardW, cardH, 8);
         ctx.fill();
         ctx.stroke();
 
-        // Label
+        // Digit Label with Highlight
         if (this.showLabels) {
-            ctx.fillStyle = '#fff';
+            const valStr = String(item.value).padStart(3, '0');
+            const highlightIndex = options.highlightIndex !== undefined ? options.highlightIndex : -1;
+            
             ctx.font = `bold ${Math.max(10, cardW * 0.45)}px Inter, sans-serif`;
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
-            ctx.shadowColor = 'rgba(0,0,0,0.3)';
-            ctx.shadowBlur = 4;
-            ctx.fillText(item.value, cardW / 2, cardH / 2);
+            
+            // Draw digits individually to highlight one
+            const spacing = cardW / 3;
+            for (let i = 0; i < 3; i++) {
+                const char = valStr[i];
+                const cx = (i + 0.5) * spacing;
+                
+                if (i === highlightIndex) {
+                    ctx.fillStyle = '#ff4d4d'; // Red highlight
+                    ctx.shadowColor = 'rgba(255,75,75,0.5)';
+                    ctx.shadowBlur = 8;
+                } else {
+                    ctx.fillStyle = '#fff';
+                    ctx.shadowBlur = 0;
+                }
+                ctx.fillText(char, cx, cardH / 2);
+            }
             ctx.shadowBlur = 0;
         }
 
@@ -423,13 +484,18 @@ const RadixSortingCase = {
         // Draw Input Row
         this.inputItems.forEach((item, i) => {
             const pos = this.getArrayPos(i, this.inputItems.length, yPos[0]);
-            this.drawCard(item, pos.x, pos.y);
+            this.drawCard(item, pos.x, pos.y, { 
+                focusDigit: this.getDigit(item.value, 0),
+                highlightIndex: 2, // 1s digit
+                sweepProgress: this.levelSweep[0]
+            });
         });
 
         // Draw Buckets at each level
         for (let l = 0; l < this.maxDigits; l++) {
             const totalWidth = this.base * bucketW;
             const startX = (w - totalWidth) / 2;
+            const hlIdx = l === 0 ? 1 : (l === 1 ? 0 : -1); // 1층:10s(1), 2층:100s(0)
             
             for (let d = 0; d < this.base; d++) {
                 const x = startX + d * bucketW + 6;
@@ -457,7 +523,11 @@ const RadixSortingCase = {
                 // Items in bucket
                 this.levelBuckets[l][d].forEach((item, si) => {
                     const pos = this.getBucketPos(l, d, si);
-                    this.drawCard(item, pos.x, pos.y, { focusDigit: this.getDigit(item.value, l) });
+                    this.drawCard(item, pos.x, pos.y, { 
+                        focusDigit: this.getDigit(item.value, l),
+                        highlightIndex: hlIdx,
+                        sweepProgress: this.levelSweep[l+1]
+                    });
                 });
             }
         }
@@ -465,7 +535,7 @@ const RadixSortingCase = {
         // Draw Output Row
         this.outputItems.forEach((item, i) => {
             const pos = this.getArrayPos(i, this.outputItems.length, yPos[4]);
-            this.drawCard(item, pos.x, pos.y);
+            this.drawCard(item, pos.x, pos.y, { focusDigit: this.getDigit(item.value, this.maxDigits - 1) });
         });
 
         // Draw Active Move item with path
@@ -495,12 +565,16 @@ const RadixSortingCase = {
             ctx.setLineDash([]);
 
             // Moving Card
-            const x = from.x + (to.x - from.x) * eased;
+            const highlightIdx = type === 'to_output' ? -1 : (level === 0 ? 2 : (level === 1 ? 1 : 0));
+            
             // Arc motion
             const curX = from.x + (to.x - from.x) * eased;
             const curY = from.y + (to.y - from.y) * eased - Math.sin(t * Math.PI) * 60;
             
-            this.drawCard(item, curX, curY, { focusDigit: this.getDigit(item.value, this.activeMove.level || 0) });
+            this.drawCard(item, curX, curY, { 
+                focusDigit: this.getDigit(item.value, level || 0),
+                highlightIndex: highlightIdx
+            });
         }
 
         // Final Ribbon
