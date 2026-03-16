@@ -35,6 +35,13 @@ const RadixSortingCase = {
     levelComplete: [false, false, false, false],
     finishSweep: 0, // Final piano wave
 
+    // Narrative State
+    narrative: {
+        text: '',
+        timer: 0,
+        opacity: 0
+    },
+
     guideText: [
         '[Radix Sorting 폭포수 모드]',
         '- 카드가 위에서 아래로 흐르며 정렬되는 방식입니다.',
@@ -192,6 +199,14 @@ const RadixSortingCase = {
         if (typeof Core !== 'undefined' && Core.currentCase === this) {
             Core.updateControls();
         }
+
+        this.showNarrative("Welcome! Let's examine the 3-digit Radix Sort. First, sorting by the ones place.", 3.5);
+    },
+
+    showNarrative(text, duration = 2.5) {
+        this.narrative.text = text;
+        this.narrative.timer = duration;
+        this.narrative.opacity = 0;
     },
 
     getDigit(value, passIndex) {
@@ -212,6 +227,18 @@ const RadixSortingCase = {
             if (this.finishSweep < 1.5) {
                 this.finishSweep += dt * 1.5;
             }
+        }
+
+        // Update Narrative
+        if (this.narrative.timer > 0) {
+            this.narrative.timer -= dt;
+            // Fade in/out logic
+            if (this.narrative.timer > 0.5) {
+                this.narrative.opacity = Math.min(1, this.narrative.opacity + dt * 4);
+            } else {
+                this.narrative.opacity = Math.max(0, this.narrative.opacity - dt * 4);
+            }
+            return; // Pause simulation while narrative is showing
         }
 
         if (this.activeMove) {
@@ -240,6 +267,7 @@ const RadixSortingCase = {
                 this.currentLevel = 1;
                 this.currentSourceBucket = 0;
                 this.currentSourceIndex = 0;
+                this.showNarrative("Ones sorted. Next, sorting by the tens place.");
                 return;
             }
             const item = this.inputItems[this.currentSourceIndex];
@@ -273,6 +301,11 @@ const RadixSortingCase = {
                 this.currentLevel++;
                 this.currentSourceBucket = 0;
                 this.currentSourceIndex = 0;
+                if (this.currentLevel === 2) {
+                    this.showNarrative("Tens sorted. Next, sorting by the hundreds place.");
+                } else if (this.currentLevel === 3) {
+                    this.showNarrative("Almost done! Collecting the final sorted numbers.");
+                }
                 return;
             }
 
@@ -653,6 +686,35 @@ const RadixSortingCase = {
             ctx.textAlign = 'center';
             ctx.fillText("Radix Sort Complete!", w/2, yPos[4] + 60);
         }
+
+        this.drawNarrative(ctx, w, h);
+    },
+
+    drawNarrative(ctx, w, h) {
+        if (this.narrative.opacity <= 0) return;
+
+        ctx.save();
+        ctx.globalAlpha = this.narrative.opacity;
+        
+        // Background bar (Overlay)
+        const barH = 60;
+        ctx.fillStyle = 'rgba(2, 6, 23, 0.85)';
+        ctx.fillRect(0, 20, w, barH);
+        
+        ctx.strokeStyle = 'rgba(59, 130, 246, 0.5)';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(0, 20, w, barH);
+        
+        // Text
+        ctx.fillStyle = '#fff';
+        ctx.font = 'bold 20px Inter, system-ui';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.shadowColor = 'rgba(0,0,0,1)';
+        ctx.shadowBlur = 10;
+        ctx.fillText(this.narrative.text, w / 2, 20 + barH / 2);
+        
+        ctx.restore();
     },
 
     showGuide() {
