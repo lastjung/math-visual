@@ -274,6 +274,12 @@ const App = {
         if (this.shape === 'parabola') {
             this.lightSourceMode = 'point';
         }
+        
+        // One-time auto-calculation of parallel range when switching shape in parallel mode
+        if (this.lightSourceMode === 'parallel') {
+            this.recalcParallelRange();
+        }
+
         this.autoModes.revolution = false;
         this.autoModes.rotation = false;
 

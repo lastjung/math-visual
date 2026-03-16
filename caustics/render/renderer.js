@@ -655,7 +655,52 @@ export const Renderer = {
         }
         ctx.restore();
 
-        // 3. Additional Guides (Foci, etc. - respect showAxes)
+        // 3. Point/Converge Beam Handles (Visible only when AXES is ON)
+        if (state.showAxes && state.isLightVisible && state.lightSourceMode !== 'parallel') {
+            ctx.save();
+            const anchor = state.getActiveSourceAnchor();
+            
+            // Use the actual center launch angle for accuracy
+            let centerAngle = state.getTriangleLaunchAngle(anchor, size, 0.5);
+            
+            // If it's converge mode, the rays flow at angle + PI relative to the base calculation
+            if (state.lightSourceMode === 'converge') {
+                centerAngle += Math.PI;
+            }
+
+            // Position handles at the current 'front' of the rays
+            const beamLength = Math.max(40, Math.min(state.growth, size * 1.5));
+            const edgeA = centerAngle - state.spread / 2;
+            const edgeB = centerAngle + state.spread / 2;
+            
+            const tips = [
+                { x: sX + Math.cos(edgeA) * beamLength, y: sY + Math.sin(edgeA) * beamLength },
+                { x: sX + Math.cos(edgeB) * beamLength, y: sY + Math.sin(edgeB) * beamLength }
+            ];
+
+            // Guide Arc
+            ctx.beginPath();
+            ctx.setLineDash([4, 4]);
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+            ctx.arc(sX, sY, beamLength, edgeA, edgeB);
+            ctx.stroke();
+
+            // End handles
+            ctx.setLineDash([]);
+            tips.forEach(t => {
+                ctx.beginPath();
+                ctx.arc(t.x, t.y, 8, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
+                ctx.fill();
+                ctx.beginPath();
+                ctx.arc(t.x, t.y, 3, 0, Math.PI * 2);
+                ctx.fillStyle = '#fff';
+                ctx.fill();
+            });
+            ctx.restore();
+        }
+
+        // 4. Additional Guides (Foci, etc. - respect showAxes)
         if (state.showAxes && (state.shape === 'ellipse' || state.shape === 'v-oval' || state.shape === 'vv-oval')) {
             // (Foci drawing logic is already above, this is just for structure clarity if needed)
         }

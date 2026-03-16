@@ -416,6 +416,8 @@ export function setupControls(app, ui) {
     let isDragging = false;
     let dragTarget = 'center';
     let dragSourceIndex = -1;
+    let dragSide = 0; // -1 for left edge, 1 for right edge
+    let fixedEdgeAngle = 0;
     let pendingIncrementalRefresh = false;
 
     const handleInteraction = (e) => {
@@ -466,17 +468,31 @@ export function setupControls(app, ui) {
             }
 
             // 4. Direct Beam Interaction
-            if (!isDragging && app.isLightVisible && !app.isFlowing && app.lightSourceMode !== 'parallel') {
-                const beamLength = Math.max(120, app.getShapeSize() * 0.85);
-                const centerAngle = app.sourceRotation + Math.PI / 2;
+            if (!isDragging && app.isLightVisible && app.lightSourceMode !== 'parallel') {
+                const size = app.getShapeSize();
+                const beamLength = Math.max(40, Math.min(app.growth, size * 1.5));
+                
+                // Must match renderer's dynamic angle logic
+                let centerAngle = app.getTriangleLaunchAngle(anchor, size, 0.5);
+                if (app.lightSourceMode === 'converge') {
+                    centerAngle += Math.PI;
+                }
+
                 const edgeA = centerAngle - app.spread / 2;
                 const edgeB = centerAngle + app.spread / 2;
                 const tipA = { x: sX + Math.cos(edgeA) * beamLength, y: sY + Math.sin(edgeA) * beamLength };
                 const tipB = { x: sX + Math.cos(edgeB) * beamLength, y: sY + Math.sin(edgeB) * beamLength };
 
-                if (Math.hypot(x - tipA.x, y - tipA.y) < 28 || Math.hypot(x - tipB.x, y - tipB.y) < 28) {
+                const distA = Math.hypot(x - tipA.x, y - tipA.y);
+                const distB = Math.hypot(x - tipB.x, y - tipB.y);
+
+                if (distA < 40 || distB < 40) {
                     isDragging = true;
                     dragTarget = 'beam';
+                    dragSide = distA < distB ? -1 : 1;
+                    
+                    // The anchor (side that stays fixed)
+                    fixedEdgeAngle = centerAngle - (dragSide * app.spread / 2);
                 }
             }
 
@@ -510,10 +526,32 @@ export function setupControls(app, ui) {
                 }
             } else if (dragTarget === 'beam') {
                 const mouseAngle = Math.atan2(y - sY, x - sX);
-                let diff = mouseAngle - (app.sourceRotation + Math.PI / 2);
-                while (diff > Math.PI) diff -= Math.PI * 2;
-                while (diff < -Math.PI) diff += Math.PI * 2;
-                app.updateSlider('spread', Math.max(0.02, Math.min(Math.PI * 2, Math.abs(diff) * 2)));
+                const fixedEdge = fixedEdgeAngle;
+                
+                // Calculate gap from fixed edge to mouse
+                let gap = mouseAngle - fixedEdge;
+                while (gap > Math.PI) gap -= Math.PI * 2;
+                while (gap < -Math.PI) gap += Math.PI * 2;
+
+                // Spread is the absolute magnitude of the gap
+                const finalSpread = Math.max(0.01, Math.min(Math.PI * 2 - 0.02, Math.abs(gap)));
+                // Center is exactly between fixed edge and mouse
+                const newCenter = fixedEdge + (gap / 2);
+
+                const size = app.getShapeSize();
+                const currentRotation = app.sourceRotation;
+                // Calculate the 'static' part of the launch angle without current rotation
+                const baseAngle = app.getTriangleLaunchAngle(anchor, size, 0.5) - currentRotation;
+                
+                // Target rotation is the offset needed to reach 'newCenter'
+                let targetRotation = newCenter - baseAngle;
+                if (app.lightSourceMode === 'converge') targetRotation -= Math.PI;
+                
+                while (targetRotation > Math.PI) targetRotation -= Math.PI * 2;
+                while (targetRotation < -Math.PI) targetRotation += Math.PI * 2;
+
+                app.updateSlider('sourceRotation', targetRotation);
+                app.updateSlider('spread', finalSpread);
             } else {
                 const dx = x - sX, dy = y - sY;
                 const dist = Math.sqrt(dx * dx + dy * dy);
