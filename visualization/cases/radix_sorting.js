@@ -200,7 +200,7 @@ const RadixSortingCase = {
             Core.updateControls();
         }
 
-        this.showNarrative("Welcome! Let's examine the 3-digit Radix Sort.\nFirst, sorting by the ones place.", 4.0);
+        this.showNarrative("Welcome!\nLet's examine the 3-digit Radix Sort.\nFirst, sorting by the ones place.", 4.0);
     },
 
     showNarrative(text, duration = 2.5) {

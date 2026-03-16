@@ -727,6 +727,7 @@ body.hide-ui .canvas-container {
         aspect-ratio: 1 / 1;
         width: 100vw;
         max-height: 100dvh;
+        margin-top: 40px; /* Added margin at top */
     }
     
     body.hide-ui main.dashboard-card {
