@@ -489,12 +489,21 @@ const RadixSortingCase = {
         ctx.fillText("LEVEL 3: HUNDREDS", 30, yPos[3] - 25);
         ctx.fillText("FINAL SORTED", 30, yPos[4] - 15);
 
+        // Draw Input Row Slots (Empty)
+        for (let i = 0; i < this.itemCount; i++) {
+            const pos = this.getArrayPos(i, this.itemCount, yPos[0]);
+            ctx.strokeStyle = 'rgba(255,255,255,0.05)';
+            ctx.setLineDash([2, 2]);
+            ctx.strokeRect(pos.x, pos.y, cardW, cardH);
+        }
+
         // Draw Input Row
         this.inputItems.forEach((item, i) => {
-            const pos = this.getArrayPos(i, this.inputItems.length, yPos[0]);
+            // Use current index but fixed total count for stable positioning
+            const pos = this.getArrayPos(i, this.itemCount, yPos[0]);
             this.drawCard(item, pos.x, pos.y, { 
                 focusDigit: this.getDigit(item.value, 0),
-                highlightIndex: -1, // No highlight for Input
+                highlightIndex: -1, 
                 sweepProgress: this.levelSweep[0]
             });
         });
@@ -540,9 +549,18 @@ const RadixSortingCase = {
             }
         }
 
+        // Draw Output Row Slots (Empty)
+        for (let i = 0; i < this.itemCount; i++) {
+            const pos = this.getArrayPos(i, this.itemCount, yPos[4]);
+            ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+            ctx.setLineDash([2, 2]);
+            ctx.strokeRect(pos.x, pos.y, cardW, cardH);
+            ctx.setLineDash([]);
+        }
+
         // Draw Output Row
         this.outputItems.forEach((item, i) => {
-            const pos = this.getArrayPos(i, this.outputItems.length, yPos[4]);
+            const pos = this.getArrayPos(i, this.itemCount, yPos[4]);
             this.drawCard(item, pos.x, pos.y, { focusDigit: this.getDigit(item.value, this.maxDigits - 1) });
         });
 
