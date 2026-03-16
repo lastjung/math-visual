@@ -202,10 +202,7 @@ const Core = {
         }
         
         window.addEventListener('resize', () => {
-            const settingsPanel = document.getElementById('settings-panel');
-            if (settingsPanel && window.innerWidth <= 1024) {
-                settingsPanel.classList.add('visible');
-            }
+            // Removed auto-open on resize
             if (this.currentCase && this.currentCase.resize) {
                 this.currentCase.resize();
             }
@@ -222,11 +219,7 @@ const Core = {
             document.body.appendChild(panel);
         }
 
-        // Keep controls visible by default on mobile/tablet for live tweaking.
-        const settingsPanel = document.getElementById('settings-panel');
-        if (settingsPanel && window.innerWidth <= 1024) {
-            settingsPanel.classList.add('visible');
-        }
+        // Removed auto-open on init. User must click the gear icon to open.
 
         // 2. Create Floating Dock
         if (!document.getElementById('floating-dock-container')) {
