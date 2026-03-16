@@ -149,7 +149,6 @@ const RadixSortingCase = {
         cancelAnimationFrame(this.animationId);
         this.animationId = null;
     },
-
     reset() {
         this.itemCount = 16;
         this.maxValue = 999;
@@ -167,6 +166,16 @@ const RadixSortingCase = {
 
     generateData() {
         this.itemIdSeed = 0;
+        this.phase = 'animating';
+        this.currentLevel = 0;
+        this.currentSourceIndex = 0;
+        this.currentSourceBucket = 0;
+        this.activeMove = null;
+        this.levelSweep = [0, 0, 0, 0];
+        this.levelComplete = [false, false, false, false];
+        this.finishSweep = 0;
+        this.autoPlay = true; // Ensure autoPlay is true on data generation
+        
         this.inputItems = Array.from({ length: this.itemCount }, () => ({
             id: this.itemIdSeed++,
             value: Math.floor(Math.random() * (this.maxValue + 1))
@@ -177,15 +186,12 @@ const RadixSortingCase = {
             Array.from({ length: this.base }, () => [])
         );
         this.outputItems = [];
-        
-        this.currentLevel = 0;
-        this.currentSourceIndex = 0;
-        this.currentSourceBucket = 0;
-        this.activeMove = null;
-        this.levelSweep = [0, 0, 0, 0];
-        this.levelComplete = [false, false, false, false];
         this.finishSweep = 0;
         this.draw();
+
+        if (typeof Core !== 'undefined' && Core.currentCase === this) {
+            Core.updateControls();
+        }
     },
 
     getDigit(value, passIndex) {
@@ -295,6 +301,10 @@ const RadixSortingCase = {
 
             if (this.currentSourceBucket >= this.base) {
                 this.phase = 'done';
+                this.autoPlay = false; // Stop autoPlay when finished
+                if (typeof Core !== 'undefined' && Core.currentCase === this) {
+                    Core.updateControls();
+                }
                 return;
             }
 
