@@ -1139,9 +1139,15 @@ body.hide-ui #ui-toggle-btn:hover {
     }
 
     #floating-dock-container .play-btn {
-        height: 34px; /* Reduced from 44px */
-        padding: 0 16px;
-        font-size: 0.85rem;
+        height: 34px;
+        width: 34px; /* Make it identical to icon-btn size */
+        padding: 0;
+        justify-content: center;
+        border-radius: 50%;
+    }
+    
+    #floating-dock-container .play-btn span:last-child {
+        display: none; /* Hide "Pause", "Resume", "Go", etc. */
     }
 }
 
