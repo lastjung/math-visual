@@ -144,6 +144,10 @@ button:hover {
 
 .control-divider {
   position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
   margin: 10px 0 2px;
   padding-top: 14px;
   border-top: 1px solid rgba(255, 255, 255, 0.12);
@@ -156,6 +160,13 @@ button:hover {
   font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
+}
+
+.control-divider-button {
+  min-width: 84px;
+  padding: 5px 12px;
+  font-size: 0.74rem;
+  line-height: 1;
 }
 
 .control-item {

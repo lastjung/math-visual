@@ -10,7 +10,7 @@ const CardioidCircleCase = {
 
     pointCount: 250,
     multiplier: 40,
-    multiplierSpeed: 0.35,
+    multiplierSpeed: 0,
     lineWidth: 1.85,
     lineAlpha: 0.4,
     pointRadius: 1.1,
@@ -18,11 +18,15 @@ const CardioidCircleCase = {
     showHud: true,
     integersOnly: false,
     colorMode: 'angle', // monochrome | angle | length | origin
-    sortMode: 'off', // off | hue
+    sortMode: 'off', // off | hue | lsh
     sortSpeed: 48,
     sortProgress: 0,
     sortPlan: null,
     sortSignature: '',
+    shuffleNonce: 0,
+    shuffleOrder: null,
+    shuffleSignature: '',
+    shuffleFlash: 0,
     rotation: -Math.PI / 2,
     learningMode: 'off', // off | n-ramp | m-ramp | gcd | integer-snap | mapping | classic | ultimate | mirror-chaos
     classicTargets: [2, 3, 4, 5, 6, 7, 8, 9, 10],
@@ -71,7 +75,7 @@ const CardioidCircleCase = {
         '- Integers Only: M을 정수로 반올림해 단계적으로 변화.',
         '- HUD: 좌상단 수치 표시 On/Off.',
         '- Reset/Resume: 상단 Master Controls 버튼 사용.',
-        '- Reset 시 기본 세팅(N=250, M=40, M Speed=0.35)으로 복귀.'
+        '- Reset 시 기본 세팅(N=250, M=40, M Speed=0.00)으로 복귀.'
     ].join('\n'),
 
     init() {
@@ -182,7 +186,12 @@ const CardioidCircleCase = {
             {
                 type: 'divider',
                 id: 'mc_sort_divider',
-                label: 'Sorting'
+                label: 'Sorting',
+                actionLabel: 'Shuffle',
+                onAction: () => {
+                    this.shuffleChords();
+                    this.draw();
+                }
             },
             {
                 type: 'select',
@@ -191,7 +200,8 @@ const CardioidCircleCase = {
                 value: this.sortMode,
                 options: [
                     { value: 'off', label: 'Off' },
-                    { value: 'hue', label: 'Hue Radix' }
+                    { value: 'hue', label: 'Hue Radix' },
+                    { value: 'lsh', label: 'L-S-H Radix' }
                 ],
                 onChange: (v) => {
                     this.sortMode = v;
@@ -505,7 +515,7 @@ const CardioidCircleCase = {
     reset() {
         this.pointCount = 250;
         this.multiplier = 40;
-        this.multiplierSpeed = 0.35;
+        this.multiplierSpeed = 0;
         this.lineWidth = 1.85;
         this.lineAlpha = 0.4;
         this.integersOnly = false;
@@ -515,6 +525,10 @@ const CardioidCircleCase = {
         this.sortProgress = 0;
         this.sortPlan = null;
         this.sortSignature = '';
+        this.shuffleNonce = 0;
+        this.shuffleOrder = null;
+        this.shuffleSignature = '';
+        this.shuffleFlash = 0;
         this.showHud = true;
         this.learningMode = 'off';
         this.learnFixedM = 0;
@@ -613,6 +627,46 @@ const CardioidCircleCase = {
         }
     },
 
+    getShuffleSignature(n, m) {
+        return [
+            n,
+            m.toFixed(6),
+            this.learningMode,
+            this.integersOnly ? 1 : 0,
+            this.shuffleNonce
+        ].join('|');
+    },
+
+    ensureShuffleOrder(n, m) {
+        if (n <= 0) {
+            this.shuffleOrder = null;
+            this.shuffleSignature = '';
+            return null;
+        }
+
+        const signature = this.getShuffleSignature(n, m);
+        if (this.shuffleOrder && this.shuffleSignature === signature && this.shuffleOrder.length === n) {
+            return this.shuffleOrder;
+        }
+
+        const order = Array.from({ length: n }, (_, index) => index);
+        for (let i = order.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [order[i], order[j]] = [order[j], order[i]];
+        }
+        this.shuffleOrder = order;
+        this.shuffleSignature = signature;
+        return order;
+    },
+
+    shuffleChords() {
+        this.shuffleNonce += 1;
+        this.shuffleOrder = null;
+        this.shuffleSignature = '';
+        this.shuffleFlash = 1;
+        this.restartSort();
+    },
+
     buildChordData(n, m, radius, cx, cy) {
         const chords = [];
         for (let i = 0; i < n; i++) {
@@ -625,14 +679,23 @@ const CardioidCircleCase = {
                 from,
                 to,
                 hue: visual.hue,
+                saturation: visual.saturation,
+                lightness: visual.lightness,
                 color: visual.color
             });
         }
-        return chords;
+        const shuffleOrder = this.ensureShuffleOrder(n, m);
+        return shuffleOrder ? shuffleOrder.map((index) => chords[index]) : chords;
     },
 
     getHueKey(hue) {
         return Math.max(0, Math.min(359, Math.round(hue)));
+    },
+
+    getChannelBucket(value, maxValue) {
+        const safe = Math.max(0, Math.min(maxValue, value));
+        if (maxValue <= 0) return 0;
+        return Math.max(0, Math.min(9, Math.floor((safe / (maxValue + 0.0001)) * 10)));
     },
 
     getSortSignature(n, m) {
@@ -647,7 +710,7 @@ const CardioidCircleCase = {
     },
 
     ensureSortPlan(chords, n, m) {
-        if (this.sortMode !== 'hue' || this.learningMode !== 'off' || !n) {
+        if ((this.sortMode !== 'hue' && this.sortMode !== 'lsh') || this.learningMode !== 'off' || !n) {
             this.sortPlan = null;
             this.sortSignature = '';
             return null;
@@ -658,33 +721,51 @@ const CardioidCircleCase = {
             return this.sortPlan;
         }
 
-        let sourceOrder = chords.map((chord) => ({
-            ...chord,
-            hueKey: this.getHueKey(chord.hue)
-        }));
+        let sourceOrder = chords.map((chord) => {
+            const hueKey = this.getHueKey(chord.hue);
+            return {
+                ...chord,
+                hueKey,
+                hueBucket: this.getChannelBucket(hueKey, 359),
+                saturationBucket: this.getChannelBucket(chord.saturation, 100),
+                lightnessBucket: this.getChannelBucket(chord.lightness, 100)
+            };
+        });
         const passes = [];
-        let digitDivisor = 1;
+        const passDescriptors = this.sortMode === 'lsh'
+            ? [
+                { key: 'lightnessBucket', label: 'Lightness' },
+                { key: 'saturationBucket', label: 'Saturation' },
+                { key: 'hueBucket', label: 'Hue' }
+            ]
+            : [
+                { key: 'hueKey', divisor: 1, label: 'Hue 1s' },
+                { key: 'hueKey', divisor: 10, label: 'Hue 10s' },
+                { key: 'hueKey', divisor: 100, label: 'Hue 100s' }
+            ];
 
-        while (digitDivisor <= 100) {
+        for (const descriptor of passDescriptors) {
             const buckets = Array.from({ length: 10 }, () => []);
             const digits = [];
 
             sourceOrder.forEach((entry) => {
-                const digit = Math.floor(entry.hueKey / digitDivisor) % 10;
+                const digit = descriptor.divisor
+                    ? Math.floor(entry[descriptor.key] / descriptor.divisor) % 10
+                    : entry[descriptor.key];
                 digits.push(digit);
                 buckets[digit].push(entry);
             });
 
             const order = buckets.flat();
             passes.push({
-                digitDivisor,
+                digitDivisor: descriptor.divisor || 1,
+                label: descriptor.label,
                 sourceOrder,
                 digits,
                 order,
                 bucketCounts: buckets.map((bucket) => bucket.length)
             });
             sourceOrder = order;
-            digitDivisor *= 10;
         }
 
         this.sortPlan = {
@@ -741,6 +822,63 @@ const CardioidCircleCase = {
             drawEntries,
             coloredCount: stepInPass
         };
+    },
+
+    drawSortBuckets(ctx, w, h, sortView) {
+        if (!sortView) return;
+
+        const panelW = 216;
+        const panelH = 124;
+        const panelX = w - panelW - 24;
+        const panelY = h - panelH - 24;
+        const maxCount = Math.max(1, ...sortView.bucketCounts);
+        const chartTop = panelY + 34;
+        const chartBottom = panelY + panelH - 24;
+        const chartHeight = chartBottom - chartTop;
+        const barW = 14;
+        const gap = 6;
+
+        ctx.save();
+        ctx.fillStyle = 'rgba(10, 14, 24, 0.82)';
+        ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.roundRect(panelX, panelY, panelW, panelH, 16);
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.fillStyle = 'rgba(255,255,255,0.9)';
+        ctx.font = '600 12px Inter, system-ui, sans-serif';
+        ctx.fillText('Hue Buckets', panelX + 14, panelY + 20);
+
+        for (let digit = 0; digit < 10; digit++) {
+            const count = sortView.bucketCounts[digit];
+            const x = panelX + 14 + digit * (barW + gap);
+            const barH = (count / maxCount) * chartHeight;
+            const y = chartBottom - barH;
+            const isActive = sortView.activeDigit === digit;
+            const hue = digit * 36;
+
+            ctx.fillStyle = 'rgba(255,255,255,0.08)';
+            ctx.fillRect(x, chartTop, barW, chartHeight);
+
+            ctx.fillStyle = isActive
+                ? `hsla(${hue}, 95%, 68%, 0.96)`
+                : `hsla(${hue}, 88%, 60%, 0.56)`;
+            ctx.fillRect(x, y, barW, Math.max(barH, 2));
+
+            if (isActive) {
+                ctx.strokeStyle = 'rgba(255, 209, 102, 0.95)';
+                ctx.lineWidth = 1.5;
+                ctx.strokeRect(x - 2, chartTop - 2, barW + 4, chartHeight + 4);
+            }
+
+            ctx.fillStyle = 'rgba(255,255,255,0.72)';
+            ctx.font = '600 10px IBM Plex Sans, sans-serif';
+            ctx.fillText(String(digit), x + 2, panelY + panelH - 8);
+        }
+
+        ctx.restore();
     },
 
     gcd(a, b) {
@@ -900,6 +1038,9 @@ const CardioidCircleCase = {
             const totalSteps = (this.sortPlan && this.sortPlan.totalSteps) ? this.sortPlan.totalSteps : n * 3;
             this.sortProgress = Math.min(totalSteps, this.sortProgress + this.sortSpeed * dt);
         }
+        if (this.shuffleFlash > 0) {
+            this.shuffleFlash = Math.max(0, this.shuffleFlash - dt * 1.8);
+        }
         this.multiplier += this.multiplierSpeed * dt;
     },
 
@@ -928,7 +1069,7 @@ const CardioidCircleCase = {
         const mInt = Math.round(m);
         const gcdValue = (this.learningMode === 'gcd' && n > 0) ? this.gcd(n, this.positiveMod(mInt, n)) : 1;
         const chords = this.buildChordData(n, m, radius, cx, cy);
-        const sortingActive = this.sortMode === 'hue' && this.learningMode === 'off' && n > 0;
+        const sortingActive = (this.sortMode === 'hue' || this.sortMode === 'lsh') && this.learningMode === 'off' && n > 0;
         const sortPlan = sortingActive ? this.ensureSortPlan(chords, n, m) : null;
         const sortView = sortingActive ? this.getSortViewState(sortPlan) : null;
 
@@ -947,8 +1088,10 @@ const CardioidCircleCase = {
                 ctx.stroke();
             }
         } else if (sortingActive && sortView) {
-            ctx.strokeStyle = 'rgba(210, 222, 255, 0.08)';
+            const shuffledBaseAlpha = 0.14 + this.shuffleFlash * 0.26;
             for (const chord of sortView.drawEntries) {
+                const muted = this.lineVisual(chord.index, n, chord.from, chord.to, radius, shuffledBaseAlpha);
+                ctx.strokeStyle = muted.color;
                 ctx.beginPath();
                 ctx.moveTo(chord.from.x, chord.from.y);
                 ctx.lineTo(chord.to.x, chord.to.y);
@@ -1010,14 +1153,29 @@ const CardioidCircleCase = {
             ctx.fillText(`dM/dt: ${hudSpeed.toFixed(3)}`, 24, 74);
             ctx.fillText(`Time: ${timeLabel}`, 24, 96);
             if (sortingActive && sortView) {
-                const digitLabel = sortView.passIndex === 0 ? '1s' : sortView.passIndex === 1 ? '10s' : '100s';
-                ctx.fillText(`Sort: Hue Radix`, 24, 118);
+                const sortLabel = this.sortMode === 'lsh' ? 'L-S-H Radix' : 'Hue Radix';
+                const digitLabel = sortPlan?.passes?.[sortView.passIndex]?.label || `Pass ${sortView.passNumber}`;
+                ctx.fillText(`Sort: ${sortLabel}`, 24, 118);
                 ctx.fillText(`Pass: ${sortView.passNumber}/${sortView.totalPasses} (${digitLabel})`, 24, 140);
                 ctx.fillText(`Step: ${sortView.stepInPass}/${sortView.totalInPass}`, 24, 162);
                 if (sortView.activeDigit != null) {
                     ctx.fillText(`Bucket: ${sortView.activeDigit}`, 24, 184);
                 }
             }
+        }
+
+        if (sortingActive && sortView) {
+            this.drawSortBuckets(ctx, w, h, sortView);
+        }
+
+        if (this.shuffleFlash > 0) {
+            ctx.save();
+            ctx.fillStyle = `rgba(255, 209, 102, ${0.12 * this.shuffleFlash})`;
+            ctx.fillRect(0, 0, w, h);
+            ctx.fillStyle = `rgba(255, 240, 201, ${0.95 * this.shuffleFlash})`;
+            ctx.font = '700 20px IBM Plex Sans, sans-serif';
+            ctx.fillText('Shuffle', 24, h - 24);
+            ctx.restore();
         }
 
         if (this.learningMode === 'mapping' && n > 0) {

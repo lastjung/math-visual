@@ -219,6 +219,14 @@ const Core = {
                     text.textContent = control.label;
                     divider.appendChild(text);
                 }
+                if (control.actionLabel && typeof control.onAction === 'function') {
+                    const button = document.createElement('button');
+                    button.type = 'button';
+                    button.className = 'control-divider-button';
+                    button.textContent = control.actionLabel;
+                    button.onclick = () => control.onAction();
+                    divider.appendChild(button);
+                }
                 host.appendChild(divider);
                 return;
             }
