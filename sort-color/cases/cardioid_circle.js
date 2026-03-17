@@ -89,6 +89,18 @@ const CardioidCircleCase = {
     get uiConfig() {
         const controls = [
             {
+                type: 'button',
+                id: 'mc_play_toggle',
+                label: '',
+                value: typeof Core !== 'undefined' && Core.isRunning ? 'HOLD (Stop)' : 'PLAY (Resume)',
+                onClick: () => {
+                    if (typeof Core !== 'undefined') {
+                        Core.togglePlay();
+                        Core.updateControls();
+                    }
+                }
+            },
+            {
                 type: 'select',
                 id: 'mc_mode',
                 label: 'Learning Mode',
@@ -668,24 +680,33 @@ const CardioidCircleCase = {
     },
 
     buildChordData(n, m, radius, cx, cy) {
+        const shuffleOrder = this.ensureShuffleOrder(n, m);
         const chords = [];
+        // 1. 먼저 모든 색상 데이터를 생성
         for (let i = 0; i < n; i++) {
-            const from = this.circlePoint(i, n, radius, cx, cy);
-            const j = (m * i) % n;
-            const to = this.circlePointByIndex(j, n, radius, cx, cy);
-            const visual = this.lineVisual(i, n, from, to, radius);
+            const visual = this.lineVisual(i, n, { x: 0, y: 0 }, { x: 0, y: 0 }, radius);
             chords.push({
-                index: i,
-                from,
-                to,
+                originalIndex: i,
                 hue: visual.hue,
                 saturation: visual.saturation,
                 lightness: visual.lightness,
                 color: visual.color
             });
         }
-        const shuffleOrder = this.ensureShuffleOrder(n, m);
-        return shuffleOrder ? shuffleOrder.map((index) => chords[index]) : chords;
+
+        // 2. 셔플 상태라면 색상 배열을 섞음
+        let finalChords = shuffleOrder ? shuffleOrder.map(idx => chords[idx]) : chords;
+
+        // 3. 현재 배열 순서(k)에 맞춰 기하학적 위치를 부여 (패턴은 유지, 색상만 섞임)
+        for (let k = 0; k < n; k++) {
+            const from = this.circlePoint(k, n, radius, cx, cy);
+            const j = (m * k) % n;
+            const to = this.circlePointByIndex(j, n, radius, cx, cy);
+            finalChords[k].from = from;
+            finalChords[k].to = to;
+        }
+
+        return finalChords;
     },
 
     getHueKey(hue) {
@@ -1089,33 +1110,38 @@ const CardioidCircleCase = {
             }
         } else if (sortingActive && sortView) {
             const shuffledBaseAlpha = 0.14 + this.shuffleFlash * 0.26;
-            for (const chord of sortView.drawEntries) {
-                const muted = this.lineVisual(chord.index, n, chord.from, chord.to, radius, shuffledBaseAlpha);
+            for (let k = 0; k < sortView.drawEntries.length; k++) {
+                const chord = sortView.drawEntries[k];
+                // 소팅 가시화를 위해: 현재 배열 인덱스 k에 해당하는 기하학적 위치 계산
+                const geoFrom = this.circlePoint(k, n, radius, cx, cy);
+                const geoTo = this.circlePointByIndex((m * k) % n, n, radius, cx, cy);
+
+                const muted = this.lineVisual(chord.originalIndex, n, geoFrom, geoTo, radius, shuffledBaseAlpha);
                 ctx.strokeStyle = muted.color;
                 ctx.beginPath();
-                ctx.moveTo(chord.from.x, chord.from.y);
-                ctx.lineTo(chord.to.x, chord.to.y);
+                ctx.moveTo(geoFrom.x, geoFrom.y);
+                ctx.lineTo(geoTo.x, geoTo.y);
                 ctx.stroke();
-            }
 
-            for (let i = 0; i < sortView.coloredCount; i++) {
-                const chord = sortView.drawEntries[i];
-                ctx.strokeStyle = chord.color;
-                ctx.beginPath();
-                ctx.moveTo(chord.from.x, chord.from.y);
-                ctx.lineTo(chord.to.x, chord.to.y);
-                ctx.stroke();
-            }
+                // 정렬이 완료된 부분은 본래의 진한 색으로 덧그림
+                if (k < sortView.coloredCount) {
+                    ctx.strokeStyle = chord.color;
+                    ctx.beginPath();
+                    ctx.moveTo(geoFrom.x, geoFrom.y);
+                    ctx.lineTo(geoTo.x, geoTo.y);
+                    ctx.stroke();
+                }
 
-            if (!sortView.completed && sortView.stepInPass < sortView.drawEntries.length) {
-                const activeChord = sortView.drawEntries[sortView.coloredCount];
-                ctx.lineWidth = Math.max(this.lineWidth + 1.5, 3);
-                ctx.strokeStyle = 'rgba(255, 209, 102, 0.95)';
-                ctx.beginPath();
-                ctx.moveTo(activeChord.from.x, activeChord.from.y);
-                ctx.lineTo(activeChord.to.x, activeChord.to.y);
-                ctx.stroke();
-                ctx.lineWidth = this.lineWidth;
+                // 현재 정렬 중인 항목 강조 (노란색)
+                if (!sortView.completed && k === sortView.coloredCount) {
+                    ctx.lineWidth = Math.max(this.lineWidth + 1.5, 3);
+                    ctx.strokeStyle = 'rgba(255, 209, 102, 0.95)';
+                    ctx.beginPath();
+                    ctx.moveTo(geoFrom.x, geoFrom.y);
+                    ctx.lineTo(geoTo.x, geoTo.y);
+                    ctx.stroke();
+                    ctx.lineWidth = this.lineWidth;
+                }
             }
         } else {
             for (const chord of chords) {

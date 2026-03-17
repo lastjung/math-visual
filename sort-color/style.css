@@ -163,10 +163,19 @@ button:hover {
 }
 
 .control-divider-button {
-  min-width: 84px;
-  padding: 5px 12px;
-  font-size: 0.74rem;
-  line-height: 1;
+  padding: 4px 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 999px;
+  color: #d1d5db;
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.control-divider-button:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
 }
 
 .control-item {
@@ -203,10 +212,42 @@ button:hover {
 }
 
 .control-item button {
-  width: auto;
-  min-width: 100px;
-  padding: 6px 12px;
-  font-size: 0.8rem;
+  width: 100%;
+  padding: 10px 14px;
+  background: linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.03) 100%);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 12px;
+  color: #fff;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  margin-top: 4px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+.control-item button:hover {
+  background: linear-gradient(135deg, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0.06) 100%);
+  border-color: rgba(255,255,255,0.2);
+  transform: translateY(-1px);
+}
+
+.control-item button:active {
+  transform: translateY(1px);
+  filter: brightness(0.9);
+}
+
+/* Play/Hold button specialization */
+.control-item[data-id="mc_play_toggle"] button {
+  background: linear-gradient(135deg, rgba(52, 211, 153, 0.2) 0%, rgba(16, 185, 129, 0.1) 100%);
+  border-color: rgba(52, 211, 153, 0.3);
+  color: #a7f3d0;
+  font-size: 0.95rem;
+}
+
+.control-item[data-id="mc_play_toggle"] button:hover {
+  background: linear-gradient(135deg, rgba(52, 211, 153, 0.3) 0%, rgba(16, 185, 129, 0.2) 100%);
+  border-color: rgba(52, 211, 153, 0.4);
 }
 
 .control-value {

@@ -208,75 +208,103 @@ const Core = {
     updateControls() {
         const host = document.getElementById('control-list');
         if (!host || !this.currentCase || !Array.isArray(this.currentCase.uiConfig)) return;
-        host.innerHTML = '';
 
         this.currentCase.uiConfig.forEach((control) => {
             if (control.type === 'divider') {
-                const divider = document.createElement('div');
-                divider.className = 'control-divider';
-                if (control.label) {
-                    const text = document.createElement('span');
-                    text.textContent = control.label;
-                    divider.appendChild(text);
+                let divider = host.querySelector(`.control-divider[data-id="${control.id || control.label}"]`);
+                if (!divider) {
+                    divider = document.createElement('div');
+                    divider.className = 'control-divider';
+                    divider.setAttribute('data-id', control.id || control.label);
+                    if (control.label) {
+                        const text = document.createElement('span');
+                        text.textContent = control.label;
+                        divider.appendChild(text);
+                    }
+                    if (control.actionLabel && typeof control.onAction === 'function') {
+                        const button = document.createElement('button');
+                        button.type = 'button';
+                        button.className = 'control-divider-button';
+                        button.textContent = control.actionLabel;
+                        button.onclick = () => control.onAction();
+                        divider.appendChild(button);
+                    }
+                    host.appendChild(divider);
                 }
-                if (control.actionLabel && typeof control.onAction === 'function') {
-                    const button = document.createElement('button');
-                    button.type = 'button';
-                    button.className = 'control-divider-button';
-                    button.textContent = control.actionLabel;
-                    button.onclick = () => control.onAction();
-                    divider.appendChild(button);
-                }
-                host.appendChild(divider);
                 return;
             }
 
-            const item = document.createElement('div');
-            item.className = 'control-item';
+            let item = host.querySelector(`.control-item[data-id="${control.id}"]`);
+            if (!item) {
+                item = document.createElement('div');
+                item.className = 'control-item';
+                item.setAttribute('data-id', control.id);
 
-            const label = document.createElement('label');
-            label.textContent = control.label;
-            item.appendChild(label);
+                if (control.label) {
+                    const label = document.createElement('label');
+                    label.textContent = control.label;
+                    item.appendChild(label);
+                } else {
+                    item.classList.add('no-label');
+                }
 
-            if (control.type === 'slider') {
-                const value = document.createElement('div');
-                value.className = 'control-value';
-                value.textContent = this.formatControlValue(control, control.value);
+                if (control.type === 'slider') {
+                    const valueDisplay = document.createElement('div');
+                    valueDisplay.className = 'control-value';
+                    valueDisplay.id = `val-${control.id}`;
+                    
+                    const input = document.createElement('input');
+                    input.type = 'range';
+                    input.id = `input-${control.id}`;
+                    input.min = String(control.min);
+                    input.max = String(control.max);
+                    input.step = String(control.step);
+                    input.oninput = (e) => {
+                        const nextValue = Number(e.target.value);
+                        valueDisplay.textContent = this.formatControlValue(control, nextValue);
+                        control.onChange(nextValue);
+                    };
 
-                const input = document.createElement('input');
-                input.type = 'range';
-                input.min = String(control.min);
-                input.max = String(control.max);
-                input.step = String(control.step);
-                input.value = String(control.value);
-                input.oninput = (e) => {
-                    const nextValue = Number(e.target.value);
-                    value.textContent = this.formatControlValue(control, nextValue);
-                    control.onChange(nextValue);
-                };
-
-                item.appendChild(value);
-                item.appendChild(input);
-            } else if (control.type === 'select') {
-                const select = document.createElement('select');
-                control.options.forEach((option) => {
-                    const el = document.createElement('option');
-                    el.value = option.value;
-                    el.textContent = option.label;
-                    if (option.value === control.value) el.selected = true;
-                    select.appendChild(el);
-                });
-                select.onchange = (e) => control.onChange(e.target.value);
-                item.appendChild(select);
-            } else if (control.type === 'button') {
-                const button = document.createElement('button');
-                button.type = 'button';
-                button.textContent = control.value || control.label;
-                button.onclick = () => control.onClick();
-                item.appendChild(button);
+                    item.appendChild(valueDisplay);
+                    item.appendChild(input);
+                } else if (control.type === 'select') {
+                    const select = document.createElement('select');
+                    select.id = `input-${control.id}`;
+                    control.options.forEach((option) => {
+                        const el = document.createElement('option');
+                        el.value = option.value;
+                        el.textContent = option.label;
+                        select.appendChild(el);
+                    });
+                    select.onchange = (e) => control.onChange(e.target.value);
+                    item.appendChild(select);
+                } else if (control.type === 'button') {
+                    const button = document.createElement('button');
+                    button.type = 'button';
+                    button.id = `input-${control.id}`;
+                    button.className = 'control-button-main';
+                    button.onclick = () => control.onClick();
+                    item.appendChild(button);
+                }
+                host.appendChild(item);
             }
 
-            host.appendChild(item);
+            // Update existing values
+            const input = document.getElementById(`input-${control.id}`);
+            const display = document.getElementById(`val-${control.id}`);
+            
+            if (input) {
+                if (control.type === 'slider' || control.type === 'select') {
+                    if (document.activeElement !== input) {
+                        input.value = String(control.value);
+                    }
+                } else if (control.type === 'button') {
+                    input.textContent = control.value || control.label;
+                }
+            }
+            if (display) {
+                display.textContent = this.formatControlValue(control, control.value);
+            }
         });
 
         const playBtn = document.getElementById('btn-play');
