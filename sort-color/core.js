@@ -34,7 +34,153 @@ const Core = {
         if (resetBtn) resetBtn.onclick = () => this.resetCase();
         if (bgmBtn) bgmBtn.onclick = () => this.toggleAudio();
         if (nextTrackBtn) nextTrackBtn.onclick = () => this.changeMusicTrack();
+        this.bindAppleHUD();
         this.syncAudioButton();
+    },
+
+    bindAppleHUD() {
+        const applePlay = document.getElementById('apple-play');
+        const appleReset = document.getElementById('apple-full-reset');
+        const applePartial = document.getElementById('apple-partial-reset');
+        const appleSpeedUp = document.getElementById('apple-speed-up');
+        const appleSpeedDown = document.getElementById('apple-speed-down');
+        const appleNext = document.getElementById('apple-next-track');
+        const appleVol = document.getElementById('apple-vol-slider');
+        const appleVolIcon = document.getElementById('apple-vol-icon');
+        const btnToggleView = document.getElementById('btn-toggle-view');
+        const btnHideHud = document.getElementById('btn-hide-hud');
+
+        if (applePlay) applePlay.onclick = () => this.togglePlay();
+        if (appleReset) appleReset.onclick = () => this.resetCase();
+        
+        if (appleVolIcon) appleVolIcon.onclick = () => this.toggleAudio();
+
+        if (applePartial) {
+            applePartial.onclick = () => {
+                if (this.currentCase && typeof this.currentCase.multiplier !== 'undefined') {
+                    this.currentCase.multiplier = 40; 
+                    this.updateControls();
+                }
+            };
+        }
+        if (appleSpeedUp) {
+            appleSpeedUp.onclick = () => {
+                if (this.currentCase && typeof this.currentCase.multiplierSpeed !== 'undefined') {
+                    this.currentCase.multiplierSpeed += 0.05;
+                    this.updateControls();
+                }
+            };
+        }
+        if (appleSpeedDown) {
+            appleSpeedDown.onclick = () => {
+                if (this.currentCase && typeof this.currentCase.multiplierSpeed !== 'undefined') {
+                    this.currentCase.multiplierSpeed -= 0.05;
+                    this.updateControls();
+                }
+            };
+        }
+        if (appleNext) appleNext.onclick = () => this.changeMusicTrack();
+        if (appleVol && window.audioManager) {
+            appleVol.oninput = (e) => {
+                window.audioManager.setTargetVolume(e.target.value);
+                this.syncAudioButton();
+            };
+            appleVol.value = window.audioManager.getTargetVolume();
+        }
+
+        if (btnToggleView) {
+            btnToggleView.onclick = () => {
+                document.body.classList.toggle('full-view-mode');
+                if (this.currentCase && typeof this.currentCase.resize === 'function') {
+                    setTimeout(() => this.currentCase.resize(), 500);
+                }
+            };
+        }
+
+        if (btnHideHud) {
+            btnHideHud.onclick = () => {
+                const hud = document.getElementById('apple-hud');
+                if (hud) hud.classList.add('hidden');
+            };
+        }
+
+        // Add Dragging Support
+        const hud = document.getElementById('apple-hud');
+        if (hud) {
+            let isDragging = false;
+            let dragOffsetX = 0;
+            let dragOffsetY = 0;
+
+            hud.onmousedown = (e) => {
+                if (e.target.closest('button, input')) return;
+                
+                isDragging = true;
+                const rect = hud.getBoundingClientRect();
+                // Store offset from the center of the HUD
+                dragOffsetX = e.clientX - (rect.left + rect.width / 2);
+                dragOffsetY = e.clientY - (rect.top + rect.height / 2);
+                
+                hud.style.transition = 'none';
+                hud.style.cursor = 'grabbing';
+            };
+
+            window.addEventListener('mousemove', (e) => {
+                if (!isDragging) return;
+                // Move HUD center to mouse position minus initial click offset
+                hud.style.left = (e.clientX - dragOffsetX) + 'px';
+                hud.style.top = (e.clientY - dragOffsetY) + 'px';
+                hud.style.bottom = 'auto'; // Release fixed bottom
+                hud.style.transform = 'translate(-50%, -50%)'; // Ensure transform stays for centering
+            });
+
+            window.addEventListener('mouseup', () => {
+                if (isDragging) {
+                    isDragging = false;
+                    hud.style.transition = 'all 0.5s cubic-bezier(0.16, 1, 0.3, 1)';
+                    hud.style.cursor = 'grab';
+                }
+            });
+        }
+
+        // Global Shortcuts
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                const hud = document.getElementById('apple-hud');
+                if (hud) hud.classList.remove('hidden');
+                document.body.classList.remove('full-view-mode');
+                if (this.currentCase && typeof this.currentCase.resize === 'function') {
+                    setTimeout(() => this.currentCase.resize(), 500);
+                }
+            }
+            if (e.code === 'Space') {
+                e.preventDefault();
+                this.togglePlay();
+            }
+        });
+
+        setInterval(() => this.updateAppleHUD(), 500);
+    },
+
+    updateAppleHUD() {
+        // Time
+        const timeEl = document.getElementById('apple-time');
+        if (timeEl) {
+            const elapsed = this.getRecordingElapsedMs();
+            timeEl.textContent = this.formatRecordingTimeMMSS(elapsed);
+        }
+
+        // Play/Pause SVG toggle
+        const applePlay = document.getElementById('apple-play');
+        const playIconSvg = document.getElementById('play-icon-svg');
+        if (applePlay && playIconSvg) {
+            if (this.isRunning) {
+                applePlay.classList.add('is-playing');
+                playIconSvg.innerHTML = `<svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>`;
+            } else {
+                applePlay.classList.remove('is-playing');
+                playIconSvg.innerHTML = `<svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>`;
+            }
+        }
     },
 
     loadCase(caseInstance) {
@@ -65,6 +211,18 @@ const Core = {
         host.innerHTML = '';
 
         this.currentCase.uiConfig.forEach((control) => {
+            if (control.type === 'divider') {
+                const divider = document.createElement('div');
+                divider.className = 'control-divider';
+                if (control.label) {
+                    const text = document.createElement('span');
+                    text.textContent = control.label;
+                    divider.appendChild(text);
+                }
+                host.appendChild(divider);
+                return;
+            }
+
             const item = document.createElement('div');
             item.className = 'control-item';
 
@@ -75,7 +233,7 @@ const Core = {
             if (control.type === 'slider') {
                 const value = document.createElement('div');
                 value.className = 'control-value';
-                value.textContent = String(control.value);
+                value.textContent = this.formatControlValue(control, control.value);
 
                 const input = document.createElement('input');
                 input.type = 'range';
@@ -85,7 +243,7 @@ const Core = {
                 input.value = String(control.value);
                 input.oninput = (e) => {
                     const nextValue = Number(e.target.value);
-                    value.textContent = String(nextValue);
+                    value.textContent = this.formatControlValue(control, nextValue);
                     control.onChange(nextValue);
                 };
 
@@ -117,6 +275,13 @@ const Core = {
         if (playBtn) playBtn.textContent = this.isRunning ? 'Pause' : 'Play';
     },
 
+    formatControlValue(control, value) {
+        if (typeof control.decimals === 'number') {
+            return Number(value).toFixed(control.decimals);
+        }
+        return String(value);
+    },
+
     resetCase() {
         if (!this.currentCase || typeof this.currentCase.reset !== 'function') return;
         this.currentCase.reset();
@@ -132,9 +297,11 @@ const Core = {
         if (!this.currentCase) return;
         if (this.isRunning) {
             if (typeof this.currentCase.stop === 'function') this.currentCase.stop();
+            // Preserve track by using pause()
             if (window.audioManager) window.audioManager.pause();
         } else {
             if (typeof this.currentCase.start === 'function') this.currentCase.start();
+            // Resume if track exists
             if (window.audioManager) window.audioManager.resume();
         }
         this.isRunning = !this.isRunning;
@@ -151,6 +318,11 @@ const Core = {
         if (!isMuted && !window.audioManager.currentTrack) {
             window.audioManager.play(this.getFullTrackPath(this.tracks[0]), { forceSwitch: true });
         }
+        
+        // Update HUD slider to match
+        const appleVol = document.getElementById('apple-vol-slider');
+        if (appleVol) appleVol.value = isMuted ? 0 : window.audioManager.getTargetVolume();
+        
         this.syncAudioButton();
     },
 
@@ -167,8 +339,34 @@ const Core = {
 
     syncAudioButton() {
         const bgmBtn = document.getElementById('btn-bgm');
-        if (!bgmBtn || !window.audioManager) return;
-        bgmBtn.textContent = window.audioManager.isMuted ? 'Sound Off' : 'Sound On';
+        const appleVolIcon = document.getElementById('apple-vol-icon');
+        const appleVolSlider = document.getElementById('apple-vol-slider');
+        
+        if (!window.audioManager) return;
+        const isMuted = window.audioManager.isMuted;
+
+        if (bgmBtn) {
+            bgmBtn.textContent = isMuted ? 'Sound Off' : 'Sound On';
+        }
+
+        if (appleVolIcon) {
+            if (isMuted) {
+                appleVolIcon.innerHTML = `
+                    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                    <line x1="23" y1="9" x2="17" y2="15"></line>
+                    <line x1="17" y1="9" x2="23" y2="15"></line>`;
+                appleVolIcon.style.color = 'var(--apple-accent-red)';
+            } else {
+                appleVolIcon.innerHTML = `
+                    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                    <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>`;
+                appleVolIcon.style.color = 'var(--apple-text-muted)';
+            }
+        }
+
+        if (appleVolSlider) {
+            appleVolSlider.value = isMuted ? 0 : window.audioManager.getTargetVolume();
+        }
     },
 
     getRecordingElapsedMs() {

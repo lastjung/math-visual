@@ -97,8 +97,22 @@ class AudioManager {
         if (Number.isNaN(parsed)) return this.targetVolume;
         const clamped = Math.max(0, Math.min(1, parsed));
         this.targetVolume = clamped;
+        
+        // If user slides volume up from 0 while muted, unmute automatically
+        if (clamped > 0 && this.isMuted) {
+            this.isMuted = false;
+        } else if (clamped === 0 && !this.isMuted) {
+            this.isMuted = true;
+        }
+
         if (!this.isMuted) {
             this.audio.volume = clamped;
+            if (this.currentTrack && this.audio.paused) {
+                this.audio.play().catch(() => {});
+            }
+        } else {
+            this.audio.volume = 0;
+            this.audio.pause();
         }
         return this.targetVolume;
     }

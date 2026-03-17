@@ -18,6 +18,11 @@ const CardioidCircleCase = {
     showHud: true,
     integersOnly: false,
     colorMode: 'angle', // monochrome | angle | length | origin
+    sortMode: 'off', // off | hue
+    sortSpeed: 48,
+    sortProgress: 0,
+    sortPlan: null,
+    sortSignature: '',
     rotation: -Math.PI / 2,
     learningMode: 'off', // off | n-ramp | m-ramp | gcd | integer-snap | mapping | classic | ultimate | mirror-chaos
     classicTargets: [2, 3, 4, 5, 6, 7, 8, 9, 10],
@@ -109,6 +114,7 @@ const CardioidCircleCase = {
                 value: this.pointCount,
                 onChange: (v) => {
                     this.pointCount = Math.max(0, Math.floor(v));
+                    this.restartSort();
                     this.draw();
                 }
             },
@@ -119,12 +125,14 @@ const CardioidCircleCase = {
                 min: 0,
                 max: 100,
                 step: 0.001,
+                decimals: 2,
                 value: this.multiplier,
                 onChange: (v) => {
                     this.multiplier = v;
                     if (this.learningMode === 'n-ramp') {
                         this.learnFixedM = v;
                     }
+                    this.restartSort();
                     this.draw();
                 }
             },
@@ -150,6 +158,7 @@ const CardioidCircleCase = {
                 value: this.lineAlpha,
                 onChange: (v) => {
                     this.lineAlpha = v;
+                    this.restartSort();
                     this.draw();
                 }
             },
@@ -166,7 +175,40 @@ const CardioidCircleCase = {
                 ],
                 onChange: (v) => {
                     this.colorMode = v;
+                    this.restartSort();
                     this.draw();
+                }
+            },
+            {
+                type: 'divider',
+                id: 'mc_sort_divider',
+                label: 'Sorting'
+            },
+            {
+                type: 'select',
+                id: 'mc_sort',
+                label: 'Sorting',
+                value: this.sortMode,
+                options: [
+                    { value: 'off', label: 'Off' },
+                    { value: 'hue', label: 'Hue Radix' }
+                ],
+                onChange: (v) => {
+                    this.sortMode = v;
+                    this.restartSort();
+                    this.draw();
+                }
+            },
+            {
+                type: 'slider',
+                id: 'mc_sort_speed',
+                label: 'Sort Speed',
+                min: 4,
+                max: 180,
+                step: 1,
+                value: this.sortSpeed,
+                onChange: (v) => {
+                    this.sortSpeed = Math.max(1, v);
                 }
             },
             {
@@ -180,6 +222,7 @@ const CardioidCircleCase = {
                 ],
                 onChange: (v) => {
                     this.integersOnly = v === 'on';
+                    this.restartSort();
                     this.draw();
                 }
             },
@@ -203,6 +246,16 @@ const CardioidCircleCase = {
                 label: 'Guide',
                 value: '설명서 보기',
                 onClick: () => this.showGuide()
+            },
+            {
+                type: 'button',
+                id: 'mc_sort_restart',
+                label: 'Restart Sorting',
+                value: 'Sorting 다시 시작',
+                onClick: () => {
+                    this.restartSort();
+                    this.draw();
+                }
             }
         ];
         if (this.learningMode === 'n-ramp') {
@@ -457,6 +510,11 @@ const CardioidCircleCase = {
         this.lineAlpha = 0.4;
         this.integersOnly = false;
         this.colorMode = 'angle';
+        this.sortMode = 'off';
+        this.sortSpeed = 48;
+        this.sortProgress = 0;
+        this.sortPlan = null;
+        this.sortSignature = '';
         this.showHud = true;
         this.learningMode = 'off';
         this.learnFixedM = 0;
@@ -499,20 +557,190 @@ const CardioidCircleCase = {
         };
     },
 
-    lineColor(i, n, from, to, radius) {
-        if (this.colorMode === 'monochrome') return `rgba(167, 243, 208, ${this.lineAlpha})`;
+    lineVisual(i, n, from, to, radius, alphaOverride = null) {
+        const alpha = alphaOverride == null ? this.lineAlpha : alphaOverride;
+        if (this.colorMode === 'monochrome') {
+            return {
+                hue: 160,
+                saturation: 46,
+                lightness: 80,
+                alpha,
+                color: `rgba(167, 243, 208, ${alpha})`
+            };
+        }
         if (this.colorMode === 'angle') {
             const hue = (i / n) * 360;
-            return `hsla(${hue}, 95%, 62%, ${this.lineAlpha})`;
+            return {
+                hue,
+                saturation: 95,
+                lightness: 62,
+                alpha,
+                color: `hsla(${hue}, 95%, 62%, ${alpha})`
+            };
         }
         if (this.colorMode === 'origin') {
             const hue = ((Math.atan2(from.y - to.y, from.x - to.x) + Math.PI) / (2 * Math.PI)) * 360;
-            return `hsla(${hue}, 90%, 62%, ${this.lineAlpha})`;
+            return {
+                hue,
+                saturation: 90,
+                lightness: 62,
+                alpha,
+                color: `hsla(${hue}, 90%, 62%, ${alpha})`
+            };
         }
         const len = Math.hypot(to.x - from.x, to.y - from.y);
         const ratio = Math.max(0, Math.min(1, len / (2 * radius)));
         const hue = 240 - ratio * 220;
-        return `hsla(${hue}, 92%, 60%, ${this.lineAlpha})`;
+        return {
+            hue,
+            saturation: 92,
+            lightness: 60,
+            alpha,
+            color: `hsla(${hue}, 92%, 60%, ${alpha})`
+        };
+    },
+
+    lineColor(i, n, from, to, radius) {
+        return this.lineVisual(i, n, from, to, radius).color;
+    },
+
+    restartSort() {
+        this.sortProgress = 0;
+        this.sortPlan = null;
+        this.sortSignature = '';
+        if (typeof Core !== 'undefined' && Core.currentCase === this) {
+            Core.updateControls();
+        }
+    },
+
+    buildChordData(n, m, radius, cx, cy) {
+        const chords = [];
+        for (let i = 0; i < n; i++) {
+            const from = this.circlePoint(i, n, radius, cx, cy);
+            const j = (m * i) % n;
+            const to = this.circlePointByIndex(j, n, radius, cx, cy);
+            const visual = this.lineVisual(i, n, from, to, radius);
+            chords.push({
+                index: i,
+                from,
+                to,
+                hue: visual.hue,
+                color: visual.color
+            });
+        }
+        return chords;
+    },
+
+    getHueKey(hue) {
+        return Math.max(0, Math.min(359, Math.round(hue)));
+    },
+
+    getSortSignature(n, m) {
+        return [
+            n,
+            m.toFixed(6),
+            this.colorMode,
+            this.sortMode,
+            this.integersOnly ? 1 : 0,
+            this.learningMode
+        ].join('|');
+    },
+
+    ensureSortPlan(chords, n, m) {
+        if (this.sortMode !== 'hue' || this.learningMode !== 'off' || !n) {
+            this.sortPlan = null;
+            this.sortSignature = '';
+            return null;
+        }
+
+        const signature = this.getSortSignature(n, m);
+        if (this.sortPlan && this.sortSignature === signature) {
+            return this.sortPlan;
+        }
+
+        let sourceOrder = chords.map((chord) => ({
+            ...chord,
+            hueKey: this.getHueKey(chord.hue)
+        }));
+        const passes = [];
+        let digitDivisor = 1;
+
+        while (digitDivisor <= 100) {
+            const buckets = Array.from({ length: 10 }, () => []);
+            const digits = [];
+
+            sourceOrder.forEach((entry) => {
+                const digit = Math.floor(entry.hueKey / digitDivisor) % 10;
+                digits.push(digit);
+                buckets[digit].push(entry);
+            });
+
+            const order = buckets.flat();
+            passes.push({
+                digitDivisor,
+                sourceOrder,
+                digits,
+                order,
+                bucketCounts: buckets.map((bucket) => bucket.length)
+            });
+            sourceOrder = order;
+            digitDivisor *= 10;
+        }
+
+        this.sortPlan = {
+            passes,
+            totalSteps: passes.length * n
+        };
+        this.sortSignature = signature;
+        return this.sortPlan;
+    },
+
+    getSortViewState(plan) {
+        if (!plan || !plan.passes.length) return null;
+
+        const totalSteps = plan.totalSteps;
+        const completedSteps = Math.max(0, Math.min(totalSteps, Math.floor(this.sortProgress)));
+        if (completedSteps >= totalSteps) {
+            const finalPass = plan.passes[plan.passes.length - 1];
+            return {
+                passIndex: plan.passes.length - 1,
+                passNumber: plan.passes.length,
+                totalPasses: plan.passes.length,
+                stepInPass: finalPass.order.length,
+                totalInPass: finalPass.order.length,
+                activeDigit: null,
+                bucketCounts: finalPass.bucketCounts,
+                completed: true,
+                drawEntries: finalPass.order,
+                coloredCount: finalPass.order.length
+            };
+        }
+
+        const passLength = plan.passes[0].sourceOrder.length;
+        const passIndex = Math.floor(completedSteps / passLength);
+        const stepInPass = completedSteps % passLength;
+        const pass = plan.passes[passIndex];
+        const processedBuckets = Array.from({ length: 10 }, () => []);
+
+        for (let i = 0; i < stepInPass; i++) {
+            processedBuckets[pass.digits[i]].push(pass.sourceOrder[i]);
+        }
+
+        const drawEntries = processedBuckets.flat().concat(pass.sourceOrder.slice(stepInPass));
+        const activeDigit = stepInPass < pass.digits.length ? pass.digits[stepInPass] : null;
+
+        return {
+            passIndex,
+            passNumber: passIndex + 1,
+            totalPasses: plan.passes.length,
+            stepInPass,
+            totalInPass: pass.sourceOrder.length,
+            activeDigit,
+            bucketCounts: pass.bucketCounts,
+            completed: false,
+            drawEntries,
+            coloredCount: stepInPass
+        };
     },
 
     gcd(a, b) {
@@ -667,6 +895,11 @@ const CardioidCircleCase = {
             }
             return;
         }
+        if (this.sortMode !== 'off' && this.learningMode === 'off') {
+            const n = Math.max(0, Math.floor(this.pointCount));
+            const totalSteps = (this.sortPlan && this.sortPlan.totalSteps) ? this.sortPlan.totalSteps : n * 3;
+            this.sortProgress = Math.min(totalSteps, this.sortProgress + this.sortSpeed * dt);
+        }
         this.multiplier += this.multiplierSpeed * dt;
     },
 
@@ -692,25 +925,63 @@ const CardioidCircleCase = {
         ctx.arc(cx, cy, radius, 0, Math.PI * 2);
         ctx.stroke();
 
+        const mInt = Math.round(m);
+        const gcdValue = (this.learningMode === 'gcd' && n > 0) ? this.gcd(n, this.positiveMod(mInt, n)) : 1;
+        const chords = this.buildChordData(n, m, radius, cx, cy);
+        const sortingActive = this.sortMode === 'hue' && this.learningMode === 'off' && n > 0;
+        const sortPlan = sortingActive ? this.ensureSortPlan(chords, n, m) : null;
+        const sortView = sortingActive ? this.getSortViewState(sortPlan) : null;
+
         ctx.lineWidth = this.lineWidth;
         ctx.save();
         ctx.globalCompositeOperation = 'lighter';
-        const mInt = Math.round(m);
-        const gcdValue = (this.learningMode === 'gcd' && n > 0) ? this.gcd(n, this.positiveMod(mInt, n)) : 1;
-        for (let i = 0; i < n; i++) {
-            const from = this.circlePoint(i, n, radius, cx, cy);
-            const j = (m * i) % n;
-            const to = this.circlePointByIndex(j, n, radius, cx, cy);
-            if (this.learningMode === 'gcd' && gcdValue > 1) {
+
+        if (this.learningMode === 'gcd' && gcdValue > 1) {
+            for (let i = 0; i < n; i++) {
+                const chord = chords[i];
                 const hue = ((i % gcdValue) / gcdValue) * 360;
                 ctx.strokeStyle = `hsla(${hue}, 95%, 62%, ${Math.max(this.lineAlpha, 0.22)})`;
-            } else {
-                ctx.strokeStyle = this.lineColor(i, n, from, to, radius);
+                ctx.beginPath();
+                ctx.moveTo(chord.from.x, chord.from.y);
+                ctx.lineTo(chord.to.x, chord.to.y);
+                ctx.stroke();
             }
-            ctx.beginPath();
-            ctx.moveTo(from.x, from.y);
-            ctx.lineTo(to.x, to.y);
-            ctx.stroke();
+        } else if (sortingActive && sortView) {
+            ctx.strokeStyle = 'rgba(210, 222, 255, 0.08)';
+            for (const chord of sortView.drawEntries) {
+                ctx.beginPath();
+                ctx.moveTo(chord.from.x, chord.from.y);
+                ctx.lineTo(chord.to.x, chord.to.y);
+                ctx.stroke();
+            }
+
+            for (let i = 0; i < sortView.coloredCount; i++) {
+                const chord = sortView.drawEntries[i];
+                ctx.strokeStyle = chord.color;
+                ctx.beginPath();
+                ctx.moveTo(chord.from.x, chord.from.y);
+                ctx.lineTo(chord.to.x, chord.to.y);
+                ctx.stroke();
+            }
+
+            if (!sortView.completed && sortView.stepInPass < sortView.drawEntries.length) {
+                const activeChord = sortView.drawEntries[sortView.coloredCount];
+                ctx.lineWidth = Math.max(this.lineWidth + 1.5, 3);
+                ctx.strokeStyle = 'rgba(255, 209, 102, 0.95)';
+                ctx.beginPath();
+                ctx.moveTo(activeChord.from.x, activeChord.from.y);
+                ctx.lineTo(activeChord.to.x, activeChord.to.y);
+                ctx.stroke();
+                ctx.lineWidth = this.lineWidth;
+            }
+        } else {
+            for (const chord of chords) {
+                ctx.strokeStyle = chord.color;
+                ctx.beginPath();
+                ctx.moveTo(chord.from.x, chord.from.y);
+                ctx.lineTo(chord.to.x, chord.to.y);
+                ctx.stroke();
+            }
         }
         ctx.restore();
 
@@ -738,6 +1009,15 @@ const CardioidCircleCase = {
             ctx.fillText(`Mul: ${hudM.toFixed(3)}`, 24, 52);
             ctx.fillText(`dM/dt: ${hudSpeed.toFixed(3)}`, 24, 74);
             ctx.fillText(`Time: ${timeLabel}`, 24, 96);
+            if (sortingActive && sortView) {
+                const digitLabel = sortView.passIndex === 0 ? '1s' : sortView.passIndex === 1 ? '10s' : '100s';
+                ctx.fillText(`Sort: Hue Radix`, 24, 118);
+                ctx.fillText(`Pass: ${sortView.passNumber}/${sortView.totalPasses} (${digitLabel})`, 24, 140);
+                ctx.fillText(`Step: ${sortView.stepInPass}/${sortView.totalInPass}`, 24, 162);
+                if (sortView.activeDigit != null) {
+                    ctx.fillText(`Bucket: ${sortView.activeDigit}`, 24, 184);
+                }
+            }
         }
 
         if (this.learningMode === 'mapping' && n > 0) {

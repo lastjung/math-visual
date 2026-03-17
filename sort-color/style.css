@@ -93,18 +93,6 @@ select {
   padding: 18px;
 }
 
-.stage-toolbar {
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 16px;
-}
-
-.toolbar-group {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-}
 
 button {
   border: 1px solid rgba(255, 255, 255, 0.12);
@@ -125,7 +113,7 @@ button:hover {
 .canvas-frame {
   position: relative;
   width: 100%;
-  height: 72vh;
+  height: 80vh;
   min-height: 560px;
   border-radius: 18px;
   overflow: hidden;
@@ -154,31 +142,70 @@ button:hover {
   gap: 14px;
 }
 
+.control-divider {
+  position: relative;
+  margin: 10px 0 2px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.control-divider span {
+  display: inline-block;
+  color: var(--accent);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
 .control-item {
-  display: grid;
-  gap: 8px;
-  padding: 14px;
-  border-radius: 16px;
-  background: var(--panel-strong);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 6px 0;
 }
 
 .control-item label {
   color: var(--muted);
-  font-size: 0.92rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  margin: 0;
+  flex: 1;
 }
 
-.control-item input[type="range"],
 .control-item select,
+.control-item input[type="range"] {
+  width: 150px;
+  flex: 0 0 150px;
+  height: 30px;
+  margin: 0;
+}
+
+.control-item select {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  color: white;
+  padding: 0 8px;
+  cursor: pointer;
+}
+
 .control-item button {
-  width: 100%;
+  width: auto;
+  min-width: 100px;
+  padding: 6px 12px;
+  font-size: 0.8rem;
 }
 
 .control-value {
-  color: var(--accent-2);
-  font-size: 0.82rem;
-  font-weight: 600;
+  color: var(--apple-accent-blue);
+  font-size: 0.8rem;
+  font-weight: 700;
+  min-width: 52px;
   text-align: right;
+  font-family: 'IBM Plex Mono', monospace;
+  font-variant-numeric: tabular-nums;
 }
 
 .guide-modal {
@@ -220,5 +247,236 @@ button:hover {
 
   .stage-toolbar {
     flex-direction: column;
+  }
+}
+/* -------------------------------------------------------------------------- */
+/* Game Apple HUD: Premium Glassmorphism UI                                   */
+/* -------------------------------------------------------------------------- */
+
+:root {
+  --apple-glass-bg: rgba(10, 10, 15, 0.4);
+  --apple-glass-blur: blur(32px) saturate(120%);
+  --apple-glass-border: 1px solid rgba(255, 255, 255, 0.08);
+  --apple-accent-blue: #007aff;
+  --apple-accent-red: rgba(255, 69, 58, 0.9);
+  --apple-text: #ffffff;
+  --apple-text-muted: rgba(255, 255, 255, 0.5);
+}
+
+.apple-player {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  height: 52px;
+  padding: 0 20px;
+  background: var(--apple-glass-bg);
+  backdrop-filter: var(--apple-glass-blur);
+  -webkit-backdrop-filter: var(--apple-glass-blur);
+  border: var(--apple-glass-border);
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  width: fit-content;
+  min-width: 420px;
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.5), inset 0 1px 1px rgba(255, 255, 255, 0.1);
+  z-index: 2000;
+  cursor: grab;
+  transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.apple-player:hover {
+  background: rgba(20, 20, 30, 0.5);
+  box-shadow: 0 32px 64px rgba(0, 0, 0, 0.6), inset 0 1px 1px rgba(255, 255, 255, 0.15);
+  bottom: 26px;
+}
+
+.player-controls-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: 24px;
+}
+
+.hud-section {
+  display: flex;
+  align-items: center;
+}
+
+.section-left {
+  gap: 10px;
+}
+
+.hud-item-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.hud-icon-small {
+  width: 18px;
+  height: 18px;
+  color: var(--apple-text-muted);
+}
+
+.section-center {
+  justify-content: center;
+  gap: 16px;
+}
+
+.section-right {
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.hud-separator {
+  width: 1px;
+  height: 20px;
+  background: rgba(255, 255, 255, 0.12);
+  margin: 0 4px;
+}
+
+.time-display {
+  font-family: 'IBM Plex Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--apple-text-muted);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.08em;
+}
+
+/* Apple Buttons */
+.btn-hud-main {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: white;
+  color: black;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  box-shadow: 0 4px 12px rgba(255, 255, 255, 0.2);
+}
+
+.btn-hud-main svg {
+  width: 18px;
+  height: 18px;
+}
+
+.btn-hud-main:hover {
+  transform: scale(1.15);
+  box-shadow: 0 8px 20px rgba(255, 255, 255, 0.4);
+}
+
+.btn-hud-main.is-playing {
+  background: var(--apple-accent-blue);
+  color: white;
+  box-shadow: 0 0 25px rgba(0, 122, 255, 0.6);
+  border: 1.5px solid rgba(255, 255, 255, 0.3);
+}
+
+.btn-hud-mini, .btn-hud-speed {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  padding: 0;
+}
+
+.btn-hud-mini svg, .btn-hud-speed svg {
+  width: 13px;
+  height: 13px;
+}
+
+.btn-hud-mini:hover, .btn-hud-speed:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.2);
+  color: white;
+  transform: translateY(-1px);
+}
+
+.btn-danger {
+  color: rgba(255, 69, 58, 0.7);
+}
+
+.btn-danger:hover {
+  background: rgba(255, 69, 58, 0.15) !important;
+  color: #ff453a !important;
+}
+
+/* Apple Slider */
+.apple-slider-vol {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 70px;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+  outline: none;
+}
+
+.apple-slider-vol::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: white;
+  cursor: pointer;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.4);
+}
+
+/* Full View & Hidden State Support */
+.apple-player.hidden {
+  opacity: 0;
+  transform: translate(-50%, 40px) scale(0.9);
+  pointer-events: none;
+}
+
+.full-view-mode aside.control-panel,
+.full-view-mode header.hero,
+.full-view-mode .stage-toolbar {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.5s ease;
+}
+
+.full-view-mode .layout {
+  grid-template-columns: 1fr;
+}
+
+.full-view-mode .stage-panel {
+  border: none;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+
+.full-view-mode .canvas-frame {
+  height: calc(100vh - 48px);
+}
+
+@media (max-width: 768px) {
+  .apple-player {
+    min-width: calc(100vw - 32px);
+    height: 52px;
+    bottom: 12px;
+  }
+  .player-controls-row {
+    grid-template-columns: 100px 1fr 100px;
+  }
+  .hud-section.section-left, .hud-section.section-right {
+    display: flex;
   }
 }
