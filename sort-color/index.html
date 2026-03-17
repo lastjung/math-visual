@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sort Color</title>
+    <link rel="stylesheet" href="style.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=IBM+Plex+Sans:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="hero">
+        <p class="eyebrow">Standalone Lab</p>
+        <h1>Sort Color</h1>
+        <p class="subtitle">
+          Cardioid circle as a standalone base for color-driven sorting experiments.
+        </p>
+      </header>
+
+      <main class="layout">
+        <section class="stage-panel">
+          <div class="stage-toolbar">
+            <div class="toolbar-group">
+              <button id="btn-play" type="button">Pause</button>
+              <button id="btn-reset" type="button">Reset</button>
+            </div>
+            <div class="toolbar-group">
+              <button id="btn-bgm" type="button">Sound Off</button>
+              <button id="btn-next-track" type="button">Next Track</button>
+            </div>
+          </div>
+          <div class="canvas-frame">
+            <canvas id="mathCanvas"></canvas>
+          </div>
+        </section>
+
+        <aside class="control-panel">
+          <div class="panel-header">
+            <p class="eyebrow">Controls</p>
+            <h2>Cardioid</h2>
+          </div>
+          <div id="control-list" class="control-list"></div>
+        </aside>
+      </main>
+    </div>
+
+    <script src="audio.js"></script>
+    <script src="core.js"></script>
+    <script src="cases/cardioid_circle.js"></script>
+  </body>
+</html>
