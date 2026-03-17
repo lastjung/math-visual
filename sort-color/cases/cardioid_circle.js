@@ -20,7 +20,7 @@ const CardioidCircleCase = {
     integersOnly: false,
     colorMode: 'angle', // monochrome | angle | length | origin
     sortMode: 'off', // off | hue | lsh
-    sortingStatus: 'idle', // idle | running | completed
+    sortingStatus: 'idle', // idle | running | holding | completed
     sortSpeed: 48,
     sortProgress: 0,
     sortPlan: null,
@@ -654,6 +654,84 @@ const CardioidCircleCase = {
         this.sortSignature = '';
     },
 
+    isSortModeAvailable() {
+        return this.sortMode === 'hue' || this.sortMode === 'lsh';
+    },
+
+    buildSortPlanForCurrentState() {
+        const n = Math.max(0, Math.floor(this.pointCount));
+        if (!this.isSortModeAvailable() || n <= 0) return null;
+        const radius = Math.min(this.canvas.width, this.canvas.height) * 0.48;
+        const cx = this.canvas.width / 2;
+        const cy = this.canvas.height / 2;
+        const forceIntegerM = this.learningMode === 'gcd' || this.learningMode === 'integer-snap' || this.learningMode === 'mapping';
+        const m = (this.integersOnly || forceIntegerM) ? Math.round(this.multiplier) : this.multiplier;
+        const chords = this.buildChordData(n, m, radius, cx, cy);
+        const signature = this.getSortSignature(n, m);
+        if (this.sortPlan && this.sortSignature === signature) {
+            return this.sortPlan;
+        }
+
+        let sourceOrder = chords.map((chord) => {
+            const hueKey = this.getHueKey(chord.hue);
+            return {
+                ...chord,
+                hueKey,
+                hueBucket: this.getChannelBucket(hueKey, 359),
+                saturationBucket: this.getChannelBucket(chord.saturation, 100),
+                lightnessBucket: this.getChannelBucket(chord.lightness, 100)
+            };
+        });
+        const passes = [];
+        const passDescriptors = this.sortMode === 'lsh'
+            ? [
+                { key: 'lightnessBucket', label: 'Lightness' },
+                { key: 'saturationBucket', label: 'Saturation' },
+                { key: 'hueBucket', label: 'Hue' }
+            ]
+            : [
+                { key: 'hueKey', divisor: 1, label: 'Hue 1s' },
+                { key: 'hueKey', divisor: 10, label: 'Hue 10s' },
+                { key: 'hueKey', divisor: 100, label: 'Hue 100s' }
+            ];
+
+        for (const descriptor of passDescriptors) {
+            const buckets = Array.from({ length: 10 }, () => []);
+            const digits = [];
+
+            sourceOrder.forEach((entry) => {
+                const digit = descriptor.divisor
+                    ? Math.floor(entry[descriptor.key] / descriptor.divisor) % 10
+                    : entry[descriptor.key];
+                digits.push(digit);
+                buckets[digit].push(entry);
+            });
+
+            const order = buckets.flat();
+            passes.push({
+                digitDivisor: descriptor.divisor || 1,
+                label: descriptor.label,
+                sourceOrder,
+                digits,
+                order,
+                bucketCounts: buckets.map((bucket) => bucket.length)
+            });
+            sourceOrder = order;
+        }
+
+        this.sortPlan = {
+            passes,
+            totalSteps: passes.length * n
+        };
+        this.sortSignature = signature;
+        return this.sortPlan;
+    },
+
+    getSortTotalSteps() {
+        const plan = this.buildSortPlanForCurrentState();
+        return plan?.totalSteps || 0;
+    },
+
     restartSort() {
         if (this.sortMode === 'off') {
             this.resetSortState('idle');
@@ -663,6 +741,52 @@ const CardioidCircleCase = {
         if (typeof Core !== 'undefined' && Core.currentCase === this) {
             Core.updateControls();
         }
+    },
+
+    holdSort() {
+        if (!this.isSortModeAvailable()) return;
+        if (this.sortingStatus === 'running') {
+            this.sortingStatus = 'holding';
+        }
+    },
+
+    toggleSortPlayback() {
+        if (this.sortMode === 'off') {
+            this.sortMode = 'hue';
+        }
+        if (this.sortingStatus === 'running') {
+            this.holdSort();
+            return;
+        }
+        if (this.sortingStatus === 'completed') {
+            this.restartSort();
+            return;
+        }
+        if (this.sortingStatus === 'idle') {
+            this.restartSort();
+            return;
+        }
+        this.sortingStatus = 'running';
+    },
+
+    stepSort(delta) {
+        if (!this.isSortModeAvailable()) {
+            this.sortMode = 'hue';
+        }
+        const totalSteps = this.getSortTotalSteps();
+        if (!totalSteps) return;
+        this.sortingStatus = 'holding';
+        this.sortProgress = Math.max(0, Math.min(totalSteps, this.sortProgress + delta));
+        if (this.sortProgress >= totalSteps) {
+            this.sortingStatus = 'completed';
+        } else if (this.sortProgress <= 0) {
+            this.sortingStatus = 'idle';
+        }
+    },
+
+    resetSortProgress() {
+        if (!this.isSortModeAvailable()) return;
+        this.resetSortState('idle');
     },
 
     getShuffleSignature(n, m) {
@@ -758,7 +882,11 @@ const CardioidCircleCase = {
     },
 
     isSortingEnabled() {
-        return (this.sortingStatus === 'running' || this.sortingStatus === 'completed') && (this.sortMode === 'hue' || this.sortMode === 'lsh') && (this.learningMode === 'off' || this.isPaused);
+        return (
+            this.sortingStatus === 'running'
+            || this.sortingStatus === 'holding'
+            || this.sortingStatus === 'completed'
+        ) && this.isSortModeAvailable() && (this.learningMode === 'off' || this.isPaused);
     },
 
     ensureSortPlan(chords, n, m) {
@@ -767,65 +895,7 @@ const CardioidCircleCase = {
             this.sortSignature = '';
             return null;
         }
-
-        const signature = this.getSortSignature(n, m);
-        if (this.sortPlan && this.sortSignature === signature) {
-            return this.sortPlan;
-        }
-
-        let sourceOrder = chords.map((chord) => {
-            const hueKey = this.getHueKey(chord.hue);
-            return {
-                ...chord,
-                hueKey,
-                hueBucket: this.getChannelBucket(hueKey, 359),
-                saturationBucket: this.getChannelBucket(chord.saturation, 100),
-                lightnessBucket: this.getChannelBucket(chord.lightness, 100)
-            };
-        });
-        const passes = [];
-        const passDescriptors = this.sortMode === 'lsh'
-            ? [
-                { key: 'lightnessBucket', label: 'Lightness' },
-                { key: 'saturationBucket', label: 'Saturation' },
-                { key: 'hueBucket', label: 'Hue' }
-            ]
-            : [
-                { key: 'hueKey', divisor: 1, label: 'Hue 1s' },
-                { key: 'hueKey', divisor: 10, label: 'Hue 10s' },
-                { key: 'hueKey', divisor: 100, label: 'Hue 100s' }
-            ];
-
-        for (const descriptor of passDescriptors) {
-            const buckets = Array.from({ length: 10 }, () => []);
-            const digits = [];
-
-            sourceOrder.forEach((entry) => {
-                const digit = descriptor.divisor
-                    ? Math.floor(entry[descriptor.key] / descriptor.divisor) % 10
-                    : entry[descriptor.key];
-                digits.push(digit);
-                buckets[digit].push(entry);
-            });
-
-            const order = buckets.flat();
-            passes.push({
-                digitDivisor: descriptor.divisor || 1,
-                label: descriptor.label,
-                sourceOrder,
-                digits,
-                order,
-                bucketCounts: buckets.map((bucket) => bucket.length)
-            });
-            sourceOrder = order;
-        }
-
-        this.sortPlan = {
-            passes,
-            totalSteps: passes.length * n
-        };
-        this.sortSignature = signature;
-        return this.sortPlan;
+        return this.buildSortPlanForCurrentState();
     },
 
     getSortViewState(plan) {
@@ -1100,6 +1170,7 @@ const CardioidCircleCase = {
     },
 
     updateSortingState(dt) {
+        if (this.sortingStatus !== 'running') return;
         if (!this.isSortingEnabled()) return;
         const n = Math.max(0, Math.floor(this.pointCount));
         const totalSteps = (this.sortPlan && this.sortPlan.totalSteps) ? this.sortPlan.totalSteps : n * 3;

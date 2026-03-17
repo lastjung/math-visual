@@ -4,14 +4,53 @@ const Core = {
     recordingStartMs: performance.now(),
     BGM_BASE: '../visualization/assets/music/bgm/',
     tracks: [
-        'math/Math_01_Minimalist_Sine_Pulse.mp3',
-        'math/Math_09_Fibonacci_Golden_Ratio.mp3',
-        'math/Math_16_Coordinate_Plane_Ambient.mp3',
-        'math/Math_20_Theorem_Q.E.D..mp3',
-        'piano-shorts/Piano_Short_12_Minimal_Cycle_Full_HQ.mp3',
-        'piano-shorts/Piano_Short_21_Spring_Blossom_Full_HQ.mp3',
-        'piano-shorts/Piano_Short_38_Lofi_Chill_Full_HQ.mp3',
-        'lofi/Lofi_80_Batch_12.mp3'
+        'math/Math_01_Minimalist_Sine_Pulse.mp3', 'math/Math_02_Fractal_Recursive_Ambient.mp3',
+        'math/Math_03_Euclidean_Polyrhythm.mp3', 'math/Math_04_Cybernetic_Grid_Logic.mp3',
+        'math/Math_05_Infinite_Series_Flow.mp3', 'math/Math_06_Binary_Symphony.mp3',
+        'math/Math_07_Quantum_Resonance.mp3', 'math/Math_08_Geometric_Vector_Motion.mp3',
+        'math/Math_09_Fibonacci_Golden_Ratio.mp3', 'math/Math_10_Bitwise_Glitch_Architecture.mp3',
+        'math/Math_11_Calculus_Flow.mp3', 'math/Math_12_Neural_Network_Synapse.mp3',
+        'math/Math_13_Retro_8-bit_Math.mp3', 'math/Math_14_Primality_Test_Beat.mp3',
+        'math/Math_15_Deep_Space_Topology.mp3', 'math/Math_16_Coordinate_Plane_Ambient.mp3',
+        'math/Math_17_Mathematical_Induction.mp3', 'math/Math_18_Lo-fi_Coding_Marathon.mp3',
+        'math/Math_19_Abstract_Set_Theory.mp3', 'math/Math_20_Theorem_Q.E.D..mp3',
+        'piano-shorts/Piano_Short_01_Nocturne_Full_HQ.mp3', 'piano-shorts/Piano_Short_02_Moonlight_Full_HQ.mp3',
+        'piano-shorts/Piano_Short_03_Claire_Full_HQ.mp3', 'piano-shorts/Piano_Short_04_Liebestraum_Full_HQ.mp3',
+        'piano-shorts/Piano_Short_05_Gymnopedie_Full_HQ.mp3', 'piano-shorts/Piano_Short_06_Classical_Sonata_Full_HQ.mp3',
+        'piano-shorts/Piano_Short_07_Rach_Grand_Full_HQ.mp3', 'piano-shorts/Piano_Short_08_River_Flows_Full_HQ.mp3',
+        'piano-shorts/Piano_Short_09_Hisaishi_Fantasy_Full_HQ.mp3', 'piano-shorts/Piano_Short_10_Jazz_Mood_Full_HQ.mp3',
+        'piano-shorts/Piano_Short_11_Ragtime_Fun_Full_HQ.mp3', 'piano-shorts/Piano_Short_12_Minimal_Cycle_Full_HQ.mp3',
+        'piano-shorts/Piano_Short_13_Cinematic_Tear_Full_HQ.mp3', 'piano-shorts/Piano_Short_14_Pop_Vibe_Full_HQ.mp3',
+        'piano-shorts/Piano_Short_15_Mystery_Night_Full_HQ.mp3', 'piano-shorts/Piano_Short_16_Morning_Dew_Full_HQ.mp3',
+        'piano-shorts/Piano_Short_17_Rainy_Window_Full_HQ.mp3', 'piano-shorts/Piano_Short_18_Soulful_Touch_Full_HQ.mp3',
+        'piano-shorts/Piano_Short_19_Wedding_Grace_Full_HQ.mp3', 'piano-shorts/Piano_Short_20_Grand_Power_Full_HQ.mp3',
+        'piano-shorts/Piano_Short_21_Spring_Blossom_Full_HQ.mp3', 'piano-shorts/Piano_Short_22_Bossa_Cafe_Full_HQ.mp3',
+        'piano-shorts/Piano_Short_23_Tango_Full_HQ.mp3', 'piano-shorts/Piano_Short_24_Black_Keys_Full_HQ.mp3',
+        'piano-shorts/Piano_Short_25_Winter_Fire_Full_HQ.mp3', 'piano-shorts/Piano_Short_26_Space_Walk_Full_HQ.mp3',
+        'piano-shorts/Piano_Short_27_Music_Box_Full_HQ.mp3', 'piano-shorts/Piano_Short_28_French_Waltz_Full_HQ.mp3',
+        'piano-shorts/Piano_Short_29_Dark_Gothic_Full_HQ.mp3', 'piano-shorts/Piano_Short_30_Vlog_Loop_Full_HQ.mp3',
+        'piano-shorts/Piano_Short_31_Toy_March_Full_HQ.mp3', 'piano-shorts/Piano_Short_32_Sad_Elegy_Full_HQ.mp3',
+        'piano-shorts/Piano_Short_33_Summer_Sea_Full_HQ.mp3', 'piano-shorts/Piano_Short_34_Swing_Jazz_Full_HQ.mp3',
+        'piano-shorts/Piano_Short_35_Wedding_Full_HQ.mp3', 'piano-shorts/Piano_Short_36_Epic_Power_Full_HQ.mp3',
+        'piano-shorts/Piano_Short_37_Nostalgia_Full_HQ.mp3', 'piano-shorts/Piano_Short_38_Lofi_Chill_Full_HQ.mp3',
+        'piano-shorts/Piano_Short_39_Impromptu_Full_HQ.mp3', 'piano-shorts/Piano_Short_40_Lullaby_Full_HQ.mp3',
+        'lofi/EXO_Crown_Lofi_Remix_v2_Safe.mp3', 'lofi/LifeGoesOn_Lofi_Safe_V01.mp3',
+        'lofi/Lofi_80_Batch_01.mp3', 'lofi/Lofi_80_Batch_02.mp3',
+        'lofi/Lofi_80_Batch_03.mp3', 'lofi/Lofi_80_Batch_04.mp3',
+        'lofi/Lofi_80_Batch_05.mp3', 'lofi/Lofi_80_Batch_06.mp3',
+        'lofi/Lofi_80_Batch_07.mp3', 'lofi/Lofi_80_Batch_08.mp3',
+        'lofi/Lofi_80_Batch_09.mp3', 'lofi/Lofi_80_Batch_10.mp3',
+        'lofi/Lofi_80_Batch_11.mp3', 'lofi/Lofi_80_Batch_12.mp3',
+        'lofi/Lofi_80_Batch_13.mp3', 'lofi/Lofi_80_Batch_14.mp3',
+        'lofi/Lofi_80_Batch_15.mp3', 'lofi/Lofi_80_Batch_16.mp3',
+        'lofi/Lofi_80_Batch_17.mp3', 'lofi/Lofi_80_Batch_18.mp3',
+        'lofi/Lofi_80_Batch_19.mp3', 'lofi/Lofi_80_Batch_20.mp3',
+        'lofi/Lofi_80_Batch_21.mp3', 'lofi/Lofi_80_Batch_22.mp3',
+        'lofi/Lofi_80_Batch_23.mp3', 'lofi/Lofi_80_Batch_24.mp3',
+        'lofi/Lofi_80_Batch_25.mp3', 'lofi/Lofi_80_Batch_26.mp3',
+        'lofi/Lofi_80_Batch_27.mp3', 'lofi/Lofi_80_Batch_28.mp3',
+        'lofi/Lofi_80_Batch_29.mp3', 'lofi/Lofi_80_Batch_30.mp3',
+        'lofi/Lofi_80_Relaxing_V01_Full.mp3'
     ],
 
     init() {
@@ -34,11 +73,11 @@ const Core = {
         if (resetBtn) resetBtn.onclick = () => this.resetCase();
         if (bgmBtn) bgmBtn.onclick = () => this.toggleAudio();
         if (nextTrackBtn) nextTrackBtn.onclick = () => this.changeMusicTrack();
-        this.bindAppleHUD();
+        this.bindSortBar();
         this.syncAudioButton();
     },
 
-    bindAppleHUD() {
+    bindSortBar() {
         const applePlay = document.getElementById('apple-play');
         const appleReset = document.getElementById('apple-full-reset');
         const applePartial = document.getElementById('apple-partial-reset');
@@ -53,40 +92,44 @@ const Core = {
         if (applePlay) {
             applePlay.onclick = () => {
                 if (this.currentCase && typeof this.currentCase.sortMode !== 'undefined') {
-                    // Set to a sorting mode if turned off
-                    if (this.currentCase.sortMode === 'off') {
-                        this.currentCase.sortMode = 'hue';
-                    }
-                    this.currentCase.restartSort();
-                    this.updateAppleHUD();
+                    this.currentCase.toggleSortPlayback();
+                    this.updateSortBar();
                 }
             };
         }
-        if (appleReset) appleReset.onclick = () => this.resetCase();
+        if (appleReset) {
+            appleReset.onclick = () => {
+                this.resetCase();
+                this.updateSortBar();
+            };
+        }
         
         if (appleVolIcon) appleVolIcon.onclick = () => this.toggleAudio();
 
         if (applePartial) {
             applePartial.onclick = () => {
-                if (this.currentCase && typeof this.currentCase.multiplier !== 'undefined') {
-                    this.currentCase.multiplier = 40; 
-                    this.updateControls();
+                if (this.currentCase && typeof this.currentCase.resetSortProgress === 'function') {
+                    this.currentCase.resetSortProgress();
+                    this.currentCase.draw();
+                    this.updateSortBar();
                 }
             };
         }
         if (appleSpeedUp) {
             appleSpeedUp.onclick = () => {
-                if (this.currentCase && typeof this.currentCase.multiplierSpeed !== 'undefined') {
-                    this.currentCase.multiplierSpeed += 0.05;
-                    this.updateControls();
+                if (this.currentCase && typeof this.currentCase.stepSort === 'function') {
+                    this.currentCase.stepSort(1);
+                    this.currentCase.draw();
+                    this.updateSortBar();
                 }
             };
         }
         if (appleSpeedDown) {
             appleSpeedDown.onclick = () => {
-                if (this.currentCase && typeof this.currentCase.multiplierSpeed !== 'undefined') {
-                    this.currentCase.multiplierSpeed -= 0.05;
-                    this.updateControls();
+                if (this.currentCase && typeof this.currentCase.stepSort === 'function') {
+                    this.currentCase.stepSort(-1);
+                    this.currentCase.draw();
+                    this.updateSortBar();
                 }
             };
         }
@@ -110,45 +153,45 @@ const Core = {
 
         if (btnHideHud) {
             btnHideHud.onclick = () => {
-                const hud = document.getElementById('apple-hud');
-                if (hud) hud.classList.add('hidden');
+                const bar = document.getElementById('sort-bar');
+                if (bar) bar.classList.add('hidden');
             };
         }
 
         // Add Dragging Support
-        const hud = document.getElementById('apple-hud');
-        if (hud) {
+        const bar = document.getElementById('sort-bar');
+        if (bar) {
             let isDragging = false;
             let dragOffsetX = 0;
             let dragOffsetY = 0;
 
-            hud.onmousedown = (e) => {
+            bar.onmousedown = (e) => {
                 if (e.target.closest('button, input')) return;
                 
                 isDragging = true;
-                const rect = hud.getBoundingClientRect();
-                // Store offset from the center of the HUD
+                const rect = bar.getBoundingClientRect();
+                // Store offset from the center of the bar
                 dragOffsetX = e.clientX - (rect.left + rect.width / 2);
                 dragOffsetY = e.clientY - (rect.top + rect.height / 2);
                 
-                hud.style.transition = 'none';
-                hud.style.cursor = 'grabbing';
+                bar.style.transition = 'none';
+                bar.style.cursor = 'grabbing';
             };
 
             window.addEventListener('mousemove', (e) => {
                 if (!isDragging) return;
-                // Move HUD center to mouse position minus initial click offset
-                hud.style.left = (e.clientX - dragOffsetX) + 'px';
-                hud.style.top = (e.clientY - dragOffsetY) + 'px';
-                hud.style.bottom = 'auto'; // Release fixed bottom
-                hud.style.transform = 'translate(-50%, -50%)'; // Ensure transform stays for centering
+                // Move bar center to mouse position minus initial click offset
+                bar.style.left = (e.clientX - dragOffsetX) + 'px';
+                bar.style.top = (e.clientY - dragOffsetY) + 'px';
+                bar.style.bottom = 'auto'; // Release fixed bottom
+                bar.style.transform = 'translate(-50%, -50%)'; // Ensure transform stays for centering
             });
 
             window.addEventListener('mouseup', () => {
                 if (isDragging) {
                     isDragging = false;
-                    hud.style.transition = 'all 0.5s cubic-bezier(0.16, 1, 0.3, 1)';
-                    hud.style.cursor = 'grab';
+                    bar.style.transition = 'all 0.5s cubic-bezier(0.16, 1, 0.3, 1)';
+                    bar.style.cursor = 'grab';
                 }
             });
         }
@@ -156,8 +199,8 @@ const Core = {
         // Global Shortcuts
         window.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
-                const hud = document.getElementById('apple-hud');
-                if (hud) hud.classList.remove('hidden');
+                const bar = document.getElementById('sort-bar');
+                if (bar) bar.classList.remove('hidden');
                 document.body.classList.remove('full-view-mode');
                 if (this.currentCase && typeof this.currentCase.resize === 'function') {
                     setTimeout(() => this.currentCase.resize(), 500);
@@ -165,14 +208,17 @@ const Core = {
             }
             if (e.code === 'Space') {
                 e.preventDefault();
-                this.togglePlay();
+                if (this.currentCase && typeof this.currentCase.toggleSortPlayback === 'function') {
+                    this.currentCase.toggleSortPlayback();
+                    this.updateSortBar();
+                }
             }
         });
 
-        setInterval(() => this.updateAppleHUD(), 500);
+        setInterval(() => this.updateSortBar(), 500);
     },
 
-    updateAppleHUD() {
+    updateSortBar() {
         // Time
         const timeEl = document.getElementById('apple-time');
         if (timeEl) {
@@ -180,22 +226,31 @@ const Core = {
             timeEl.textContent = this.formatRecordingTimeMMSS(elapsed);
         }
 
-        // Sorting Icon toggle
+        // Play/Pause icon toggle based on sorting status
         const applePlay = document.getElementById('apple-play');
         const playIconSvg = document.getElementById('play-icon-svg');
         if (applePlay && playIconSvg) {
             const isSorting = this.currentCase
                 && this.currentCase.sortMode !== 'off'
                 && this.currentCase.sortingStatus === 'running';
+            const isHolding = this.currentCase
+                && this.currentCase.sortMode !== 'off'
+                && this.currentCase.sortingStatus === 'holding';
             
             if (isSorting) {
                 applePlay.classList.add('is-playing');
-                // Sparkle or active sort icon
-                playIconSvg.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5h10"></path><path d="M11 9h7"></path><path d="M11 13h4"></path><path d="M3 17l3 3 3-3"></path><path d="M6 18V4"></path></svg>`;
+                // Pause (Hold) icon
+                playIconSvg.innerHTML = `<svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>`;
+                applePlay.title = 'Hold Sorting';
+            } else if (isHolding) {
+                applePlay.classList.remove('is-playing');
+                playIconSvg.innerHTML = `<svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>`;
+                applePlay.title = 'Resume Sorting';
             } else {
                 applePlay.classList.remove('is-playing');
-                // Normal sort icon
-                playIconSvg.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5h10"></path><path d="M11 9h7"></path><path d="M11 13h4"></path><path d="M3 17l3 3 3-3"></path><path d="M6 18V4"></path></svg>`;
+                // Play icon
+                playIconSvg.innerHTML = `<svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>`;
+                applePlay.title = 'Start Sorting';
             }
         }
     },
@@ -216,8 +271,7 @@ const Core = {
     ensureTrack() {
         if (!window.audioManager) return;
         if (!window.audioManager.currentTrack) {
-            const picked = this.getFullTrackPath(this.tracks[0]);
-            window.audioManager.play(picked, { forceSwitch: true });
+            this.pickMusicTrack(false, false);
         }
         this.syncAudioButton();
     },
@@ -342,6 +396,7 @@ const Core = {
         }
         this.isRunning = true;
         this.recordingStartMs = performance.now();
+        this.pickMusicTrack(true, false);
         this.updateControls();
     },
 
@@ -372,11 +427,43 @@ const Core = {
         return track.startsWith('assets/') ? track : `${this.BGM_BASE}${track}`;
     },
 
+    pickMusicTrack(autoPlay = true, manualSequential = false) {
+        if (!window.audioManager || this.tracks.length === 0) return;
+
+        let selectedTrack;
+        const currentTrackUrl = window.audioManager.currentTrack || '';
+        const currentTrackFilename = currentTrackUrl.replace(this.BGM_BASE, '');
+
+        if (manualSequential && currentTrackFilename) {
+            const genre = currentTrackFilename.split('/')[0];
+            const genreTracks = this.tracks.filter((track) => track.startsWith(`${genre}/`));
+            if (genreTracks.length > 0) {
+                const currentIndex = genreTracks.indexOf(currentTrackFilename);
+                const nextIndex = (currentIndex + 1) % genreTracks.length;
+                selectedTrack = genreTracks[nextIndex];
+            }
+        }
+
+        if (!selectedTrack) {
+            const candidates = this.tracks.filter((track) => track !== currentTrackFilename);
+            const pool = candidates.length > 0 ? candidates : this.tracks;
+            selectedTrack = pool[Math.floor(Math.random() * pool.length)];
+        }
+
+        const url = this.getFullTrackPath(selectedTrack);
+        if (autoPlay) {
+            window.audioManager.play(url, { forceSwitch: true });
+        } else {
+            window.audioManager.currentTrack = url;
+            window.audioManager.audio.src = url;
+        }
+    },
+
     toggleAudio() {
         if (!window.audioManager) return;
         const isMuted = window.audioManager.toggleMute();
         if (!isMuted && !window.audioManager.currentTrack) {
-            window.audioManager.play(this.getFullTrackPath(this.tracks[0]), { forceSwitch: true });
+            this.pickMusicTrack(true, false);
         }
         
         // Update HUD slider to match
@@ -387,13 +474,7 @@ const Core = {
     },
 
     changeMusicTrack() {
-        if (!window.audioManager) return;
-        const current = window.audioManager.currentTrack
-            ? window.audioManager.currentTrack.split(this.BGM_BASE)[1]
-            : null;
-        const currentIndex = current ? this.tracks.indexOf(current) : -1;
-        const nextTrack = this.tracks[(currentIndex + 1 + this.tracks.length) % this.tracks.length];
-        window.audioManager.play(this.getFullTrackPath(nextTrack), { forceSwitch: true });
+        this.pickMusicTrack(true, true);
         this.syncAudioButton();
     },
 

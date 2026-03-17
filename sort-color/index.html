@@ -39,8 +39,8 @@
       </main>
     </div>
 
-    <!-- Apple Premium HUD: Play Box -->
-    <div id="apple-hud" class="apple-player">
+    <!-- Apple Premium Sort Bar: Play Box -->
+    <div id="sort-bar" class="apple-player">
       <div class="player-controls-row">
         <!-- Left Section: Audio Controls -->
         <div class="hud-section section-left">
@@ -51,7 +51,7 @@
             </svg>
             <input type="range" id="apple-vol-slider" class="apple-slider-vol" min="0" max="1" step="0.01" value="0.15" />
           </div>
-          <button id="apple-next-track" class="btn-hud-mini" title="Next Track">
+          <button id="apple-next-track" class="btn-bar-mini" title="Next Track">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
               <polygon points="5 4 15 12 5 20 5 4"></polygon>
               <line x1="19" y1="5" x2="19" y2="19"></line>
@@ -61,34 +61,30 @@
 
         <!-- Center Section: Playback Controls -->
         <div class="hud-section section-center">
-          <button id="apple-partial-reset" class="btn-hud-mini" title="Partial Reset">
+          <button id="apple-partial-reset" class="btn-bar-mini" title="Reset Sort">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
               <path d="M9 14L4 9L9 4"></path>
               <path d="M20 20v-7a4 4 0 0 0-4-4H4"></path>
             </svg>
           </button>
-          <button id="apple-speed-down" class="btn-hud-speed" title="Slow Down">
+          <button id="apple-speed-down" class="btn-bar-speed" title="Step Back">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
               <path d="M11 17l-5-5 5-5M18 17l-5-5 5-5"></path>
             </svg>
           </button>
-          <button id="apple-play" class="btn-hud-main" title="Start Sorting">
+          <button id="apple-play" class="btn-bar-main" title="Start Sorting">
             <div id="play-icon-svg">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M11 5h10"></path>
-                <path d="M11 9h7"></path>
-                <path d="M11 13h4"></path>
-                <path d="M3 17l3 3 3-3"></path>
-                <path d="M6 18V4"></path>
+              <svg viewBox="0 0 24 24" fill="currentColor">
+                <polygon points="5 3 19 12 5 21 5 3"></polygon>
               </svg>
             </div>
           </button>
-          <button id="apple-speed-up" class="btn-hud-speed" title="Speed Up">
+          <button id="apple-speed-up" class="btn-bar-speed" title="Step Forward">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
               <path d="M13 17l5-5-5-5M6 17l5-5-5-5"></path>
             </svg>
           </button>
-          <button id="apple-full-reset" class="btn-hud-mini" title="Full Reset">
+          <button id="apple-full-reset" class="btn-bar-mini" title="Reset Case">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
               <path d="M21 2v6h-6"></path>
               <path d="M3 12a9 9 0 0 1 15-6.7L21 8"></path>
@@ -100,12 +96,12 @@
 
         <!-- Right Section: Info & UI Controls -->
         <div class="hud-section section-right">
-          <button id="btn-toggle-view" class="btn-hud-mini" title="Full View">
+          <button id="btn-toggle-view" class="btn-bar-mini" title="Full View">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
               <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>
             </svg>
           </button>
-          <button id="btn-hide-hud" class="btn-hud-mini btn-danger" title="Close HUD">
+          <button id="btn-hide-hud" class="btn-bar-mini btn-danger" title="Close Bar">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
               <line x1="18" y1="6" x2="6" y2="18"></line>
               <line x1="6" y1="6" x2="18" y2="18"></line>
