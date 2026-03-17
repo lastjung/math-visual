@@ -605,15 +605,32 @@ button:hover {
 }
 
 .full-view-mode aside.control-panel,
-.full-view-mode header.hero,
-.full-view-mode .stage-toolbar {
+.full-view-mode .stage-toolbar,
+.full-view-mode .panel-restore {
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.5s ease;
 }
 
+.full-view-mode header.hero {
+  display: none;
+}
+
+.full-view-mode aside.control-panel {
+  display: none;
+}
+
+.full-view-mode .app-shell {
+  width: min(100vw - 20px, 1600px);
+  margin-top: 0;
+  padding-top: 4px;
+  padding-bottom: 8px;
+}
+
 .full-view-mode .layout {
   grid-template-columns: 1fr;
+  gap: 0;
+  margin-top: -6px;
 }
 
 .full-view-mode .stage-panel {
@@ -621,10 +638,14 @@ button:hover {
   background: transparent;
   box-shadow: none;
   backdrop-filter: none;
+  padding: 0;
+  margin-top: 8px;
 }
 
 .full-view-mode .canvas-frame {
-  height: calc(100vh - 48px);
+  height: calc(100vh - 72px);
+  min-height: 0;
+  border-radius: 16px;
 }
 
 @media (max-width: 768px) {

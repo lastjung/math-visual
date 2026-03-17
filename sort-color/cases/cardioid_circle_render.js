@@ -142,10 +142,9 @@ const CardioidCircleRender = {
             const sortLabel = this.sortMode === 'lsh' ? 'L-S-H Radix' : 'Hue Radix';
             const digitLabel = sortPlan?.passes?.[sortView.passIndex]?.label || `Pass ${sortView.passNumber}`;
             ctx.fillText(`Sort: ${sortLabel}`, 24, 52);
-            ctx.fillText(`Pass: ${sortView.passNumber}/${sortView.totalPasses} (${digitLabel})`, 24, 74);
-            ctx.fillText(`Pass Time: ${passTimeLabel || '0.0s / 0.0s'}`, 24, 96);
+            ctx.fillText(`Pass: ${digitLabel}`, 24, 74);
             if (sortView.activeDigit != null) {
-                ctx.fillText(`Bucket: ${sortView.activeDigit}`, 24, 118);
+                ctx.fillText(`Bucket: ${sortView.activeDigit}`, 24, 96);
             }
         } else if (this.isSortModeAvailable()) {
             const sortLabel = this.sortMode === 'lsh' ? 'L-S-H Radix' : 'Hue Radix';

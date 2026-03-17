@@ -320,9 +320,22 @@ const CardioidCircleSorting = {
         ctx.fill();
         ctx.stroke();
 
+        let passTimeLabel = '0.0s / 0.0s';
+        if (this.sortSpeed > 0 && sortView.totalInPass > 0) {
+            const passElapsedSeconds = sortView.stepInPass / this.sortSpeed;
+            const passTotalSeconds = sortView.totalInPass / this.sortSpeed;
+            passTimeLabel = `${Math.max(0, passElapsedSeconds).toFixed(1)}s / ${Math.max(0, passTotalSeconds).toFixed(1)}s`;
+        }
+
         ctx.fillStyle = 'rgba(255,255,255,0.9)';
         ctx.font = '600 12px Inter, system-ui, sans-serif';
         ctx.fillText(sortView.passLabel || 'Buckets', panelX + 14, panelY + 20);
+        ctx.save();
+        ctx.textAlign = 'right';
+        ctx.fillStyle = 'rgba(255,255,255,0.72)';
+        ctx.font = '600 10px IBM Plex Sans, sans-serif';
+        ctx.fillText(passTimeLabel, panelX + panelW - 14, panelY + 20);
+        ctx.restore();
         ctx.fillStyle = 'rgba(255,255,255,0.56)';
         ctx.font = '500 10px IBM Plex Sans, sans-serif';
         ctx.fillText(`Pass ${sortView.passNumber}/${sortView.totalPasses}`, panelX + 14, panelY + 32);
