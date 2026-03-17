@@ -189,7 +189,6 @@ const CardioidCircleCase = {
                 value: this.lineAlpha,
                 onChange: (v) => {
                     this.lineAlpha = v;
-                    this.restartSort();
                     this.draw();
                 }
             },

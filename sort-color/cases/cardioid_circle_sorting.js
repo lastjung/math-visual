@@ -222,6 +222,7 @@ const CardioidCircleSorting = {
                 hue: visual.hue,
                 saturation: visual.saturation,
                 lightness: visual.lightness,
+                alpha: visual.alpha,
                 color: visual.color
             });
         }

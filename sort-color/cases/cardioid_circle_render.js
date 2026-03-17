@@ -84,7 +84,8 @@ const CardioidCircleRender = {
                 ctx.stroke();
 
                 if (k < sortView.coloredCount) {
-                    ctx.strokeStyle = chord.color;
+                    const active = this.lineVisual(chord.originalIndex, lockedN, geoFrom, geoTo, radius);
+                    ctx.strokeStyle = active.color;
                     ctx.beginPath();
                     ctx.moveTo(geoFrom.x, geoFrom.y);
                     ctx.lineTo(geoTo.x, geoTo.y);
