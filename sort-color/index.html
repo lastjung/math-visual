@@ -23,21 +23,38 @@
       </header>
 
       <main class="layout">
+        <aside id="sorting-panel" class="control-panel panel-sorting">
+          <div class="panel-header">
+            <div>
+              <p class="eyebrow">Sorting</p>
+              <h2>Transport</h2>
+            </div>
+            <button id="sorting-panel-close" class="panel-close" title="Close Sorting Panel">×</button>
+          </div>
+          <div id="sorting-control-list" class="control-list"></div>
+        </aside>
+
         <section class="stage-panel">
           <div class="canvas-frame">
             <canvas id="mathCanvas"></canvas>
           </div>
         </section>
 
-        <aside class="control-panel">
+        <aside id="generator-panel" class="control-panel panel-generator">
           <div class="panel-header">
-            <p class="eyebrow">Controls</p>
-            <h2>Cardioid</h2>
+            <div>
+              <p class="eyebrow">Generator</p>
+              <h2>Cardioid</h2>
+            </div>
+            <button id="generator-panel-close" class="panel-close" title="Close Generator Panel">×</button>
           </div>
-          <div id="control-list" class="control-list"></div>
+          <div id="generator-control-list" class="control-list"></div>
         </aside>
       </main>
     </div>
+
+    <button id="sorting-panel-restore" class="panel-restore panel-restore-left hidden" title="Show Sorting Panel">Sorting</button>
+    <button id="generator-panel-restore" class="panel-restore panel-restore-right hidden" title="Show Generator Panel">Generator</button>
 
     <!-- Apple Premium Sort Bar: Play Box -->
     <div id="sort-bar" class="apple-player">
@@ -115,6 +132,7 @@
     <script src="audio.js"></script>
     <script src="core.js"></script>
     <script src="cases/cardioid_circle_sorting.js"></script>
+    <script src="cases/cardioid_circle_render.js"></script>
     <script src="cases/cardioid_circle.js"></script>
   </body>
 </html>

@@ -55,6 +55,7 @@ const Core = {
 
     init() {
         this.bindToolbar();
+        this.bindSidePanels();
         this.loadCase(CardioidCircleCase);
         window.addEventListener('resize', () => {
             if (this.currentCase && typeof this.currentCase.resize === 'function') {
@@ -276,12 +277,48 @@ const Core = {
         this.syncAudioButton();
     },
 
-    updateControls() {
-        const host = document.getElementById('control-list');
-        if (!host || !this.currentCase || !Array.isArray(this.currentCase.uiConfig)) return;
+    bindSidePanels() {
+        this.bindPanelToggle('sorting-panel', 'sorting-panel-close', 'sorting-panel-restore');
+        this.bindPanelToggle('generator-panel', 'generator-panel-close', 'generator-panel-restore');
+    },
+
+    bindPanelToggle(panelId, closeId, restoreId) {
+        const panel = document.getElementById(panelId);
+        const closeBtn = document.getElementById(closeId);
+        const restoreBtn = document.getElementById(restoreId);
+        if (!panel) return;
+
+        if (closeBtn) {
+            closeBtn.onclick = () => {
+                panel.classList.add('hidden');
+                if (restoreBtn) restoreBtn.classList.remove('hidden');
+            };
+        }
+
+        if (restoreBtn) {
+            restoreBtn.onclick = () => {
+                panel.classList.remove('hidden');
+                restoreBtn.classList.add('hidden');
+            };
+        }
+    },
+
+    isSortingControl(control) {
+        if (!control || !control.id) return false;
+        const sortingIds = new Set([
+            'mc_sort_divider',
+            'mc_sort',
+            'mc_sort_speed',
+            'mc_sort_restart'
+        ]);
+        return sortingIds.has(control.id);
+    },
+
+    renderControlList(host, controls) {
+        if (!host) return;
         host.innerHTML = '';
 
-        this.currentCase.uiConfig.forEach((control) => {
+        controls.forEach((control) => {
             if (control.type === 'divider') {
                 const divider = document.createElement('div');
                 divider.className = 'control-divider';
@@ -373,6 +410,23 @@ const Core = {
 
             host.appendChild(item);
         });
+    },
+
+    updateControls() {
+        const generatorHost = document.getElementById('generator-control-list');
+        const sortingHost = document.getElementById('sorting-control-list');
+        if ((!generatorHost && !sortingHost) || !this.currentCase || !Array.isArray(this.currentCase.uiConfig)) return;
+
+        const sortingControls = [];
+        const generatorControls = [];
+
+        this.currentCase.uiConfig.forEach((control) => {
+            if (this.isSortingControl(control)) sortingControls.push(control);
+            else generatorControls.push(control);
+        });
+
+        this.renderControlList(sortingHost, sortingControls);
+        this.renderControlList(generatorHost, generatorControls);
 
         const playBtn = document.getElementById('btn-play');
         if (playBtn) playBtn.textContent = this.isRunning ? 'Pause' : 'Play';

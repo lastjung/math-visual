@@ -258,6 +258,7 @@ const CardioidCircleSorting = {
                 passIndex: plan.passes.length - 1,
                 passNumber: plan.passes.length,
                 totalPasses: plan.passes.length,
+                passLabel: finalPass.label,
                 stepInPass: finalPass.order.length,
                 totalInPass: finalPass.order.length,
                 activeDigit: null,
@@ -285,6 +286,7 @@ const CardioidCircleSorting = {
             passIndex,
             passNumber: passIndex + 1,
             totalPasses: plan.passes.length,
+            passLabel: pass.label,
             stepInPass,
             totalInPass: pass.sourceOrder.length,
             activeDigit,
@@ -320,7 +322,10 @@ const CardioidCircleSorting = {
 
         ctx.fillStyle = 'rgba(255,255,255,0.9)';
         ctx.font = '600 12px Inter, system-ui, sans-serif';
-        ctx.fillText('Hue Buckets', panelX + 14, panelY + 20);
+        ctx.fillText(sortView.passLabel || 'Buckets', panelX + 14, panelY + 20);
+        ctx.fillStyle = 'rgba(255,255,255,0.56)';
+        ctx.font = '500 10px IBM Plex Sans, sans-serif';
+        ctx.fillText(`Pass ${sortView.passNumber}/${sortView.totalPasses}`, panelX + 14, panelY + 32);
 
         for (let digit = 0; digit < 10; digit++) {
             const count = sortView.bucketCounts[digit];
@@ -329,13 +334,28 @@ const CardioidCircleSorting = {
             const y = chartBottom - barH;
             const isActive = sortView.activeDigit === digit;
             const hue = digit * 36;
+            const isLightnessPass = (sortView.passLabel || '').toLowerCase().includes('lightness');
+            const isSaturationPass = (sortView.passLabel || '').toLowerCase().includes('saturation');
 
             ctx.fillStyle = 'rgba(255,255,255,0.08)';
             ctx.fillRect(x, chartTop, barW, chartHeight);
 
-            ctx.fillStyle = isActive
-                ? `hsla(${hue}, 95%, 68%, 0.96)`
-                : `hsla(${hue}, 88%, 60%, 0.56)`;
+            let activeColor;
+            let baseColor;
+            if (isLightnessPass) {
+                const lightness = 16 + digit * 7.6;
+                activeColor = `hsla(0, 0%, ${Math.min(92, lightness + 10)}%, 0.96)`;
+                baseColor = `hsla(0, 0%, ${lightness}%, 0.62)`;
+            } else if (isSaturationPass) {
+                const sat = 10 + digit * 8.5;
+                activeColor = `hsla(164, ${Math.min(100, sat + 10)}%, 68%, 0.96)`;
+                baseColor = `hsla(164, ${sat}%, 56%, 0.62)`;
+            } else {
+                activeColor = `hsla(${hue}, 95%, 68%, 0.96)`;
+                baseColor = `hsla(${hue}, 88%, 60%, 0.56)`;
+            }
+
+            ctx.fillStyle = isActive ? activeColor : baseColor;
             ctx.fillRect(x, y, barW, Math.max(barH, 2));
 
             if (isActive) {
