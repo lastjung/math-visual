@@ -27,6 +27,8 @@ const CardioidCircleCase = {
     sortPlan: null,
     sortSignature: '',
     sortLockedState: null,
+    sortPanelPosition: null,
+    sortPanelDrag: null,
     shuffleNonce: 0,
     shuffleOrder: null,
     shuffleSignature: '',
@@ -87,6 +89,7 @@ const CardioidCircleCase = {
         this.canvas = document.getElementById('mathCanvas');
         if (!this.canvas) return;
         this.ctx = this.canvas.getContext('2d');
+        this.bindCanvasInteractions();
         this.resize();
         this.draw();
     },
@@ -242,7 +245,8 @@ const CardioidCircleCase = {
                     { value: 'off', label: 'Off' },
                     { value: 'hue', label: 'Hue Radix' },
                     { value: 'lsh', label: 'L-S-H Radix' },
-                    { value: 'bubble', label: 'Bubble Sort' }
+                    { value: 'bubble', label: 'Bubble Sort' },
+                    { value: 'quick', label: 'Quick Sort' }
                 ],
                 onChange: (v) => {
                     this.sortMode = v;
@@ -546,6 +550,8 @@ const CardioidCircleCase = {
         this.sortPlan = null;
         this.sortSignature = '';
         this.sortLockedState = null;
+        this.sortPanelPosition = null;
+        this.sortPanelDrag = null;
         this.shuffleNonce = 0;
         this.shuffleOrder = null;
         this.shuffleSignature = '';
@@ -573,7 +579,68 @@ const CardioidCircleCase = {
     },
 
     destroy() {
+        this.unbindCanvasInteractions();
         this.stop();
+    },
+
+    bindCanvasInteractions() {
+        if (!this.canvas || this._canvasInteractionsBound) return;
+        this._canvasInteractionsBound = true;
+
+        this._handleCanvasPointerDown = (e) => {
+            if (this.sortMode === 'bubble' || this.sortMode === 'quick') return;
+            if (!this.isSortModeAvailable()) return;
+            const layout = this.getSortPanelLayout(this.canvas.width, this.canvas.height);
+            if (!layout) return;
+
+            const rect = this.canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            const inside = x >= layout.panelX && x <= layout.panelX + layout.panelW
+                && y >= layout.panelY && y <= layout.panelY + layout.panelH;
+            if (!inside) return;
+
+            this.sortPanelDrag = {
+                offsetX: x - layout.panelX,
+                offsetY: y - layout.panelY
+            };
+        };
+
+        this._handleWindowPointerMove = (e) => {
+            if (!this.sortPanelDrag || !this.canvas) return;
+            const rect = this.canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            const layout = this.getSortPanelLayout(this.canvas.width, this.canvas.height);
+            if (!layout) return;
+
+            const nextX = x - this.sortPanelDrag.offsetX;
+            const nextY = y - this.sortPanelDrag.offsetY;
+            const maxX = Math.max(24, this.canvas.width - layout.panelW - 24);
+            const maxY = Math.max(24, this.canvas.height - layout.panelH - 24);
+
+            this.sortPanelPosition = {
+                x: Math.max(24, Math.min(maxX, nextX)),
+                y: Math.max(24, Math.min(maxY, nextY))
+            };
+            this.draw();
+        };
+
+        this._handleWindowPointerUp = () => {
+            this.sortPanelDrag = null;
+        };
+
+        this.canvas.addEventListener('pointerdown', this._handleCanvasPointerDown);
+        window.addEventListener('pointermove', this._handleWindowPointerMove);
+        window.addEventListener('pointerup', this._handleWindowPointerUp);
+    },
+
+    unbindCanvasInteractions() {
+        if (!this._canvasInteractionsBound || !this.canvas) return;
+        this._canvasInteractionsBound = false;
+        this.canvas.removeEventListener('pointerdown', this._handleCanvasPointerDown);
+        window.removeEventListener('pointermove', this._handleWindowPointerMove);
+        window.removeEventListener('pointerup', this._handleWindowPointerUp);
     },
 
     circlePoint(i, n, radius, cx, cy) {

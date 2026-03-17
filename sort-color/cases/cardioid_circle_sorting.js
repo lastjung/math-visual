@@ -7,8 +7,17 @@ const CardioidCircleSorting = {
         this.sortLockedState = null;
     },
 
+    getSortPanelLayout(w, h) {
+        if (this.sortMode === 'bubble' || this.sortMode === 'quick') return null;
+        const panelW = 216;
+        const panelH = 124;
+        const panelX = this.sortPanelPosition?.x ?? (w - panelW - 24);
+        const panelY = this.sortPanelPosition?.y ?? (h - panelH - 24);
+        return { panelW, panelH, panelX, panelY };
+    },
+
     isSortModeAvailable() {
-        return this.sortMode === 'hue' || this.sortMode === 'lsh' || this.sortMode === 'bubble';
+        return this.sortMode === 'hue' || this.sortMode === 'lsh' || this.sortMode === 'bubble' || this.sortMode === 'quick';
     },
 
     canRunSort() {
@@ -77,6 +86,83 @@ const CardioidCircleSorting = {
                 finalState: [...arr],
                 totalSteps,
                 n
+            };
+            this.sortSignature = signature;
+            return this.sortPlan;
+        }
+
+        if (this.sortMode === 'quick') {
+            const arr = [...sourceOrder];
+            const events = [];
+            let partitionCount = 0;
+
+            const pushEvent = (meta) => {
+                events.push({
+                    order: [...arr],
+                    ...meta
+                });
+            };
+
+            const swap = (a, b) => {
+                if (a === b) return;
+                [arr[a], arr[b]] = [arr[b], arr[a]];
+            };
+
+            const stack = [];
+            if (arr.length > 1) stack.push({ low: 0, high: arr.length - 1 });
+
+            while (stack.length) {
+                const { low, high } = stack.pop();
+                if (low >= high) continue;
+
+                partitionCount += 1;
+                const partitionLabel = `Partition ${partitionCount}`;
+                const pivotIndex = high;
+                const pivotValue = arr[pivotIndex].hueKey;
+                let storeIndex = low;
+
+                for (let scanIndex = low; scanIndex < high; scanIndex++) {
+                    pushEvent({
+                        partitionLabel,
+                        activeIndices: [scanIndex, pivotIndex],
+                        pivotIndex,
+                        range: [low, high],
+                        swapIndices: null
+                    });
+
+                    if (arr[scanIndex].hueKey <= pivotValue) {
+                        swap(storeIndex, scanIndex);
+                        pushEvent({
+                            partitionLabel,
+                            activeIndices: [storeIndex, scanIndex],
+                            pivotIndex,
+                            range: [low, high],
+                            swapIndices: [storeIndex, scanIndex]
+                        });
+                        storeIndex += 1;
+                    }
+                }
+
+                swap(storeIndex, high);
+                pushEvent({
+                    partitionLabel,
+                    activeIndices: [storeIndex, high],
+                    pivotIndex: storeIndex,
+                    range: [low, high],
+                    swapIndices: [storeIndex, high],
+                    pivotSettled: true
+                });
+
+                if (storeIndex + 1 < high) stack.push({ low: storeIndex + 1, high });
+                if (low < storeIndex - 1) stack.push({ low, high: storeIndex - 1 });
+            }
+
+            this.sortPlan = {
+                type: 'quick',
+                events,
+                initialState: sourceOrder,
+                finalState: [...arr],
+                totalSteps: events.length
             };
             this.sortSignature = signature;
             return this.sortPlan;
@@ -373,6 +459,66 @@ const CardioidCircleSorting = {
             };
         }
 
+        if (plan.type === 'quick') {
+            const totalSteps = plan.totalSteps;
+            const progress = Math.max(0, Math.min(totalSteps, Math.floor(this.sortProgress)));
+
+            if (progress >= totalSteps) {
+                return {
+                    passIndex: totalSteps,
+                    passNumber: totalSteps,
+                    totalPasses: totalSteps,
+                    passLabel: 'Completed',
+                    stepInPass: 0,
+                    totalInPass: 0,
+                    activeDigit: null,
+                    activeIndices: null,
+                    completed: true,
+                    drawEntries: plan.finalState,
+                    coloredCount: plan.finalState.length,
+                    pivotIndex: null,
+                    range: null
+                };
+            }
+
+            const event = plan.events[Math.max(0, Math.min(plan.events.length - 1, progress))];
+            if (!event) {
+                return {
+                    passIndex: 0,
+                    passNumber: 1,
+                    totalPasses: 1,
+                    passLabel: 'Partition 1',
+                    stepInPass: 0,
+                    totalInPass: plan.totalSteps,
+                    activeDigit: null,
+                    activeIndices: null,
+                    completed: false,
+                    drawEntries: plan.initialState,
+                    coloredCount: 0,
+                    pivotIndex: null,
+                    range: null
+                };
+            }
+
+            return {
+                passIndex: progress,
+                passNumber: progress + 1,
+                totalPasses: totalSteps,
+                passLabel: event.partitionLabel,
+                stepInPass: progress,
+                totalInPass: totalSteps,
+                activeDigit: null,
+                activeIndices: event.activeIndices,
+                completed: false,
+                drawEntries: event.order,
+                coloredCount: 0,
+                pivotIndex: event.pivotIndex,
+                range: event.range,
+                swapIndices: event.swapIndices || null,
+                pivotSettled: !!event.pivotSettled
+            };
+        }
+
         if (!plan.passes.length) return null;
 
         const totalSteps = plan.totalSteps;
@@ -423,12 +569,11 @@ const CardioidCircleSorting = {
     },
 
     drawSortBuckets(ctx, w, h, sortView) {
-        if (!sortView || this.sortMode === 'bubble') return;
+        if (!sortView || this.sortMode === 'bubble' || this.sortMode === 'quick') return;
 
-        const panelW = 216;
-        const panelH = 124;
-        const panelX = w - panelW - 24;
-        const panelY = h - panelH - 24;
+        const layout = this.getSortPanelLayout(w, h);
+        if (!layout) return;
+        const { panelW, panelH, panelX, panelY } = layout;
         const maxCount = Math.max(1, ...sortView.bucketCounts);
         const chartTop = panelY + 34;
         const chartBottom = panelY + panelH - 24;
