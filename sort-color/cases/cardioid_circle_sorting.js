@@ -4,20 +4,34 @@ const CardioidCircleSorting = {
         this.sortProgress = 0;
         this.sortPlan = null;
         this.sortSignature = '';
+        this.sortLockedState = null;
     },
 
     isSortModeAvailable() {
         return this.sortMode === 'hue' || this.sortMode === 'lsh';
     },
 
-    buildSortPlanForCurrentState() {
+    canRunSort() {
+        return this.isSortModeAvailable()
+            && (this.learningMode === 'off' || this.isPaused);
+    },
+
+    captureSortLockedState() {
         const n = Math.max(0, Math.floor(this.pointCount));
+        const forceIntegerM = this.learningMode === 'gcd' || this.learningMode === 'integer-snap' || this.learningMode === 'mapping';
+        const m = (this.integersOnly || forceIntegerM) ? Math.round(this.multiplier) : this.multiplier;
+        this.sortLockedState = { n, m };
+        return this.sortLockedState;
+    },
+
+    buildSortPlanForCurrentState() {
+        const locked = this.sortLockedState || this.captureSortLockedState();
+        const n = locked.n;
         if (!this.isSortModeAvailable() || n <= 0) return null;
         const radius = Math.min(this.canvas.width, this.canvas.height) * 0.48;
         const cx = this.canvas.width / 2;
         const cy = this.canvas.height / 2;
-        const forceIntegerM = this.learningMode === 'gcd' || this.learningMode === 'integer-snap' || this.learningMode === 'mapping';
-        const m = (this.integersOnly || forceIntegerM) ? Math.round(this.multiplier) : this.multiplier;
+        const m = locked.m;
         const chords = this.buildChordData(n, m, radius, cx, cy);
         const signature = this.getSortSignature(n, m);
         if (this.sortPlan && this.sortSignature === signature) {
@@ -89,7 +103,15 @@ const CardioidCircleSorting = {
             this.resetSortState('idle');
             return;
         }
-        this.resetSortState('running');
+        if (!this.canRunSort()) {
+            this.resetSortState('idle');
+            return;
+        }
+        this.captureSortLockedState();
+        this.sortProgress = 0;
+        this.sortPlan = null;
+        this.sortSignature = '';
+        this.sortingStatus = 'running';
         if (typeof Core !== 'undefined' && Core.currentCase === this) {
             Core.updateControls();
         }
@@ -125,6 +147,8 @@ const CardioidCircleSorting = {
         if (!this.isSortModeAvailable()) {
             this.sortMode = 'hue';
         }
+        if (!this.canRunSort()) return;
+        if (!this.sortLockedState) this.captureSortLockedState();
         const totalSteps = this.getSortTotalSteps();
         if (!totalSteps) return;
         this.sortingStatus = 'holding';
@@ -235,7 +259,7 @@ const CardioidCircleSorting = {
             this.sortingStatus === 'running'
             || this.sortingStatus === 'holding'
             || this.sortingStatus === 'completed'
-        ) && this.isSortModeAvailable() && (this.learningMode === 'off' || this.isPaused);
+        ) && this.isSortModeAvailable() && !!this.sortLockedState;
     },
 
     ensureSortPlan(chords, n, m) {

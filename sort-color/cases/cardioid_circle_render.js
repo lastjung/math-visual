@@ -55,7 +55,7 @@ const CardioidCircleRender = {
 
         ctx.lineWidth = this.lineWidth;
         ctx.save();
-        ctx.globalCompositeOperation = 'lighter';
+        ctx.globalCompositeOperation = this.renderMode === 'light' ? 'source-over' : 'lighter';
 
         if (this.learningMode === 'gcd' && gcdValue > 1) {
             for (let i = 0; i < n; i++) {
@@ -69,12 +69,14 @@ const CardioidCircleRender = {
             }
         } else if (sortingActive && sortView) {
             const shuffledBaseAlpha = 0.14 + this.shuffleFlash * 0.26;
+            const lockedN = this.sortLockedState?.n || n;
+            const lockedM = this.sortLockedState?.m ?? m;
             for (let k = 0; k < sortView.drawEntries.length; k++) {
                 const chord = sortView.drawEntries[k];
-                const geoFrom = this.circlePoint(k, n, radius, cx, cy);
-                const geoTo = this.circlePointByIndex((m * k) % n, n, radius, cx, cy);
+                const geoFrom = this.circlePoint(k, lockedN, radius, cx, cy);
+                const geoTo = this.circlePointByIndex((lockedM * k) % lockedN, lockedN, radius, cx, cy);
 
-                const muted = this.lineVisual(chord.originalIndex, n, geoFrom, geoTo, radius, shuffledBaseAlpha);
+                const muted = this.lineVisual(chord.originalIndex, lockedN, geoFrom, geoTo, radius, shuffledBaseAlpha);
                 ctx.strokeStyle = muted.color;
                 ctx.beginPath();
                 ctx.moveTo(geoFrom.x, geoFrom.y);

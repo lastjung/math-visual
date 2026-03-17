@@ -19,12 +19,14 @@ const CardioidCircleCase = {
     showHud: true,
     integersOnly: false,
     colorMode: 'angle', // monochrome | angle | length | origin
+    renderMode: 'light', // glow | light
     sortMode: 'off', // off | hue | lsh
     sortingStatus: 'idle', // idle | running | holding | completed
-    sortSpeed: 48,
+    sortSpeed: 150,
     sortProgress: 0,
     sortPlan: null,
     sortSignature: '',
+    sortLockedState: null,
     shuffleNonce: 0,
     shuffleOrder: null,
     shuffleSignature: '',
@@ -63,7 +65,7 @@ const CardioidCircleCase = {
         '- N (Points): 원 위 점 개수. 커질수록 패턴이 촘촘해짐.',
         '- M (Multiplier): i -> (M*i) mod N 연결 규칙의 핵심 값.',
         '- M Speed: 회전이 아니라 M 변화 속도. +면 증가, -면 감소.',
-        '- N Ramp: M 고정 후 N이 느리게->빠르게 증가.',
+        '- N Ramp: M 고정 후 N 슬라이더로 점 개수를 수동 조절.',
         '- M Ramp: N 고정 후 M 증가 + 후반 가속.',
         '- GCD Mode: gcd(N, M)가 루프 분할 구조에 미치는 영향 시각화.',
         '- Integer Snap: M을 정수 단계로만 진행해 대표 패턴 확인.',
@@ -73,6 +75,7 @@ const CardioidCircleCase = {
         '- Mapping Auto Step: i를 자동으로 증가시키며 연속 시연.',
         '- Mapping i: 현재 추적 중인 시작점 인덱스.',
         '- Line Alpha: 선 투명도.',
+        '- Render: Glow는 겹칠수록 밝아지고, Light는 겹쳐도 더 밝아지지 않음.',
         '- Color: Angle/Length/Origin/Monochrome 색 기준.',
         '- Integers Only: M을 정수로 반올림해 단계적으로 변화.',
         '- HUD: 좌상단 수치 표시 On/Off.',
@@ -133,11 +136,15 @@ const CardioidCircleCase = {
                 id: 'mc_n',
                 label: 'N (Points)',
                 min: 0,
-                max: 1500,
+                max: this.learningMode === 'n-ramp' ? 1000 : 1500,
                 step: 1,
                 value: this.pointCount,
                 onChange: (v) => {
-                    this.pointCount = Math.max(0, Math.floor(v));
+                    if (this.learningMode === 'n-ramp') {
+                        this.learnN = Math.max(0, Math.floor(v));
+                    } else {
+                        this.pointCount = Math.max(0, Math.floor(v));
+                    }
                     this.resetSortState('idle');
                     this.draw();
                 }
@@ -183,6 +190,20 @@ const CardioidCircleCase = {
                 onChange: (v) => {
                     this.lineAlpha = v;
                     this.restartSort();
+                    this.draw();
+                }
+            },
+            {
+                type: 'select',
+                id: 'mc_render',
+                label: 'Render',
+                value: this.renderMode,
+                options: [
+                    { value: 'glow', label: 'LGT' },
+                    { value: 'light', label: 'Source Over' }
+                ],
+                onChange: (v) => {
+                    this.renderMode = v;
                     this.draw();
                 }
             },
@@ -308,44 +329,15 @@ const CardioidCircleCase = {
                     }
                 },
                 {
-                    type: 'slider',
-                    id: 'mc_nr_slow',
-                    label: 'N Ramp: Slow Speed',
-                    min: 1,
-                    max: 80,
-                    step: 1,
-                    value: this.nRampSlowRate,
-                    onChange: (v) => { this.nRampSlowRate = v; }
-                },
-                {
-                    type: 'slider',
-                    id: 'mc_nr_fast',
-                    label: 'N Ramp: Fast Speed',
-                    min: 20,
-                    max: 500,
-                    step: 1,
-                    value: this.nRampFastRate,
-                    onChange: (v) => { this.nRampFastRate = v; }
-                },
-                {
-                    type: 'slider',
-                    id: 'mc_nr_switch',
-                    label: 'N Ramp: Switch At N',
-                    min: 10,
-                    max: 1000,
-                    step: 1,
-                    value: this.nRampSwitchN,
-                    onChange: (v) => { this.nRampSwitchN = Math.floor(v); }
-                },
-                {
                     type: 'button',
                     id: 'mc_nr_restart',
                     label: 'Restart N Ramp',
                     value: 'N Ramp 재시작',
                     onClick: () => {
                         this.learnN = 0;
-                        this.multiplier = this.learnFixedM;
                         this.pointCount = 0;
+                        this.multiplier = this.learnFixedM;
+                        this.resetSortState('idle');
                         this.draw();
                     }
                 }
@@ -547,11 +539,13 @@ const CardioidCircleCase = {
         this.lineAlpha = 0.4;
         this.integersOnly = false;
         this.colorMode = 'angle';
+        this.renderMode = 'light';
         this.sortMode = 'off';
-        this.sortSpeed = 48;
+        this.sortSpeed = 150;
         this.sortProgress = 0;
         this.sortPlan = null;
         this.sortSignature = '';
+        this.sortLockedState = null;
         this.shuffleNonce = 0;
         this.shuffleOrder = null;
         this.shuffleSignature = '';
@@ -674,8 +668,7 @@ const CardioidCircleCase = {
 
     applyLearningModeState() {
         if (this.learningMode === 'n-ramp') {
-            this.learnN = 0;
-            this.pointCount = 0;
+            this.learnN = Math.max(0, Math.floor(this.pointCount));
             this.learnFixedM = 0;
             this.multiplier = 0;
         }
@@ -725,9 +718,7 @@ const CardioidCircleCase = {
     updateLearningModeSimulation(dt) {
         if (this.learningMode === 'n-ramp') {
             this.multiplier = this.learnFixedM;
-            const speed = this.learnN < this.nRampSwitchN ? this.nRampSlowRate : this.nRampFastRate;
-            this.learnN += speed * dt;
-            if (this.learnN > this.nRampMaxN) this.learnN = 0;
+            this.learnN = Math.max(0, Math.floor(this.learnN));
             this.pointCount = Math.max(0, Math.floor(this.learnN));
             return true;
         }
