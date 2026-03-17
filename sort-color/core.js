@@ -238,6 +238,7 @@ const Core = {
             if (!item) {
                 item = document.createElement('div');
                 item.className = 'control-item';
+                item.classList.add(`control-item-${control.type}`);
                 item.setAttribute('data-id', control.id);
 
                 if (control.label) {
@@ -321,10 +322,13 @@ const Core = {
     resetCase() {
         if (!this.currentCase || typeof this.currentCase.reset !== 'function') return;
         this.currentCase.reset();
-        if (!this.isRunning && typeof this.currentCase.start === 'function') {
-            this.currentCase.start();
-            this.isRunning = true;
+        if (typeof this.currentCase.setPaused === 'function') {
+            this.currentCase.setPaused(false);
         }
+        if (!this.currentCase.animationId && typeof this.currentCase.start === 'function') {
+            this.currentCase.start();
+        }
+        this.isRunning = true;
         this.recordingStartMs = performance.now();
         this.updateControls();
     },
@@ -332,11 +336,19 @@ const Core = {
     togglePlay() {
         if (!this.currentCase) return;
         if (this.isRunning) {
-            if (typeof this.currentCase.stop === 'function') this.currentCase.stop();
+            if (typeof this.currentCase.setPaused === 'function') {
+                this.currentCase.setPaused(true);
+            } else if (typeof this.currentCase.stop === 'function') {
+                this.currentCase.stop();
+            }
             // Preserve track by using pause()
             if (window.audioManager) window.audioManager.pause();
         } else {
-            if (typeof this.currentCase.start === 'function') this.currentCase.start();
+            if (typeof this.currentCase.setPaused === 'function') {
+                this.currentCase.setPaused(false);
+            } else if (typeof this.currentCase.start === 'function') {
+                this.currentCase.start();
+            }
             // Resume if track exists
             if (window.audioManager) window.audioManager.resume();
         }

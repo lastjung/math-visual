@@ -7,6 +7,7 @@ const CardioidCircleCase = {
     ctx: null,
     animationId: null,
     lastTimeMs: 0,
+    isPaused: false,
 
     pointCount: 250,
     multiplier: 40,
@@ -87,7 +88,13 @@ const CardioidCircleCase = {
     },
 
     get uiConfig() {
-        const controls = [
+        const controls = this.getBaseControls();
+        this.appendLearningModeControls(controls);
+        return controls;
+    },
+
+    getBaseControls() {
+        return [
             {
                 type: 'button',
                 id: 'mc_play_toggle',
@@ -280,6 +287,9 @@ const CardioidCircleCase = {
                 }
             }
         ];
+    },
+
+    appendLearningModeControls(controls) {
         if (this.learningMode === 'n-ramp') {
             controls.push(
                 {
@@ -428,7 +438,6 @@ const CardioidCircleCase = {
                 }
             );
         }
-        return controls;
     },
 
     showGuide() {
@@ -518,6 +527,11 @@ const CardioidCircleCase = {
         this.animationId = requestAnimationFrame(loop);
     },
 
+    setPaused(paused) {
+        this.isPaused = !!paused;
+        this.lastTimeMs = performance.now();
+    },
+
     stop() {
         if (!this.animationId) return;
         cancelAnimationFrame(this.animationId);
@@ -542,6 +556,7 @@ const CardioidCircleCase = {
         this.shuffleSignature = '';
         this.shuffleFlash = 0;
         this.showHud = true;
+        this.isPaused = false;
         this.learningMode = 'off';
         this.learnFixedM = 0;
         this.learnN = 0;
@@ -676,6 +691,7 @@ const CardioidCircleCase = {
         this.shuffleOrder = null;
         this.shuffleSignature = '';
         this.shuffleFlash = 1;
+        this.sortMode = 'off';
         this.restartSort();
     },
 
@@ -730,8 +746,12 @@ const CardioidCircleCase = {
         ].join('|');
     },
 
+    isSortingEnabled() {
+        return (this.sortMode === 'hue' || this.sortMode === 'lsh') && (this.learningMode === 'off' || this.isPaused);
+    },
+
     ensureSortPlan(chords, n, m) {
-        if ((this.sortMode !== 'hue' && this.sortMode !== 'lsh') || this.learningMode !== 'off' || !n) {
+        if (!this.isSortingEnabled() || !n) {
             this.sortPlan = null;
             this.sortSignature = '';
             return null;
@@ -922,6 +942,12 @@ const CardioidCircleCase = {
 
     setLearningMode(mode) {
         this.learningMode = mode || 'off';
+        this.applyLearningModeState();
+        if (typeof Core !== 'undefined' && Core.currentCase === this) Core.updateControls();
+        this.draw();
+    },
+
+    applyLearningModeState() {
         if (this.learningMode === 'n-ramp') {
             this.learnN = 0;
             this.pointCount = 0;
@@ -952,18 +978,33 @@ const CardioidCircleCase = {
             this.multiplier = this.mirrorTargets[this.mirrorIndex];
             this.pointCount = 360;
         }
-        if (typeof Core !== 'undefined' && Core.currentCase === this) Core.updateControls();
-        this.draw();
     },
 
     updateSimulation(dt) {
+        if (!this.isPaused) {
+            this.updateGeometryState(dt);
+        }
+        this.updateVisualState(dt);
+    },
+
+    updateGeometryState(dt) {
+        if (this.updateLearningModeSimulation(dt)) return;
+        this.updateFreeRunMultiplier(dt);
+    },
+
+    updateVisualState(dt) {
+        this.updateSortingState(dt);
+        this.updateShuffleFlash(dt);
+    },
+
+    updateLearningModeSimulation(dt) {
         if (this.learningMode === 'n-ramp') {
             this.multiplier = this.learnFixedM;
             const speed = this.learnN < this.nRampSwitchN ? this.nRampSlowRate : this.nRampFastRate;
             this.learnN += speed * dt;
             if (this.learnN > this.nRampMaxN) this.learnN = 0;
             this.pointCount = Math.max(0, Math.floor(this.learnN));
-            return;
+            return true;
         }
         if (this.learningMode === 'm-ramp') {
             this.pointCount = Math.max(1, Math.floor(this.mRampFixedN));
@@ -979,11 +1020,11 @@ const CardioidCircleCase = {
                 this.multiplier = 0;
                 if (this.mRampEffectiveRate < 0) this.mRampEffectiveRate = 0;
             }
-            return;
+            return true;
         }
         if (this.learningMode === 'integer-snap') {
             this.multiplier += this.snapRate * dt;
-            return;
+            return true;
         }
         if (this.learningMode === 'mapping') {
             if (this.demoAuto && this.pointCount > 0) {
@@ -992,76 +1033,75 @@ const CardioidCircleCase = {
                 if (this.demoIndex >= n) this.demoIndex = this.demoIndex % n;
             }
             this.multiplier += this.multiplierSpeed * dt;
-            return;
+            return true;
         }
         if (this.learningMode === 'classic') {
-            this.classicTimer += dt;
-            if (this.classicTimer >= this.classicDuration) {
-                this.classicTimer = 0;
-                this.classicIndex = (this.classicIndex + 1) % this.classicTargets.length;
-            }
-            // 2 seconds hold, 3 seconds transition
-            const holdTime = 2.0;
-            const currentM = this.classicTargets[this.classicIndex];
-            if (this.classicTimer < holdTime) {
-                this.multiplier = currentM;
-            } else {
-                const t = (this.classicTimer - holdTime) / (this.classicDuration - holdTime);
-                const ease = 0.5 - 0.5 * Math.cos(t * Math.PI);
-                const nextIndex = (this.classicIndex + 1) % this.classicTargets.length;
-                const nextM = this.classicTargets[nextIndex];
-                this.multiplier = currentM + (nextM - currentM) * ease;
-            }
-            return;
+            this.updateTimedLearningMode(dt, {
+                timerKey: 'classicTimer',
+                duration: this.classicDuration,
+                indexKey: 'classicIndex',
+                targets: this.classicTargets,
+                holdTime: 2.0
+            });
+            return true;
         }
         if (this.learningMode === 'ultimate') {
-            this.ultimateTimer += dt;
-            if (this.ultimateTimer >= this.ultimateDuration) {
-                this.ultimateTimer = 0;
-                this.ultimateIndex = (this.ultimateIndex + 1) % this.ultimateTargets.length;
-            }
-            // 1 second hold, 4 seconds transition
-            const holdTime = 1.0;
-            const currentM = this.ultimateTargets[this.ultimateIndex];
-            if (this.ultimateTimer < holdTime) {
-                this.multiplier = currentM;
-            } else {
-                const t = (this.ultimateTimer - holdTime) / (this.ultimateDuration - holdTime);
-                const ease = 0.5 - 0.5 * Math.cos(t * Math.PI);
-                const nextIndex = (this.ultimateIndex + 1) % this.ultimateTargets.length;
-                const nextM = this.ultimateTargets[nextIndex];
-                this.multiplier = currentM + (nextM - currentM) * ease;
-            }
-            return;
+            this.updateTimedLearningMode(dt, {
+                timerKey: 'ultimateTimer',
+                duration: this.ultimateDuration,
+                indexKey: 'ultimateIndex',
+                targets: this.ultimateTargets,
+                holdTime: 1.0
+            });
+            return true;
         }
         if (this.learningMode === 'mirror-chaos') {
-            this.mirrorTimer += dt;
-            if (this.mirrorTimer >= this.mirrorDuration) {
-                this.mirrorTimer = 0;
-                this.mirrorIndex = (this.mirrorIndex + 1) % this.mirrorTargets.length;
-            }
-            // 1 second hold, 4 seconds transition
-            const holdTime = 1.0;
-            const currentM = this.mirrorTargets[this.mirrorIndex];
-            if (this.mirrorTimer < holdTime) {
-                this.multiplier = currentM;
-            } else {
-                const t = (this.mirrorTimer - holdTime) / (this.mirrorDuration - holdTime);
-                const ease = 0.5 - 0.5 * Math.cos(t * Math.PI);
-                const nextIndex = (this.mirrorIndex + 1) % this.mirrorTargets.length;
-                const nextM = this.mirrorTargets[nextIndex];
-                this.multiplier = currentM + (nextM - currentM) * ease;
-            }
+            this.updateTimedLearningMode(dt, {
+                timerKey: 'mirrorTimer',
+                duration: this.mirrorDuration,
+                indexKey: 'mirrorIndex',
+                targets: this.mirrorTargets,
+                holdTime: 1.0
+            });
+            return true;
+        }
+        return false;
+    },
+
+    updateTimedLearningMode(dt, config) {
+        this[config.timerKey] += dt;
+        if (this[config.timerKey] >= config.duration) {
+            this[config.timerKey] = 0;
+            this[config.indexKey] = (this[config.indexKey] + 1) % config.targets.length;
+        }
+
+        const currentM = config.targets[this[config.indexKey]];
+        if (this[config.timerKey] < config.holdTime) {
+            this.multiplier = currentM;
             return;
         }
-        if (this.sortMode !== 'off' && this.learningMode === 'off') {
-            const n = Math.max(0, Math.floor(this.pointCount));
-            const totalSteps = (this.sortPlan && this.sortPlan.totalSteps) ? this.sortPlan.totalSteps : n * 3;
-            this.sortProgress = Math.min(totalSteps, this.sortProgress + this.sortSpeed * dt);
-        }
+
+        const t = (this[config.timerKey] - config.holdTime) / (config.duration - config.holdTime);
+        const ease = 0.5 - 0.5 * Math.cos(t * Math.PI);
+        const nextIndex = (this[config.indexKey] + 1) % config.targets.length;
+        const nextM = config.targets[nextIndex];
+        this.multiplier = currentM + (nextM - currentM) * ease;
+    },
+
+    updateSortingState(dt) {
+        if (!this.isSortingEnabled()) return;
+        const n = Math.max(0, Math.floor(this.pointCount));
+        const totalSteps = (this.sortPlan && this.sortPlan.totalSteps) ? this.sortPlan.totalSteps : n * 3;
+        this.sortProgress = Math.min(totalSteps, this.sortProgress + this.sortSpeed * dt);
+    },
+
+    updateShuffleFlash(dt) {
         if (this.shuffleFlash > 0) {
             this.shuffleFlash = Math.max(0, this.shuffleFlash - dt * 1.8);
         }
+    },
+
+    updateFreeRunMultiplier(dt) {
         this.multiplier += this.multiplierSpeed * dt;
     },
 
@@ -1077,6 +1117,7 @@ const CardioidCircleCase = {
         const forceIntegerM = this.learningMode === 'gcd' || this.learningMode === 'integer-snap' || this.learningMode === 'mapping';
         const m = (this.integersOnly || forceIntegerM) ? Math.round(this.multiplier) : this.multiplier;
         const hudM = this.learningMode === 'n-ramp' ? this.learnFixedM : m;
+        const viewState = this.getViewState(w, h, cx, cy, radius, n, m, hudM);
 
         ctx.fillStyle = '#020205';
         ctx.fillRect(0, 0, w, h);
@@ -1087,12 +1128,36 @@ const CardioidCircleCase = {
         ctx.arc(cx, cy, radius, 0, Math.PI * 2);
         ctx.stroke();
 
+        this.drawChords(ctx, viewState);
+
+        if (this.showPoints) {
+            ctx.fillStyle = 'rgba(255,255,255,0.9)';
+            for (let i = 0; i < n; i++) {
+                const p = this.circlePoint(i, n, radius, cx, cy);
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, this.pointRadius, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        this.drawHud(ctx, viewState);
+        this.drawSortOverlay(ctx, viewState);
+        this.drawShuffleOverlay(ctx, viewState);
+        this.drawLearningModeOverlay(ctx, viewState);
+    },
+
+    getViewState(w, h, cx, cy, radius, n, m, hudM) {
         const mInt = Math.round(m);
         const gcdValue = (this.learningMode === 'gcd' && n > 0) ? this.gcd(n, this.positiveMod(mInt, n)) : 1;
         const chords = this.buildChordData(n, m, radius, cx, cy);
-        const sortingActive = (this.sortMode === 'hue' || this.sortMode === 'lsh') && this.learningMode === 'off' && n > 0;
+        const sortingActive = this.isSortingEnabled() && n > 0;
         const sortPlan = sortingActive ? this.ensureSortPlan(chords, n, m) : null;
         const sortView = sortingActive ? this.getSortViewState(sortPlan) : null;
+        return { w, h, cx, cy, radius, n, m, hudM, gcdValue, chords, sortingActive, sortPlan, sortView };
+    },
+
+    drawChords(ctx, viewState) {
+        const { n, m, radius, cx, cy, gcdValue, chords, sortingActive, sortView } = viewState;
 
         ctx.lineWidth = this.lineWidth;
         ctx.save();
@@ -1112,7 +1177,6 @@ const CardioidCircleCase = {
             const shuffledBaseAlpha = 0.14 + this.shuffleFlash * 0.26;
             for (let k = 0; k < sortView.drawEntries.length; k++) {
                 const chord = sortView.drawEntries[k];
-                // 소팅 가시화를 위해: 현재 배열 인덱스 k에 해당하는 기하학적 위치 계산
                 const geoFrom = this.circlePoint(k, n, radius, cx, cy);
                 const geoTo = this.circlePointByIndex((m * k) % n, n, radius, cx, cy);
 
@@ -1123,7 +1187,6 @@ const CardioidCircleCase = {
                 ctx.lineTo(geoTo.x, geoTo.y);
                 ctx.stroke();
 
-                // 정렬이 완료된 부분은 본래의 진한 색으로 덧그림
                 if (k < sortView.coloredCount) {
                     ctx.strokeStyle = chord.color;
                     ctx.beginPath();
@@ -1132,7 +1195,6 @@ const CardioidCircleCase = {
                     ctx.stroke();
                 }
 
-                // 현재 정렬 중인 항목 강조 (노란색)
                 if (!sortView.completed && k === sortView.coloredCount) {
                     ctx.lineWidth = Math.max(this.lineWidth + 1.5, 3);
                     ctx.strokeStyle = 'rgba(255, 209, 102, 0.95)';
@@ -1152,177 +1214,169 @@ const CardioidCircleCase = {
                 ctx.stroke();
             }
         }
+
         ctx.restore();
+    },
 
-        if (this.showPoints) {
-            ctx.fillStyle = 'rgba(255,255,255,0.9)';
-            for (let i = 0; i < n; i++) {
-                const p = this.circlePoint(i, n, radius, cx, cy);
-                ctx.beginPath();
-                ctx.arc(p.x, p.y, this.pointRadius, 0, Math.PI * 2);
-                ctx.fill();
-            }
-        }
+    drawHud(ctx, viewState) {
+        if (!this.showHud) return;
 
-        if (this.showHud) {
-            ctx.fillStyle = 'rgba(255,255,255,0.92)';
-            ctx.font = '600 14px Inter, system-ui, sans-serif';
-            const elapsed = (typeof Core !== 'undefined' && typeof Core.getRecordingElapsedMs === 'function')
-                ? Core.getRecordingElapsedMs()
-                : 0;
-            const timeLabel = (typeof Core !== 'undefined' && typeof Core.formatRecordingTimeMMSS === 'function')
-                ? Core.formatRecordingTimeMMSS(elapsed)
-                : '00:00';
-            const hudSpeed = this.learningMode === 'm-ramp' ? this.mRampEffectiveRate : this.multiplierSpeed;
-            ctx.fillText(`Node: ${n}`, 24, 30);
-            ctx.fillText(`Mul: ${hudM.toFixed(3)}`, 24, 52);
-            ctx.fillText(`dM/dt: ${hudSpeed.toFixed(3)}`, 24, 74);
-            ctx.fillText(`Time: ${timeLabel}`, 24, 96);
-            if (sortingActive && sortView) {
-                const sortLabel = this.sortMode === 'lsh' ? 'L-S-H Radix' : 'Hue Radix';
-                const digitLabel = sortPlan?.passes?.[sortView.passIndex]?.label || `Pass ${sortView.passNumber}`;
-                ctx.fillText(`Sort: ${sortLabel}`, 24, 118);
-                ctx.fillText(`Pass: ${sortView.passNumber}/${sortView.totalPasses} (${digitLabel})`, 24, 140);
-                ctx.fillText(`Step: ${sortView.stepInPass}/${sortView.totalInPass}`, 24, 162);
-                if (sortView.activeDigit != null) {
-                    ctx.fillText(`Bucket: ${sortView.activeDigit}`, 24, 184);
-                }
-            }
-        }
-
+        const { n, hudM, sortingActive, sortView, sortPlan } = viewState;
+        ctx.fillStyle = 'rgba(255,255,255,0.92)';
+        ctx.font = '600 14px Inter, system-ui, sans-serif';
+        const elapsed = (typeof Core !== 'undefined' && typeof Core.getRecordingElapsedMs === 'function')
+            ? Core.getRecordingElapsedMs()
+            : 0;
+        const timeLabel = (typeof Core !== 'undefined' && typeof Core.formatRecordingTimeMMSS === 'function')
+            ? Core.formatRecordingTimeMMSS(elapsed)
+            : '00:00';
+        const hudSpeed = this.learningMode === 'm-ramp' ? this.mRampEffectiveRate : this.multiplierSpeed;
+        ctx.fillText(`Node: ${n}`, 24, 30);
+        ctx.fillText(`Mul: ${hudM.toFixed(3)}`, 24, 52);
+        ctx.fillText(`dM/dt: ${hudSpeed.toFixed(3)}`, 24, 74);
+        ctx.fillText(`Time: ${timeLabel}`, 24, 96);
         if (sortingActive && sortView) {
-            this.drawSortBuckets(ctx, w, h, sortView);
+            const sortLabel = this.sortMode === 'lsh' ? 'L-S-H Radix' : 'Hue Radix';
+            const digitLabel = sortPlan?.passes?.[sortView.passIndex]?.label || `Pass ${sortView.passNumber}`;
+            ctx.fillText(`Sort: ${sortLabel}`, 24, 118);
+            ctx.fillText(`Pass: ${sortView.passNumber}/${sortView.totalPasses} (${digitLabel})`, 24, 140);
+            ctx.fillText(`Step: ${sortView.stepInPass}/${sortView.totalInPass}`, 24, 162);
+            if (sortView.activeDigit != null) {
+                ctx.fillText(`Bucket: ${sortView.activeDigit}`, 24, 184);
+            }
         }
+    },
 
-        if (this.shuffleFlash > 0) {
-            ctx.save();
-            ctx.fillStyle = `rgba(255, 209, 102, ${0.12 * this.shuffleFlash})`;
-            ctx.fillRect(0, 0, w, h);
-            ctx.fillStyle = `rgba(255, 240, 201, ${0.95 * this.shuffleFlash})`;
-            ctx.font = '700 20px IBM Plex Sans, sans-serif';
-            ctx.fillText('Shuffle', 24, h - 24);
-            ctx.restore();
+    drawSortOverlay(ctx, viewState) {
+        if (viewState.sortingActive && viewState.sortView) {
+            this.drawSortBuckets(ctx, viewState.w, viewState.h, viewState.sortView);
         }
+    },
 
-        if (this.learningMode === 'mapping' && n > 0) {
-            const i = this.positiveMod(Math.floor(this.demoIndex), n);
-            const raw = m * i;
-            const j = this.positiveMod(raw, n);
-            const from = this.circlePoint(i, n, radius, cx, cy);
-            const to = this.circlePointByIndex(j, n, radius, cx, cy);
+    drawShuffleOverlay(ctx, viewState) {
+        if (this.shuffleFlash <= 0) return;
+        ctx.save();
+        ctx.fillStyle = `rgba(255, 209, 102, ${0.12 * this.shuffleFlash})`;
+        ctx.fillRect(0, 0, viewState.w, viewState.h);
+        ctx.fillStyle = `rgba(255, 240, 201, ${0.95 * this.shuffleFlash})`;
+        ctx.font = '700 20px IBM Plex Sans, sans-serif';
+        ctx.fillText('Shuffle', 24, viewState.h - 24);
+        ctx.restore();
+    },
 
-            ctx.lineWidth = Math.max(2.8, this.lineWidth + 1.5);
-            ctx.strokeStyle = 'rgba(255, 216, 102, 0.95)';
-            ctx.beginPath();
-            ctx.moveTo(from.x, from.y);
-            ctx.lineTo(to.x, to.y);
-            ctx.stroke();
+    drawLearningModeOverlay(ctx, viewState) {
+        this.drawMappingOverlay(ctx, viewState);
+        this.drawRampOverlay(ctx, viewState);
+        this.drawTimedModeOverlay(ctx, viewState);
+    },
 
-            ctx.fillStyle = '#ffd166';
-            ctx.beginPath();
-            ctx.arc(from.x, from.y, Math.max(4, this.pointRadius + 2.5), 0, Math.PI * 2);
-            ctx.fill();
+    drawMappingOverlay(ctx, viewState) {
+        const { n, m, radius, cx, cy, h } = viewState;
+        if (this.learningMode !== 'mapping' || n <= 0) return;
 
-            ctx.fillStyle = '#06d6a0';
-            ctx.beginPath();
-            ctx.arc(to.x, to.y, Math.max(4, this.pointRadius + 2.5), 0, Math.PI * 2);
-            ctx.fill();
+        const i = this.positiveMod(Math.floor(this.demoIndex), n);
+        const raw = m * i;
+        const j = this.positiveMod(raw, n);
+        const from = this.circlePoint(i, n, radius, cx, cy);
+        const to = this.circlePointByIndex(j, n, radius, cx, cy);
 
-            ctx.fillStyle = 'rgba(255,255,255,0.98)';
-            ctx.font = '600 16px Inter, system-ui, sans-serif';
-            ctx.fillText(`i=${i} -> M*i=${Math.round(raw)} -> mod N=${j}`, 24, h - 28);
-        }
+        ctx.lineWidth = Math.max(2.8, this.lineWidth + 1.5);
+        ctx.strokeStyle = 'rgba(255, 216, 102, 0.95)';
+        ctx.beginPath();
+        ctx.moveTo(from.x, from.y);
+        ctx.lineTo(to.x, to.y);
+        ctx.stroke();
+
+        ctx.fillStyle = '#ffd166';
+        ctx.beginPath();
+        ctx.arc(from.x, from.y, Math.max(4, this.pointRadius + 2.5), 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = '#06d6a0';
+        ctx.beginPath();
+        ctx.arc(to.x, to.y, Math.max(4, this.pointRadius + 2.5), 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = 'rgba(255,255,255,0.98)';
+        ctx.font = '600 16px Inter, system-ui, sans-serif';
+        ctx.fillText(`i=${i} -> M*i=${Math.round(raw)} -> mod N=${j}`, 24, h - 28);
+    },
+
+    drawRampOverlay(ctx, viewState) {
+        ctx.fillStyle = 'rgba(255,255,255,0.92)';
+        ctx.font = '600 14px Inter, system-ui, sans-serif';
 
         if (this.learningMode === 'n-ramp') {
-            ctx.fillStyle = 'rgba(255,255,255,0.92)';
-            ctx.font = '600 14px Inter, system-ui, sans-serif';
             const speed = this.learnN < this.nRampSwitchN ? this.nRampSlowRate : this.nRampFastRate;
-            ctx.fillText(`N Ramp | speed=${speed.toFixed(1)}/s`, 24, h - 28);
+            ctx.fillText(`N Ramp | speed=${speed.toFixed(1)}/s`, 24, viewState.h - 28);
         }
 
         if (this.learningMode === 'm-ramp') {
-            ctx.fillStyle = 'rgba(255,255,255,0.92)';
-            ctx.font = '600 14px Inter, system-ui, sans-serif';
-            ctx.fillText(`M Ramp | dM/dt=${this.mRampEffectiveRate.toFixed(3)}`, 24, h - 28);
+            ctx.fillText(`M Ramp | dM/dt=${this.mRampEffectiveRate.toFixed(3)}`, 24, viewState.h - 28);
         }
 
-        if (this.learningMode === 'gcd' && n > 0) {
-            ctx.fillStyle = 'rgba(255,255,255,0.92)';
-            ctx.font = '600 14px Inter, system-ui, sans-serif';
-            const loopCount = this.gcd(n, this.positiveMod(Math.round(m), n));
-            ctx.fillText(`GCD Mode | loop groups = ${loopCount}`, 24, h - 28);
+        if (this.learningMode === 'gcd' && viewState.n > 0) {
+            const loopCount = this.gcd(viewState.n, this.positiveMod(Math.round(viewState.m), viewState.n));
+            ctx.fillText(`GCD Mode | loop groups = ${loopCount}`, 24, viewState.h - 28);
         }
 
         if (this.learningMode === 'integer-snap') {
-            ctx.fillStyle = 'rgba(255,255,255,0.92)';
-            ctx.font = '600 14px Inter, system-ui, sans-serif';
-            ctx.fillText(`Integer Snap | speed = ${this.snapRate.toFixed(2)}`, 24, h - 28);
+            ctx.fillText(`Integer Snap | speed = ${this.snapRate.toFixed(2)}`, 24, viewState.h - 28);
         }
+    },
 
+    drawTimedModeOverlay(ctx, viewState) {
         if (this.learningMode === 'classic') {
-            ctx.fillStyle = 'rgba(255,255,255,0.92)';
-            ctx.font = '600 14px Inter, system-ui, sans-serif';
-            const timeLeft = Math.max(0, this.classicDuration - this.classicTimer);
             const targetM = this.classicTargets[this.classicIndex];
             const patternName = targetM === 2 ? 'Cardioid' : (targetM === 3 ? 'Nephroid' : `${targetM - 1} Petals`);
-            ctx.fillText(`Classic Mode | Next in ${timeLeft.toFixed(1)}s`, 24, h - 28);
-
-            // Large Top-Right Name
-            ctx.save();
-            ctx.textAlign = 'right';
-            ctx.font = '700 32px Inter, system-ui, sans-serif';
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.45)';
-            ctx.fillText(patternName, w - 32, 52);
-            ctx.restore();
+            this.drawPatternOverlay(ctx, viewState, {
+                label: `Classic Mode | Next in ${Math.max(0, this.classicDuration - this.classicTimer).toFixed(1)}s`,
+                patternName
+            });
         }
 
         if (this.learningMode === 'ultimate') {
-            ctx.fillStyle = 'rgba(255,255,255,0.92)';
-            ctx.font = '600 14px Inter, system-ui, sans-serif';
-            const timeLeft = Math.max(0, this.ultimateDuration - this.ultimateTimer);
             const targetM = this.ultimateTargets[this.ultimateIndex];
             const names = {
                 2: 'Cardioid', 2.1: 'Warped Heart', 1.618: 'Golden Ratio', 2.5: 'Split Cardioid',
                 3: 'Nephroid', 3.14159: 'Pi Spiral', 3.5: 'Split Nephroid', 4: 'Clover',
-                5: 'Flower', 8: 'Infinity Petals', 13: 'Fibonacci Bloom', 
-                21: 'Fibonacci Spiral', 34: 'Golden Spiral', 55: 'Star Dust', 
+                5: 'Flower', 8: 'Infinity Petals', 13: 'Fibonacci Bloom',
+                21: 'Fibonacci Spiral', 34: 'Golden Spiral', 55: 'Star Dust',
                 67: 'Sun Star', 89: 'Natural Harmony', 99: 'Cosmic Web',
-                181: 'Global Grid (Mirror)', 181.5: 'Warped Grid (Chaos)', 
+                181: 'Global Grid (Mirror)', 181.5: 'Warped Grid (Chaos)',
                 359: 'The Singularity (Focus)', 359.7: 'Stardust Fountain'
             };
-            const patternName = names[targetM] || 'Complex Pattern';
-            ctx.fillText(`Ultimate Mode | Next in ${timeLeft.toFixed(1)}s`, 24, h - 28);
-
-            // Large Top-Right Name
-            ctx.save();
-            ctx.textAlign = 'right';
-            ctx.font = '700 32px Inter, system-ui, sans-serif';
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.45)';
-            ctx.fillText(patternName, w - 32, 52);
-            ctx.restore();
+            this.drawPatternOverlay(ctx, viewState, {
+                label: `Ultimate Mode | Next in ${Math.max(0, this.ultimateDuration - this.ultimateTimer).toFixed(1)}s`,
+                patternName: names[targetM] || 'Complex Pattern'
+            });
         }
 
         if (this.learningMode === 'mirror-chaos') {
-            ctx.fillStyle = 'rgba(255,255,255,0.92)';
-            ctx.font = '600 14px Inter, system-ui, sans-serif';
-            const timeLeft = Math.max(0, this.mirrorDuration - this.mirrorTimer);
             const targetM = this.mirrorTargets[this.mirrorIndex];
             const names = {
                 2.5: 'Split Cardioid', 3.5: 'Split Nephroid', 4.5: 'Split Clover',
                 6.66: 'Order in Chaos', 13.13: 'Abstract Rhythm',
-                181: 'Global Grid (Mirror)', 181.5: 'Warped Grid (Chaos)', 
+                181: 'Global Grid (Mirror)', 181.5: 'Warped Grid (Chaos)',
                 359: 'The Singularity (Focus)', 359.7: 'Stardust Fountain'
             };
-            const patternName = names[targetM] || 'Complex Pattern';
-            ctx.fillText(`Mirror & Chaos | Next in ${timeLeft.toFixed(1)}s`, 24, h - 28);
-
-            // Large Top-Right Name
-            ctx.save();
-            ctx.textAlign = 'right';
-            ctx.font = '700 32px Inter, system-ui, sans-serif';
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.45)';
-            ctx.fillText(patternName, w - 32, 52);
-            ctx.restore();
+            this.drawPatternOverlay(ctx, viewState, {
+                label: `Mirror & Chaos | Next in ${Math.max(0, this.mirrorDuration - this.mirrorTimer).toFixed(1)}s`,
+                patternName: names[targetM] || 'Complex Pattern'
+            });
         }
+    },
+
+    drawPatternOverlay(ctx, viewState, config) {
+        ctx.fillStyle = 'rgba(255,255,255,0.92)';
+        ctx.font = '600 14px Inter, system-ui, sans-serif';
+        ctx.fillText(config.label, 24, viewState.h - 28);
+
+        ctx.save();
+        ctx.textAlign = 'right';
+        ctx.font = '700 32px Inter, system-ui, sans-serif';
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.45)';
+        ctx.fillText(config.patternName, viewState.w - 32, 52);
+        ctx.restore();
     }
 };

@@ -194,6 +194,32 @@ button:hover {
   flex: 1;
 }
 
+.control-item-slider {
+  flex-wrap: wrap;
+  align-items: flex-start;
+}
+
+.control-item-slider label,
+.control-item-slider .control-value {
+  flex: 0 0 auto;
+}
+
+.control-item-slider label {
+  min-width: 0;
+  max-width: calc(100% - 72px);
+}
+
+.control-item-slider .control-value {
+  min-width: 60px;
+  margin-left: auto;
+}
+
+.control-item-slider input[type="range"] {
+  width: 100%;
+  flex: 0 0 100%;
+  margin-top: 2px;
+}
+
 .control-item select,
 .control-item input[type="range"] {
   width: 150px;
