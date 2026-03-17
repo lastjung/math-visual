@@ -10,7 +10,7 @@ const CardioidCircleCase = {
     isPaused: false,
 
     pointCount: 250,
-    multiplier: 40,
+    multiplier: 0,
     multiplierSpeed: 0,
     lineWidth: 1.85,
     lineAlpha: 0.4,

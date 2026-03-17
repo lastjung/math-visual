@@ -53,7 +53,9 @@ const CardioidCircleSorting = {
             ? [
                 { key: 'lightnessBucket', label: 'Lightness' },
                 { key: 'saturationBucket', label: 'Saturation' },
-                { key: 'hueBucket', label: 'Hue' }
+                { key: 'hueKey', divisor: 1, label: 'Hue 1s' },
+                { key: 'hueKey', divisor: 10, label: 'Hue 10s' },
+                { key: 'hueKey', divisor: 100, label: 'Hue 100s' }
             ]
             : [
                 { key: 'hueKey', divisor: 1, label: 'Hue 1s' },
@@ -210,7 +212,11 @@ const CardioidCircleSorting = {
         const shuffleOrder = this.ensureShuffleOrder(n, m);
         const chords = [];
         for (let i = 0; i < n; i++) {
-            const visual = this.lineVisual(i, n, { x: 0, y: 0 }, { x: 0, y: 0 }, radius);
+            const from = this.circlePoint(i, n, radius, cx, cy);
+            const j = (m * i) % n;
+            const to = this.circlePointByIndex(j, n, radius, cx, cy);
+
+            const visual = this.lineVisual(i, n, from, to, radius);
             chords.push({
                 originalIndex: i,
                 hue: visual.hue,
