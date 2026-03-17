@@ -179,62 +179,88 @@ button:hover {
 }
 
 .control-item {
+  display: grid;
+  gap: 8px;
+  padding: 8px 0;
+}
+
+.control-item-select {
+  grid-template-columns: 110px minmax(0, 1fr);
+  align-items: center;
+}
+
+.control-item-button {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.control-item-slider {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.control-item-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 6px 0;
+  min-width: 0;
 }
 
 .control-item label {
   color: var(--muted);
-  font-size: 0.85rem;
-  font-weight: 500;
+  font-size: 0.82rem;
+  font-weight: 600;
   margin: 0;
-  flex: 1;
-}
-
-.control-item-slider {
-  flex-wrap: wrap;
-  align-items: flex-start;
-}
-
-.control-item-slider label,
-.control-item-slider .control-value {
-  flex: 0 0 auto;
-}
-
-.control-item-slider label {
   min-width: 0;
-  max-width: calc(100% - 72px);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.control-item-slider .control-value {
-  min-width: 60px;
-  margin-left: auto;
+.control-item-select > label {
+  width: 110px;
 }
 
-.control-item-slider input[type="range"] {
+.control-item-slider .control-item-header label {
+  width: auto;
+  white-space: normal;
+}
+
+.control-item-button label {
   width: 100%;
-  flex: 0 0 100%;
-  margin-top: 2px;
-}
-
-.control-item select,
-.control-item input[type="range"] {
-  width: 150px;
-  flex: 0 0 150px;
-  height: 30px;
-  margin: 0;
+  white-space: normal;
+  margin-bottom: 2px;
 }
 
 .control-item select {
+  width: 100%;
+  min-width: 0;
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 6px;
+  border-radius: 8px;
   color: white;
-  padding: 0 8px;
+  padding: 0 10px;
+  height: 34px;
   cursor: pointer;
+  font-size: 0.85rem;
+}
+
+.control-item input[type="range"] {
+  width: 100%;
+  height: 6px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.1);
+  outline: none;
+  cursor: pointer;
+  -webkit-appearance: none;
+}
+
+.control-item input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--apple-accent-blue);
+  box-shadow: 0 0 10px rgba(0, 122, 255, 0.4);
 }
 
 .control-item button {
@@ -278,12 +304,13 @@ button:hover {
 
 .control-value {
   color: var(--apple-accent-blue);
-  font-size: 0.8rem;
+  font-size: 0.85rem;
   font-weight: 700;
-  min-width: 52px;
+  min-width: 58px;
   text-align: right;
   font-family: 'IBM Plex Mono', monospace;
   font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
 }
 
 .guide-modal {

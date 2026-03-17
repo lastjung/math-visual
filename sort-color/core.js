@@ -50,7 +50,18 @@ const Core = {
         const btnToggleView = document.getElementById('btn-toggle-view');
         const btnHideHud = document.getElementById('btn-hide-hud');
 
-        if (applePlay) applePlay.onclick = () => this.togglePlay();
+        if (applePlay) {
+            applePlay.onclick = () => {
+                if (this.currentCase && typeof this.currentCase.sortMode !== 'undefined') {
+                    // Set to a sorting mode if turned off
+                    if (this.currentCase.sortMode === 'off') {
+                        this.currentCase.sortMode = 'hue';
+                    }
+                    this.currentCase.restartSort();
+                    this.updateAppleHUD();
+                }
+            };
+        }
         if (appleReset) appleReset.onclick = () => this.resetCase();
         
         if (appleVolIcon) appleVolIcon.onclick = () => this.toggleAudio();
@@ -169,16 +180,22 @@ const Core = {
             timeEl.textContent = this.formatRecordingTimeMMSS(elapsed);
         }
 
-        // Play/Pause SVG toggle
+        // Sorting Icon toggle
         const applePlay = document.getElementById('apple-play');
         const playIconSvg = document.getElementById('play-icon-svg');
         if (applePlay && playIconSvg) {
-            if (this.isRunning) {
+            const isSorting = this.currentCase
+                && this.currentCase.sortMode !== 'off'
+                && this.currentCase.sortingStatus === 'running';
+            
+            if (isSorting) {
                 applePlay.classList.add('is-playing');
-                playIconSvg.innerHTML = `<svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>`;
+                // Sparkle or active sort icon
+                playIconSvg.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5h10"></path><path d="M11 9h7"></path><path d="M11 13h4"></path><path d="M3 17l3 3 3-3"></path><path d="M6 18V4"></path></svg>`;
             } else {
                 applePlay.classList.remove('is-playing');
-                playIconSvg.innerHTML = `<svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>`;
+                // Normal sort icon
+                playIconSvg.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5h10"></path><path d="M11 9h7"></path><path d="M11 13h4"></path><path d="M3 17l3 3 3-3"></path><path d="M6 18V4"></path></svg>`;
             }
         }
     },
@@ -208,39 +225,81 @@ const Core = {
     updateControls() {
         const host = document.getElementById('control-list');
         if (!host || !this.currentCase || !Array.isArray(this.currentCase.uiConfig)) return;
+        host.innerHTML = '';
 
         this.currentCase.uiConfig.forEach((control) => {
             if (control.type === 'divider') {
-                let divider = host.querySelector(`.control-divider[data-id="${control.id || control.label}"]`);
-                if (!divider) {
-                    divider = document.createElement('div');
-                    divider.className = 'control-divider';
-                    divider.setAttribute('data-id', control.id || control.label);
-                    if (control.label) {
-                        const text = document.createElement('span');
-                        text.textContent = control.label;
-                        divider.appendChild(text);
-                    }
-                    if (control.actionLabel && typeof control.onAction === 'function') {
-                        const button = document.createElement('button');
-                        button.type = 'button';
-                        button.className = 'control-divider-button';
-                        button.textContent = control.actionLabel;
-                        button.onclick = () => control.onAction();
-                        divider.appendChild(button);
-                    }
-                    host.appendChild(divider);
+                const divider = document.createElement('div');
+                divider.className = 'control-divider';
+                divider.setAttribute('data-id', control.id || control.label);
+                if (control.label) {
+                    const text = document.createElement('span');
+                    text.textContent = control.label;
+                    divider.appendChild(text);
                 }
+                if (control.actionLabel && typeof control.onAction === 'function') {
+                    const button = document.createElement('button');
+                    button.type = 'button';
+                    button.className = 'control-divider-button';
+                    button.textContent = control.actionLabel;
+                    button.onclick = () => control.onAction();
+                    divider.appendChild(button);
+                }
+                host.appendChild(divider);
                 return;
             }
 
-            let item = host.querySelector(`.control-item[data-id="${control.id}"]`);
-            if (!item) {
-                item = document.createElement('div');
-                item.className = 'control-item';
-                item.classList.add(`control-item-${control.type}`);
-                item.setAttribute('data-id', control.id);
+            const item = document.createElement('div');
+            item.className = `control-item control-item-${control.type}`;
+            item.setAttribute('data-id', control.id);
 
+            if (control.type === 'slider') {
+                const header = document.createElement('div');
+                header.className = 'control-item-header';
+
+                const label = document.createElement('label');
+                label.textContent = control.label;
+
+                const valueDisplay = document.createElement('div');
+                valueDisplay.className = 'control-value';
+                valueDisplay.id = `val-${control.id}`;
+                valueDisplay.textContent = this.formatControlValue(control, control.value);
+
+                const input = document.createElement('input');
+                input.type = 'range';
+                input.id = `input-${control.id}`;
+                input.min = String(control.min);
+                input.max = String(control.max);
+                input.step = String(control.step);
+                input.value = String(control.value);
+                input.oninput = (e) => {
+                    const nextValue = Number(e.target.value);
+                    valueDisplay.textContent = this.formatControlValue(control, nextValue);
+                    control.onChange(nextValue);
+                };
+
+                header.appendChild(label);
+                header.appendChild(valueDisplay);
+                item.appendChild(header);
+                item.appendChild(input);
+            } else if (control.type === 'select') {
+                const label = document.createElement('label');
+                label.textContent = control.label;
+
+                const select = document.createElement('select');
+                select.id = `input-${control.id}`;
+                control.options.forEach((option) => {
+                    const el = document.createElement('option');
+                    el.value = option.value;
+                    el.textContent = option.label;
+                    if (option.value === control.value) el.selected = true;
+                    select.appendChild(el);
+                });
+                select.onchange = (e) => control.onChange(e.target.value);
+
+                item.appendChild(label);
+                item.appendChild(select);
+            } else if (control.type === 'button') {
                 if (control.label) {
                     const label = document.createElement('label');
                     label.textContent = control.label;
@@ -249,63 +308,16 @@ const Core = {
                     item.classList.add('no-label');
                 }
 
-                if (control.type === 'slider') {
-                    const valueDisplay = document.createElement('div');
-                    valueDisplay.className = 'control-value';
-                    valueDisplay.id = `val-${control.id}`;
-                    
-                    const input = document.createElement('input');
-                    input.type = 'range';
-                    input.id = `input-${control.id}`;
-                    input.min = String(control.min);
-                    input.max = String(control.max);
-                    input.step = String(control.step);
-                    input.oninput = (e) => {
-                        const nextValue = Number(e.target.value);
-                        valueDisplay.textContent = this.formatControlValue(control, nextValue);
-                        control.onChange(nextValue);
-                    };
-
-                    item.appendChild(valueDisplay);
-                    item.appendChild(input);
-                } else if (control.type === 'select') {
-                    const select = document.createElement('select');
-                    select.id = `input-${control.id}`;
-                    control.options.forEach((option) => {
-                        const el = document.createElement('option');
-                        el.value = option.value;
-                        el.textContent = option.label;
-                        select.appendChild(el);
-                    });
-                    select.onchange = (e) => control.onChange(e.target.value);
-                    item.appendChild(select);
-                } else if (control.type === 'button') {
-                    const button = document.createElement('button');
-                    button.type = 'button';
-                    button.id = `input-${control.id}`;
-                    button.className = 'control-button-main';
-                    button.onclick = () => control.onClick();
-                    item.appendChild(button);
-                }
-                host.appendChild(item);
+                const button = document.createElement('button');
+                button.type = 'button';
+                button.id = `input-${control.id}`;
+                button.className = 'control-button-main';
+                button.textContent = control.value || control.label;
+                button.onclick = () => control.onClick();
+                item.appendChild(button);
             }
 
-            // Update existing values
-            const input = document.getElementById(`input-${control.id}`);
-            const display = document.getElementById(`val-${control.id}`);
-            
-            if (input) {
-                if (control.type === 'slider' || control.type === 'select') {
-                    if (document.activeElement !== input) {
-                        input.value = String(control.value);
-                    }
-                } else if (control.type === 'button') {
-                    input.textContent = control.value || control.label;
-                }
-            }
-            if (display) {
-                display.textContent = this.formatControlValue(control, control.value);
-            }
+            host.appendChild(item);
         });
 
         const playBtn = document.getElementById('btn-play');

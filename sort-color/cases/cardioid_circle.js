@@ -20,6 +20,7 @@ const CardioidCircleCase = {
     integersOnly: false,
     colorMode: 'angle', // monochrome | angle | length | origin
     sortMode: 'off', // off | hue | lsh
+    sortingStatus: 'idle', // idle | running | completed
     sortSpeed: 48,
     sortProgress: 0,
     sortPlan: null,
@@ -137,7 +138,7 @@ const CardioidCircleCase = {
                 value: this.pointCount,
                 onChange: (v) => {
                     this.pointCount = Math.max(0, Math.floor(v));
-                    this.restartSort();
+                    this.resetSortState('idle');
                     this.draw();
                 }
             },
@@ -155,7 +156,7 @@ const CardioidCircleCase = {
                     if (this.learningMode === 'n-ramp') {
                         this.learnFixedM = v;
                     }
-                    this.restartSort();
+                    this.resetSortState('idle');
                     this.draw();
                 }
             },
@@ -198,7 +199,7 @@ const CardioidCircleCase = {
                 ],
                 onChange: (v) => {
                     this.colorMode = v;
-                    this.restartSort();
+                    this.resetSortState('idle');
                     this.draw();
                 }
             },
@@ -215,7 +216,7 @@ const CardioidCircleCase = {
             {
                 type: 'select',
                 id: 'mc_sort',
-                label: 'Sorting',
+                label: 'Method',
                 value: this.sortMode,
                 options: [
                     { value: 'off', label: 'Off' },
@@ -224,7 +225,7 @@ const CardioidCircleCase = {
                 ],
                 onChange: (v) => {
                     this.sortMode = v;
-                    this.restartSort();
+                    this.resetSortState('idle');
                     this.draw();
                 }
             },
@@ -557,6 +558,7 @@ const CardioidCircleCase = {
         this.shuffleFlash = 0;
         this.showHud = true;
         this.isPaused = false;
+        this.sortingStatus = 'idle';
         this.learningMode = 'off';
         this.learnFixedM = 0;
         this.learnN = 0;
@@ -645,10 +647,19 @@ const CardioidCircleCase = {
         return this.lineVisual(i, n, from, to, radius).color;
     },
 
-    restartSort() {
+    resetSortState(status = 'idle') {
+        this.sortingStatus = status;
         this.sortProgress = 0;
         this.sortPlan = null;
         this.sortSignature = '';
+    },
+
+    restartSort() {
+        if (this.sortMode === 'off') {
+            this.resetSortState('idle');
+            return;
+        }
+        this.resetSortState('running');
         if (typeof Core !== 'undefined' && Core.currentCase === this) {
             Core.updateControls();
         }
@@ -692,7 +703,7 @@ const CardioidCircleCase = {
         this.shuffleSignature = '';
         this.shuffleFlash = 1;
         this.sortMode = 'off';
-        this.restartSort();
+        this.resetSortState('idle');
     },
 
     buildChordData(n, m, radius, cx, cy) {
@@ -747,7 +758,7 @@ const CardioidCircleCase = {
     },
 
     isSortingEnabled() {
-        return (this.sortMode === 'hue' || this.sortMode === 'lsh') && (this.learningMode === 'off' || this.isPaused);
+        return (this.sortingStatus === 'running' || this.sortingStatus === 'completed') && (this.sortMode === 'hue' || this.sortMode === 'lsh') && (this.learningMode === 'off' || this.isPaused);
     },
 
     ensureSortPlan(chords, n, m) {
@@ -1093,6 +1104,9 @@ const CardioidCircleCase = {
         const n = Math.max(0, Math.floor(this.pointCount));
         const totalSteps = (this.sortPlan && this.sortPlan.totalSteps) ? this.sortPlan.totalSteps : n * 3;
         this.sortProgress = Math.min(totalSteps, this.sortProgress + this.sortSpeed * dt);
+        if (this.sortProgress >= totalSteps) {
+            this.sortingStatus = 'completed';
+        }
     },
 
     updateShuffleFlash(dt) {
