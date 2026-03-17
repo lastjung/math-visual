@@ -120,6 +120,9 @@ const CardioidCircleRender = {
         const { n, hudM, sortingActive, sortView, sortPlan } = viewState;
         const formatSortSeconds = (seconds) => `${Math.max(0, seconds).toFixed(1)}s`;
         const hudSpeed = this.learningMode === 'm-ramp' ? this.mRampEffectiveRate : this.multiplierSpeed;
+        const simElapsedLabel = (typeof Core !== 'undefined' && Core.isSimRunning && typeof Core.getSimulationElapsedMs === 'function')
+            ? Core.formatRecordingTimeMMSS(Core.getSimulationElapsedMs())
+            : null;
 
         ctx.fillStyle = 'rgba(255,255,255,0.92)';
         ctx.font = '600 14px Inter, system-ui, sans-serif';
@@ -139,20 +142,32 @@ const CardioidCircleRender = {
             }
         }
 
-        ctx.fillText(`Sort Time: ${sortTimeLabel}`, 24, 30);
+        let nextY = 30;
+        ctx.fillText(`Sort Time: ${sortTimeLabel}`, 24, nextY);
+        nextY += 22;
         if (sortingActive && sortView) {
             const sortLabel = this.sortMode === 'lsh' ? 'L-S-H Radix' : 'Hue Radix';
             const digitLabel = sortPlan?.passes?.[sortView.passIndex]?.label || `Pass ${sortView.passNumber}`;
-            ctx.fillText(`Sort: ${sortLabel}`, 24, 52);
-            ctx.fillText(`Pass: ${digitLabel}`, 24, 74);
+            ctx.fillText(`Sort: ${sortLabel}`, 24, nextY);
+            nextY += 22;
+            ctx.fillText(`Pass: ${digitLabel}`, 24, nextY);
+            nextY += 22;
             if (sortView.activeDigit != null) {
-                ctx.fillText(`Bucket: ${sortView.activeDigit}`, 24, 96);
+                ctx.fillText(`Bucket: ${sortView.activeDigit}`, 24, nextY);
+                nextY += 22;
             }
         } else if (this.isSortModeAvailable()) {
             const sortLabel = this.sortMode === 'lsh' ? 'L-S-H Radix' : 'Hue Radix';
-            ctx.fillText(`Sort: ${sortLabel}`, 24, 52);
-            ctx.fillText(`Step: ${Math.floor(this.sortProgress)}`, 24, 74);
-            ctx.fillText(`State: ${this.sortingStatus}`, 24, 96);
+            ctx.fillText(`Sort: ${sortLabel}`, 24, nextY);
+            nextY += 22;
+            ctx.fillText(`Step: ${Math.floor(this.sortProgress)}`, 24, nextY);
+            nextY += 22;
+            ctx.fillText(`State: ${this.sortingStatus}`, 24, nextY);
+            nextY += 22;
+        }
+
+        if (simElapsedLabel) {
+            ctx.fillText(`Sim Time: ${simElapsedLabel}`, 24, nextY);
         }
 
         ctx.save();

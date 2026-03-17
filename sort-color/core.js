@@ -2,6 +2,10 @@ const Core = {
     currentCase: null,
     isRunning: true,
     recordingStartMs: performance.now(),
+    simTimers: [],
+    isSimRunning: false,
+    simStateSnapshot: null,
+    simStartMs: null,
     BGM_BASE: '../visualization/assets/music/bgm/',
     tracks: [
         'math/Math_01_Minimalist_Sine_Pulse.mp3', 'math/Math_02_Fractal_Recursive_Ambient.mp3',
@@ -92,6 +96,12 @@ const Core = {
 
         if (applePlay) {
             applePlay.onclick = () => {
+                const scenarioSelect = document.getElementById('apple-scenario-select');
+                if (scenarioSelect && scenarioSelect.value === '1_rays') {
+                    this.runRaysSimulation();
+                    this.updateSortBar();
+                    return;
+                }
                 if (this.currentCase && typeof this.currentCase.sortMode !== 'undefined') {
                     this.currentCase.toggleSortPlayback();
                     this.updateSortBar();
@@ -159,6 +169,16 @@ const Core = {
             };
         }
 
+        const scenarioSelect = document.getElementById('apple-scenario-select');
+        if (scenarioSelect) {
+            scenarioSelect.onchange = (e) => {
+                const val = e.target.value;
+                if (val !== '1_rays') {
+                    this.stopSimulation();
+                }
+            };
+        }
+
         // Add Dragging Support
         const bar = document.getElementById('sort-bar');
         if (bar) {
@@ -206,9 +226,31 @@ const Core = {
                 if (this.currentCase && typeof this.currentCase.resize === 'function') {
                     setTimeout(() => this.currentCase.resize(), 500);
                 }
+                this.stopSimulation();
             }
+
+            const isA = e.code === 'KeyA';
+            const is1 = e.code === 'Digit1';
+            
+            // Check if A is held (we can use a property to track this if needed, but for simplicity let's check Alt/Shift or just A+1 combo)
+            // The user specifically asked for A+1 (A+4 style)
+            if (e.code === 'Digit1' && this.aHeld) {
+                e.preventDefault();
+                this.runRaysSimulation();
+            }
+
+            if (e.code === 'KeyA') {
+                this.aHeld = true;
+            }
+
             if (e.code === 'Space') {
                 e.preventDefault();
+                const scenarioSelect = document.getElementById('apple-scenario-select');
+                if (scenarioSelect && scenarioSelect.value === '1_rays') {
+                    this.runRaysSimulation();
+                    this.updateSortBar();
+                    return;
+                }
                 if (this.currentCase && typeof this.currentCase.toggleSortPlayback === 'function') {
                     this.currentCase.toggleSortPlayback();
                     this.updateSortBar();
@@ -216,14 +258,143 @@ const Core = {
             }
         });
 
+        window.addEventListener('keyup', (e) => {
+            if (e.code === 'KeyA') this.aHeld = false;
+        });
+
         setInterval(() => this.updateSortBar(), 500);
+    },
+
+    aHeld: false,
+
+    clearSimTimers() {
+        this.simTimers.forEach(id => clearTimeout(id));
+        this.simTimers = [];
+    },
+
+    showSimMessage(title, subtitle, duration = 3000) {
+        const overlay = document.getElementById('sim-overlay');
+        const titleEl = document.getElementById('sim-title');
+        const subtitleEl = document.getElementById('sim-subtitle');
+        if (!overlay || !titleEl || !subtitleEl) return;
+
+        titleEl.textContent = title;
+        subtitleEl.textContent = subtitle;
+        overlay.classList.add('visible');
+
+        const tid = setTimeout(() => {
+            overlay.classList.remove('visible');
+        }, duration);
+        this.simTimers.push(tid);
+    },
+
+    stopSimulation() {
+        this.clearSimTimers();
+        this.isSimRunning = false;
+        this.simStartMs = null;
+        const overlay = document.getElementById('sim-overlay');
+        if (overlay) overlay.classList.remove('visible');
+
+        if (this.currentCase && this.simStateSnapshot) {
+            if (typeof this.simStateSnapshot.pointCount === 'number') {
+                this.currentCase.pointCount = this.simStateSnapshot.pointCount;
+            }
+            if (typeof this.currentCase.resetSortState === 'function') {
+                this.currentCase.resetSortState('idle');
+            }
+            if (typeof this.currentCase.draw === 'function') {
+                this.currentCase.draw();
+            }
+            this.updateControls();
+        }
+        this.simStateSnapshot = null;
+        
+    },
+
+    runRaysSimulation() {
+        if (this.isSimRunning) {
+            this.stopSimulation();
+            return;
+        }
+        if (!this.currentCase) return;
+
+        this.isSimRunning = true;
+        this.simStartMs = performance.now();
+        this.simStateSnapshot = {
+            pointCount: this.currentCase.pointCount
+        };
+        const scenarioSelect = document.getElementById('apple-scenario-select');
+        if (scenarioSelect) scenarioSelect.value = '1_rays';
+
+        const stages = [
+            { n: 180, title: 'Color Radix Sort', subtitle: '180 Rays' },
+            { n: 360, title: 'Color Radix Sort', subtitle: '360 Rays' },
+            { n: 720, title: 'Color Radix Sort', subtitle: '720 Rays' },
+            { n: 1080, title: 'Color Radix Sort', subtitle: '1080 Rays' }
+        ];
+
+        let currentIdx = 0;
+
+        const runStage = () => {
+            if (!this.isSimRunning || currentIdx >= stages.length) {
+                this.showSimMessage('Color Radix Sort', 'Complete', 4000);
+                const tid = setTimeout(() => this.stopSimulation(), 4500);
+                this.simTimers.push(tid);
+                return;
+            }
+
+            const stage = stages[currentIdx];
+            
+            // 1. Show message
+            this.showSimMessage(stage.title, stage.subtitle, 2500);
+
+            const tid1 = setTimeout(() => {
+                if (!this.isSimRunning) return;
+                
+                // 2. Set Point Count
+                this.currentCase.pointCount = stage.n;
+                this.currentCase.resetSortState('idle');
+                this.currentCase.draw();
+                this.updateControls();
+
+                // 3. Start Sorting automatically after a short delay
+                const tid2 = setTimeout(() => {
+                    if (!this.isSimRunning) return;
+                    
+                    if (this.currentCase.sortMode === 'off') {
+                        this.currentCase.sortMode = 'hue';
+                    }
+                    this.currentCase.restartSort();
+                    this.updateSortBar();
+
+                    // 4. Wait for sort to finish, then hold the completed frame briefly.
+                    const totalSteps = typeof this.currentCase.getSortTotalSteps === 'function'
+                        ? this.currentCase.getSortTotalSteps()
+                        : (stage.n * 3);
+                    const sortDurationMs = Math.ceil((totalSteps / Math.max(1, this.currentCase.sortSpeed || 1)) * 1000);
+                    const finalHoldMs = 1000;
+                    const sortTime = sortDurationMs + finalHoldMs;
+                    const tid3 = setTimeout(() => {
+                        currentIdx++;
+                        runStage();
+                    }, sortTime);
+                    this.simTimers.push(tid3);
+
+                }, 1000);
+                this.simTimers.push(tid2);
+
+            }, 3000);
+            this.simTimers.push(tid1);
+        };
+
+        runStage();
     },
 
     updateSortBar() {
         // Time
         const timeEl = document.getElementById('apple-time');
         if (timeEl) {
-            const elapsed = this.getRecordingElapsedMs();
+            const elapsed = this.getActiveElapsedMs();
             timeEl.textContent = this.formatRecordingTimeMMSS(elapsed);
         }
 
@@ -566,6 +737,18 @@ const Core = {
 
     getRecordingElapsedMs() {
         return performance.now() - this.recordingStartMs;
+    },
+
+    getSimulationElapsedMs() {
+        if (!this.simStartMs) return 0;
+        return performance.now() - this.simStartMs;
+    },
+
+    getActiveElapsedMs() {
+        if (this.isSimRunning && this.simStartMs) {
+            return this.getSimulationElapsedMs();
+        }
+        return this.getRecordingElapsedMs();
     },
 
     formatRecordingTimeMMSS(ms) {

@@ -80,7 +80,7 @@ const CardioidCircleCase = {
         '- Integers Only: M을 정수로 반올림해 단계적으로 변화.',
         '- HUD: 좌상단 수치 표시 On/Off.',
         '- Reset/Resume: 상단 Master Controls 버튼 사용.',
-        '- Reset 시 기본 세팅(N=250, M=40, M Speed=0.00)으로 복귀.'
+        '- Reset 시 기본 세팅(N=250, M=0, M Speed=0.00)으로 복귀.'
     ].join('\n'),
 
     init() {
@@ -533,7 +533,7 @@ const CardioidCircleCase = {
 
     reset() {
         this.pointCount = 250;
-        this.multiplier = 40;
+        this.multiplier = 0;
         this.multiplierSpeed = 0;
         this.lineWidth = 1.85;
         this.lineAlpha = 0.4;

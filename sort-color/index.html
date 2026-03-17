@@ -32,11 +32,24 @@
             <button id="sorting-panel-close" class="panel-close" title="Close Sorting Panel">×</button>
           </div>
           <div id="sorting-control-list" class="control-list"></div>
+          
+          <!-- Bottom Scenario Combo -->
+          <div class="panel-footer">
+            <span class="scenario-label">Study Journey</span>
+            <select id="apple-scenario-select" class="apple-select-wide">
+              <option value="0_default">0_default</option>
+              <option value="1_rays">1_rays</option>
+            </select>
+          </div>
         </aside>
 
         <section class="stage-panel">
           <div class="canvas-frame">
             <canvas id="mathCanvas"></canvas>
+            <div id="sim-overlay" class="sim-overlay">
+              <div id="sim-title" class="sim-title"></div>
+              <div id="sim-subtitle" class="sim-subtitle"></div>
+            </div>
           </div>
         </section>
 
@@ -68,6 +81,9 @@
             </svg>
             <input type="range" id="apple-vol-slider" class="apple-slider-vol" min="0" max="1" step="0.01" value="0.15" />
           </div>
+          
+          <div class="hud-separator"></div>
+
           <button id="apple-next-track" class="btn-bar-mini" title="Next Track">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
               <polygon points="5 4 15 12 5 20 5 4"></polygon>
@@ -127,7 +143,6 @@
         </div>
       </div>
     </div>
-
 
     <script src="audio.js"></script>
     <script src="core.js"></script>

@@ -184,8 +184,45 @@ button:hover {
 }
 
 .control-list {
+  flex: 1;
   display: grid;
   gap: 14px;
+}
+
+.panel-footer {
+  margin-top: 20px;
+  padding-top: 18px;
+  border-top: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.scenario-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+
+.apple-select-wide {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  color: white;
+  padding: 10px 14px;
+  height: 42px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 600;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.apple-select-wide:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
 }
 
 .control-divider {
@@ -493,14 +530,6 @@ button:hover {
   margin: 0 4px;
 }
 
-.time-display {
-  font-family: 'IBM Plex Sans', sans-serif;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--apple-text-muted);
-  font-variant-numeric: tabular-nums;
-  letter-spacing: 0.08em;
-}
 
 /* Apple Buttons */
 .btn-bar-main {
@@ -593,6 +622,68 @@ button:hover {
   box-shadow: 0 2px 5px rgba(0,0,0,0.4);
 }
 
+.apple-select-mini {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 999px;
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 10px;
+  cursor: pointer;
+  outline: none;
+  transition: all 0.2s ease;
+  min-width: 90px;
+}
+
+.apple-select-mini:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.22);
+  color: white;
+}
+
+.apple-select-mini option {
+  background: #12121e;
+  color: white;
+}
+
+/* Simulation Overlay */
+.sim-overlay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  text-align: center;
+  z-index: 100;
+  opacity: 0;
+  transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+  width: 100%;
+}
+
+.sim-overlay.visible {
+  opacity: 1;
+}
+
+.sim-title {
+  font-family: "Fraunces", serif;
+  font-size: 2.4rem;
+  font-weight: 700;
+  color: white;
+  text-shadow: 0 4px 20px rgba(0,0,0,0.6);
+  margin-bottom: 8px;
+  letter-spacing: -0.02em;
+}
+
+.sim-subtitle {
+  font-family: "IBM Plex Sans", sans-serif;
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: #ffd166;
+  letter-spacing: 0.08em;
+  text-shadow: 0 2px 10px rgba(0,0,0,0.55);
+}
+
 /* Full View & Hidden State Support */
 .apple-player.hidden {
   opacity: 0;
@@ -647,6 +738,7 @@ button:hover {
   min-height: 0;
   border-radius: 16px;
 }
+
 
 @media (max-width: 768px) {
   .apple-player {
