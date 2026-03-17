@@ -333,6 +333,36 @@ const CardioidCircleCase = {
                     }
                 },
                 {
+                    type: 'slider',
+                    id: 'mc_nr_slow',
+                    label: 'N Ramp: Slow Speed',
+                    min: 1,
+                    max: 80,
+                    step: 1,
+                    value: this.nRampSlowRate,
+                    onChange: (v) => { this.nRampSlowRate = v; }
+                },
+                {
+                    type: 'slider',
+                    id: 'mc_nr_fast',
+                    label: 'N Ramp: Fast Speed',
+                    min: 20,
+                    max: 500,
+                    step: 1,
+                    value: this.nRampFastRate,
+                    onChange: (v) => { this.nRampFastRate = v; }
+                },
+                {
+                    type: 'slider',
+                    id: 'mc_nr_switch',
+                    label: 'N Ramp: Switch At N',
+                    min: 10,
+                    max: 1000,
+                    step: 1,
+                    value: this.nRampSwitchN,
+                    onChange: (v) => { this.nRampSwitchN = Math.floor(v); }
+                },
+                {
                     type: 'button',
                     id: 'mc_nr_restart',
                     label: 'Restart N Ramp',
@@ -785,7 +815,9 @@ const CardioidCircleCase = {
     updateLearningModeSimulation(dt) {
         if (this.learningMode === 'n-ramp') {
             this.multiplier = this.learnFixedM;
-            this.learnN = Math.max(0, Math.floor(this.learnN));
+            const speed = this.learnN < this.nRampSwitchN ? this.nRampSlowRate : this.nRampFastRate;
+            this.learnN += speed * dt;
+            if (this.learnN > this.nRampMaxN) this.learnN = 0;
             this.pointCount = Math.max(0, Math.floor(this.learnN));
             return true;
         }
