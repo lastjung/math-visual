@@ -8,7 +8,7 @@ const CardioidCircleSorting = {
     },
 
     isSortModeAvailable() {
-        return this.sortMode === 'hue' || this.sortMode === 'lsh';
+        return this.sortMode === 'hue' || this.sortMode === 'lsh' || this.sortMode === 'bubble';
     },
 
     canRunSort() {
@@ -48,6 +48,40 @@ const CardioidCircleSorting = {
                 lightnessBucket: this.getChannelBucket(chord.lightness, 100)
             };
         });
+
+        if (this.sortMode === 'bubble') {
+            const arr = [...sourceOrder];
+            const snapshots = [];
+            let totalSteps = 0;
+
+            for (let passIndex = 0; passIndex < n - 1; passIndex++) {
+                const innerSteps = n - 1 - passIndex;
+                snapshots.push({
+                    order: [...arr],
+                    passIndex,
+                    stepCount: innerSteps,
+                    label: `Bubble Pass ${passIndex + 1}`
+                });
+                totalSteps += innerSteps;
+
+                for (let compareIndex = 0; compareIndex < innerSteps; compareIndex++) {
+                    if (arr[compareIndex].hueKey > arr[compareIndex + 1].hueKey) {
+                        [arr[compareIndex], arr[compareIndex + 1]] = [arr[compareIndex + 1], arr[compareIndex]];
+                    }
+                }
+            }
+
+            this.sortPlan = {
+                type: 'bubble',
+                snapshots,
+                finalState: [...arr],
+                totalSteps,
+                n
+            };
+            this.sortSignature = signature;
+            return this.sortPlan;
+        }
+
         const passes = [];
         const passDescriptors = this.sortMode === 'lsh'
             ? [
@@ -279,7 +313,67 @@ const CardioidCircleSorting = {
     },
 
     getSortViewState(plan) {
-        if (!plan || !plan.passes.length) return null;
+        if (!plan) return null;
+
+        if (plan.type === 'bubble') {
+            const totalSteps = plan.totalSteps;
+            const progress = Math.max(0, Math.min(totalSteps, Math.floor(this.sortProgress)));
+
+            if (progress >= totalSteps) {
+                return {
+                    passIndex: plan.n - 2,
+                    passNumber: Math.max(1, plan.n - 1),
+                    totalPasses: Math.max(1, plan.n - 1),
+                    passLabel: 'Completed',
+                    stepInPass: 0,
+                    totalInPass: 0,
+                    activeDigit: null,
+                    activeIndices: null,
+                    completed: true,
+                    drawEntries: plan.finalState,
+                    coloredCount: plan.finalState.length,
+                    sortedSuffixCount: plan.n
+                };
+            }
+
+            let passIndex = 0;
+            let accumulated = 0;
+            while (passIndex < plan.snapshots.length) {
+                const stepCount = plan.snapshots[passIndex].stepCount;
+                if (progress < accumulated + stepCount) break;
+                accumulated += stepCount;
+                passIndex += 1;
+            }
+
+            const snapshot = plan.snapshots[Math.min(passIndex, plan.snapshots.length - 1)];
+            if (!snapshot) return null;
+
+            const stepInPass = progress - accumulated;
+            const currentArr = [...snapshot.order];
+
+            for (let compareIndex = 0; compareIndex < stepInPass; compareIndex++) {
+                if (currentArr[compareIndex].hueKey > currentArr[compareIndex + 1].hueKey) {
+                    [currentArr[compareIndex], currentArr[compareIndex + 1]] = [currentArr[compareIndex + 1], currentArr[compareIndex]];
+                }
+            }
+
+            return {
+                passIndex,
+                passNumber: passIndex + 1,
+                totalPasses: plan.snapshots.length,
+                passLabel: snapshot.label,
+                stepInPass,
+                totalInPass: snapshot.stepCount,
+                activeDigit: null,
+                activeIndices: [stepInPass, stepInPass + 1],
+                completed: false,
+                drawEntries: currentArr,
+                coloredCount: 0,
+                sortedSuffixCount: passIndex
+            };
+        }
+
+        if (!plan.passes.length) return null;
 
         const totalSteps = plan.totalSteps;
         const completedSteps = Math.max(0, Math.min(totalSteps, Math.floor(this.sortProgress)));
@@ -329,7 +423,7 @@ const CardioidCircleSorting = {
     },
 
     drawSortBuckets(ctx, w, h, sortView) {
-        if (!sortView) return;
+        if (!sortView || this.sortMode === 'bubble') return;
 
         const panelW = 216;
         const panelH = 124;
@@ -419,8 +513,8 @@ const CardioidCircleSorting = {
     updateSortingState(dt) {
         if (this.sortingStatus !== 'running') return;
         if (!this.isSortingEnabled()) return;
-        const n = Math.max(0, Math.floor(this.pointCount));
-        const totalSteps = (this.sortPlan && this.sortPlan.totalSteps) ? this.sortPlan.totalSteps : n * 3;
+        const totalSteps = this.getSortTotalSteps();
+        if (!totalSteps) return;
         this.sortProgress = Math.min(totalSteps, this.sortProgress + this.sortSpeed * dt);
         if (this.sortProgress >= totalSteps) {
             this.sortingStatus = 'completed';

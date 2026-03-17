@@ -241,7 +241,8 @@ const CardioidCircleCase = {
                 options: [
                     { value: 'off', label: 'Off' },
                     { value: 'hue', label: 'Hue Radix' },
-                    { value: 'lsh', label: 'L-S-H Radix' }
+                    { value: 'lsh', label: 'L-S-H Radix' },
+                    { value: 'bubble', label: 'Bubble Sort' }
                 ],
                 onChange: (v) => {
                     this.sortMode = v;

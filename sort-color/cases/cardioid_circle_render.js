@@ -83,7 +83,14 @@ const CardioidCircleRender = {
                 ctx.lineTo(geoTo.x, geoTo.y);
                 ctx.stroke();
 
-                if (k < sortView.coloredCount) {
+                if (sortView.sortedSuffixCount > 0 && k >= lockedN - sortView.sortedSuffixCount) {
+                    const active = this.lineVisual(chord.originalIndex, lockedN, geoFrom, geoTo, radius);
+                    ctx.strokeStyle = active.color;
+                    ctx.beginPath();
+                    ctx.moveTo(geoFrom.x, geoFrom.y);
+                    ctx.lineTo(geoTo.x, geoTo.y);
+                    ctx.stroke();
+                } else if (k < sortView.coloredCount) {
                     const active = this.lineVisual(chord.originalIndex, lockedN, geoFrom, geoTo, radius);
                     ctx.strokeStyle = active.color;
                     ctx.beginPath();
@@ -92,13 +99,33 @@ const CardioidCircleRender = {
                     ctx.stroke();
                 }
 
-                if (!sortView.completed && k === sortView.coloredCount) {
+                if (!sortView.completed && k === sortView.coloredCount && !sortView.activeIndices) {
                     ctx.lineWidth = Math.max(this.lineWidth + 1.5, 3);
                     ctx.strokeStyle = 'rgba(255, 209, 102, 0.95)';
                     ctx.beginPath();
                     ctx.moveTo(geoFrom.x, geoFrom.y);
                     ctx.lineTo(geoTo.x, geoTo.y);
                     ctx.stroke();
+                    ctx.lineWidth = this.lineWidth;
+                }
+
+                if (sortView.activeIndices && sortView.activeIndices.includes(k)) {
+                    const active = this.lineVisual(chord.originalIndex, lockedN, geoFrom, geoTo, radius);
+                    ctx.lineWidth = Math.max(this.lineWidth + 2, 4);
+                    ctx.strokeStyle = 'rgba(255,255,255,0.95)';
+                    ctx.beginPath();
+                    ctx.moveTo(geoFrom.x, geoFrom.y);
+                    ctx.lineTo(geoTo.x, geoTo.y);
+                    ctx.stroke();
+
+                    ctx.strokeStyle = active.color;
+                    ctx.globalAlpha = 0.45;
+                    ctx.lineWidth = Math.max(this.lineWidth + 4, 6);
+                    ctx.beginPath();
+                    ctx.moveTo(geoFrom.x, geoFrom.y);
+                    ctx.lineTo(geoTo.x, geoTo.y);
+                    ctx.stroke();
+                    ctx.globalAlpha = 1;
                     ctx.lineWidth = this.lineWidth;
                 }
             }
@@ -147,8 +174,11 @@ const CardioidCircleRender = {
         ctx.fillText(`Sort Time: ${sortTimeLabel}`, 24, nextY);
         nextY += 22;
         if (sortingActive && sortView) {
-            const sortLabel = this.sortMode === 'lsh' ? 'L-S-H Radix' : 'Hue Radix';
-            const digitLabel = sortPlan?.passes?.[sortView.passIndex]?.label || `Pass ${sortView.passNumber}`;
+            let sortLabel = 'Radix';
+            if (this.sortMode === 'lsh') sortLabel = 'L-S-H Radix';
+            if (this.sortMode === 'hue') sortLabel = 'Hue Radix';
+            if (this.sortMode === 'bubble') sortLabel = 'Bubble Sort';
+            const digitLabel = sortView.passLabel || sortPlan?.passes?.[sortView.passIndex]?.label || `Pass ${sortView.passNumber}`;
             ctx.fillText(`Sort: ${sortLabel}`, 24, nextY);
             nextY += 22;
             ctx.fillText(`Pass: ${digitLabel}`, 24, nextY);
@@ -156,9 +186,17 @@ const CardioidCircleRender = {
             if (sortView.activeDigit != null) {
                 ctx.fillText(`Bucket: ${sortView.activeDigit}`, 24, nextY);
                 nextY += 22;
+            } else if (sortView.activeIndices) {
+                ctx.fillText(`Pair: ${sortView.activeIndices[0]} ↔ ${sortView.activeIndices[1]}`, 24, nextY);
+                nextY += 22;
+                ctx.fillText(`Sorted: ${sortView.sortedSuffixCount} / ${n}`, 24, nextY);
+                nextY += 22;
             }
         } else if (this.isSortModeAvailable()) {
-            const sortLabel = this.sortMode === 'lsh' ? 'L-S-H Radix' : 'Hue Radix';
+            let sortLabel = 'Radix';
+            if (this.sortMode === 'lsh') sortLabel = 'L-S-H Radix';
+            if (this.sortMode === 'hue') sortLabel = 'Hue Radix';
+            if (this.sortMode === 'bubble') sortLabel = 'Bubble Sort';
             ctx.fillText(`Sort: ${sortLabel}`, 24, nextY);
             nextY += 22;
             ctx.fillText(`Step: ${Math.floor(this.sortProgress)}`, 24, nextY);
