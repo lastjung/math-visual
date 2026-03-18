@@ -420,13 +420,6 @@ const SortEngine = {
         ].join('|');
     },
 
-    extractSortItems(items) {
-        return items.map((item) => ({
-            ...item,
-            hueKey: Math.round(item.hue || 0)
-        }));
-    },
-
     isSortingEnabled() {
         return (
             this.sortingStatus === 'running'

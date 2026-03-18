@@ -264,13 +264,11 @@ const GoldbergSphereGeometryProvider = {
         const northPole2D = this.projectSpherePointToCanvas(rotatedNorthPole, cx, cy, radius, scaleBoost);
         const southPole2D = this.projectSpherePointToCanvas(rotatedSouthPole, cx, cy, radius, scaleBoost);
 
-        // Calculate all slot entries first (un-mapped)
         const entriesRaw = topology.faceCells.map((cell, index) => {
             const rotatedCell = cell.map((point) => this.rotateSpherePoint(point, rotX, rotY));
             const projectedCell = rotatedCell.map((point) => this.projectSpherePointToCanvas(point, cx, cy, radius, scaleBoost));
             const rotatedCenter = rotatedPoints[index];
             const theta = Math.acos(Math.max(-1, Math.min(1, topology.points[index].y)));
-            
             return {
                 originalIndex: index,
                 center: topology.points[index],
@@ -291,24 +289,20 @@ const GoldbergSphereGeometryProvider = {
             };
         });
 
-        // Mapping indices logic: Top-down sorting by static local Y
-        let mapping = Array.from({ length: topology.faceCells.length }, (_, i) => i);
+        let mapping = Array.from({ length: topology.faceCells.length }, (_, index) => index);
         if (options.slotMapping === 'top-down') {
-            mapping.sort((a, b) => {
-                const ay = topology.points[a].y;
-                const by = topology.points[b].y;
-                return by - ay;
-            });
+            mapping.sort((a, b) => topology.points[b].y - topology.points[a].y);
         }
 
-        const slots = mapping.map((origIdx, slotIdx) => {
-            const raw = entriesRaw[origIdx];
+        const slots = mapping.map((originalIndex, slotIndex) => {
+            const raw = entriesRaw[originalIndex];
             return {
-                slotIndex: slotIdx,
+                slotIndex,
                 geometry: raw.geometry,
                 meta: {
+                    center: raw.center,
                     ...raw.meta,
-                    originalIndex: origIdx,
+                    originalIndex,
                     rotatedCenter: raw.rotatedCenter,
                     depth: raw.depth,
                     hidden: raw.hidden
@@ -316,15 +310,18 @@ const GoldbergSphereGeometryProvider = {
             };
         });
 
-        const items = mapping.map((origIdx, slotIdx) => {
-            const slot = slots[slotIdx];
-            const hue = (origIdx / Math.max(1, topology.points.length)) * 360;
+        const items = mapping.map((originalIndex, slotIndex) => {
+            const slot = slots[slotIndex];
+            const hue = (originalIndex / Math.max(1, topology.points.length)) * 360;
             return {
-                id: `sphere-face-${origIdx}`,
-                originalIndex: origIdx,
-                slotIndex: slotIdx,
+                id: `sphere-face-${originalIndex}`,
+                originalIndex,
+                slotIndex,
                 slotGeometry: slot.geometry,
-                sourceGeometry: slot.geometry,
+                sourceGeometry: {
+                    kind: 'polygon',
+                    points: topology.faceCells[originalIndex]
+                },
                 hue,
                 saturation: 90,
                 lightness: 58,
@@ -334,7 +331,7 @@ const GoldbergSphereGeometryProvider = {
             };
         });
 
-        const drawOrder = Array.from({ length: items.length }, (_, i) => i)
+        const drawOrder = Array.from({ length: items.length }, (_, index) => index)
             .sort((a, b) => slots[a].meta.depth - slots[b].meta.depth);
 
         return {
