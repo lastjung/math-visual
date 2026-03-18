@@ -1225,3 +1225,418 @@ renderer는 가능한 다음만 받는다.
 즉 결론:
 
 `지금은 범용 컬러 정렬 엔진으로 정리하고, sphere는 그 다음 단계에서 geometry만 교체하는 방향이 가장 좋다.`
+
+---
+
+## Phase 2 Follow-up Plan
+
+현재 Phase 1~6을 거치면서 구조는 많이 범용화되었지만,
+이름과 폴더 구조는 아직 cardioid-era 흔적이 강하다.
+
+즉 지금부터의 다음 묶음 작업은
+`새 기능 추가`보다
+`네이밍 / 폴더 / 공용 인터페이스 정리`
+를 먼저 하는 것이 맞다.
+
+### Why This Matters Now
+
+현재 상태의 문제:
+
+- `cardioid_circle_sorting.js` 안에 사실상 공용 sorting engine이 들어 있다
+- `cardioid_circle_render.js` 안에 사실상 공용 renderer가 들어 있다
+- `buildCardioidProvider(...)`, `getCurrentCardioidProvider()` 같은 이름이
+  sphere case에서도 남아 있다
+- 즉 구조는 플랫폼인데 이름이 여전히 첫 번째 geometry에 묶여 있다
+
+이 상태로 sphere upgrade를 먼저 키우면,
+기능은 늘어나도 문맥과 파일명이 점점 더 어색해진다.
+
+### Phase 2-A. Naming Cleanup
+
+우선순위:
+
+1. 공용 엔진 이름 중립화
+2. geometry-specific 파일과 engine 파일의 폴더 분리
+3. 공용 함수명에서 `Cardioid` 제거
+
+권장 예시:
+
+- `cases/cardioid_circle_sorting.js`
+  -> `engine/sort_engine.js`
+- `cases/cardioid_circle_render.js`
+  -> `engine/sort_renderer.js`
+- `cases/cardioid_circle_color_keys.js`
+  -> `engine/color_keys.js`
+- `cases/cardioid_circle_provider.js`
+  -> `geometry/cardioid_provider.js`
+- `cases/goldberg_sphere_provider.js`
+  -> `geometry/goldberg_sphere_provider.js`
+- `cases/cardioid_circle.js`
+  -> `cases/cardioid_case.js`
+
+함수명 예시:
+
+- `buildCardioidProvider(...)`
+  -> `buildGeometryProvider(...)`
+- `getCurrentCardioidProvider()`
+  -> `getCurrentGeometryProvider()`
+
+핵심 목표:
+
+- geometry 전용 이름은 geometry provider/case에만 남긴다
+- sorting, render, color key는 중립 이름으로 올린다
+
+### Phase 2-B. Generic Geometry Case Interface
+
+이름 정리와 함께,
+geometry case가 따라야 할 최소 공용 인터페이스도 더 분명히 한다.
+
+필수 축:
+
+- `uiConfig`
+- `buildGeometryProvider(...)`
+- `getCurrentGeometryProvider()`
+- `drawHud(...)`
+- `reset()`
+- `start() / stop() / destroy()`
+
+이 단계가 끝나면:
+
+- cardioid
+- goldberg sphere
+
+두 geometry가 같은 shell 위에서 더 자연스럽게 읽히게 된다.
+
+### Phase 2-C. Sphere Upgrade Track
+
+naming cleanup이 어느 정도 끝나면,
+그 다음에 sphere를 실제로 업그레이드한다.
+
+이때의 목표는 단순 2D polygon 표시를 넘어서:
+
+- 입체 sphere 회전
+- depth-aware projection
+- front/back 읽힘 개선
+- auto rotation / idle rotation
+- optional auto tracking
+
+까지 포함한 `real sphere presentation`이다.
+
+즉 sphere upgrade는 가능하지만,
+순서상 naming cleanup 이후가 더 안전하다.
+
+---
+
+## Sphere Upgrade References From maze-art
+
+`maze-art`에는 이미 sphere를 실제로 움직이고 따라가는 흐름이 들어 있다.
+
+특히 참고 가치가 큰 건 다음이다.
+
+### 1. Rotating sphere view
+
+파일:
+
+- `/Users/eric/PG/maze-art/cases/sphere_maze.js`
+- `/Users/eric/PG/maze-art/cases/sphere_face_maze.js`
+
+참고 포인트:
+
+- `rotX`, `rotY`
+- `rotationSpeed`
+- idle auto-rotation loop
+- drag-based sphere rotation
+- `rotatePoint(...)`
+
+즉 `sort-sphere` 또는 이후 sphere upgrade에서는
+지금의 2D 정적 polygon draw 대신
+`3D points -> rotated points -> projected polygons`
+흐름을 가져오는 것이 맞다.
+
+### 2. Face-cell projection for Goldberg sphere
+
+파일:
+
+- `/Users/eric/PG/maze-art/cases/sphere_face_maze.js`
+
+특히 참고할 지점:
+
+- rotated vertex projection
+- projected face-cell polygon 생성
+- sphere body / front-facing visual 처리
+
+이건 현재 `goldberg_sphere_provider.js`가 만든 topology를
+실제 입체 view로 바꾸는 데 가장 직접적인 참고 소스다.
+
+### 3. Auto tracking / focus behavior
+
+파일:
+
+- `/Users/eric/PG/maze-art/cases/sphere_maze.js`
+- `/Users/eric/PG/maze-art/cases/sphere_face_maze.js`
+
+참고 포인트:
+
+- `autoTrack`
+- tracking smoothing
+- active node/path 중심 추적
+- idle rotation으로 복귀하는 흐름
+
+sorting 쪽으로 가져온다면 이 기능은:
+
+- 현재 active compare pair
+- active bucket region
+- pivot region
+- selected north axis target
+
+같은 곳을 따라가는 방식으로 바꿔볼 수 있다.
+
+다만 이건 1차 기능이 아니라
+`sphere view가 안정된 뒤의 2차 연출 기능`
+으로 보는 것이 맞다.
+
+---
+
+## Practical Recommendation
+
+지금 가장 좋은 실무 순서는 다음이다.
+
+1. naming / folder cleanup
+2. generic geometry case interface 정리
+3. sphere prototype 유지한 채 regression 확인
+4. 그 다음 maze-art 참고로 3D rotation/projection 도입
+5. 마지막에 auto tracking 같은 연출 기능 검토
+
+즉 결론:
+
+`스피어 업그레이드는 같이 보되, 바로 큰 기능으로 들어가지 말고 naming cleanup 이후의 2차 계획으로 붙이는 것이 가장 안전하다.`
+
+---
+
+## Phase 2 Execution Risks and Guardrails
+
+Phase 2 방향 자체는 맞지만,
+실행 과정에서는 아래 두 리스크를 명시적으로 통제해야 한다.
+
+### Risk 1. Global Script Rename Breakage
+
+현재 프로젝트는:
+
+- ESM import/export 구조가 아니라
+- `index.html`의 `<script>` 순서와 전역 이름에 의존한다
+
+따라서 다음 중 하나라도 누락되면
+즉시 전체 화면이 죽을 수 있다.
+
+- 파일명 변경
+- 전역 객체명 변경
+- HTML script 경로 변경
+- `core.js` / case compose 지점 참조명 변경
+
+즉 rename은 단순한 미관 문제가 아니라
+현재 구조에서는 실제 가동 리스크가 큰 변경이다.
+
+#### Guardrail
+
+rename은 반드시 원자 단위로 진행한다.
+
+안전 순서:
+
+1. 새 alias 이름 추가
+2. 호출부를 새 이름으로 전환
+3. 문법 체크
+4. 브라우저 새로고침 후 즉시 확인
+5. 마지막에 파일명 이동
+6. 마지막에 `index.html` script 경로 교체
+
+핵심:
+
+- 파일명과 전역 객체명을 한 번에 크게 갈지 않는다
+- 한 단계 끝날 때마다 바로 동작 확인한다
+
+### Risk 2. Sphere 3D Logic Polluting Generic Renderer
+
+Sphere upgrade 단계에서 가장 위험한 건
+3D 회전/투영 계산이 renderer 쪽으로 새는 것이다.
+
+만약 아래가 공용 renderer로 들어가면:
+
+- `rotX`, `rotY`
+- depth sorting
+- front/back 판정
+- backface culling
+- camera projection
+
+renderer가 다시 sphere 전용 렌더러로 오염된다.
+
+즉 지금까지 만든
+`geometry-agnostic render shell`
+이 다시 무너진다.
+
+#### Guardrail
+
+3D sphere 관련 수학은 전부 provider 안에서 끝낸다.
+
+즉 provider가 책임질 것:
+
+- 원본 3D topology
+- 회전 상태
+- depth 계산
+- 앞/뒤 판정
+- 최종 2D projected polygon 생성
+
+renderer가 책임질 것:
+
+- provider가 넘긴 `slotGeometry`를 그리기
+- highlight / bucket / pair / pivot 표시
+- geometry 종류별 최소 path trace 분기
+
+한 줄 원칙:
+
+`renderer는 투영하지 않는다. provider가 투영한 결과만 그린다.`
+
+---
+
+## Phase 2 Detailed Execution Plan
+
+위 리스크를 반영한 실제 실행 순서는 다음이 가장 안전하다.
+
+### Step 1. Generic Alias First
+
+먼저 기존 이름을 지우지 않고 alias를 추가한다.
+
+예:
+
+- `buildGeometryProvider(...)`
+- `getCurrentGeometryProvider()`
+- `SortEngine`
+- `SortRenderer`
+- `ColorKeys`
+
+목표:
+
+- 기존 이름을 살린 상태에서
+  새 공용 이름이 동작하도록 만든다
+
+검점:
+
+- 기존 cardioid case가 안 깨지는가
+- sphere case도 alias 경로를 타는가
+
+### Step 2. Call Sites Migrate
+
+그 다음 호출부를 새 generic 이름으로 바꾼다.
+
+대상:
+
+- sorting main path
+- render main path
+- geometry case compose 지점
+
+목표:
+
+- 주 경로에서 `Cardioid` 이름이 빠지게 한다
+
+검점:
+
+- `cardioid`와 `sphere` 둘 다 동일 공용 호출 축을 쓰는가
+
+### Step 3. File/Folder Re-layout
+
+이 단계에서 실제 파일을 옮긴다.
+
+권장 방향:
+
+- `engine/`
+- `geometry/`
+- `cases/`
+
+즉:
+
+- engine = sort/render/color keys
+- geometry = providers
+- cases = scene wrappers
+
+검점:
+
+- `index.html` script 순서가 올바른가
+- 전역 객체 해석 순서가 안 깨졌는가
+
+### Step 4. Generic Case Contract Freeze
+
+이 시점에 geometry case 공통 계약을 확정한다.
+
+필수 항목:
+
+- `uiConfig`
+- `buildGeometryProvider(...)`
+- `getCurrentGeometryProvider()`
+- `drawHud(...)`
+- `reset()`
+- `start() / stop() / destroy()`
+
+검점:
+
+- 새 geometry case를 이 계약만으로 꽂을 수 있는가
+
+### Step 5. Sphere 3D Upgrade Start
+
+naming/folder/interface가 정리된 뒤에만
+sphere 3D 업그레이드를 시작한다.
+
+초기 도입 범위:
+
+1. provider 내부 rotation state
+2. rotated 3D points
+3. projected 2D polygon build
+4. depth-aware draw order
+
+이 단계에서도 renderer는
+투영 계산을 몰라야 한다.
+
+### Step 6. Advanced Sphere Motion
+
+마지막으로 `maze-art` 참고 기능 중
+연출성 기능을 순차 도입한다.
+
+후순위 기능:
+
+- idle auto rotation
+- drag rotation
+- optional auto tracking
+- smoothing / focus behavior
+
+검점:
+
+- 정렬 엔진과 렌더 shell이 다시 sphere 전용으로 오염되지 않는가
+
+---
+
+## Updated Practical Recommendation
+
+실제 실행 순서를 다시 줄이면:
+
+1. generic alias 추가
+2. 호출부 migration
+3. 파일/폴더 rename
+4. case contract freeze
+5. sphere 3D projection provider 도입
+6. auto tracking 같은 연출 기능은 마지막
+
+즉 결론:
+
+`문서상 Phase 2는 유지하되, 실제 구현은 "alias -> migration -> rename -> contract freeze -> sphere 3D" 순서로 원자 단위 진행하는 것이 가장 안전하다.`
+
+## AI Architecture Review: Potential Risks in Phase 2 Plan
+
+위 "Phase 2 Follow-up Plan"의 방향성과 진행 순서 판단(명칭 및 구조 일반화를 3D 기능 확장보다 우선시하는 것)은 구조적으로 완벽합니다. 다만 실행 과정에서 발생할 수 있는 잠재적이고 치명적인 아키텍처 위험 요소(Risks) 2가지를 방주(Note)로 남깁니다.
+
+### 🚨 Risk 1. 대규모 Rename에 따른 전역 참조 붕괴 (Phase 2-A)
+- **문제 진단:** 현재 이 프로젝트는 웹팩(Webpack) 등 명시적 모듈러(import/export) 없이 HTML의 `<script>` 로드로 전역(Global) 변수를 서로 참조하는 원시적 환경입니다.
+- **위기 요소:** `CardioidCircleSorting`을 `SortEngine`으로 바꾸거나 디렉터리를 재배치할 때, `index.html` 내 스크립트 선언 순서나 `core.js`의 호출부, 그리고 좌측 UI DOM 이벤트 리스너 중 하나라도 수정이 누락되면 즉시 화면 전체가 렌더링되지 않는 화이트스크린 버그가 발생하게 됩니다.
+- **가이드:** **"파일명 하나, 클래스명 하나를 바꿀 때마다 반드시 브라우저를 새로고침(Ctrl+S -> Refresh)하여 즉시 테스트한다"**의 단위 쪼개기(Atomic Commit) 방식으로 안전하게 진행해야만 거대한 Rename 폭탄을 피할 수 있습니다.
+
+### 🚨 Risk 2. 3D 투영 시 범용 렌더러의 '도형 결합' 오염 (Phase 2-C)
+- **문제 진단:** 2차 계획인 `maze-art` 참고 3D 구체(Sphere) 업그레이드 단계 시, 회전(`rotX/Y`)과 Z-Depth(앞/뒷면 판별) 연산을 어느 곳에 둘 것인가가 가장 심각한 설계 문제입니다.
+- **위기 요소:** 만약 범용 렌더러 파일(`sort_renderer.js`) 쪽에 이 3D 카메라 투영 공식이나 가려짐(Backface culling) 연산이 섞여 들어가면, 앞서 고생해서 만들어낸 "도형에 종속되지 않는 범용 플랫폼"의 근간이 또다시 무너지고 스피어 특화 렌더러가 되어버립니다.
+- **가이드(아키텍처 강제):** 3D 회전과 해당 회전값을 2D 캔버스용 평면 폴리곤(Polygon) 데이터로 투영/변환시키는 일체의 수학 연산은 **반드시 `sphere_provider.js` 하나 안에서 온전히 끝내야만 합니다.** Provider가 모든 투영 계산을 마친 결과물 즉, "2D 화면상(x, y)에 그려질 단순 다각형 스펙(`slotGeometry`)"을 구워내면 렌더러는 그걸 받아서 평소처럼 선을 긋고 색만 칠해주도록 **철저하게 책임의 방화벽(Boundary)을 치셔야 합니다.** 

@@ -1,4 +1,4 @@
-const CardioidCircleSorting = {
+const SortEngine = {
     resetSortState(status = 'idle') {
         this.sortingStatus = status;
         this.sortProgress = 0;
@@ -643,4 +643,4 @@ const CardioidCircleSorting = {
     }
 };
 
-const SortEngine = CardioidCircleSorting;
+const CardioidCircleSorting = SortEngine;

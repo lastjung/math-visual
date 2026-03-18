@@ -20,3 +20,5 @@ Thumbs.db
 .vscode/
 .idea/
 
+# Custom ignores
+sort-color-bak.zip

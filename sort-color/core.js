@@ -1,5 +1,6 @@
 const Core = {
     currentCase: null,
+    currentGeometryId: 'cardioid',
     isRunning: true,
     recordingStartMs: performance.now(),
     simTimers: [],
@@ -56,11 +57,28 @@ const Core = {
         'lofi/Lofi_80_Batch_29.mp3', 'lofi/Lofi_80_Batch_30.mp3',
         'lofi/Lofi_80_Relaxing_V01_Full.mp3'
     ],
+    geometryRegistry: {
+        cardioid: {
+            id: 'cardioid',
+            label: 'Cardioid',
+            panelTitle: 'Cardioid Inspector',
+            eyebrow: 'Geometry',
+            caseRef: () => CardioidCircleCase
+        },
+        goldberg_sphere: {
+            id: 'goldberg_sphere',
+            label: 'Goldberg Sphere',
+            panelTitle: 'Goldberg Sphere Inspector',
+            eyebrow: 'Geometry',
+            caseRef: () => GoldbergSphereCase
+        }
+    },
 
     init() {
         this.bindToolbar();
         this.bindSidePanels();
-        this.loadCase(CardioidCircleCase);
+        this.bindGlobalToolbar();
+        this.loadGeometryCase(this.currentGeometryId);
         window.addEventListener('resize', () => {
             if (this.currentCase && typeof this.currentCase.resize === 'function') {
                 this.currentCase.resize();
@@ -80,6 +98,39 @@ const Core = {
         if (nextTrackBtn) nextTrackBtn.onclick = () => this.changeMusicTrack();
         this.bindSortBar();
         this.syncAudioButton();
+    },
+
+    bindGlobalToolbar() {
+        const geometrySelect = document.getElementById('global-geometry-select');
+        if (!geometrySelect) return;
+
+        geometrySelect.innerHTML = '';
+        Object.values(this.geometryRegistry).forEach((entry) => {
+            const option = document.createElement('option');
+            option.value = entry.id;
+            option.textContent = entry.label;
+            geometrySelect.appendChild(option);
+        });
+        geometrySelect.value = this.currentGeometryId;
+        geometrySelect.onchange = (e) => this.loadGeometryCase(e.target.value);
+        this.syncGeometryMeta();
+    },
+
+    loadGeometryCase(geometryId) {
+        const entry = this.geometryRegistry[geometryId] || this.geometryRegistry.cardioid;
+        this.currentGeometryId = entry.id;
+        this.loadCase(entry.caseRef());
+    },
+
+    syncGeometryMeta() {
+        const entry = this.geometryRegistry[this.currentGeometryId] || this.geometryRegistry.cardioid;
+        const geometrySelect = document.getElementById('global-geometry-select');
+        const title = document.getElementById('geometry-panel-title');
+        const eyebrow = document.getElementById('geometry-panel-eyebrow');
+
+        if (geometrySelect) geometrySelect.value = entry.id;
+        if (title) title.textContent = entry.panelTitle;
+        if (eyebrow) eyebrow.textContent = entry.eyebrow || 'Geometry';
     },
 
     bindSortBar() {
@@ -436,6 +487,7 @@ const Core = {
         if (typeof caseInstance.init === 'function') caseInstance.init();
         if (typeof caseInstance.start === 'function') caseInstance.start();
         this.isRunning = true;
+        this.syncGeometryMeta();
         this.updateControls();
         this.ensureTrack();
     },
@@ -477,12 +529,22 @@ const Core = {
     isSortingControl(control) {
         if (!control || !control.id) return false;
         const sortingIds = new Set([
+            'mc_play_toggle',
             'mc_sort_divider',
             'mc_sort',
             'mc_sort_speed',
             'mc_sort_restart'
         ]);
         return sortingIds.has(control.id);
+    },
+
+    isGlobalControl(control) {
+        if (!control || !control.id) return false;
+        const globalIds = new Set([
+            'mc_render',
+            'mc_color'
+        ]);
+        return globalIds.has(control.id);
     },
 
     renderControlList(host, controls) {
@@ -584,20 +646,26 @@ const Core = {
     },
 
     updateControls() {
+        const globalHost = document.getElementById('global-control-list');
         const generatorHost = document.getElementById('generator-control-list');
         const sortingHost = document.getElementById('sorting-control-list');
-        if ((!generatorHost && !sortingHost) || !this.currentCase || !Array.isArray(this.currentCase.uiConfig)) return;
+        if ((!globalHost && !generatorHost && !sortingHost) || !this.currentCase || !Array.isArray(this.currentCase.uiConfig)) return;
 
+        const globalControls = [];
         const sortingControls = [];
         const generatorControls = [];
 
         this.currentCase.uiConfig.forEach((control) => {
-            if (this.isSortingControl(control)) sortingControls.push(control);
+            if (this.isGlobalControl(control)) globalControls.push(control);
+            else if (this.isSortingControl(control)) sortingControls.push(control);
             else generatorControls.push(control);
         });
 
+        this.renderControlList(globalHost, globalControls);
         this.renderControlList(sortingHost, sortingControls);
         this.renderControlList(generatorHost, generatorControls);
+
+        this.syncGeometryMeta();
 
         const playBtn = document.getElementById('btn-play');
         if (playBtn) playBtn.textContent = this.isRunning ? 'Pause' : 'Play';

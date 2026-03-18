@@ -1,4 +1,4 @@
-const CardioidCircleRender = {
+const SortRenderer = {
     traceGeometryPath(ctx, geometry) {
         if (!geometry) return false;
         if (geometry.kind === 'polygon' && Array.isArray(geometry.points) && geometry.points.length >= 3) {
@@ -375,4 +375,4 @@ const CardioidCircleRender = {
     }
 };
 
-const SortRenderer = CardioidCircleRender;
+const CardioidCircleRender = SortRenderer;

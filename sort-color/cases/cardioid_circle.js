@@ -674,68 +674,19 @@ const CardioidCircleCase = {
     },
 
     circlePoint(i, n, radius, cx, cy) {
-        const t = this.rotation + (Math.PI * 2 * i) / n;
-        return { x: cx + radius * Math.cos(t), y: cy + radius * Math.sin(t), t };
+        return this.getCardioidPoint(i, n, radius, cx, cy);
     },
 
     circlePointByIndex(index, n, radius, cx, cy) {
-        const wrapped = ((index % n) + n) % n;
-        const i0 = Math.floor(wrapped);
-        const i1 = (i0 + 1) % n;
-        const frac = wrapped - i0;
-        const p0 = this.circlePoint(i0, n, radius, cx, cy);
-        const p1 = this.circlePoint(i1, n, radius, cx, cy);
-        return {
-            x: p0.x + (p1.x - p0.x) * frac,
-            y: p0.y + (p1.y - p0.y) * frac
-        };
+        return this.getCardioidPointByIndex(index, n, radius, cx, cy);
     },
 
     lineVisual(i, n, from, to, radius, alphaOverride = null) {
-        const alpha = alphaOverride == null ? this.lineAlpha : alphaOverride;
-        if (this.colorMode === 'monochrome') {
-            return {
-                hue: 160,
-                saturation: 46,
-                lightness: 80,
-                alpha,
-                color: `rgba(167, 243, 208, ${alpha})`
-            };
-        }
-        if (this.colorMode === 'angle') {
-            const hue = (i / n) * 360;
-            return {
-                hue,
-                saturation: 95,
-                lightness: 62,
-                alpha,
-                color: `hsla(${hue}, 95%, 62%, ${alpha})`
-            };
-        }
-        if (this.colorMode === 'origin') {
-            const hue = ((Math.atan2(from.y - to.y, from.x - to.x) + Math.PI) / (2 * Math.PI)) * 360;
-            return {
-                hue,
-                saturation: 90,
-                lightness: 62,
-                alpha,
-                color: `hsla(${hue}, 90%, 62%, ${alpha})`
-            };
-        }
-        const len = Math.hypot(to.x - from.x, to.y - from.y);
-        const ratio = Math.max(0, Math.min(1, len / (2 * radius)));
-        const hue = 240 - ratio * 220;
-        return {
-            hue,
-            saturation: 92,
-            lightness: 60,
-            alpha,
-            color: `hsla(${hue}, 92%, 60%, ${alpha})`
-        };
+        return this.getCardioidLineVisual(i, n, from, to, radius, alphaOverride);
     },
 
     lineColor(i, n, from, to, radius) {
-        return this.lineVisual(i, n, from, to, radius).color;
+        return this.getCardioidLineColor(i, n, from, to, radius);
     },
 
     gcd(a, b) {
@@ -915,10 +866,18 @@ const CardioidCircleCase = {
 
 };
 
-if (typeof CardioidCircleSorting !== 'undefined') {
-    Object.assign(CardioidCircleCase, CardioidCircleSorting);
+if (typeof CardioidGeometryProvider !== 'undefined') {
+    Object.assign(CardioidCircleCase, CardioidGeometryProvider);
 }
 
-if (typeof CardioidCircleRender !== 'undefined') {
-    Object.assign(CardioidCircleCase, CardioidCircleRender);
+if (typeof ColorKeyEngine !== 'undefined') {
+    Object.assign(CardioidCircleCase, ColorKeyEngine);
+}
+
+if (typeof SortEngine !== 'undefined') {
+    Object.assign(CardioidCircleCase, SortEngine);
+}
+
+if (typeof SortRenderer !== 'undefined') {
+    Object.assign(CardioidCircleCase, SortRenderer);
 }

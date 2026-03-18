@@ -22,6 +22,22 @@
         </p>
       </header>
 
+      <section class="global-toolbar">
+        <div class="global-toolbar-copy">
+          <p class="eyebrow">Global</p>
+          <h2>Scene Controls</h2>
+        </div>
+        <div class="global-toolbar-fields">
+          <div class="global-static-field">
+            <label for="global-geometry-select">Geometry</label>
+            <select id="global-geometry-select">
+              <option value="cardioid">Cardioid</option>
+            </select>
+          </div>
+          <div id="global-control-list" class="global-control-list"></div>
+        </div>
+      </section>
+
       <main class="layout">
         <aside id="sorting-panel" class="control-panel panel-sorting">
           <div class="panel-header">
@@ -56,8 +72,8 @@
         <aside id="generator-panel" class="control-panel panel-generator">
           <div class="panel-header">
             <div>
-              <p class="eyebrow">Generator</p>
-              <h2>Cardioid</h2>
+              <p id="geometry-panel-eyebrow" class="eyebrow">Geometry</p>
+              <h2 id="geometry-panel-title">Cardioid Inspector</h2>
             </div>
             <button id="generator-panel-close" class="panel-close" title="Close Generator Panel">×</button>
           </div>
@@ -146,8 +162,12 @@
 
     <script src="audio.js"></script>
     <script src="core.js"></script>
-    <script src="cases/cardioid_circle_sorting.js"></script>
-    <script src="cases/cardioid_circle_render.js"></script>
+    <script src="geometry/goldberg_sphere_provider.js"></script>
+    <script src="geometry/cardioid_provider.js"></script>
+    <script src="engine/color_keys.js"></script>
+    <script src="engine/sort_engine.js"></script>
+    <script src="engine/sort_renderer.js"></script>
     <script src="cases/cardioid_circle.js"></script>
+    <script src="cases/goldberg_sphere_case.js"></script>
   </body>
 </html>
