@@ -22,7 +22,15 @@ const SortRenderer = {
 
     getGeometryStrokeColor(chord, geometry, radius, n) {
         if (geometry?.kind === 'polygon') return chord.color;
-        return this.getCardioidLineVisual(chord.originalIndex, n, geometry.from, geometry.to, radius).color;
+        // Check for generic line visual method instead of hardcoded Cardioid name
+        if (typeof this.getGeometryLineVisual === 'function') {
+            return this.getGeometryLineVisual(chord.originalIndex, n, geometry.from, geometry.to, radius).color;
+        }
+        // Legacy fallback
+        if (typeof this.getCardioidLineVisual === 'function') {
+            return this.getCardioidLineVisual(chord.originalIndex, n, geometry.from, geometry.to, radius).color;
+        }
+        return chord.color || 'white';
     },
 
     draw() {
@@ -83,6 +91,9 @@ const SortRenderer = {
 
     drawChords(ctx, viewState) {
         const { n, radius, gcdValue, chords, provider, sortingActive, sortView } = viewState;
+        const drawOrder = Array.isArray(provider?.drawOrder) && provider.drawOrder.length
+            ? provider.drawOrder
+            : Array.from({ length: chords.length }, (_, index) => index);
 
         ctx.lineWidth = this.lineWidth;
         ctx.save();
@@ -92,17 +103,29 @@ const SortRenderer = {
             for (let i = 0; i < n; i++) {
                 const chord = chords[i];
                 const hue = ((i % gcdValue) / gcdValue) * 360;
+                const getPt = typeof this.getGeometryAnchorPoint === 'function' 
+                    ? this.getGeometryAnchorPoint.bind(this)
+                    : (this.getCardioidPoint ? this.getCardioidPoint.bind(this) : null);
+                
+                if (getPt && chord.slotGeometry && !chord.slotGeometry.from) {
+                    // This is for cases where we need to dynamically calculate points if they're missing
+                }
+
                 ctx.strokeStyle = `hsla(${hue}, 95%, 62%, ${Math.max(this.lineAlpha, 0.22)})`;
                 ctx.beginPath();
-                ctx.moveTo(chord.slotGeometry.from.x, chord.slotGeometry.from.y);
-                ctx.lineTo(chord.slotGeometry.to.x, chord.slotGeometry.to.y);
+                if (chord.slotGeometry && chord.slotGeometry.from) {
+                    ctx.moveTo(chord.slotGeometry.from.x, chord.slotGeometry.from.y);
+                    ctx.lineTo(chord.slotGeometry.to.x, chord.slotGeometry.to.y);
+                } else if (typeof this.traceGeometryPath === 'function') {
+                    this.traceGeometryPath(ctx, chord.slotGeometry);
+                }
                 ctx.stroke();
             }
         } else if (sortingActive && sortView) {
             const lockedN = this.sortLockedState?.n || n;
-            for (let k = 0; k < sortView.drawEntries.length; k++) {
-                const chord = sortView.drawEntries[k];
-                const slotGeometry = provider.slots[k]?.geometry;
+            for (const slotIndex of drawOrder) {
+                const chord = sortView.drawEntries[slotIndex];
+                const slotGeometry = provider.slots[slotIndex]?.geometry;
                 if (!slotGeometry) continue;
                 const activeColor = this.getGeometryStrokeColor(chord, slotGeometry, radius, lockedN);
 
@@ -116,22 +139,22 @@ const SortRenderer = {
                 ctx.strokeStyle = activeColor;
                 if (this.traceGeometryPath(ctx, slotGeometry)) ctx.stroke();
 
-                if (sortView.sortedSuffixCount > 0 && k >= lockedN - sortView.sortedSuffixCount) {
+                if (sortView.sortedSuffixCount > 0 && slotIndex >= lockedN - sortView.sortedSuffixCount) {
                     ctx.strokeStyle = activeColor;
                     if (this.traceGeometryPath(ctx, slotGeometry)) ctx.stroke();
-                } else if (k < sortView.coloredCount) {
+                } else if (slotIndex < sortView.coloredCount) {
                     ctx.strokeStyle = activeColor;
                     if (this.traceGeometryPath(ctx, slotGeometry)) ctx.stroke();
                 }
 
-                if (!sortView.completed && k === sortView.coloredCount && !sortView.activeIndices) {
+                if (!sortView.completed && slotIndex === sortView.coloredCount && !sortView.activeIndices) {
                     ctx.lineWidth = Math.max(this.lineWidth + 1.5, 3);
                     ctx.strokeStyle = 'rgba(255, 209, 102, 0.95)';
                     if (this.traceGeometryPath(ctx, slotGeometry)) ctx.stroke();
                     ctx.lineWidth = this.lineWidth;
                 }
 
-                if (sortView.activeIndices && sortView.activeIndices.includes(k)) {
+                if (sortView.activeIndices && sortView.activeIndices.includes(slotIndex)) {
                     ctx.lineWidth = Math.max(this.lineWidth + 2, 4);
                     ctx.strokeStyle = 'rgba(255,255,255,0.95)';
                     if (this.traceGeometryPath(ctx, slotGeometry)) ctx.stroke();
@@ -144,7 +167,7 @@ const SortRenderer = {
                     ctx.lineWidth = this.lineWidth;
                 }
 
-                if (sortView.pivotIndex === k) {
+                if (sortView.pivotIndex === slotIndex) {
                     ctx.lineWidth = Math.max(this.lineWidth + 1.5, 3);
                     ctx.strokeStyle = 'rgba(255, 209, 102, 0.95)';
                     if (this.traceGeometryPath(ctx, slotGeometry)) ctx.stroke();
@@ -152,8 +175,9 @@ const SortRenderer = {
                 }
             }
         } else {
-            for (const chord of chords) {
-                const geometry = chord.slotGeometry;
+            for (const slotIndex of drawOrder) {
+                const chord = chords[slotIndex];
+                const geometry = chord?.slotGeometry || provider.slots[slotIndex]?.geometry;
                 if (!geometry) continue;
                 if (geometry.kind === 'polygon') {
                     ctx.fillStyle = chord.color;
@@ -276,8 +300,19 @@ const SortRenderer = {
         const i = this.positiveMod(Math.floor(this.demoIndex), n);
         const raw = m * i;
         const j = this.positiveMod(raw, n);
-        const from = this.getCardioidPoint(i, n, radius, cx, cy);
-        const to = this.getCardioidPointByIndex(j, n, radius, cx, cy);
+        const getPt = typeof this.getGeometryAnchorPoint === 'function' 
+            ? this.getGeometryAnchorPoint 
+            : this.getCardioidPoint;
+        const getPtIdx = typeof this.getGeometryAnchorPointByIndex === 'function'
+            ? this.getGeometryAnchorPointByIndex
+            : this.getCardioidPointByIndex;
+
+        if (typeof getPt !== 'function' || typeof getPtIdx !== 'function') return;
+
+        const from = getPt.call(this, i, n, radius, cx, cy);
+        const to = getPtIdx.call(this, j, n, radius, cx, cy);
+
+        if (!from || !to) return;
 
         ctx.lineWidth = Math.max(2.8, this.lineWidth + 1.5);
         ctx.strokeStyle = 'rgba(255, 216, 102, 0.95)';

@@ -1022,7 +1022,6 @@ provider 내부에서 회전/투영되는 입체 표현으로 올리기 시작�
 - 정교한 camera model
 - true perspective camera parameters
 - front/back edge fade tuning
-- active sort target auto tracking
 - 회전 상태의 별도 HUD/mini-map
 
 즉 아직은 `Step 5 시작` 수준이고,
@@ -1056,6 +1055,11 @@ provider 내부에서 회전/투영되는 입체 표현으로 올리기 시작�
 - 북극 / 남극 표시
   - provider가 rotated pole의 2D 좌표를 계산
   - sphere case가 `N`, `S` marker를 화면에 draw
+- maze-art 기반 auto tracking stabilizer
+  - active sorting slot을 추적 대상으로 선택
+  - moving average + EMA smoothing
+  - angular velocity easing
+  - tracking hysteresis
 
 ---
 
@@ -1072,9 +1076,9 @@ provider 내부에서 회전/투영되는 입체 표현으로 올리기 시작�
 
 ### 2. Sphere Advanced Motion
 
-- auto tracking 도입 여부 판단
-- active pair / pivot / bucket 추적 방식 설계
-- 필요하면 maze-art smoothing 일부 참고
+- auto tracking on/off UI 필요 여부 판단
+- active pair / pivot / frontier 중 무엇을 우선 추적할지 튜닝
+- tracking gain / hysteresis / damping 값 브라우저 튜닝
 
 ### 3. Final Naming Debt Cleanup
 

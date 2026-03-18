@@ -80,6 +80,7 @@ const Core = {
     },
 
     init() {
+        this.restoreGeometrySelection();
         this.bindToolbar();
         this.bindSidePanels();
         this.bindGlobalToolbar();
@@ -124,7 +125,27 @@ const Core = {
     loadGeometryCase(geometryId) {
         const entry = this.geometryRegistry[geometryId] || this.geometryRegistry.cardioid;
         this.currentGeometryId = entry.id;
+        this.persistGeometrySelection();
         this.loadCase(entry.caseRef());
+    },
+
+    restoreGeometrySelection() {
+        try {
+            const saved = window.localStorage.getItem('sort-color:geometry');
+            if (saved && this.geometryRegistry[saved]) {
+                this.currentGeometryId = saved;
+            }
+        } catch (_err) {
+            // Ignore storage errors and keep default geometry.
+        }
+    },
+
+    persistGeometrySelection() {
+        try {
+            window.localStorage.setItem('sort-color:geometry', this.currentGeometryId);
+        } catch (_err) {
+            // Ignore storage errors.
+        }
     },
 
     syncGeometryMeta() {
@@ -656,6 +677,22 @@ const Core = {
 
                 item.appendChild(label);
                 item.appendChild(select);
+            } else if (control.type === 'checkbox') {
+                const label = document.createElement('label');
+                label.className = 'control-checkbox-label';
+
+                const input = document.createElement('input');
+                input.type = 'checkbox';
+                input.id = `input-${control.id}`;
+                input.checked = !!control.value;
+                input.onchange = (e) => control.onChange(!!e.target.checked);
+
+                const text = document.createElement('span');
+                text.textContent = control.label;
+
+                label.appendChild(input);
+                label.appendChild(text);
+                item.appendChild(label);
             } else if (control.type === 'button') {
                 if (control.label) {
                     const label = document.createElement('label');

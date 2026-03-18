@@ -33,6 +33,7 @@ const CardioidCircleCase = {
     shuffleOrder: null,
     shuffleSignature: '',
     shuffleFlash: 0,
+    shuffleAnimation: null,
     rotation: -Math.PI / 2,
     learningMode: 'off', // off | n-ramp | m-ramp | gcd | integer-snap | mapping | classic | ultimate | mirror-chaos
     classicTargets: [2, 3, 4, 5, 6, 7, 8, 9, 10],
@@ -586,6 +587,7 @@ const CardioidCircleCase = {
         this.shuffleOrder = null;
         this.shuffleSignature = '';
         this.shuffleFlash = 0;
+        this.shuffleAnimation = null;
         this.showHud = true;
         this.isPaused = false;
         this.sortingStatus = 'idle';
@@ -760,6 +762,7 @@ const CardioidCircleCase = {
 
     updateVisualState(dt) {
         this.updateSortingState(dt);
+        this.updateShuffleAnimation(dt);
         this.updateShuffleFlash(dt);
     },
 

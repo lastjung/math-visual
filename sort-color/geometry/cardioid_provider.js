@@ -1,4 +1,19 @@
 const CardioidGeometryProvider = {
+    interpolateCardioidGeometry(fromGeometry, toGeometry, t) {
+        if (!fromGeometry || !toGeometry) return toGeometry || fromGeometry || null;
+        return {
+            kind: 'line',
+            from: {
+                x: fromGeometry.from.x + (toGeometry.from.x - fromGeometry.from.x) * t,
+                y: fromGeometry.from.y + (toGeometry.from.y - fromGeometry.from.y) * t
+            },
+            to: {
+                x: fromGeometry.to.x + (toGeometry.to.x - fromGeometry.to.x) * t,
+                y: fromGeometry.to.y + (toGeometry.to.y - fromGeometry.to.y) * t
+            }
+        };
+    },
+
     getCardioidPoint(i, n, radius, cx, cy) {
         const safeN = Math.max(1, n);
         const t = this.rotation + (Math.PI * 2 * i) / safeN;
@@ -108,11 +123,20 @@ const CardioidGeometryProvider = {
             };
         });
 
-        const orderedItems = (shuffleOrder || Array.from({ length: safeN }, (_, i) => i)).map((itemIndex, slotIndex) => ({
-            ...baseItems[itemIndex],
-            slotIndex,
-            slotGeometry: slots[slotIndex]?.geometry || this.getCardioidLineGeometry(slotIndex, safeDenominator, m, radius, cx, cy)
-        }));
+        const activeShuffle = this.getActiveShuffleAnimation(safeN, m);
+        const orderedItems = (shuffleOrder || Array.from({ length: safeN }, (_, i) => i)).map((itemIndex, slotIndex) => {
+            let slotGeometry = slots[slotIndex]?.geometry || this.getCardioidLineGeometry(slotIndex, safeDenominator, m, radius, cx, cy);
+            if (activeShuffle) {
+                const fromSlotIndex = activeShuffle.fromSlotsByItem[itemIndex];
+                const fromGeometry = slots[fromSlotIndex]?.geometry || baseItems[itemIndex].slotGeometry;
+                slotGeometry = this.interpolateCardioidGeometry(fromGeometry, slotGeometry, activeShuffle.progress);
+            }
+            return {
+                ...baseItems[itemIndex],
+                slotIndex,
+                slotGeometry
+            };
+        });
 
         return {
             providerId: 'cardioid',
