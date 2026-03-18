@@ -1,4 +1,6 @@
 const GoldbergSphereGeometryProvider = {
+    topologyCache: new Map(),
+
     normalizeSpherePoint(point) {
         const len = Math.hypot(point.x, point.y, point.z) || 1;
         return {
@@ -138,6 +140,10 @@ const GoldbergSphereGeometryProvider = {
     },
 
     generateGoldbergTopology(frequency) {
+        if (this.topologyCache.has(frequency)) {
+            return this.topologyCache.get(frequency);
+        }
+
         const base = this.buildGoldbergIcosahedron();
         const geo = this.buildGoldbergIcosphereByFrequency(base.vertices, base.faces, frequency);
         const points = geo.vertices.map((v) => ({ x: v.x, y: v.y, z: v.z }));
@@ -204,17 +210,39 @@ const GoldbergSphereGeometryProvider = {
         }
 
         this.connectSphereComponents(points, edgeSets);
-        return {
+        const topology = {
             points,
             neighbors: edgeSets.map((set) => Array.from(set)),
             faceCells
         };
+        this.topologyCache.set(frequency, topology);
+        return topology;
     },
 
-    projectSpherePointToCanvas(point, cx, cy, radius) {
+    rotateSpherePoint(point, rx = 0, ry = 0) {
+        const cosY = Math.cos(ry);
+        const sinY = Math.sin(ry);
+        const x1 = point.x * cosY + point.z * sinY;
+        const z1 = -point.x * sinY + point.z * cosY;
+
+        const cosX = Math.cos(rx);
+        const sinX = Math.sin(rx);
+        const y2 = point.y * cosX - z1 * sinX;
+        const z2 = point.y * sinX + z1 * cosX;
+
         return {
-            x: cx + point.x * radius,
-            y: cy - point.y * radius
+            x: x1,
+            y: y2,
+            z: z2
+        };
+    },
+
+    projectSpherePointToCanvas(point, cx, cy, radius, scaleBoost = 1) {
+        const perspective = 0.76 + ((point.z + 1) * 0.5) * 0.34;
+        const scale = perspective * scaleBoost;
+        return {
+            x: cx + point.x * radius * scale,
+            y: cy - point.y * radius * scale
         };
     },
 
@@ -225,43 +253,81 @@ const GoldbergSphereGeometryProvider = {
         const cx = options.cx || 0;
         const cy = options.cy || 0;
         const radius = options.radius || 100;
+        const rotX = options.rotX || 0;
+        const rotY = options.rotY || 0;
+        const scaleBoost = options.scaleBoost || 1;
 
-        const slots = topology.faceCells.map((cell, slotIndex) => ({
+        const rotatedPoints = topology.points.map((point) => this.rotateSpherePoint(point, rotX, rotY));
+        const points2D = rotatedPoints.map((point) => this.projectSpherePointToCanvas(point, cx, cy, radius, scaleBoost));
+        const rotatedNorthPole = this.rotateSpherePoint({ x: 0, y: 1, z: 0 }, rotX, rotY);
+        const rotatedSouthPole = this.rotateSpherePoint({ x: 0, y: -1, z: 0 }, rotX, rotY);
+        const northPole2D = this.projectSpherePointToCanvas(rotatedNorthPole, cx, cy, radius, scaleBoost);
+        const southPole2D = this.projectSpherePointToCanvas(rotatedSouthPole, cx, cy, radius, scaleBoost);
+
+        const slotEntries = topology.faceCells.map((cell, index) => {
+            const rotatedCell = cell.map((point) => this.rotateSpherePoint(point, rotX, rotY));
+            const projectedCell = rotatedCell.map((point) => this.projectSpherePointToCanvas(point, cx, cy, radius, scaleBoost));
+            const rotatedCenter = rotatedPoints[index];
+            const theta = Math.acos(Math.max(-1, Math.min(1, topology.points[index].y)));
+            return {
+                index,
+                center: topology.points[index],
+                rotatedCenter,
+                depth: rotatedCenter.z,
+                hidden: rotatedCenter.z < -0.18,
+                geometry: {
+                    kind: 'polygon',
+                    points: projectedCell,
+                    hidden: rotatedCenter.z < -0.18,
+                    depth: rotatedCenter.z
+                },
+                meta: {
+                    theta,
+                    northness: topology.points[index].y,
+                    neighbors: topology.neighbors[index]
+                }
+            };
+        }).sort((a, b) => a.depth - b.depth);
+
+        const slots = slotEntries.map((entry, slotIndex) => ({
             slotIndex,
-            geometry: {
-                kind: 'polygon',
-                points: cell.map((point) => this.projectSpherePointToCanvas(point, cx, cy, radius))
+            geometry: entry.geometry,
+            meta: {
+                depth: entry.depth,
+                hidden: entry.hidden,
+                originalIndex: entry.index
             }
         }));
 
-        const points2D = topology.points.map((point) => this.projectSpherePointToCanvas(point, cx, cy, radius));
-
-        const items = topology.points.map((point, index) => {
-            const theta = Math.acos(Math.max(-1, Math.min(1, point.y)));
-            const hue = (index / Math.max(1, topology.points.length)) * 360;
+        const items = slotEntries.map((entry, slotIndex) => {
+            const hue = (entry.index / Math.max(1, topology.points.length)) * 360;
+            const alpha = entry.hidden ? 0.12 : 0.92;
             return {
-                id: `sphere-face-${index}`,
-                originalIndex: index,
-                slotIndex: index,
-                slotGeometry: slots[index].geometry,
-                sourceGeometry: slots[index].geometry,
+                id: `sphere-face-${entry.index}`,
+                originalIndex: entry.index,
+                slotIndex,
+                slotGeometry: entry.geometry,
+                sourceGeometry: entry.geometry,
                 hue,
                 saturation: 90,
                 lightness: 58,
-                alpha: 0.92,
-                color: `hsla(${hue}, 90%, 58%, 0.92)`,
+                alpha,
+                color: `hsla(${hue}, 90%, 58%, ${alpha})`,
                 meta: {
-                    center: point,
-                    theta,
-                    northness: point.y,
-                    neighbors: topology.neighbors[index]
+                    center: entry.center,
+                    rotatedCenter: entry.rotatedCenter,
+                    theta: entry.meta.theta,
+                    northness: entry.meta.northness,
+                    neighbors: entry.meta.neighbors,
+                    depth: entry.depth,
+                    hidden: entry.hidden
                 }
             };
         });
 
         return {
             providerId: 'goldberg-sphere',
-            revision: `gp|${frequency}|${items.length}`,
+            revision: `gp|${frequency}|${items.length}|${rotX.toFixed(4)}|${rotY.toFixed(4)}`,
             items,
             slots,
             points: points2D,
@@ -269,7 +335,17 @@ const GoldbergSphereGeometryProvider = {
                 label: 'Goldberg Sphere',
                 itemCount: items.length,
                 targetCount,
-                frequency
+                frequency,
+                rotX,
+                rotY,
+                northPole: {
+                    point: northPole2D,
+                    hidden: rotatedNorthPole.z < -0.18
+                },
+                southPole: {
+                    point: southPole2D,
+                    hidden: rotatedSouthPole.z < -0.18
+                }
             }
         };
     }

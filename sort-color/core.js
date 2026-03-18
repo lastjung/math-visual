@@ -73,6 +73,11 @@ const Core = {
             caseRef: () => GoldbergSphereCase
         }
     },
+    caseContract: {
+        requiredFns: ['buildGeometryProvider', 'getCurrentGeometryProvider', 'reset', 'start', 'stop', 'destroy'],
+        requiredProps: ['uiConfig'],
+        recommendedFns: ['drawHud', 'resize', 'setPaused']
+    },
 
     init() {
         this.bindToolbar();
@@ -482,6 +487,7 @@ const Core = {
         if (this.currentCase && typeof this.currentCase.destroy === 'function') {
             this.currentCase.destroy();
         }
+        this.validateCaseContract(caseInstance);
         this.currentCase = caseInstance;
         this.recordingStartMs = performance.now();
         if (typeof caseInstance.init === 'function') caseInstance.init();
@@ -490,6 +496,33 @@ const Core = {
         this.syncGeometryMeta();
         this.updateControls();
         this.ensureTrack();
+    },
+
+    validateCaseContract(caseInstance) {
+        if (!caseInstance) return;
+
+        const missingRequired = [];
+        const missingRecommended = [];
+
+        this.caseContract.requiredProps.forEach((key) => {
+            if (!(key in caseInstance)) missingRequired.push(key);
+        });
+
+        this.caseContract.requiredFns.forEach((key) => {
+            if (typeof caseInstance[key] !== 'function') missingRequired.push(`${key}()`);
+        });
+
+        this.caseContract.recommendedFns.forEach((key) => {
+            if (typeof caseInstance[key] !== 'function') missingRecommended.push(`${key}()`);
+        });
+
+        if (missingRequired.length > 0) {
+            console.warn('[SortColor] Case contract missing required members:', missingRequired.join(', '));
+        }
+
+        if (missingRecommended.length > 0) {
+            console.info('[SortColor] Case contract missing recommended members:', missingRecommended.join(', '));
+        }
     },
 
     ensureTrack() {

@@ -32,6 +32,12 @@ const GoldbergSphereCase = {
     rotation: -Math.PI / 2,
     learningMode: 'off',
     sphereFrequencyOverride: 0,
+    rotX: -0.35,
+    rotY: 0.45,
+    rotationSpeed: 0.16,
+    isDraggingSphere: false,
+    lastPointerX: 0,
+    lastPointerY: 0,
 
     init() {
         this.canvas = document.getElementById('mathCanvas');
@@ -70,6 +76,18 @@ const GoldbergSphereCase = {
                     this.sphereFrequencyOverride = Math.max(0, Math.floor(v));
                     this.resetSortState('idle');
                     this.draw();
+                }
+            },
+            {
+                type: 'slider',
+                id: 'mc_sphere_rot',
+                label: 'Rotation Speed',
+                min: -1.2,
+                max: 1.2,
+                step: 0.01,
+                value: this.rotationSpeed,
+                onChange: (v) => {
+                    this.rotationSpeed = v;
                 }
             },
             {
@@ -226,6 +244,10 @@ const GoldbergSphereCase = {
         this.sortMode = 'off';
         this.sortSpeed = 150;
         this.sphereFrequencyOverride = 0;
+        this.rotX = -0.35;
+        this.rotY = 0.45;
+        this.rotationSpeed = 0.16;
+        this.isDraggingSphere = false;
         this.sortProgress = 0;
         this.sortPlan = null;
         this.sortSignature = '';
@@ -253,25 +275,40 @@ const GoldbergSphereCase = {
         this._canvasInteractionsBound = true;
 
         this._handleCanvasPointerDown = (e) => {
-            if (this.sortMode === 'bubble' || this.sortMode === 'quick') return;
-            if (!this.isSortModeAvailable()) return;
-            const layout = this.getSortPanelLayout(this.canvas.width, this.canvas.height);
-            if (!layout) return;
-
             const rect = this.canvas.getBoundingClientRect();
             const x = e.clientX - rect.left;
             const y = e.clientY - rect.top;
-            const inside = x >= layout.panelX && x <= layout.panelX + layout.panelW
+            const layout = this.isSortModeAvailable() ? this.getSortPanelLayout(this.canvas.width, this.canvas.height) : null;
+            const insideSortPanel = !!layout
+                && x >= layout.panelX && x <= layout.panelX + layout.panelW
                 && y >= layout.panelY && y <= layout.panelY + layout.panelH;
-            if (!inside) return;
 
-            this.sortPanelDrag = {
-                offsetX: x - layout.panelX,
-                offsetY: y - layout.panelY
-            };
+            if (insideSortPanel) {
+                this.sortPanelDrag = {
+                    offsetX: x - layout.panelX,
+                    offsetY: y - layout.panelY
+                };
+                return;
+            }
+
+            this.isDraggingSphere = true;
+            this.lastPointerX = e.clientX;
+            this.lastPointerY = e.clientY;
         };
 
         this._handleWindowPointerMove = (e) => {
+            if (this.isDraggingSphere) {
+                const dx = e.clientX - this.lastPointerX;
+                const dy = e.clientY - this.lastPointerY;
+                this.lastPointerX = e.clientX;
+                this.lastPointerY = e.clientY;
+                this.rotY += dx * 0.008;
+                this.rotX += dy * 0.008;
+                this.rotX = Math.max(-1.35, Math.min(1.35, this.rotX));
+                this.draw();
+                return;
+            }
+
             if (!this.sortPanelDrag || !this.canvas) return;
             const rect = this.canvas.getBoundingClientRect();
             const x = e.clientX - rect.left;
@@ -292,6 +329,7 @@ const GoldbergSphereCase = {
         };
 
         this._handleWindowPointerUp = () => {
+            this.isDraggingSphere = false;
             this.sortPanelDrag = null;
         };
 
@@ -309,6 +347,9 @@ const GoldbergSphereCase = {
     },
 
     updateSimulation(dt) {
+        if (!this.isPaused && !this.isDraggingSphere) {
+            this.rotY += this.rotationSpeed * dt;
+        }
         this.updateSortingState(dt);
         this.updateShuffleFlash(dt);
     },
@@ -388,6 +429,8 @@ const GoldbergSphereCase = {
         const provider = GoldbergSphereProvider.buildGoldbergSphereProvider({
             targetCount: Math.max(12, Math.floor(n || this.pointCount)),
             frequencyOverride: this.sphereFrequencyOverride,
+            rotX: this.rotX,
+            rotY: this.rotY,
             cx,
             cy,
             radius
@@ -505,8 +548,36 @@ const GoldbergSphereCase = {
         ctx.fillText(`Faces: ${itemCount}`, w - 24, 30);
         ctx.fillText(`Target: ${Math.floor(this.pointCount)}`, w - 24, 52);
         ctx.fillText(`Freq: ${frequency}`, w - 24, 74);
-        ctx.fillText(`Mode: ${this.sphereFrequencyOverride > 0 ? 'manual' : 'auto'}`, w - 24, 96);
+        ctx.fillText(`Rot: ${this.rotationSpeed.toFixed(2)}`, w - 24, 96);
         ctx.restore();
+    },
+
+    drawGeometryOverlay(ctx, viewState) {
+        const northPole = viewState.provider?.providerMeta?.northPole;
+        const southPole = viewState.provider?.providerMeta?.southPole;
+        if (!northPole?.point || !southPole?.point) return;
+
+        const drawPole = (pole, label, color) => {
+            if (pole.hidden) return;
+            const p = pole.point;
+            ctx.save();
+            ctx.fillStyle = color;
+            ctx.strokeStyle = 'rgba(10, 14, 24, 0.9)';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, 6, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+
+            ctx.font = '700 12px IBM Plex Sans, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillStyle = 'rgba(255,255,255,0.95)';
+            ctx.fillText(label, p.x, p.y - 12);
+            ctx.restore();
+        };
+
+        drawPole(northPole, 'N', 'rgba(255, 209, 102, 0.95)');
+        drawPole(southPole, 'S', 'rgba(120, 200, 255, 0.95)');
     }
 };
 

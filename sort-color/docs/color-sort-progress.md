@@ -947,3 +947,148 @@ alias 도입과 공용 경로 전환이다.
 - `node --check sort-color/geometry/goldberg_sphere_provider.js`
 - `node --check sort-color/cases/cardioid_circle.js`
 - `node --check sort-color/cases/goldberg_sphere_case.js`
+
+### Step 4 Started - Generic Case Contract Freeze
+
+이 단계에서는 문서상의 공통 case 계약을
+실제 shell 쪽에도 반영하기 시작했다.
+
+추가된 것:
+
+- [`core.js`](/Users/eric/PG/math-visual/sort-color/core.js)
+  - `caseContract` 정의
+  - `validateCaseContract(caseInstance)` 추가
+  - `loadCase(...)` 진입 시 contract 검증 수행
+
+현재 계약은:
+
+- required props
+  - `uiConfig`
+- required functions
+  - `buildGeometryProvider()`
+  - `getCurrentGeometryProvider()`
+  - `reset()`
+  - `start()`
+  - `stop()`
+  - `destroy()`
+- recommended functions
+  - `drawHud()`
+  - `resize()`
+  - `setPaused()`
+
+지금은 강제 중단이 아니라
+console warn/info 기반의 비파괴 검증이다.
+
+즉 새 geometry case를 꽂을 때
+최소 계약을 빠르게 점검할 수 있는 상태가 됐다.
+
+### Step 5 Started - Sphere 3D Upgrade
+
+이 단계에서는 sphere를 더 이상 정적 2D polygon 집합이 아니라,
+provider 내부에서 회전/투영되는 입체 표현으로 올리기 시작했다.
+
+핵심 변경:
+
+- [`geometry/goldberg_sphere_provider.js`](/Users/eric/PG/math-visual/sort-color/geometry/goldberg_sphere_provider.js)
+  - topology cache 추가
+  - `rotateSpherePoint(...)` 추가
+  - perspective 성격이 있는 `projectSpherePointToCanvas(...)`로 확장
+  - `rotX`, `rotY` 입력 지원
+  - slot polygon을 depth 기준으로 정렬
+  - back-side geometry에 `hidden` / `depth` 메타데이터 부여
+- [`cases/goldberg_sphere_case.js`](/Users/eric/PG/math-visual/sort-color/cases/goldberg_sphere_case.js)
+  - `rotX`, `rotY`, `rotationSpeed` 상태 추가
+  - idle auto rotation 추가
+  - drag rotation 추가
+  - inspector에 `Rotation Speed` slider 추가
+- [`engine/sort_renderer.js`](/Users/eric/PG/math-visual/sort-color/engine/sort_renderer.js)
+  - `geometry.hidden`이면 draw skip
+
+즉 이번 단계의 원칙은 유지되었다.
+
+- 3D 수학은 provider 내부
+- renderer는 최종 2D geometry만 그림
+
+### What This Upgrade Currently Includes
+
+- idle auto rotation
+- manual drag rotation
+- rotated 3D points -> 2D projected polygon
+- depth 기반 slot order
+- back-side geometry skip
+
+### What It Does Not Yet Include
+
+- 정교한 camera model
+- true perspective camera parameters
+- front/back edge fade tuning
+- active sort target auto tracking
+- 회전 상태의 별도 HUD/mini-map
+
+즉 아직은 `Step 5 시작` 수준이고,
+완성형 sphere viewer까지는 아니다.
+
+### Verification
+
+문법 체크 통과:
+
+- `node --check sort-color/geometry/goldberg_sphere_provider.js`
+- `node --check sort-color/cases/goldberg_sphere_case.js`
+- `node --check sort-color/engine/sort_renderer.js`
+- `node --check sort-color/cases/cardioid_circle.js`
+- `node --check sort-color/core.js`
+
+### Sphere UX Notes
+
+현재 sphere 쪽에서 이미 되는 것:
+
+- 셀 수 변경
+  - `Target Faces`
+  - `Frequency`
+- 컬러 스킴 변경
+  - `Longitude`
+  - `Northness`
+  - `Latitude`
+  - `Monochrome`
+
+이번에 추가한 것:
+
+- 북극 / 남극 표시
+  - provider가 rotated pole의 2D 좌표를 계산
+  - sphere case가 `N`, `S` marker를 화면에 draw
+
+---
+
+## Current Remaining Work
+
+현재 기준 남은 큰 작업은 아래다.
+
+### 1. Sphere 3D Tuning
+
+- 투영감 조정
+- 뒷면 skip 기준 조정
+- rotation 속도 / 드래그 감도 조정
+- sorting 중 시각 가독성 확인
+
+### 2. Sphere Advanced Motion
+
+- auto tracking 도입 여부 판단
+- active pair / pivot / bucket 추적 방식 설계
+- 필요하면 maze-art smoothing 일부 참고
+
+### 3. Final Naming Debt Cleanup
+
+- case 파일명 정리 여부 결정
+- 과거 `cases/` 안의 참고용 엔진/provider 파일 정리
+- 문서 링크 경로 최종 정리
+
+### 4. Stabilization
+
+- 실제 브라우저 검증
+- 한 번 더 구조 안정화 커밋
+
+즉 현재 상태는:
+
+- 플랫폼 기반 공사는 대부분 완료
+- sphere는 3D prototype 단계
+- 최종 완성 단계는 아직 아님

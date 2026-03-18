@@ -1,6 +1,7 @@
 const SortRenderer = {
     traceGeometryPath(ctx, geometry) {
         if (!geometry) return false;
+        if (geometry.hidden) return false;
         if (geometry.kind === 'polygon' && Array.isArray(geometry.points) && geometry.points.length >= 3) {
             ctx.beginPath();
             ctx.moveTo(geometry.points[0].x, geometry.points[0].y);
@@ -57,6 +58,10 @@ const SortRenderer = {
                 ctx.arc(p.x, p.y, this.pointRadius, 0, Math.PI * 2);
                 ctx.fill();
             }
+        }
+
+        if (typeof this.drawGeometryOverlay === 'function') {
+            this.drawGeometryOverlay(ctx, viewState);
         }
 
         this.drawHud(ctx, viewState);

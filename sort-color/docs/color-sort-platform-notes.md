@@ -1300,6 +1300,19 @@ geometry case가 따라야 할 최소 공용 인터페이스도 더 분명히 �
 - `reset()`
 - `start() / stop() / destroy()`
 
+권장 축:
+
+- `resize()`
+- `setPaused()`
+- `init()`
+
+실행 shell 기준 원칙:
+
+- `uiConfig`는 반드시 배열이어야 한다
+- `buildGeometryProvider(...)` / `getCurrentGeometryProvider()`는 필수다
+- `drawHud(...)`는 강제는 아니지만 geometry별 HUD 분리를 위해 사실상 권장된다
+- `resize()`, `setPaused()`는 transport와 layout 일관성을 위해 권장된다
+
 이 단계가 끝나면:
 
 - cardioid
