@@ -261,11 +261,17 @@ const SortEngine = {
         this.sortPassTransitionSeenKey = '';
     },
 
+    getSortTransitionKey(plan, sortView) {
+        if (!sortView || sortView.completed) return '';
+        const label = sortView.passLabel || `Pass ${sortView.passNumber || 1}`;
+        const planType = plan?.type || (Array.isArray(plan?.passes) ? 'radix' : this.sortMode || 'sort');
+        return `${this.sortMode || 'sort'}:${planType}:${label}`;
+    },
+
     supportsSortPassTransition(plan, sortView) {
         return !!sortView
             && !sortView.completed
-            && Array.isArray(plan?.passes)
-            && (this.sortMode === 'hue' || this.sortMode === 'lsh');
+            && !!this.getSortTransitionKey(plan, sortView);
     },
 
     syncSortPassTransition(plan, sortView) {
@@ -274,7 +280,7 @@ const SortEngine = {
         if (this.sortingStatus !== 'running') return;
         if (!this.supportsSortPassTransition(plan, sortView)) return;
 
-        const key = `${this.sortMode}:${sortView.passIndex}:${sortView.passLabel || sortView.passNumber}`;
+        const key = this.getSortTransitionKey(plan, sortView);
         if (this.sortPassTransitionSeenKey === key) return;
 
         this.sortPassTransitionSeenKey = key;

@@ -233,6 +233,7 @@ class GameSfxManager {
             step: [660, 880],
             tick: [784],
             play: [523.25, 659.25, 783.99],
+            shuffle: [196, 246.94, 329.63],
             reset: [440, 349.23],
             complete: [659.25, 783.99, 987.77, 1174.66]
         };
@@ -241,15 +242,16 @@ class GameSfxManager {
         notes.forEach((freq, index) => {
             const osc = context.createOscillator();
             const gain = context.createGain();
-            osc.type = type === 'reset' ? 'sine' : 'triangle';
+            osc.type = type === 'reset' ? 'sine' : (type === 'shuffle' ? 'triangle' : 'triangle');
             const start = now + index * 0.055;
-            const end = start + (type === 'complete' ? 0.18 : 0.14);
+            const end = start + (type === 'complete' ? 0.18 : (type === 'shuffle' ? 0.11 : 0.14));
             osc.frequency.setValueAtTime(freq, start);
-            osc.frequency.linearRampToValueAtTime(Math.max(180, freq * 0.92), end);
+            osc.frequency.linearRampToValueAtTime(Math.max(180, freq * (type === 'shuffle' ? 0.78 : 0.92)), end);
 
-            const peak = 0.18 / Math.max(1, notes.length);
+            const peakBase = type === 'shuffle' ? 0.32 : 0.18;
+            const peak = peakBase / Math.max(1, notes.length);
             gain.gain.setValueAtTime(0, start);
-            gain.gain.linearRampToValueAtTime(peak, start + 0.028);
+            gain.gain.linearRampToValueAtTime(peak, start + (type === 'shuffle' ? 0.014 : 0.028));
             gain.gain.exponentialRampToValueAtTime(0.0001, end);
 
             osc.connect(gain);

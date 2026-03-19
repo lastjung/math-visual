@@ -1034,7 +1034,7 @@ provider 내부에서 회전/투영되는 입체 표현으로 올리기 시작�
 - `node --check sort-color/geometry/goldberg_sphere_provider.js`
 - `node --check sort-color/cases/goldberg_sphere_case.js`
 - `node --check sort-color/engine/sort_renderer.js`
-- `node --check sort-color/cases/cardioid_circle.js`
+- `node --check sort-color/cases/cardioid_case.js`
 - `node --check sort-color/core.js`
 
 ### Sphere UX Notes
@@ -1082,8 +1082,6 @@ provider 내부에서 회전/투영되는 입체 표현으로 올리기 시작�
 
 ### 3. Final Naming Debt Cleanup
 
-- case 파일명 정리 여부 결정
-- 과거 `cases/` 안의 참고용 엔진/provider 파일 정리
 - 문서 링크 경로 최종 정리
 
 ### 4. Stabilization
@@ -1096,3 +1094,27 @@ provider 내부에서 회전/투영되는 입체 표현으로 올리기 시작�
 - 플랫폼 기반 공사는 대부분 완료
 - sphere는 3D prototype 단계
 - 최종 완성 단계는 아직 아님
+
+---
+
+## Cleanup Update
+
+현재 구조 기준으로 실제 정리한 사항:
+
+- `cases/cardioid_circle.js` -> `cases/cardioid_case.js`
+- `cases/` 안의 obsolete helper 파일 제거
+  - `cardioid_circle_color_keys.js`
+  - `cardioid_circle_provider.js`
+  - `cardioid_circle_render.js`
+  - `cardioid_circle_sorting.js`
+
+현재 naming rule:
+
+- `engine/` 안 공용 로직은 generic 이름 유지
+- `geometry/` 안 파일은 `*_provider.js`
+- `cases/` 안 wrapper 파일은 `*_case.js`
+
+현재 `cases/`의 canonical wrapper:
+
+- `cardioid_case.js`
+- `goldberg_sphere_case.js`

@@ -460,8 +460,9 @@ const Core = {
                 this.currentCase.resetSortState('idle');
             }
             this.currentCase.pointCount = stage.n;
-            if (typeof this.currentCase.shuffleChords === 'function') {
-                this.currentCase.shuffleChords();
+            if (typeof this.currentCase.shuffleScene === 'function') {
+                this.playGameSound('shuffle');
+                this.currentCase.shuffleScene();
             } else if (typeof this.currentCase.resetSortState === 'function') {
                 this.currentCase.resetSortState('idle');
             }
@@ -633,7 +634,6 @@ const Core = {
     isSortingControl(control) {
         if (!control || !control.id) return false;
         const sortingIds = new Set([
-            'mc_play_toggle',
             'mc_sort_divider',
             'mc_sort',
             'mc_sort_speed',

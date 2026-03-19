@@ -463,14 +463,14 @@ button:hover {
 }
 
 /* Play/Hold button specialization */
-.control-item[data-id="mc_play_toggle"] button {
+.control-item[data-id="cd_play_toggle"] button {
   background: linear-gradient(135deg, rgba(52, 211, 153, 0.2) 0%, rgba(16, 185, 129, 0.1) 100%);
   border-color: rgba(52, 211, 153, 0.3);
   color: #a7f3d0;
   font-size: 0.95rem;
 }
 
-.control-item[data-id="mc_play_toggle"] button:hover {
+.control-item[data-id="cd_play_toggle"] button:hover {
   background: linear-gradient(135deg, rgba(52, 211, 153, 0.3) 0%, rgba(16, 185, 129, 0.2) 100%);
   border-color: rgba(52, 211, 153, 0.4);
 }

@@ -105,14 +105,13 @@ const CardioidCircleCase = {
         return [
             {
                 type: 'button',
-                id: 'mc_play_toggle',
+                id: 'cd_play_toggle',
                 label: '',
-                value: typeof Core !== 'undefined' && Core.isRunning ? 'HOLD (Stop)' : 'PLAY (Resume)',
+                value: this.isPaused ? 'PLAY (Resume)' : 'HOLD (Stop)',
                 onClick: () => {
-                    if (typeof Core !== 'undefined') {
-                        Core.togglePlay();
-                        Core.updateControls();
-                    }
+                    if (!this.animationId) this.start();
+                    this.setPaused(!this.isPaused);
+                    if (typeof Core !== 'undefined' && Core.currentCase === this) Core.updateControls();
                 }
             },
             {
@@ -233,7 +232,10 @@ const CardioidCircleCase = {
                 label: 'Sorting',
                 actionLabel: 'Shuffle',
                 onAction: () => {
-                    this.shuffleChords();
+                    if (typeof Core !== 'undefined' && typeof Core.playGameSound === 'function') {
+                        Core.playGameSound('shuffle');
+                    }
+                    this.shuffleScene();
                     this.draw();
                 }
             },
@@ -753,6 +755,10 @@ const CardioidCircleCase = {
             this.updateGeometryState(dt);
         }
         this.updateVisualState(dt);
+    },
+
+    shuffleScene() {
+        this.shuffleChords();
     },
 
     updateGeometryState(dt) {
