@@ -75,7 +75,7 @@ const SortRenderer = {
         this.drawHud(ctx, viewState);
         this.drawSortOverlay(ctx, viewState);
         this.drawShuffleOverlay(ctx, viewState);
-        this.drawLearningModeOverlay(ctx, viewState);
+        // this.drawLearningModeOverlay(ctx, viewState);
     },
 
     getViewState(w, h, cx, cy, radius, n, m, hudM) {

@@ -777,16 +777,12 @@ const Core = {
             } else if (typeof this.currentCase.stop === 'function') {
                 this.currentCase.stop();
             }
-            // Preserve track by using pause()
-            if (window.audioManager) window.audioManager.pause();
         } else {
             if (typeof this.currentCase.setPaused === 'function') {
                 this.currentCase.setPaused(false);
             } else if (typeof this.currentCase.start === 'function') {
                 this.currentCase.start();
             }
-            // Resume if track exists
-            if (window.audioManager) window.audioManager.resume();
         }
         this.isRunning = !this.isRunning;
         this.updateControls();
