@@ -450,7 +450,6 @@ const SortEngine = {
             duration: 0.9
         };
         this.shuffleFlash = 1;
-        this.sortMode = 'off';
         this.resetSortState('idle');
     },
 

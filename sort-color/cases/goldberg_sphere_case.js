@@ -210,7 +210,7 @@ const GoldbergSphereCase = {
                 id: 'mc_sort_speed',
                 label: 'Sort Speed',
                 min: 4,
-                max: 180,
+                max: 400,
                 step: 1,
                 value: this.sortSpeed,
                 onChange: (v) => {

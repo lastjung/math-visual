@@ -404,14 +404,19 @@ const Core = {
         if (scenarioSelect) scenarioSelect.value = '1_rays';
 
         const unit = this.currentGeometryId === 'goldberg_sphere' ? 'Faces' : 'Rays';
+        
+        // Define labels for dynamic messaging
+        const sortLabels = {
+            'hue': 'Hue Radix Sort',
+            'lsh': 'L-S-H Radix Sort',
+            'bubble': 'Bubble Sort',
+            'quick': 'Quick Sort'
+        };
+
         const stages = [180, 360, 720, 1080].map(n => {
-            const totalSteps = n * 3; // Hue Radix
-            const sortSpeed = Math.max(1, this.currentCase.sortSpeed || 150);
-            const durationSec = (totalSteps / sortSpeed).toFixed(1);
             return {
                 n,
-                title: 'Color Radix Sort',
-                subtitle: `${n} ${unit}: ${durationSec}s`
+                subtitle: `${n} ${unit}`
             };
         });
 
@@ -419,7 +424,10 @@ const Core = {
 
         const runStage = () => {
             if (!this.isSimRunning || currentIdx >= stages.length) {
-                this.showSimMessage('Color Radix Sort', 'Complete', 4000);
+                const finalMode = (this.currentCase.sortMode && this.currentCase.sortMode !== 'off') 
+                    ? this.currentCase.sortMode 
+                    : 'hue';
+                this.showSimMessage(sortLabels[finalMode] || 'Color Sort', 'Complete', 4000);
                 const tid = setTimeout(() => this.stopSimulation(), 4500);
                 this.simTimers.push(tid);
                 return;
@@ -429,7 +437,7 @@ const Core = {
             
             // 1. Set Point Count & Shuffle (Immediately)
             if (typeof this.currentCase.resetSortState === 'function') {
-                this.currentCase.resetSortState('idle'); // Clear previous sort locks
+                this.currentCase.resetSortState('idle');
             }
             this.currentCase.pointCount = stage.n;
             if (typeof this.currentCase.shuffleChords === 'function') {
@@ -440,32 +448,47 @@ const Core = {
             this.currentCase.draw();
             this.updateControls();
 
-            // 2. Show message
-            this.showSimMessage(stage.title, stage.subtitle, 2500);
+            // 2. Identify and display the dynamic title & calculate estimated time
+            const activeSortMode = (this.currentCase.sortMode && this.currentCase.sortMode !== 'off') 
+                ? this.currentCase.sortMode 
+                : 'hue';
+            const stageTitle = sortLabels[activeSortMode] || 'Color Sort';
+            
+            // Estimate duration based on current total steps and current speed
+            const totalSteps = typeof this.currentCase.getSortTotalSteps === 'function'
+                ? this.currentCase.getSortTotalSteps()
+                : (stage.n * 3);
+            const sortSpeed = Math.max(1, this.currentCase.sortSpeed || 150);
+            const durationSec = (totalSteps / sortSpeed).toFixed(1);
+            
+            this.showSimMessage(stageTitle, `${stage.subtitle}: ${durationSec}s`, 2500);
 
-            // 3. Start Sorting after a short delay (allowing shuffle to be seen under the message)
+            // 3. Start Sorting after a short delay
             const tid1 = setTimeout(() => {
                 if (!this.isSimRunning) return;
                 
                 if (this.currentCase.sortMode === 'off') {
                     this.currentCase.sortMode = 'hue';
                 }
+                
                 this.currentCase.restartSort();
                 this.updateSortBar();
 
-                // 4. Wait for sort to finish, then hold the completed frame briefly.
-                const totalSteps = typeof this.currentCase.getSortTotalSteps === 'function'
-                    ? this.currentCase.getSortTotalSteps()
-                    : (stage.n * 3);
-                const sortDurationMs = Math.ceil((totalSteps / Math.max(1, this.currentCase.sortSpeed || 1)) * 1000);
-                const finalHoldMs = 1000;
-                const sortTime = sortDurationMs + finalHoldMs;
-                const tid2 = setTimeout(() => {
-                    currentIdx++;
-                    runStage();
-                }, sortTime);
-                this.simTimers.push(tid2);
-
+                // 4. Wait for sort completion
+                const checkFinished = setInterval(() => {
+                    if (!this.isSimRunning) {
+                        clearInterval(checkFinished);
+                        return;
+                    }
+                    if (this.currentCase.sortingStatus === 'completed') {
+                        clearInterval(checkFinished);
+                        const tid2 = setTimeout(() => {
+                            currentIdx++;
+                            runStage();
+                        }, 1000);
+                        this.simTimers.push(tid2);
+                    }
+                }, 100);
             }, 3000);
             this.simTimers.push(tid1);
         };
