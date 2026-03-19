@@ -182,6 +182,11 @@ const Core = {
                     this.updateSortBar();
                     return;
                 }
+                if (scenarioSelect && scenarioSelect.value === '2_by-sorting') {
+                    this.runBySortingSimulation();
+                    this.updateSortBar();
+                    return;
+                }
                 if (this.currentCase && typeof this.currentCase.sortMode !== 'undefined') {
                     this.currentCase.toggleSortPlayback();
                     this.updateSortBar();
@@ -258,7 +263,7 @@ const Core = {
             scenarioSelect.onchange = (e) => {
                 this.playGameSound('tap');
                 const val = e.target.value;
-                if (val !== '1_rays') {
+                if (val !== '1_rays' && val !== '2_by-sorting') {
                     this.stopSimulation();
                 }
             };
@@ -321,14 +326,13 @@ const Core = {
                 this.stopSimulation();
             }
 
-            const isA = e.code === 'KeyA';
-            const is1 = e.code === 'Digit1';
-            
-            // Check if A is held (we can use a property to track this if needed, but for simplicity let's check Alt/Shift or just A+1 combo)
-            // The user specifically asked for A+1 (A+4 style)
             if (e.code === 'Digit1' && this.aHeld) {
                 e.preventDefault();
                 this.runRaysSimulation();
+            }
+            if (e.code === 'Digit2' && this.aHeld) {
+                e.preventDefault();
+                this.runBySortingSimulation();
             }
 
             if (e.code === 'KeyA') {
@@ -340,6 +344,11 @@ const Core = {
                 const scenarioSelect = document.getElementById('apple-scenario-select');
                 if (scenarioSelect && scenarioSelect.value === '1_rays') {
                     this.runRaysSimulation();
+                    this.updateSortBar();
+                    return;
+                }
+                if (scenarioSelect && scenarioSelect.value === '2_by-sorting') {
+                    this.runBySortingSimulation();
                     this.updateSortBar();
                     return;
                 }
@@ -367,18 +376,23 @@ const Core = {
         this.simTimers = [];
     },
 
-    showSimMessage(title, subtitle, duration = 3000) {
+    showSimMessage(title, subtitle, duration = 3000, extraHtml = '') {
         const overlay = document.getElementById('sim-overlay');
         const titleEl = document.getElementById('sim-title');
         const subtitleEl = document.getElementById('sim-subtitle');
-        if (!overlay || !titleEl || !subtitleEl) return;
+        const extraEl = document.getElementById('sim-extra');
+        if (!overlay || !titleEl || !subtitleEl || !extraEl) return;
 
         titleEl.textContent = title;
         subtitleEl.textContent = subtitle;
+        extraEl.innerHTML = extraHtml || '';
         overlay.classList.add('visible');
+
+        if (duration <= 0) return;
 
         const tid = setTimeout(() => {
             overlay.classList.remove('visible');
+            extraEl.innerHTML = '';
         }, duration);
         this.simTimers.push(tid);
     },
@@ -389,10 +403,15 @@ const Core = {
         this.simStartMs = null;
         const overlay = document.getElementById('sim-overlay');
         if (overlay) overlay.classList.remove('visible');
+        const extraEl = document.getElementById('sim-extra');
+        if (extraEl) extraEl.innerHTML = '';
 
         if (this.currentCase && this.simStateSnapshot) {
             if (typeof this.simStateSnapshot.pointCount === 'number') {
                 this.currentCase.pointCount = this.simStateSnapshot.pointCount;
+            }
+            if (typeof this.simStateSnapshot.sortMode === 'string') {
+                this.currentCase.sortMode = this.simStateSnapshot.sortMode;
             }
             if (typeof this.currentCase.resetSortState === 'function') {
                 this.currentCase.resetSortState('idle');
@@ -416,7 +435,8 @@ const Core = {
         this.isSimRunning = true;
         this.simStartMs = performance.now();
         this.simStateSnapshot = {
-            pointCount: this.currentCase.pointCount
+            pointCount: this.currentCase.pointCount,
+            sortMode: this.currentCase.sortMode
         };
         const scenarioSelect = document.getElementById('apple-scenario-select');
         if (scenarioSelect) scenarioSelect.value = '1_rays';
@@ -512,6 +532,124 @@ const Core = {
                 }, 100);
                 this.simTimers.push(checkFinished);
             }, 3000);
+            this.simTimers.push(tid1);
+        };
+
+        runStage();
+    },
+
+    runBySortingSimulation() {
+        if (this.isSimRunning) {
+            this.stopSimulation();
+            return;
+        }
+        if (!this.currentCase) return;
+
+        this.isSimRunning = true;
+        this.simStartMs = performance.now();
+        this.simStateSnapshot = {
+            pointCount: this.currentCase.pointCount,
+            sortMode: this.currentCase.sortMode
+        };
+        const scenarioSelect = document.getElementById('apple-scenario-select');
+        if (scenarioSelect) scenarioSelect.value = '2_by-sorting';
+        const simTitle = 'Hue Radix · Bubble Sort · Quick Sort';
+
+        const stages = [
+            { mode: 'hue', label: 'Hue Radix' },
+            { mode: 'bubble', label: 'Bubble Sort' },
+            { mode: 'quick', label: 'Quick Sort' }
+        ];
+        const results = [];
+        let currentIdx = 0;
+
+        const formatSeconds = (value) => `${Math.max(0, value).toFixed(1)}s`;
+        const buildCompareTable = () => {
+            const header = ['Algorithm', 'Estimated', 'Booster', 'Sim Time']
+                .map(h => `<div class="sim-table-cell head">${h}</div>`).join('');
+            
+            const rows = results.map((entry) => `
+                <div class="sim-table-cell cell-alg">${entry.label}</div>
+                <div class="sim-table-cell cell-val">${entry.estimatedTime}</div>
+                <div class="sim-table-cell cell-val">${entry.multiplier}x</div>
+                <div class="sim-table-cell cell-val">${entry.duration}</div>
+            `).join('');
+
+            return `<div class="sim-compare-summary">${header}${rows}</div>`;
+        };
+        const runStage = () => {
+            if (!this.isSimRunning || currentIdx >= stages.length) {
+                this.playGameSound('complete');
+                this.showSimMessage(simTitle, 'Sorting Comparison Summary', 9000, buildCompareTable());
+                const tid = setTimeout(() => this.stopSimulation(), 9400);
+                this.simTimers.push(tid);
+                return;
+            }
+
+            const stage = stages[currentIdx];
+            if (typeof this.currentCase.resetSortState === 'function') {
+                this.currentCase.resetSortState('idle');
+            }
+            this.currentCase.sortMode = stage.mode;
+            if (typeof this.currentCase.shuffleScene === 'function') {
+                this.playGameSound('shuffle');
+                this.currentCase.shuffleScene();
+            }
+            this.currentCase.draw();
+            this.updateControls();
+
+            const totalSteps = typeof this.currentCase.getSortTotalSteps === 'function'
+                ? this.currentCase.getSortTotalSteps()
+                : (this.currentCase.pointCount * 3);
+            const baseSortSpeed = Math.max(1, this.currentCase.sortSpeed || 150);
+            const effectiveSortSpeed = typeof this.currentCase.getEffectiveSortSpeed === 'function'
+                ? this.currentCase.getEffectiveSortSpeed()
+                : baseSortSpeed;
+            const sortSpeedMultiplier = typeof this.currentCase.getSortSpeedMultiplier === 'function'
+                ? this.currentCase.getSortSpeedMultiplier()
+                : 1;
+            const estimatedDurationSec = totalSteps / baseSortSpeed;
+            const simDurationSec = estimatedDurationSec / sortSpeedMultiplier;
+            const subTitleText = `${stage.label} · ${sortSpeedMultiplier}x Boost · ${formatSeconds(estimatedDurationSec)} / ${formatSeconds(simDurationSec)}`;
+
+            this.showSimMessage(
+                currentIdx === 0 ? simTitle : '',
+                subTitleText,
+                currentIdx === 0 ? 2200 : 0
+            );
+
+            const tid1 = setTimeout(() => {
+                if (!this.isSimRunning) return;
+                if (currentIdx === 0) {
+                    this.showSimMessage('', subTitleText, 0);
+                }
+                const startedAt = performance.now();
+                this.currentCase.restartSort();
+                this.updateSortBar();
+
+                const checkFinished = setInterval(() => {
+                    if (!this.isSimRunning) {
+                        clearInterval(checkFinished);
+                        return;
+                    }
+                    if (this.currentCase.sortingStatus === 'completed') {
+                        clearInterval(checkFinished);
+                        const elapsedMs = performance.now() - startedAt;
+                        results.push({
+                            label: stage.label,
+                            multiplier: sortSpeedMultiplier,
+                            estimatedTime: formatSeconds(estimatedDurationSec),
+                            duration: formatSeconds(elapsedMs / 1000)
+                        });
+                        const tid2 = setTimeout(() => {
+                            currentIdx += 1;
+                            runStage();
+                        }, 900);
+                        this.simTimers.push(tid2);
+                    }
+                }, 100);
+                this.simTimers.push(checkFinished);
+            }, 2400);
             this.simTimers.push(tid1);
         };
 

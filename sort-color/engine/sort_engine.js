@@ -26,6 +26,17 @@ const SortEngine = {
             && (this.learningMode === 'off' || this.isPaused);
     },
 
+    getSortSpeedMultiplier() {
+        if (this.sortSpeedMode === 'uniform') return 1;
+        if (this.sortMode === 'bubble') return 50;
+        if (this.sortMode === 'quick') return 10;
+        return 1;
+    },
+
+    getEffectiveSortSpeed() {
+        return Math.max(1, this.sortSpeed * this.getSortSpeedMultiplier());
+    },
+
     captureSortLockedState() {
         const n = Math.max(0, Math.floor(this.pointCount));
         const forceIntegerM = this.learningMode === 'gcd' || this.learningMode === 'integer-snap' || this.learningMode === 'mapping';
@@ -805,7 +816,8 @@ const SortEngine = {
         const totalSteps = plan?.totalSteps || 0;
         if (!totalSteps) return;
         const previousProgress = this.sortProgress;
-        this.sortProgress = Math.min(totalSteps, this.sortProgress + this.sortSpeed * dt);
+        const effectiveSortSpeed = this.getEffectiveSortSpeed();
+        this.sortProgress = Math.min(totalSteps, this.sortProgress + effectiveSortSpeed * dt);
         if (typeof Core !== 'undefined' && typeof Core.maybePlaySortingTick === 'function') {
             Core.maybePlaySortingTick(this, previousProgress, this.sortProgress, plan);
         }
