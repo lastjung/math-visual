@@ -6,12 +6,18 @@
 class AudioManager {
     constructor() {
         this.audio = new Audio();
-        this.audio.loop = true;
+        this.audio.loop = false;
         this.audio.volume = 0; // Start muted for fade-in
         this.targetVolume = 0.15;
         this.fadeInterval = null;
         this.isMuted = true;
         this.currentTrack = null;
+        this.audio.addEventListener('ended', () => {
+            if (this.isMuted) return;
+            if (typeof Core !== 'undefined' && typeof Core.changeMusicTrack === 'function') {
+                Core.changeMusicTrack();
+            }
+        });
     }
 
     play(trackUrl, options = {}) {
@@ -161,5 +167,99 @@ class AudioManager {
     }
 }
 
+class GameSfxManager {
+    constructor() {
+        this.context = null;
+        this.masterGain = null;
+        this.masterFilter = null;
+        this.enabled = true;
+        try {
+            const saved = window.localStorage.getItem('sort-color:game-sfx-enabled');
+            if (saved != null) {
+                this.enabled = saved === 'true';
+            }
+        } catch (_err) {
+            // Ignore storage errors.
+        }
+    }
+
+    ensureContext() {
+        if (!this.context) {
+            const Ctx = window.AudioContext || window.webkitAudioContext;
+            if (!Ctx) return null;
+            this.context = new Ctx();
+            this.masterGain = this.context.createGain();
+            this.masterFilter = this.context.createBiquadFilter();
+            this.masterFilter.type = 'lowpass';
+            this.masterFilter.frequency.value = 2600;
+            this.masterFilter.Q.value = 0.3;
+            this.masterGain.gain.value = 0.16;
+            this.masterGain.connect(this.masterFilter);
+            this.masterFilter.connect(this.context.destination);
+        }
+        if (this.context.state === 'suspended') {
+            this.context.resume().catch(() => {});
+        }
+        return this.context;
+    }
+
+    setEnabled(enabled) {
+        this.enabled = !!enabled;
+        this.persist();
+    }
+
+    toggle() {
+        this.enabled = !this.enabled;
+        this.persist();
+        return this.enabled;
+    }
+
+    persist() {
+        try {
+            window.localStorage.setItem('sort-color:game-sfx-enabled', String(this.enabled));
+        } catch (_err) {
+            // Ignore storage errors.
+        }
+    }
+
+    play(type = 'tap') {
+        if (!this.enabled) return;
+        const context = this.ensureContext();
+        if (!context || !this.masterGain) return;
+
+        const now = context.currentTime;
+        const notesByType = {
+            tap: [740, 987.77],
+            step: [660, 880],
+            tick: [784],
+            play: [523.25, 659.25, 783.99],
+            reset: [440, 349.23],
+            complete: [659.25, 783.99, 987.77, 1174.66]
+        };
+        const notes = notesByType[type] || notesByType.tap;
+
+        notes.forEach((freq, index) => {
+            const osc = context.createOscillator();
+            const gain = context.createGain();
+            osc.type = type === 'reset' ? 'sine' : 'triangle';
+            const start = now + index * 0.055;
+            const end = start + (type === 'complete' ? 0.18 : 0.14);
+            osc.frequency.setValueAtTime(freq, start);
+            osc.frequency.linearRampToValueAtTime(Math.max(180, freq * 0.92), end);
+
+            const peak = 0.18 / Math.max(1, notes.length);
+            gain.gain.setValueAtTime(0, start);
+            gain.gain.linearRampToValueAtTime(peak, start + 0.028);
+            gain.gain.exponentialRampToValueAtTime(0.0001, end);
+
+            osc.connect(gain);
+            gain.connect(this.masterGain);
+            osc.start(start);
+            osc.stop(end + 0.02);
+        });
+    }
+}
+
 // Global instance
 window.audioManager = new AudioManager();
+window.gameSfx = new GameSfxManager();

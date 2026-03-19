@@ -102,13 +102,19 @@ const SortEngine = {
         if (sortMode === 'quick') {
             const arr = [...sourceOrder];
             const events = [];
+            const checkpoints = [];
             let partitionCount = 0;
+            const checkpointEvery = 64;
 
             const pushEvent = (meta) => {
-                events.push({
-                    order: [...arr],
-                    ...meta
-                });
+                events.push(meta);
+                const eventIndex = events.length - 1;
+                if (eventIndex === 0 || eventIndex % checkpointEvery === 0) {
+                    checkpoints.push({
+                        eventIndex,
+                        order: [...arr]
+                    });
+                }
             };
 
             const swap = (a, b) => {
@@ -168,6 +174,7 @@ const SortEngine = {
             this.sortPlan = {
                 type: 'quick',
                 events,
+                checkpoints,
                 initialState: sourceOrder,
                 finalState: [...arr],
                 totalSteps: events.length
@@ -214,6 +221,35 @@ const SortEngine = {
     getSortTotalSteps(provider = null) {
         const plan = provider ? this.buildSortPlanFromProvider(provider) : this.buildSortPlanForCurrentState();
         return plan?.totalSteps || 0;
+    },
+
+    getQuickSortOrderAtEvent(plan, eventIndex) {
+        if (!plan || plan.type !== 'quick') return [];
+        if (eventIndex < 0) return [...(plan.initialState || [])];
+
+        const checkpoints = Array.isArray(plan.checkpoints) ? plan.checkpoints : [];
+        let baseOrder = [...(plan.initialState || [])];
+        let startIndex = 0;
+
+        for (let i = checkpoints.length - 1; i >= 0; i--) {
+            const checkpoint = checkpoints[i];
+            if (checkpoint.eventIndex <= eventIndex) {
+                baseOrder = [...checkpoint.order];
+                startIndex = checkpoint.eventIndex + 1;
+                break;
+            }
+        }
+
+        for (let i = startIndex; i <= eventIndex; i++) {
+            const event = plan.events[i];
+            const swapIndices = event?.swapIndices;
+            if (!swapIndices) continue;
+            const [a, b] = swapIndices;
+            if (a === b || a == null || b == null) continue;
+            [baseOrder[a], baseOrder[b]] = [baseOrder[b], baseOrder[a]];
+        }
+
+        return baseOrder;
     },
 
     getSortPassTransitionConfig() {
@@ -609,7 +645,7 @@ const SortEngine = {
                 activeDigit: null,
                 activeIndices: event.activeIndices,
                 completed: false,
-                drawEntries: event.order,
+                drawEntries: this.getQuickSortOrderAtEvent(plan, progress),
                 coloredCount: 0,
                 pivotIndex: event.pivotIndex,
                 range: event.range,
@@ -758,9 +794,15 @@ const SortEngine = {
         if (this.sortingStatus !== 'running') return;
         if (!this.isSortingEnabled()) return;
         if (this.isSortPassTransitionBlocking()) return;
-        const totalSteps = this.getSortTotalSteps(this.getCurrentGeometryProvider());
+        const provider = this.getCurrentGeometryProvider();
+        const plan = this.ensureSortPlan(provider);
+        const totalSteps = plan?.totalSteps || 0;
         if (!totalSteps) return;
+        const previousProgress = this.sortProgress;
         this.sortProgress = Math.min(totalSteps, this.sortProgress + this.sortSpeed * dt);
+        if (typeof Core !== 'undefined' && typeof Core.maybePlaySortingTick === 'function') {
+            Core.maybePlaySortingTick(this, previousProgress, this.sortProgress, plan);
+        }
         if (this.sortProgress >= totalSteps) {
             this.sortingStatus = 'completed';
         }

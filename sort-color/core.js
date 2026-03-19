@@ -7,6 +7,7 @@ const Core = {
     isSimRunning: false,
     simStateSnapshot: null,
     simStartMs: null,
+    lastGameSfxTickAt: 0,
     BGM_BASE: '../visualization/assets/music/bgm/',
     tracks: [
         'math/Math_01_Minimalist_Sine_Pulse.mp3', 'math/Math_02_Fractal_Recursive_Ambient.mp3',
@@ -170,9 +171,11 @@ const Core = {
         const appleVolIcon = document.getElementById('apple-vol-icon');
         const btnToggleView = document.getElementById('btn-toggle-view');
         const btnHideHud = document.getElementById('btn-hide-hud');
+        const gameSfxToggle = document.getElementById('game-sfx-toggle');
 
         if (applePlay) {
             applePlay.onclick = () => {
+                this.playGameSound('play');
                 const scenarioSelect = document.getElementById('apple-scenario-select');
                 if (scenarioSelect && scenarioSelect.value === '1_rays') {
                     this.runRaysSimulation();
@@ -187,6 +190,7 @@ const Core = {
         }
         if (appleReset) {
             appleReset.onclick = () => {
+                this.playGameSound('reset');
                 this.resetCase();
                 this.updateSortBar();
             };
@@ -197,6 +201,7 @@ const Core = {
         if (applePartial) {
             applePartial.onclick = () => {
                 if (this.currentCase && typeof this.currentCase.resetSortProgress === 'function') {
+                    this.playGameSound('reset');
                     this.currentCase.resetSortProgress();
                     this.currentCase.draw();
                     this.updateSortBar();
@@ -206,6 +211,7 @@ const Core = {
         if (appleSpeedUp) {
             appleSpeedUp.onclick = () => {
                 if (this.currentCase && typeof this.currentCase.stepSort === 'function') {
+                    this.playGameSound('step');
                     this.currentCase.stepSort(1);
                     this.currentCase.draw();
                     this.updateSortBar();
@@ -215,6 +221,7 @@ const Core = {
         if (appleSpeedDown) {
             appleSpeedDown.onclick = () => {
                 if (this.currentCase && typeof this.currentCase.stepSort === 'function') {
+                    this.playGameSound('step');
                     this.currentCase.stepSort(-1);
                     this.currentCase.draw();
                     this.updateSortBar();
@@ -249,11 +256,19 @@ const Core = {
         const scenarioSelect = document.getElementById('apple-scenario-select');
         if (scenarioSelect) {
             scenarioSelect.onchange = (e) => {
+                this.playGameSound('tap');
                 const val = e.target.value;
                 if (val !== '1_rays') {
                     this.stopSimulation();
                 }
             };
+        }
+
+        if (gameSfxToggle) {
+            gameSfxToggle.onclick = () => {
+                this.toggleGameSound();
+            };
+            this.syncGameSoundButton();
         }
 
         // Add Dragging Support
@@ -345,7 +360,10 @@ const Core = {
     aHeld: false,
 
     clearSimTimers() {
-        this.simTimers.forEach(id => clearTimeout(id));
+        this.simTimers.forEach(id => {
+            clearTimeout(id);
+            clearInterval(id);
+        });
         this.simTimers = [];
     },
 
@@ -427,7 +445,9 @@ const Core = {
                 const finalMode = (this.currentCase.sortMode && this.currentCase.sortMode !== 'off') 
                     ? this.currentCase.sortMode 
                     : 'hue';
+                this.playGameSound('complete');
                 this.showSimMessage(sortLabels[finalMode] || 'Color Sort', 'Complete', 4000);
+                
                 const tid = setTimeout(() => this.stopSimulation(), 4500);
                 this.simTimers.push(tid);
                 return;
@@ -489,6 +509,7 @@ const Core = {
                         this.simTimers.push(tid2);
                     }
                 }, 100);
+                this.simTimers.push(checkFinished);
             }, 3000);
             this.simTimers.push(tid1);
         };
@@ -859,6 +880,56 @@ const Core = {
         if (appleVol) appleVol.value = isMuted ? 0 : window.audioManager.getTargetVolume();
         
         this.syncAudioButton();
+    },
+
+    toggleGameSound() {
+        if (!window.gameSfx) return;
+        const isOn = window.gameSfx.toggle();
+        if (isOn) this.playGameSound('play');
+        this.syncGameSoundButton();
+    },
+
+    playGameSound(type = 'tap') {
+        if (!window.gameSfx) return;
+        window.gameSfx.play(type);
+    },
+
+    maybePlaySortingTick(caseRef, previousProgress, nextProgress, plan = null) {
+        if (!window.gameSfx || !window.gameSfx.enabled) return;
+        if (!caseRef || caseRef.sortingStatus !== 'running') return;
+        const prevStep = Math.floor(previousProgress);
+        const nextStep = Math.floor(nextProgress);
+        const progressDelta = nextStep - prevStep;
+        if (progressDelta <= 0) return;
+
+        const now = performance.now();
+        const isRadix = caseRef.sortMode === 'hue' || caseRef.sortMode === 'lsh';
+        const isQuick = caseRef.sortMode === 'quick';
+        const stepStride = isRadix ? 3 : (isQuick ? 2 : 3);
+        if (Math.floor(nextStep / stepStride) === Math.floor(prevStep / stepStride)) return;
+
+        if (isRadix && Array.isArray(plan?.passes) && plan.passes.length > 0) {
+            const passLength = plan.passes[0]?.sourceOrder?.length || 0;
+            if (passLength > 0) {
+                const nextPassStep = nextStep % passLength;
+                if (nextPassStep <= 8) return;
+            }
+        }
+
+        const intervalMs = isRadix ? 95 : (isQuick ? 110 : 130);
+        if (now - this.lastGameSfxTickAt < intervalMs) return;
+
+        this.lastGameSfxTickAt = now;
+        this.playGameSound('tick');
+    },
+
+    syncGameSoundButton() {
+        const button = document.getElementById('game-sfx-toggle');
+        if (!button || !window.gameSfx) return;
+        const isOn = !!window.gameSfx.enabled;
+        button.textContent = isOn ? 'Game Sound: On' : 'Game Sound: Off';
+        button.classList.toggle('is-off', !isOn);
+        button.setAttribute('aria-pressed', String(isOn));
     },
 
     changeMusicTrack() {
