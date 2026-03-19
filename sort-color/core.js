@@ -915,10 +915,11 @@ const Core = {
                 const label = document.createElement('label');
                 label.textContent = control.label;
 
-                const valueDisplay = document.createElement('div');
-                valueDisplay.className = 'control-value';
+                const valueDisplay = document.createElement('input');
+                valueDisplay.type = 'text';
+                valueDisplay.className = 'control-value editable';
                 valueDisplay.id = `val-${control.id}`;
-                valueDisplay.textContent = this.formatControlValue(control, control.value);
+                valueDisplay.value = this.formatControlValue(control, control.value);
 
                 const input = document.createElement('input');
                 input.type = 'range';
@@ -927,9 +928,28 @@ const Core = {
                 input.max = String(control.max);
                 input.step = String(control.step);
                 input.value = String(control.value);
+
+                const applyValue = (valStr) => {
+                    let nextValue = parseFloat(valStr);
+                    if (isNaN(nextValue)) nextValue = control.value;
+                    nextValue = Math.max(control.min, Math.min(control.max, nextValue));
+                    
+                    valueDisplay.value = this.formatControlValue(control, nextValue);
+                    input.value = String(nextValue);
+                    control.onChange(nextValue);
+                };
+
+                valueDisplay.onchange = (e) => applyValue(e.target.value);
+                valueDisplay.onkeydown = (e) => {
+                    if (e.key === 'Enter') {
+                        applyValue(e.target.value);
+                        e.target.blur();
+                    }
+                };
+                
                 input.oninput = (e) => {
                     const nextValue = Number(e.target.value);
-                    valueDisplay.textContent = this.formatControlValue(control, nextValue);
+                    valueDisplay.value = this.formatControlValue(control, nextValue);
                     control.onChange(nextValue);
                 };
 

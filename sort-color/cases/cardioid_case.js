@@ -83,7 +83,20 @@ const CardioidCircleCase = {
         '- Integers Only: M을 정수로 반올림해 단계적으로 변화.',
         '- HUD: 좌상단 수치 표시 On/Off.',
         '- Reset/Resume: 상단 Master Controls 버튼 사용.',
-        '- Reset 시 기본 세팅(N=250, M=0, M Speed=0.00)으로 복귀.'
+        '- Reset 시 기본 세팅(N=250, M=0, M Speed=0.00)으로 복귀.',
+        '',
+        '[하트를 만드는 3가지 마법 공식 & 예시]',
+        '1. 정통 하트 (M = 2)',
+        ' - 저: (N=360, M=2) / 중: (N=720, M=2) / 고: (N=1440, M=2)',
+        '2. 거울 하트 (M = N/2 + 1)',
+        ' - 저: (N=360, M=181) / 중: (N=720, M=361) / 고: (N=1440, M=721)',
+        '3. 보석 미러 하트 (M = N/2 + 1.5)',
+        ' - 저: (N=360, M=181.5) / 중: (N=720, M=361.5) / 고: (N=1440, M=721.5)',
+        '',
+        '[그 외 환상적인 수학적 패턴들]',
+        '1. 거미줄 (Spider Web): (N=1500, M=1.005) *공식: M = 1 + 소수',
+        '2. 10엽화 꽃 (Flower): (N=1000, M=11.0) *공식: M = 꽃잎수 + 1',
+        '3. 황금비 (Golden Ratio): (N=1200, M=1.618) *공식: M = 1.618'
     ].join('\n'),
 
     init() {
@@ -157,7 +170,7 @@ const CardioidCircleCase = {
                 id: 'mc_m',
                 label: 'M (Multiplier)',
                 min: 0,
-                max: 100,
+                max: 1000,
                 step: 0.001,
                 decimals: 2,
                 value: this.multiplier,
@@ -326,7 +339,7 @@ const CardioidCircleCase = {
                     id: 'mc_nr_m',
                     label: 'N Ramp: Fixed M',
                     min: 0,
-                    max: 50,
+                    max: 1000,
                     step: 0.1,
                     value: this.learnFixedM,
                     onChange: (v) => {
