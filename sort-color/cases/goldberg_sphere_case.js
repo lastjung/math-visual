@@ -9,11 +9,11 @@ const GoldbergSphereCase = {
     multiplier: 0,
     multiplierSpeed: 0,
     lineWidth: 1.2,
-    lineAlpha: 0.88,
+    lineAlpha: 0.9,
     pointRadius: 1.4,
     showPoints: false,
     showHud: true,
-    showIndices: 'slot',
+    showIndices: 'off',
     integersOnly: false,
     colorGenerator: 'index-mod',
     colorMode: 'angle',
@@ -39,13 +39,9 @@ const GoldbergSphereCase = {
     rotX: -0.35,
     rotY: 0.45,
     rotationSpeed: 0.16,
+    sortPassSpinTurns: 1.05,
+    sortPassSpinDuration: 1.2,
     autoRotate: true,
-    autoTrack: true,
-    trackingHistory: [],
-    trackingSmoothedPoint: null,
-    trackingVelX: 0,
-    trackingVelY: 0,
-    trackingLocked: false,
     isDraggingSphere: false,
     lastPointerX: 0,
     lastPointerY: 0,
@@ -314,12 +310,12 @@ const GoldbergSphereCase = {
         this.multiplier = 0;
         this.multiplierSpeed = 0;
         this.lineWidth = 1.2;
-        this.lineAlpha = 0.88;
+        this.lineAlpha = 0.9;
         this.integersOnly = false;
         this.colorGenerator = 'index-mod';
         this.colorMode = 'angle';
         this.renderMode = 'light';
-        this.showIndices = 'slot';
+        this.showIndices = 'off';
         this.slotMapping = 'top-down';
         this.sortMode = 'off',
         this.sortSpeed = 150;
@@ -327,13 +323,9 @@ const GoldbergSphereCase = {
         this.rotX = -0.35;
         this.rotY = 0.45;
         this.rotationSpeed = 0.16;
+        this.sortPassSpinTurns = 1.05;
+        this.sortPassSpinDuration = 1.2;
         this.autoRotate = true;
-        this.autoTrack = true;
-        this.trackingHistory = [];
-        this.trackingSmoothedPoint = null;
-        this.trackingVelX = 0;
-        this.trackingVelY = 0;
-        this.trackingLocked = false;
         this.isDraggingSphere = false;
         this.sortProgress = 0;
         this.sortPlan = null;
@@ -437,16 +429,23 @@ const GoldbergSphereCase = {
     updateSimulation(dt) {
         if (!this.isPaused && !this.isDraggingSphere) {
             const provider = this.getCurrentGeometryProvider();
-            const sortPlan = this.isSortingEnabled() ? this.ensureSortPlan(provider) : null;
-            const sortView = this.isSortingEnabled() ? this.getSortViewState(sortPlan) : null;
-            const handledByTracking = this.updateAutoTracking(dt, provider, sortView);
-            if (!handledByTracking && this.autoRotate) {
-                this.rotY += this.rotationSpeed * dt;
+            let extraSpin = 0;
+            if (this.isSortingEnabled()) {
+                const sortPlan = this.ensureSortPlan(provider);
+                const sortView = this.getSortViewState(sortPlan);
+                this.syncSortPassTransition(sortPlan, sortView);
+                const transition = this.getSortPassTransitionState();
+                if (transition) {
+                    const t = Math.max(0, Math.min(1, transition.progress || 0));
+                    const envelope = Math.sin(t * Math.PI);
+                    extraSpin = ((transition.turns || 0) * Math.PI * 2 / Math.max(0.05, transition.duration || 1)) * envelope;
+                }
+                this.advanceSortPassTransition(dt);
+            }
+            if (this.autoRotate) {
+                this.rotY += (this.rotationSpeed + extraSpin) * dt;
             }
             this.clampPitch();
-        } else if (this.isDraggingSphere) {
-            this.trackingVelX = 0;
-            this.trackingVelY = 0;
         }
         this.updateSortingState(dt);
         this.updateShuffleAnimation(dt);
@@ -483,14 +482,6 @@ const GoldbergSphereCase = {
         return x;
     },
 
-    resetTrackingState() {
-        this.trackingHistory = [];
-        this.trackingSmoothedPoint = null;
-        this.trackingLocked = false;
-        this.trackingVelX = 0;
-        this.trackingVelY = 0;
-    },
-
     wrapAngle(angle) {
         return Math.atan2(Math.sin(angle), Math.cos(angle));
     },
@@ -501,137 +492,13 @@ const GoldbergSphereCase = {
         if (this.rotX < -limit) this.rotX = -limit;
     },
 
-    getTrackingTargetPoint(provider, sortView) {
-        if (!this.autoTrack || !provider) return null;
-        const slotMeta = provider?.slots?.map((slot) => slot?.meta || null) || [];
-        const activeIndices = Array.isArray(sortView?.activeIndices) ? sortView.activeIndices : null;
-        const shuffleAnimation = this.shuffleAnimation;
-
-        if (activeIndices && activeIndices.length) {
-            let x = 0;
-            let y = 0;
-            let z = 0;
-            let count = 0;
-            for (const slotIndex of activeIndices) {
-                const center = slotMeta[slotIndex]?.center;
-                if (!center) continue;
-                x += center.x;
-                y += center.y;
-                z += center.z;
-                count += 1;
-            }
-            if (count > 0) {
-                const len = Math.hypot(x, y, z) || 1;
-                return { x: x / len, y: y / len, z: z / len };
-            }
-        }
-
-        if (shuffleAnimation && shuffleAnimation.progress < 1 && typeof shuffleAnimation.focusItemIndex === 'number') {
-            const itemIndex = shuffleAnimation.focusItemIndex;
-            const fromSlotIndex = shuffleAnimation.fromSlotsByItem?.[itemIndex];
-            const toSlotIndex = shuffleAnimation.toSlotsByItem?.[itemIndex];
-            const fromCenter = slotMeta[fromSlotIndex]?.center;
-            const toCenter = slotMeta[toSlotIndex]?.center;
-            if (fromCenter && toCenter) {
-                const t = Math.max(0, Math.min(1, shuffleAnimation.progress));
-                const easedT = t * t * (3 - 2 * t);
-                const x = fromCenter.x + (toCenter.x - fromCenter.x) * easedT;
-                const y = fromCenter.y + (toCenter.y - fromCenter.y) * easedT;
-                const z = fromCenter.z + (toCenter.z - fromCenter.z) * easedT;
-                const len = Math.hypot(x, y, z) || 1;
-                return { x: x / len, y: y / len, z: z / len };
-            }
-        }
-
-        if (typeof sortView?.pivotIndex === 'number') {
-            return slotMeta[sortView.pivotIndex]?.center || null;
-        }
-
-        if (typeof sortView?.coloredCount === 'number' && sortView.coloredCount < slotMeta.length) {
-            return slotMeta[sortView.coloredCount]?.center || null;
-        }
-
-        return null;
-    },
-
-    updateAutoTracking(dt, provider, sortView) {
-        const activePoint = this.getTrackingTargetPoint(provider, sortView);
-        if (!activePoint) {
-            this.resetTrackingState();
-            return false;
-        }
-
-        this.trackingHistory.push({ x: activePoint.x, y: activePoint.y, z: activePoint.z });
-        if (this.trackingHistory.length > 6) this.trackingHistory.shift();
-
-        let avgX = 0;
-        let avgY = 0;
-        let avgZ = 0;
-        for (const point of this.trackingHistory) {
-            avgX += point.x;
-            avgY += point.y;
-            avgZ += point.z;
-        }
-        avgX /= this.trackingHistory.length;
-        avgY /= this.trackingHistory.length;
-        avgZ /= this.trackingHistory.length;
-
-        const averagedPoint = { x: avgX, y: avgY, z: avgZ };
-        if (!this.trackingSmoothedPoint) {
-            this.trackingSmoothedPoint = { ...averagedPoint };
-        } else {
-            const emaAlpha = 1 - Math.exp(-dt / 0.22);
-            this.trackingSmoothedPoint.x += (averagedPoint.x - this.trackingSmoothedPoint.x) * emaAlpha;
-            this.trackingSmoothedPoint.y += (averagedPoint.y - this.trackingSmoothedPoint.y) * emaAlpha;
-            this.trackingSmoothedPoint.z += (averagedPoint.z - this.trackingSmoothedPoint.z) * emaAlpha;
-            const len = Math.hypot(this.trackingSmoothedPoint.x, this.trackingSmoothedPoint.y, this.trackingSmoothedPoint.z) || 1;
-            this.trackingSmoothedPoint.x /= len;
-            this.trackingSmoothedPoint.y /= len;
-            this.trackingSmoothedPoint.z /= len;
-        }
-
-        const smoothedPoint = this.trackingSmoothedPoint;
-        const viewPoint = GoldbergSphereProvider.rotateSpherePoint(smoothedPoint, this.rotX, this.rotY);
-        const radial = Math.hypot(viewPoint.x, viewPoint.y);
-        const enterTrackRadius = 0.74;
-        const exitTrackRadius = 0.58;
-
-        if (!this.trackingLocked) {
-            if (viewPoint.z <= 0 || radial > enterTrackRadius) this.trackingLocked = true;
-        } else if (viewPoint.z > 0 && radial < exitTrackRadius) {
-            this.trackingLocked = false;
-        }
-
-        if (!this.trackingLocked) {
-            this.trackingVelX *= 0.88;
-            this.trackingVelY *= 0.88;
-            this.rotY += this.rotationSpeed * dt * 0.1;
-            return true;
-        }
-
-        const gain = 4.8;
-        const maxVel = 2.2;
-        const deadZone = 0.012;
-        const velAlpha = 1 - Math.exp(-dt / 0.14);
-        const zNew = Math.hypot(smoothedPoint.x, smoothedPoint.z);
-
-        if (zNew > 0.001) {
-            const targetAngleY = Math.atan2(-smoothedPoint.x, smoothedPoint.z);
-            let dY = this.wrapAngle(targetAngleY - this.rotY);
-            if (Math.abs(dY) < deadZone) dY = 0;
-            const desiredVelY = Math.max(-maxVel, Math.min(maxVel, dY * gain));
-            this.trackingVelY += (desiredVelY - this.trackingVelY) * velAlpha;
-        }
-
-        const targetAngleX = Math.atan2(smoothedPoint.y, zNew);
-        let dX = this.wrapAngle(targetAngleX - this.rotX);
-        if (Math.abs(dX) < deadZone) dX = 0;
-        const desiredVelX = Math.max(-maxVel, Math.min(maxVel, dX * gain));
-        this.trackingVelX += (desiredVelX - this.trackingVelX) * velAlpha;
-
-        this.rotY += this.trackingVelY * dt;
-        this.rotX += this.trackingVelX * dt;
-        return true;
+    getSortPassTransitionConfig() {
+        return {
+            enabled: true,
+            duration: this.sortPassSpinDuration,
+            turns: this.sortPassSpinTurns,
+            blockProgress: false
+        };
     },
 
     getSphereVisual(point, index, total) {
@@ -654,12 +521,13 @@ const GoldbergSphereCase = {
             : null;
         if (this.colorMode === 'angle') {
             const hue = generatedHue ?? longitudeHue;
+            const normalizedHue = ((hue % 360) + 360) % 360;
             return {
-                hue,
-                saturation: 92,
-                lightness: 60,
+                hue: normalizedHue,
+                saturation: 100,
+                lightness: 50,
                 alpha,
-                color: `hsla(${hue}, 92%, 60%, ${alpha})`
+                color: `hsla(${normalizedHue}, 100%, 50%, ${alpha})`
             };
         }
 
@@ -810,7 +678,6 @@ const GoldbergSphereCase = {
         const simElapsedLabel = (typeof Core !== 'undefined' && Core.isSimRunning && typeof Core.getSimulationElapsedMs === 'function')
             ? Core.formatRecordingTimeMMSS(Core.getSimulationElapsedMs())
             : null;
-
         ctx.fillStyle = 'rgba(255,255,255,0.92)';
         ctx.font = '600 14px Inter, system-ui, sans-serif';
 
@@ -872,9 +739,85 @@ const GoldbergSphereCase = {
 
     drawLearningModeOverlay() {},
 
+    drawSortPassScanOverlay(ctx, viewState) {
+        const transition = this.getSortPassTransitionState?.();
+        if (!transition) return;
+
+        const points = Array.isArray(viewState.provider?.points) ? viewState.provider.points : [];
+        if (!points.length) return;
+
+        let minX = Infinity;
+        let maxX = -Infinity;
+        let minY = Infinity;
+        let maxY = -Infinity;
+
+        for (const point of points) {
+            if (!point) continue;
+            if (point.x < minX) minX = point.x;
+            if (point.x > maxX) maxX = point.x;
+            if (point.y < minY) minY = point.y;
+            if (point.y > maxY) maxY = point.y;
+        }
+
+        if (!Number.isFinite(minX) || !Number.isFinite(minY)) return;
+
+        const t = Math.max(0, Math.min(1, transition.progress || 0));
+        const scanT = Math.pow(t, 3.2);
+        const scanY = minY + (maxY - minY) * scanT;
+        const bandHalf = Math.max(32, (maxY - minY) * 0.18);
+        const alpha = (0.35 + Math.sin(t * Math.PI) * 0.55);
+        const glowAlpha = alpha * 0.22;
+        const cx = (minX + maxX) * 0.5;
+        const cy = (minY + maxY) * 0.5;
+        const rx = Math.max(1, (maxX - minX) * 0.5);
+        const ry = Math.max(1, (maxY - minY) * 0.5);
+        const normalizedY = Math.max(-1, Math.min(1, (scanY - cy) / ry));
+        const latitudeRadius = Math.max(18, rx * Math.sqrt(Math.max(0, 1 - normalizedY * normalizedY)));
+        const curvatureBoost = 0.85 + (1 - Math.abs(normalizedY)) * 1.65;
+        const arcHeight = Math.max(48, bandHalf * curvatureBoost * 1.4);
+
+        ctx.save();
+        ctx.beginPath();
+        ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2);
+        ctx.clip();
+
+        const glowGradient = ctx.createRadialGradient(
+            cx, scanY, latitudeRadius * 0.2,
+            cx, scanY, latitudeRadius * 1.15
+        );
+        glowGradient.addColorStop(0, `rgba(255, 240, 160, ${glowAlpha * 1.5})`);
+        glowGradient.addColorStop(0.45, `rgba(120, 200, 255, ${glowAlpha})`);
+        glowGradient.addColorStop(1, 'rgba(120, 200, 255, 0)');
+        ctx.fillStyle = glowGradient;
+        ctx.beginPath();
+        ctx.ellipse(cx, scanY, latitudeRadius, arcHeight * 4.2, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.strokeStyle = `rgba(120, 200, 255, ${glowAlpha})`;
+        ctx.lineWidth = Math.max(arcHeight * 2.2, 32);
+        ctx.beginPath();
+        ctx.ellipse(cx, scanY, latitudeRadius, arcHeight, 0, Math.PI, Math.PI * 2);
+        ctx.stroke();
+
+        ctx.strokeStyle = `rgba(255, 246, 196, ${Math.min(1, alpha + 0.08)})`;
+        ctx.lineWidth = 8;
+        ctx.beginPath();
+        ctx.ellipse(cx, scanY, latitudeRadius, arcHeight, 0, Math.PI, Math.PI * 2);
+        ctx.stroke();
+
+        ctx.strokeStyle = `rgba(255,255,255, ${alpha * 0.32})`;
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.ellipse(cx, scanY - arcHeight * 0.22, latitudeRadius * 0.9, Math.max(12, arcHeight * 0.82), 0, Math.PI * 1.03, Math.PI * 1.97);
+        ctx.stroke();
+        ctx.restore();
+    },
+
     drawGeometryOverlay(ctx, viewState) {
         const northPole = viewState.provider?.providerMeta?.northPole;
         const southPole = viewState.provider?.providerMeta?.southPole;
+
+        this.drawSortPassScanOverlay(ctx, viewState);
 
         const drawPole = (pole, label, color) => {
             if (!pole?.point) return;
@@ -956,18 +899,17 @@ const GoldbergSphereCaseOverrides = {
     updateSimulation: GoldbergSphereCase.updateSimulation,
     updateShuffleFlash: GoldbergSphereCase.updateShuffleFlash,
     captureSortLockedState: GoldbergSphereCase.captureSortLockedState,
-    resetTrackingState: GoldbergSphereCase.resetTrackingState,
     wrapAngle: GoldbergSphereCase.wrapAngle,
     clampPitch: GoldbergSphereCase.clampPitch,
-    getTrackingTargetPoint: GoldbergSphereCase.getTrackingTargetPoint,
-    updateAutoTracking: GoldbergSphereCase.updateAutoTracking,
     getSphereVisual: GoldbergSphereCase.getSphereVisual,
     buildGeometryProvider: GoldbergSphereCase.buildGeometryProvider,
     buildCardioidProvider: GoldbergSphereCase.buildCardioidProvider,
     getCurrentGeometryProvider: GoldbergSphereCase.getCurrentGeometryProvider,
     getCurrentCardioidProvider: GoldbergSphereCase.getCurrentCardioidProvider,
+    getSortPassTransitionConfig: GoldbergSphereCase.getSortPassTransitionConfig,
     drawHud: GoldbergSphereCase.drawHud,
     drawLearningModeOverlay: GoldbergSphereCase.drawLearningModeOverlay,
+    drawSortPassScanOverlay: GoldbergSphereCase.drawSortPassScanOverlay,
     drawGeometryOverlay: GoldbergSphereCase.drawGeometryOverlay
 };
 
@@ -983,4 +925,5 @@ if (typeof SortRenderer !== 'undefined') {
     Object.assign(GoldbergSphereCase, SortRenderer);
 }
 
+Object.assign(GoldbergSphereCase, GoldbergSphereCaseOverrides);
 Object.assign(GoldbergSphereCase, GoldbergSphereCaseOverrides);

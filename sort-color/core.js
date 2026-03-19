@@ -403,12 +403,17 @@ const Core = {
         const scenarioSelect = document.getElementById('apple-scenario-select');
         if (scenarioSelect) scenarioSelect.value = '1_rays';
 
-        const stages = [
-            { n: 180, title: 'Color Radix Sort', subtitle: '180 Rays' },
-            { n: 360, title: 'Color Radix Sort', subtitle: '360 Rays' },
-            { n: 720, title: 'Color Radix Sort', subtitle: '720 Rays' },
-            { n: 1080, title: 'Color Radix Sort', subtitle: '1080 Rays' }
-        ];
+        const unit = this.currentGeometryId === 'goldberg_sphere' ? 'Faces' : 'Rays';
+        const stages = [180, 360, 720, 1080].map(n => {
+            const totalSteps = n * 3; // Hue Radix
+            const sortSpeed = Math.max(1, this.currentCase.sortSpeed || 150);
+            const durationSec = (totalSteps / sortSpeed).toFixed(1);
+            return {
+                n,
+                title: 'Color Radix Sort',
+                subtitle: `${n} ${unit}: ${durationSec}s`
+            };
+        });
 
         let currentIdx = 0;
 
@@ -422,42 +427,43 @@ const Core = {
 
             const stage = stages[currentIdx];
             
-            // 1. Show message
+            // 1. Set Point Count & Shuffle (Immediately)
+            if (typeof this.currentCase.resetSortState === 'function') {
+                this.currentCase.resetSortState('idle'); // Clear previous sort locks
+            }
+            this.currentCase.pointCount = stage.n;
+            if (typeof this.currentCase.shuffleChords === 'function') {
+                this.currentCase.shuffleChords();
+            } else if (typeof this.currentCase.resetSortState === 'function') {
+                this.currentCase.resetSortState('idle');
+            }
+            this.currentCase.draw();
+            this.updateControls();
+
+            // 2. Show message
             this.showSimMessage(stage.title, stage.subtitle, 2500);
 
+            // 3. Start Sorting after a short delay (allowing shuffle to be seen under the message)
             const tid1 = setTimeout(() => {
                 if (!this.isSimRunning) return;
                 
-                // 2. Set Point Count
-                this.currentCase.pointCount = stage.n;
-                this.currentCase.resetSortState('idle');
-                this.currentCase.draw();
-                this.updateControls();
+                if (this.currentCase.sortMode === 'off') {
+                    this.currentCase.sortMode = 'hue';
+                }
+                this.currentCase.restartSort();
+                this.updateSortBar();
 
-                // 3. Start Sorting automatically after a short delay
+                // 4. Wait for sort to finish, then hold the completed frame briefly.
+                const totalSteps = typeof this.currentCase.getSortTotalSteps === 'function'
+                    ? this.currentCase.getSortTotalSteps()
+                    : (stage.n * 3);
+                const sortDurationMs = Math.ceil((totalSteps / Math.max(1, this.currentCase.sortSpeed || 1)) * 1000);
+                const finalHoldMs = 1000;
+                const sortTime = sortDurationMs + finalHoldMs;
                 const tid2 = setTimeout(() => {
-                    if (!this.isSimRunning) return;
-                    
-                    if (this.currentCase.sortMode === 'off') {
-                        this.currentCase.sortMode = 'hue';
-                    }
-                    this.currentCase.restartSort();
-                    this.updateSortBar();
-
-                    // 4. Wait for sort to finish, then hold the completed frame briefly.
-                    const totalSteps = typeof this.currentCase.getSortTotalSteps === 'function'
-                        ? this.currentCase.getSortTotalSteps()
-                        : (stage.n * 3);
-                    const sortDurationMs = Math.ceil((totalSteps / Math.max(1, this.currentCase.sortSpeed || 1)) * 1000);
-                    const finalHoldMs = 1000;
-                    const sortTime = sortDurationMs + finalHoldMs;
-                    const tid3 = setTimeout(() => {
-                        currentIdx++;
-                        runStage();
-                    }, sortTime);
-                    this.simTimers.push(tid3);
-
-                }, 1000);
+                    currentIdx++;
+                    runStage();
+                }, sortTime);
                 this.simTimers.push(tid2);
 
             }, 3000);

@@ -5,6 +5,7 @@ const SortEngine = {
         this.sortPlan = null;
         this.sortSignature = '';
         this.sortLockedState = null;
+        this.resetSortPassTransitionState();
     },
 
     getSortPanelLayout(w, h) {
@@ -215,6 +216,64 @@ const SortEngine = {
         return plan?.totalSteps || 0;
     },
 
+    getSortPassTransitionConfig() {
+        return { enabled: false };
+    },
+
+    resetSortPassTransitionState() {
+        this.sortPassTransition = null;
+        this.sortPassTransitionSeenKey = '';
+    },
+
+    supportsSortPassTransition(plan, sortView) {
+        return !!sortView
+            && !sortView.completed
+            && Array.isArray(plan?.passes)
+            && (this.sortMode === 'hue' || this.sortMode === 'lsh');
+    },
+
+    syncSortPassTransition(plan, sortView) {
+        const config = this.getSortPassTransitionConfig();
+        if (!config?.enabled) return;
+        if (this.sortingStatus !== 'running') return;
+        if (!this.supportsSortPassTransition(plan, sortView)) return;
+
+        const key = `${this.sortMode}:${sortView.passIndex}:${sortView.passLabel || sortView.passNumber}`;
+        if (this.sortPassTransitionSeenKey === key) return;
+
+        this.sortPassTransitionSeenKey = key;
+        this.sortPassTransition = {
+            key,
+            passIndex: sortView.passIndex,
+            passLabel: sortView.passLabel || `Pass ${sortView.passNumber}`,
+            passNumber: sortView.passNumber,
+            totalPasses: sortView.totalPasses,
+            progress: 0,
+            duration: Math.max(0.05, config.duration || 1.4),
+            turns: config.turns || 0,
+            blockProgress: config.blockProgress === true,
+            startedAt: typeof performance !== 'undefined' ? performance.now() : 0
+        };
+    },
+
+    advanceSortPassTransition(dt) {
+        const state = this.sortPassTransition;
+        if (!state) return;
+        const duration = Math.max(0.05, state.duration || 1.4);
+        state.progress = Math.min(1, state.progress + (dt / duration));
+        if (state.progress >= 1) {
+            this.sortPassTransition = null;
+        }
+    },
+
+    getSortPassTransitionState() {
+        return this.sortPassTransition;
+    },
+
+    isSortPassTransitionBlocking() {
+        return !!this.sortPassTransition?.blockProgress;
+    },
+
     restartSort() {
         if (this.sortMode === 'off') {
             this.resetSortState('idle');
@@ -228,6 +287,7 @@ const SortEngine = {
         this.sortProgress = 0;
         this.sortPlan = null;
         this.sortSignature = '';
+        this.resetSortPassTransitionState();
         this.sortingStatus = 'running';
         if (typeof Core !== 'undefined' && Core.currentCase === this) {
             Core.updateControls();
@@ -698,6 +758,7 @@ const SortEngine = {
     updateSortingState(dt) {
         if (this.sortingStatus !== 'running') return;
         if (!this.isSortingEnabled()) return;
+        if (this.isSortPassTransitionBlocking()) return;
         const totalSteps = this.getSortTotalSteps(this.getCurrentGeometryProvider());
         if (!totalSteps) return;
         this.sortProgress = Math.min(totalSteps, this.sortProgress + this.sortSpeed * dt);
@@ -707,6 +768,9 @@ const SortEngine = {
     },
 
     drawSortOverlay(ctx, viewState) {
+        if (typeof this.drawSortPassTransitionOverlay === 'function') {
+            this.drawSortPassTransitionOverlay(ctx, viewState);
+        }
         if (viewState.sortingActive && viewState.sortView) {
             this.drawSortBuckets(ctx, viewState.w, viewState.h, viewState.sortView);
         }

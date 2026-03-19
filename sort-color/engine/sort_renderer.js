@@ -131,9 +131,7 @@ const SortRenderer = {
 
                 if (slotGeometry.kind === 'polygon') {
                     ctx.fillStyle = activeColor;
-                    ctx.globalAlpha = 0.82;
                     if (this.traceGeometryPath(ctx, slotGeometry)) ctx.fill();
-                    ctx.globalAlpha = 1;
                 }
 
                 ctx.strokeStyle = activeColor;
@@ -181,9 +179,7 @@ const SortRenderer = {
                 if (!geometry) continue;
                 if (geometry.kind === 'polygon') {
                     ctx.fillStyle = chord.color;
-                    ctx.globalAlpha = 0.82;
                     if (this.traceGeometryPath(ctx, geometry)) ctx.fill();
-                    ctx.globalAlpha = 1;
                 }
                 ctx.strokeStyle = chord.color;
                 if (this.traceGeometryPath(ctx, geometry)) ctx.stroke();
