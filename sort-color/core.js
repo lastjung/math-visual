@@ -376,6 +376,26 @@ const Core = {
         this.simTimers = [];
     },
 
+    restoreSimulationSortSpeed() {
+        if (!this.currentCase || !this.simStateSnapshot) return;
+        if (typeof this.simStateSnapshot.sortSpeed === 'number') {
+            this.currentCase.sortSpeed = this.simStateSnapshot.sortSpeed;
+        }
+    },
+
+    applySimulationSortSpeed(multiplier = 1) {
+        if (!this.currentCase || !this.simStateSnapshot) return Math.max(1, this.currentCase?.sortSpeed || 1);
+        const baseSortSpeed = Math.max(1, this.simStateSnapshot.sortSpeed || this.currentCase.sortSpeed || 1);
+        const effectiveMultiplier = Math.max(1, multiplier || 1);
+        this.currentCase.sortSpeed = Math.max(1, baseSortSpeed * effectiveMultiplier);
+        return this.currentCase.sortSpeed;
+    },
+
+    failSimulation(error) {
+        console.error('[SortColor] Simulation aborted:', error);
+        this.stopSimulation();
+    },
+
     showSimMessage(title, subtitle, duration = 3000, extraHtml = '') {
         const overlay = document.getElementById('sim-overlay');
         const titleEl = document.getElementById('sim-title');
@@ -413,6 +433,7 @@ const Core = {
             if (typeof this.simStateSnapshot.sortMode === 'string') {
                 this.currentCase.sortMode = this.simStateSnapshot.sortMode;
             }
+            this.restoreSimulationSortSpeed();
             if (this.simStateSnapshot.sortSpeedMode) {
                 this.currentCase.sortSpeedMode = this.simStateSnapshot.sortSpeedMode;
             }
@@ -441,6 +462,7 @@ const Core = {
         this.simStateSnapshot = {
             pointCount: this.currentCase.pointCount,
             sortMode: this.currentCase.sortMode,
+            sortSpeed: this.currentCase.sortSpeed,
             sortSpeedMode: this.currentCase.sortSpeedMode
         };
         this.currentCase.sortSpeedMode = 'uniform';
@@ -591,6 +613,7 @@ const Core = {
         this.simStateSnapshot = {
             pointCount: this.currentCase.pointCount,
             sortMode: this.currentCase.sortMode,
+            sortSpeed: this.currentCase.sortSpeed,
             sortSpeedMode: this.currentCase.sortSpeedMode
         };
         this.currentCase.sortSpeedMode = 'auto';
@@ -600,9 +623,9 @@ const Core = {
         const simTitle = 'Hue Radix · Bubble Sort · Quick Sort';
 
         const stages = [
-            { mode: 'hue', label: 'Hue Radix' },
-            { mode: 'bubble', label: 'Bubble Sort' },
-            { mode: 'quick', label: 'Quick Sort' }
+            { mode: 'hue', label: 'Hue Radix', speedMultiplier: 1 },
+            { mode: 'bubble', label: 'Bubble Sort', speedMultiplier: 50 },
+            { mode: 'quick', label: 'Quick Sort', speedMultiplier: 10 }
         ];
         const results = [];
         let currentIdx = 0;
@@ -627,80 +650,96 @@ const Core = {
             return `<div class="sim-compare-summary">${header}${rows}</div>`;
         };
         const runStage = () => {
-            if (!this.isSimRunning || currentIdx >= stages.length) {
-                this.playGameSound('complete');
-                this.showSimMessage(simTitle, 'Sorting Comparison Summary', 9000, buildCompareTable());
-                const tid = setTimeout(() => this.stopSimulation(), 9400);
-                this.simTimers.push(tid);
-                return;
-            }
-
-            const stage = stages[currentIdx];
-            if (typeof this.currentCase.resetSortState === 'function') {
-                this.currentCase.resetSortState('idle');
-            }
-            this.currentCase.sortMode = stage.mode;
-            if (typeof this.currentCase.shuffleScene === 'function') {
-                this.playGameSound('shuffle');
-                this.currentCase.shuffleScene();
-            }
-            this.currentCase.draw();
-            this.updateControls();
-
-            const totalSteps = typeof this.currentCase.getSortTotalSteps === 'function'
-                ? this.currentCase.getSortTotalSteps()
-                : (this.currentCase.pointCount * 3);
-            const baseSortSpeed = Math.max(1, this.currentCase.sortSpeed || 150);
-            const effectiveSortSpeed = typeof this.currentCase.getEffectiveSortSpeed === 'function'
-                ? this.currentCase.getEffectiveSortSpeed()
-                : baseSortSpeed;
-            const sortSpeedMultiplier = typeof this.currentCase.getSortSpeedMultiplier === 'function'
-                ? this.currentCase.getSortSpeedMultiplier()
-                : 1;
-            const estimatedDurationSec = totalSteps / baseSortSpeed;
-            const simDurationSec = estimatedDurationSec / sortSpeedMultiplier;
-            const subTitleText = `${stage.label} · ${sortSpeedMultiplier}x Boost · ${formatSeconds(estimatedDurationSec)} / ${formatSeconds(simDurationSec)}`;
-
-            this.showSimMessage(
-                currentIdx === 0 ? simTitle : '',
-                subTitleText,
-                currentIdx === 0 ? 2200 : 0
-            );
-
-            const tid1 = setTimeout(() => {
-                if (!this.isSimRunning) return;
-                if (currentIdx === 0) {
-                    this.showSimMessage('', subTitleText, 0);
+            try {
+                if (!this.isSimRunning || currentIdx >= stages.length) {
+                    this.restoreSimulationSortSpeed();
+                    this.playGameSound('complete');
+                    this.showSimMessage(simTitle, 'Sorting Comparison Summary', 9000, buildCompareTable());
+                    const tid = setTimeout(() => this.stopSimulation(), 9400);
+                    this.simTimers.push(tid);
+                    return;
                 }
-                const startedAt = performance.now();
-                this.currentCase.restartSort();
-                this.updateSortBar();
 
-                const checkFinished = setInterval(() => {
-                    if (!this.isSimRunning) {
-                        clearInterval(checkFinished);
-                        return;
+                const stage = stages[currentIdx];
+                if (typeof this.currentCase.resetSortState === 'function') {
+                    this.currentCase.resetSortState('idle');
+                }
+                this.restoreSimulationSortSpeed();
+                this.currentCase.sortMode = stage.mode;
+                if (typeof this.currentCase.shuffleScene === 'function') {
+                    this.playGameSound('shuffle');
+                    this.currentCase.shuffleScene();
+                }
+                this.currentCase.draw();
+                this.updateControls();
+
+                const totalSteps = typeof this.currentCase.getSortTotalSteps === 'function'
+                    ? this.currentCase.getSortTotalSteps()
+                    : (this.currentCase.pointCount * 3);
+                const baseSortSpeed = Math.max(1, this.simStateSnapshot?.sortSpeed || this.currentCase.sortSpeed || 150);
+                const sortSpeedMultiplier = Math.max(1, stage.speedMultiplier || 1);
+                const effectiveSortSpeed = this.applySimulationSortSpeed(sortSpeedMultiplier);
+                const estimatedDurationSec = totalSteps / baseSortSpeed;
+                const simDurationSec = totalSteps / effectiveSortSpeed;
+                const subTitleText = `${stage.label} · ${sortSpeedMultiplier}x Boost · ${formatSeconds(estimatedDurationSec)} / ${formatSeconds(simDurationSec)}`;
+
+                this.showSimMessage(
+                    currentIdx === 0 ? simTitle : '',
+                    subTitleText,
+                    currentIdx === 0 ? 2200 : 0
+                );
+
+                const tid1 = setTimeout(() => {
+                    try {
+                        if (!this.isSimRunning) return;
+                        if (currentIdx === 0) {
+                            this.showSimMessage('', subTitleText, 0);
+                        }
+                        const startedAt = performance.now();
+                        this.currentCase.restartSort();
+                        this.updateSortBar();
+
+                        const checkFinished = setInterval(() => {
+                            try {
+                                if (!this.isSimRunning) {
+                                    clearInterval(checkFinished);
+                                    return;
+                                }
+                                if (this.currentCase.sortingStatus === 'completed') {
+                                    clearInterval(checkFinished);
+                                    this.restoreSimulationSortSpeed();
+                                    const elapsedMs = performance.now() - startedAt;
+                                    results.push({
+                                        label: stage.label,
+                                        multiplier: sortSpeedMultiplier,
+                                        estimatedTime: formatSeconds(estimatedDurationSec),
+                                        duration: formatSeconds(elapsedMs / 1000),
+                                        rawEst: estimatedDurationSec
+                                    });
+                                    const tid2 = setTimeout(() => {
+                                        try {
+                                            currentIdx += 1;
+                                            runStage();
+                                        } catch (error) {
+                                            this.failSimulation(error);
+                                        }
+                                    }, 1900);
+                                    this.simTimers.push(tid2);
+                                }
+                            } catch (error) {
+                                clearInterval(checkFinished);
+                                this.failSimulation(error);
+                            }
+                        }, 100);
+                        this.simTimers.push(checkFinished);
+                    } catch (error) {
+                        this.failSimulation(error);
                     }
-                    if (this.currentCase.sortingStatus === 'completed') {
-                        clearInterval(checkFinished);
-                        const elapsedMs = performance.now() - startedAt;
-                        results.push({
-                            label: stage.label,
-                            multiplier: sortSpeedMultiplier,
-                            estimatedTime: formatSeconds(estimatedDurationSec),
-                            duration: formatSeconds(elapsedMs / 1000),
-                            rawEst: estimatedDurationSec
-                        });
-                        const tid2 = setTimeout(() => {
-                            currentIdx += 1;
-                            runStage();
-                        }, 1900);
-                        this.simTimers.push(tid2);
-                    }
-                }, 100);
-                this.simTimers.push(checkFinished);
-            }, 2400);
-            this.simTimers.push(tid1);
+                }, 2400);
+                this.simTimers.push(tid1);
+            } catch (error) {
+                this.failSimulation(error);
+            }
         };
 
         runStage();
