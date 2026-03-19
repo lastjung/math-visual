@@ -9,7 +9,7 @@ const GoldbergSphereCase = {
     multiplier: 0,
     multiplierSpeed: 0,
     lineWidth: 1.2,
-    lineAlpha: 0.9,
+    lineAlpha: 0.8,
     pointRadius: 1.4,
     showPoints: false,
     showHud: true,
@@ -33,19 +33,24 @@ const GoldbergSphereCase = {
     shuffleSignature: '',
     shuffleFlash: 0,
     shuffleAnimation: null,
+    sortPassRotationKey: '',
+    sortPassSlowTimer: 0,
     rotation: -Math.PI / 2,
     learningMode: 'off',
     sphereFrequencyOverride: 0,
     rotX: -0.35,
     rotY: 0.45,
     rotationSpeed: 0.16,
-    sortingRotationMultiplier: 2.35,
-    sortPassSpinTurns: 1.05,
-    sortPassSpinDuration: 1.2,
+    autoTrack: false,
     autoRotate: true,
     isDraggingSphere: false,
     lastPointerX: 0,
     lastPointerY: 0,
+    trackingHistory: [],
+    trackingSmoothedPoint: null,
+    trackingVelX: 0,
+    trackingVelY: 0,
+    trackingLocked: false,
 
     init() {
         this.canvas = document.getElementById('mathCanvas');
@@ -96,6 +101,16 @@ const GoldbergSphereCase = {
                     this.sphereFrequencyOverride = Math.max(0, Math.floor(v));
                     this.resetSortState('idle');
                     this.draw();
+                }
+            },
+            {
+                type: 'checkbox',
+                id: 'mc_sphere_auto_track',
+                label: 'Auto Track',
+                value: this.autoTrack,
+                onChange: (checked) => {
+                    this.autoTrack = !!checked;
+                    if (!this.autoTrack) this.resetAutoTrackingState();
                 }
             },
             {
@@ -257,6 +272,8 @@ const GoldbergSphereCase = {
                 value: this.slotMapping,
                 options: [
                     { value: 'top-down', label: 'Top-down' },
+                    { value: 'top-down-zigzag', label: 'Top-down Zigzag' },
+                    { value: 'vertical', label: 'Vertical' },
                     { value: 'sequence', label: 'Chunk' }
                 ],
                 onChange: (v) => {
@@ -314,7 +331,7 @@ const GoldbergSphereCase = {
         this.multiplier = 0;
         this.multiplierSpeed = 0;
         this.lineWidth = 1.2;
-        this.lineAlpha = 0.9;
+        this.lineAlpha = 0.8;
         this.integersOnly = false;
         this.colorGenerator = 'index-mod';
         this.colorMode = 'angle';
@@ -327,9 +344,7 @@ const GoldbergSphereCase = {
         this.rotX = -0.35;
         this.rotY = 0.45;
         this.rotationSpeed = 0.16;
-        this.sortingRotationMultiplier = 2.35;
-        this.sortPassSpinTurns = 1.05;
-        this.sortPassSpinDuration = 1.2;
+        this.autoTrack = false;
         this.autoRotate = true;
         this.isDraggingSphere = false;
         this.sortProgress = 0;
@@ -343,6 +358,9 @@ const GoldbergSphereCase = {
         this.shuffleSignature = '';
         this.shuffleFlash = 0;
         this.shuffleAnimation = null;
+        this.sortPassRotationKey = '';
+        this.sortPassSlowTimer = 0;
+        this.resetAutoTrackingState();
         this.showHud = true;
         this.isPaused = false;
         this.sortingStatus = 'idle';
@@ -433,40 +451,36 @@ const GoldbergSphereCase = {
 
     updateSimulation(dt) {
         if (!this.isPaused && !this.isDraggingSphere) {
-            const provider = this.getCurrentGeometryProvider();
-            const activeShuffle = this.getActiveShuffleAnimation?.(provider?.items?.length || 0, 0);
-            const shuffleActive = !!activeShuffle;
-            const sortingActive = this.isSortingEnabled();
-            let transition = null;
-            let extraSpin = 0;
-            if (sortingActive) {
-                const sortPlan = this.ensureSortPlan(provider);
-                const sortView = this.getSortViewState(sortPlan);
-                this.syncSortPassTransition(sortPlan, sortView);
-                transition = this.getSortPassTransitionState();
-                if (transition) {
-                    const t = Math.max(0, Math.min(1, transition.progress || 0));
-                    const envelope = Math.sin(t * Math.PI);
-                    extraSpin = ((transition.turns || 0) * Math.PI * 2 / Math.max(0.05, transition.duration || 1)) * envelope;
+            const provider = (this.autoTrack || this.autoRotate) ? this.getCurrentGeometryProvider() : null;
+            const sortPlan = provider ? this.ensureSortPlan(provider) : null;
+            const trackingApplied = this.autoTrack ? this.updateAutoTracking(dt, provider, sortPlan) : false;
+            if (!trackingApplied && this.autoRotate) {
+                const rotationMultiplier = this.sortingStatus === 'running' ? 5 : 1;
+                let effectiveMultiplier = rotationMultiplier;
+                const isRadixSort = this.sortMode === 'hue' || this.sortMode === 'lsh';
+                if (rotationMultiplier > 1 && isRadixSort) {
+                    const sortView = sortPlan ? this.getSortViewState(sortPlan) : null;
+                    if (sortView) {
+                        const passKey = `${sortView.passIndex}:${sortView.passLabel || ''}`;
+                        if (passKey !== this.sortPassRotationKey) {
+                            this.sortPassRotationKey = passKey;
+                            this.sortPassSlowTimer = 0.3;
+                        }
+                    }
+                    if (this.sortPassSlowTimer > 0) {
+                        effectiveMultiplier = 1;
+                        this.sortPassSlowTimer = Math.max(0, this.sortPassSlowTimer - dt);
+                    }
+                } else {
+                    this.sortPassRotationKey = '';
+                    this.sortPassSlowTimer = 0;
                 }
-                this.advanceSortPassTransition(dt);
-            }
-            const shouldAutoRotate = this.autoRotate && (!sortingActive || !!transition || shuffleActive);
-            if (shouldAutoRotate) {
-                const baseRotation = this.rotationSpeed * (!sortingActive ? 1 : 0.24);
-                const shuffleBoost = activeShuffle
-                    ? (1 + Math.sin(Math.max(0, Math.min(1, activeShuffle.progress || 0)) * Math.PI) * 2.4)
-                    : 1;
-                const transitionBoost = transition ? 1.55 : 1;
-                this.rotY += ((baseRotation * shuffleBoost * transitionBoost) + (extraSpin * 0.9)) * dt;
-            }
-            if (activeShuffle) {
-                const t = Math.max(0, Math.min(1, activeShuffle.progress || 0));
-                const impulse = Math.sin(Math.min(1, t * 1.75) * Math.PI) * Math.pow(1 - t, 1.8);
-                this.rotY += (5.4 + (activeShuffle.focusItemIndex % 3) * 0.6) * dt * impulse;
-                this.rotX += 0.22 * dt * Math.sin(t * Math.PI * 2);
+                this.rotY += this.rotationSpeed * effectiveMultiplier * dt;
             }
             this.clampPitch();
+        } else if (this.isDraggingSphere) {
+            this.trackingVelX = 0;
+            this.trackingVelY = 0;
         }
         this.updateSortingState(dt);
         this.updateShuffleAnimation(dt);
@@ -507,40 +521,122 @@ const GoldbergSphereCase = {
         return Math.atan2(Math.sin(angle), Math.cos(angle));
     },
 
+    resetAutoTrackingState() {
+        this.trackingHistory = [];
+        this.trackingSmoothedPoint = null;
+        this.trackingVelX = 0;
+        this.trackingVelY = 0;
+        this.trackingLocked = false;
+    },
+
+    getSortTrackingTarget(provider, sortPlan) {
+        if (!this.autoTrack || this.sortingStatus !== 'running' || !provider || !sortPlan) return null;
+        const sortView = this.getSortViewState(sortPlan);
+        if (!sortView || !Array.isArray(provider.slots) || !provider.slots.length) return null;
+
+        const centers = [];
+        const pushSlotCenter = (slotIndex) => {
+            if (!Number.isInteger(slotIndex)) return;
+            const slot = provider.slots[slotIndex];
+            const center = slot?.meta?.center;
+            if (!center) return;
+            centers.push(center);
+        };
+
+        if (this.sortMode === 'bubble' && Array.isArray(sortView.activeIndices) && sortView.activeIndices.length) {
+            pushSlotCenter(sortView.activeIndices[sortView.activeIndices.length - 1]);
+        } else if (Array.isArray(sortView.activeIndices) && sortView.activeIndices.length) {
+            sortView.activeIndices.forEach(pushSlotCenter);
+        } else if (Number.isInteger(sortView.pivotIndex)) {
+            pushSlotCenter(sortView.pivotIndex);
+        } else if (Number.isInteger(sortView.coloredCount)) {
+            pushSlotCenter(Math.min(provider.slots.length - 1, sortView.coloredCount));
+        }
+
+        if (!centers.length) return null;
+
+        const averaged = centers.reduce((acc, center) => {
+            acc.x += center.x;
+            acc.y += center.y;
+            acc.z += center.z;
+            return acc;
+        }, { x: 0, y: 0, z: 0 });
+        const len = Math.hypot(averaged.x, averaged.y, averaged.z) || 1;
+        return {
+            x: averaged.x / len,
+            y: averaged.y / len,
+            z: averaged.z / len
+        };
+    },
+
+    updateAutoTracking(dt, provider, sortPlan) {
+        const targetPoint = this.getSortTrackingTarget(provider, sortPlan);
+        if (!targetPoint) {
+            this.trackingHistory = [];
+            this.trackingSmoothedPoint = null;
+            this.trackingLocked = false;
+            this.trackingVelX *= 0.85;
+            this.trackingVelY *= 0.85;
+            return false;
+        }
+
+        this.trackingHistory.push(targetPoint);
+        if (this.trackingHistory.length > 6) this.trackingHistory.shift();
+
+        const averaged = this.trackingHistory.reduce((acc, point) => {
+            acc.x += point.x;
+            acc.y += point.y;
+            acc.z += point.z;
+            return acc;
+        }, { x: 0, y: 0, z: 0 });
+        averaged.x /= this.trackingHistory.length;
+        averaged.y /= this.trackingHistory.length;
+        averaged.z /= this.trackingHistory.length;
+
+        if (!this.trackingSmoothedPoint) {
+            this.trackingSmoothedPoint = { ...averaged };
+        } else {
+            const emaAlpha = 1 - Math.exp(-dt / 0.22);
+            this.trackingSmoothedPoint.x += (averaged.x - this.trackingSmoothedPoint.x) * emaAlpha;
+            this.trackingSmoothedPoint.y += (averaged.y - this.trackingSmoothedPoint.y) * emaAlpha;
+            this.trackingSmoothedPoint.z += (averaged.z - this.trackingSmoothedPoint.z) * emaAlpha;
+        }
+
+        const smoothed = this.trackingSmoothedPoint;
+        const smoothedLen = Math.hypot(smoothed.x, smoothed.y, smoothed.z) || 1;
+        smoothed.x /= smoothedLen;
+        smoothed.y /= smoothedLen;
+        smoothed.z /= smoothedLen;
+
+        const gain = 4.8;
+        const maxVel = 2.2;
+        const deadZone = 0.012;
+        const velAlpha = 1 - Math.exp(-dt / 0.14);
+
+        const zNew = Math.hypot(smoothed.x, smoothed.z);
+        if (zNew > 0.001) {
+            const targetAngleY = Math.atan2(-smoothed.x, smoothed.z);
+            let dY = this.wrapAngle(targetAngleY - this.rotY);
+            if (Math.abs(dY) < deadZone) dY = 0;
+            const desiredVelY = Math.max(-maxVel, Math.min(maxVel, dY * gain));
+            this.trackingVelY += (desiredVelY - this.trackingVelY) * velAlpha;
+        }
+
+        const targetAngleX = Math.atan2(smoothed.y, zNew);
+        let dX = this.wrapAngle(targetAngleX - this.rotX);
+        if (Math.abs(dX) < deadZone) dX = 0;
+        const desiredVelX = Math.max(-maxVel, Math.min(maxVel, dX * gain));
+        this.trackingVelX += (desiredVelX - this.trackingVelX) * velAlpha;
+
+        this.rotY += this.trackingVelY * dt;
+        this.rotX += this.trackingVelX * dt;
+        return true;
+    },
+
     clampPitch() {
         const limit = 1.35;
         if (this.rotX > limit) this.rotX = limit;
         if (this.rotX < -limit) this.rotX = -limit;
-    },
-
-    getSortPassTransitionConfig() {
-        return {
-            enabled: true,
-            duration: this.sortPassSpinDuration,
-            turns: this.sortPassSpinTurns,
-            blockProgress: false
-        };
-    },
-
-    buildGoldbergShuffleOrder(n) {
-        if (n <= 1) return Array.from({ length: Math.max(0, n) }, (_, index) => index);
-
-        const bandSize = Math.max(6, Math.min(24, Math.round(Math.sqrt(n) * 1.6)));
-        const baseOrder = Array.from({ length: n }, (_, index) => index);
-        const bands = [];
-        for (let start = 0; start < n; start += bandSize) {
-            bands.push(baseOrder.slice(start, start + bandSize));
-        }
-
-        const rotated = bands.map((_, bandIndex) => {
-            const sourceIndex = (bandIndex + Math.ceil(bands.length / 2)) % bands.length;
-            const band = bands[sourceIndex].slice();
-            return bandIndex % 2 === 1 ? band.reverse() : band;
-        });
-
-        const order = rotated.flat();
-        if (order.length !== n) return this.generateShuffleOrder(n);
-        return order;
     },
 
     shuffleGoldbergSlots() {
@@ -564,10 +660,11 @@ const GoldbergSphereCase = {
         }
         const m = 0;
         const currentOrder = (this.ensureShuffleOrder(n, m) || Array.from({ length: n }, (_, index) => index)).slice();
-        let nextOrder = this.buildGoldbergShuffleOrder(n);
-
-        if (n > 1 && nextOrder.every((itemIndex, slotIndex) => itemIndex === currentOrder[slotIndex])) {
+        let nextOrder = this.generateShuffleOrder(n);
+        let guard = 0;
+        while (n > 1 && guard < 4 && nextOrder.every((itemIndex, slotIndex) => itemIndex === currentOrder[slotIndex])) {
             nextOrder = this.generateShuffleOrder(n);
+            guard += 1;
         }
 
         this.shuffleNonce += 1;
@@ -874,219 +971,9 @@ const GoldbergSphereCase = {
 
     drawLearningModeOverlay() {},
 
-    drawSortPassScanOverlay(ctx, viewState) {
-        const transition = this.getSortPassTransitionState?.();
-        if (!transition) return;
-
-        const points = Array.isArray(viewState.provider?.points) ? viewState.provider.points : [];
-        if (!points.length) return;
-
-        let minX = Infinity;
-        let maxX = -Infinity;
-        let minY = Infinity;
-        let maxY = -Infinity;
-
-        for (const point of points) {
-            if (!point) continue;
-            if (point.x < minX) minX = point.x;
-            if (point.x > maxX) maxX = point.x;
-            if (point.y < minY) minY = point.y;
-            if (point.y > maxY) maxY = point.y;
-        }
-
-        if (!Number.isFinite(minX) || !Number.isFinite(minY)) return;
-
-        const t = Math.max(0, Math.min(1, transition.progress || 0));
-        const scanT = Math.pow(t, 3.2);
-        const scanY = minY + (maxY - minY) * scanT;
-        const bandHalf = Math.max(32, (maxY - minY) * 0.18);
-        const alpha = (0.58 + Math.sin(t * Math.PI) * 0.42);
-        const glowAlpha = alpha * 0.38;
-        const cx = (minX + maxX) * 0.5;
-        const cy = (minY + maxY) * 0.5;
-        const rx = Math.max(1, (maxX - minX) * 0.5);
-        const ry = Math.max(1, (maxY - minY) * 0.5);
-        const normalizedY = Math.max(-1, Math.min(1, (scanY - cy) / ry));
-        const latitudeRadius = Math.max(18, rx * Math.sqrt(Math.max(0, 1 - normalizedY * normalizedY)));
-        const curvatureBoost = 0.85 + (1 - Math.abs(normalizedY)) * 1.65;
-        const arcHeight = Math.max(48, bandHalf * curvatureBoost * 1.4);
-
-        ctx.save();
-        ctx.beginPath();
-        ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2);
-        ctx.clip();
-
-        const glowGradient = ctx.createRadialGradient(
-            cx, scanY, latitudeRadius * 0.2,
-            cx, scanY, latitudeRadius * 1.15
-        );
-        glowGradient.addColorStop(0, `rgba(255, 255, 255, ${glowAlpha * 1.8})`);
-        glowGradient.addColorStop(0.45, `rgba(255, 255, 255, ${glowAlpha * 0.95})`);
-        glowGradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
-        ctx.fillStyle = glowGradient;
-        ctx.beginPath();
-        ctx.ellipse(cx, scanY, latitudeRadius, arcHeight * 4.2, 0, 0, Math.PI * 2);
-        ctx.fill();
-
-        ctx.strokeStyle = `rgba(255, 255, 255, ${Math.min(1, glowAlpha * 1.15)})`;
-        ctx.lineWidth = Math.max(arcHeight * 2.8, 40);
-        ctx.beginPath();
-        ctx.ellipse(cx, scanY, latitudeRadius, arcHeight, 0, Math.PI, Math.PI * 2);
-        ctx.stroke();
-
-        ctx.strokeStyle = `rgba(255, 255, 255, ${Math.min(1, alpha + 0.16)})`;
-        ctx.lineWidth = 12;
-        ctx.beginPath();
-        ctx.ellipse(cx, scanY, latitudeRadius, arcHeight, 0, Math.PI, Math.PI * 2);
-        ctx.stroke();
-
-        ctx.strokeStyle = `rgba(255,255,255, ${alpha * 0.6})`;
-        ctx.lineWidth = 6;
-        ctx.beginPath();
-        ctx.ellipse(cx, scanY - arcHeight * 0.22, latitudeRadius * 0.9, Math.max(12, arcHeight * 0.82), 0, Math.PI * 1.03, Math.PI * 1.97);
-        ctx.stroke();
-        ctx.restore();
-    },
-
-    getPolygonCentroid(geometry) {
-        if (!geometry || geometry.hidden || geometry.kind !== 'polygon' || !Array.isArray(geometry.points) || geometry.points.length === 0) {
-            return null;
-        }
-        let x = 0;
-        let y = 0;
-        for (const point of geometry.points) {
-            x += point.x;
-            y += point.y;
-        }
-        return {
-            x: x / geometry.points.length,
-            y: y / geometry.points.length
-        };
-    },
-
-    drawGhostPolygon(ctx, geometry, center, angle, scale, fillStyle, strokeStyle, alpha = 1) {
-        if (!geometry || geometry.hidden || geometry.kind !== 'polygon' || !Array.isArray(geometry.points) || geometry.points.length < 3) return;
-        const centroid = this.getPolygonCentroid(geometry);
-        if (!centroid) return;
-
-        const cosA = Math.cos(angle);
-        const sinA = Math.sin(angle);
-        ctx.save();
-        ctx.globalAlpha = alpha;
-        ctx.beginPath();
-        geometry.points.forEach((point, index) => {
-            const localX = (point.x - centroid.x) * scale;
-            const localY = (point.y - centroid.y) * scale;
-            const x = center.x + localX * cosA - localY * sinA;
-            const y = center.y + localX * sinA + localY * cosA;
-            if (index === 0) ctx.moveTo(x, y);
-            else ctx.lineTo(x, y);
-        });
-        ctx.closePath();
-        ctx.fillStyle = fillStyle;
-        ctx.strokeStyle = strokeStyle;
-        ctx.lineWidth = 2;
-        ctx.fill();
-        ctx.stroke();
-        ctx.restore();
-    },
-
-    drawShuffleBurstOverlay(ctx, viewState) {
-        const provider = viewState.provider;
-        const itemCount = provider?.items?.length || 0;
-        const activeShuffle = this.getActiveShuffleAnimation(itemCount, 0);
-        if (!activeShuffle || !Array.isArray(provider?.slots)) return;
-
-        const t = Math.max(0, Math.min(1, activeShuffle.progress || 0));
-        const pulse = Math.sin(t * Math.PI);
-        const cx = viewState.cx;
-        const cy = viewState.cy;
-
-        const movedItems = [];
-        for (let itemIndex = 0; itemIndex < activeShuffle.fromSlotsByItem.length; itemIndex++) {
-            const fromSlotIndex = activeShuffle.fromSlotsByItem[itemIndex];
-            const toSlotIndex = activeShuffle.toSlotsByItem[itemIndex];
-            if (fromSlotIndex == null || toSlotIndex == null || fromSlotIndex === toSlotIndex) continue;
-            movedItems.push({
-                itemIndex,
-                fromSlotIndex,
-                toSlotIndex,
-                distance: Math.abs(toSlotIndex - fromSlotIndex)
-            });
-        }
-
-        if (movedItems.length === 0) return;
-        movedItems.sort((a, b) => b.distance - a.distance);
-        const highlighted = movedItems.slice(0, Math.min(9, movedItems.length));
-
-        ctx.save();
-
-        const glow = ctx.createRadialGradient(cx, cy, viewState.radius * 0.18, cx, cy, viewState.radius * 1.12);
-        glow.addColorStop(0, `rgba(255, 214, 102, ${0.04 + pulse * 0.08})`);
-        glow.addColorStop(0.55, `rgba(120, 200, 255, ${0.02 + pulse * 0.05})`);
-        glow.addColorStop(1, 'rgba(120, 200, 255, 0)');
-        ctx.fillStyle = glow;
-        ctx.fillRect(0, 0, viewState.w, viewState.h);
-
-        highlighted.forEach((entry, index) => {
-            const fromGeometry = provider.slots[entry.fromSlotIndex]?.geometry;
-            const toGeometry = provider.slots[entry.toSlotIndex]?.geometry;
-            const from = this.getPolygonCentroid(fromGeometry);
-            const to = this.getPolygonCentroid(toGeometry);
-            if (!from || !to) return;
-
-            const mx = (from.x + to.x) * 0.5;
-            const my = (from.y + to.y) * 0.5;
-            const dx = mx - cx;
-            const dy = my - cy;
-            const len = Math.hypot(dx, dy) || 1;
-            const arcLift = (24 + entry.distance * 1.6) * (0.8 + (1 - t) * 0.7);
-            const ctrlX = mx + (dx / len) * arcLift;
-            const ctrlY = my + (dy / len) * arcLift;
-            const hue = (index * 37 + entry.toSlotIndex * 3) % 360;
-
-            const sparkX = (1 - t) * (1 - t) * from.x + 2 * (1 - t) * t * ctrlX + t * t * to.x;
-            const sparkY = (1 - t) * (1 - t) * from.y + 2 * (1 - t) * t * ctrlY + t * t * to.y;
-
-            const trailSteps = [Math.max(0, t - 0.16), Math.max(0, t - 0.08), t];
-            trailSteps.forEach((trailT, trailIndex) => {
-                const ghostX = (1 - trailT) * (1 - trailT) * from.x + 2 * (1 - trailT) * trailT * ctrlX + trailT * trailT * to.x;
-                const ghostY = (1 - trailT) * (1 - trailT) * from.y + 2 * (1 - trailT) * trailT * ctrlY + trailT * trailT * to.y;
-                const ghostAngle = (trailT * 2.8 + index * 0.18) * (dx >= 0 ? 1 : -1);
-                const ghostScale = 1 + Math.sin(trailT * Math.PI) * 0.24;
-                const ghostAlpha = 0.12 + (trailIndex + 1) * 0.12;
-                this.drawGhostPolygon(
-                    ctx,
-                    fromGeometry,
-                    { x: ghostX, y: ghostY },
-                    ghostAngle,
-                    ghostScale,
-                    `hsla(${hue}, 95%, ${68 + trailIndex * 6}%, ${ghostAlpha})`,
-                    `rgba(255, 244, 214, ${ghostAlpha + 0.16})`,
-                    1
-                );
-            });
-
-            ctx.fillStyle = `hsla(${hue}, 100%, 78%, ${0.45 + pulse * 0.45})`;
-            ctx.beginPath();
-            ctx.arc(sparkX, sparkY, 3.8 + pulse * 2.4, 0, Math.PI * 2);
-            ctx.fill();
-
-        });
-
-        ctx.font = '700 15px IBM Plex Sans, sans-serif';
-        ctx.textAlign = 'center';
-        ctx.fillStyle = `rgba(255, 244, 214, ${0.4 + (1 - t) * 0.45})`;
-        ctx.fillText('SHUFFLE CASCADE', cx, cy - viewState.radius - 18);
-        ctx.restore();
-    },
-
     drawGeometryOverlay(ctx, viewState) {
         const northPole = viewState.provider?.providerMeta?.northPole;
         const southPole = viewState.provider?.providerMeta?.southPole;
-
-        this.drawSortPassScanOverlay(ctx, viewState);
-        this.drawShuffleBurstOverlay(ctx, viewState);
 
         const drawPole = (pole, label, color) => {
             if (!pole?.point) return;
@@ -1175,10 +1062,8 @@ const GoldbergSphereCaseOverrides = {
     buildCardioidProvider: GoldbergSphereCase.buildCardioidProvider,
     getCurrentGeometryProvider: GoldbergSphereCase.getCurrentGeometryProvider,
     getCurrentCardioidProvider: GoldbergSphereCase.getCurrentCardioidProvider,
-    getSortPassTransitionConfig: GoldbergSphereCase.getSortPassTransitionConfig,
     drawHud: GoldbergSphereCase.drawHud,
     drawLearningModeOverlay: GoldbergSphereCase.drawLearningModeOverlay,
-    drawSortPassScanOverlay: GoldbergSphereCase.drawSortPassScanOverlay,
     drawGeometryOverlay: GoldbergSphereCase.drawGeometryOverlay
 };
 
@@ -1194,5 +1079,4 @@ if (typeof SortRenderer !== 'undefined') {
     Object.assign(GoldbergSphereCase, SortRenderer);
 }
 
-Object.assign(GoldbergSphereCase, GoldbergSphereCaseOverrides);
 Object.assign(GoldbergSphereCase, GoldbergSphereCaseOverrides);

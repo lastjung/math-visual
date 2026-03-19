@@ -292,6 +292,27 @@ const GoldbergSphereGeometryProvider = {
         let mapping = Array.from({ length: topology.faceCells.length }, (_, index) => index);
         if (options.slotMapping === 'top-down') {
             mapping.sort((a, b) => topology.points[b].y - topology.points[a].y);
+        } else if (options.slotMapping === 'top-down-zigzag') {
+            const rows = new Map();
+            for (const index of mapping) {
+                const y = topology.points[index].y;
+                const rowKey = Math.round((1 - y) * 18);
+                if (!rows.has(rowKey)) rows.set(rowKey, []);
+                rows.get(rowKey).push(index);
+            }
+            mapping = Array.from(rows.keys())
+                .sort((a, b) => a - b)
+                .flatMap((rowKey, rowIndex) => {
+                    const row = rows.get(rowKey).slice().sort((a, b) => topology.points[a].x - topology.points[b].x);
+                    if (rowIndex % 2 === 1) row.reverse();
+                    return row;
+                });
+        } else if (options.slotMapping === 'vertical') {
+            mapping.sort((a, b) => {
+                const dx = topology.points[a].x - topology.points[b].x;
+                if (Math.abs(dx) > 1e-6) return dx;
+                return topology.points[b].y - topology.points[a].y;
+            });
         }
 
         const slots = mapping.map((originalIndex, slotIndex) => {
