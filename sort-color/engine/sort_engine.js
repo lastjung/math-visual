@@ -27,9 +27,11 @@ const SortEngine = {
     },
 
     getSortSpeedMultiplier() {
-        if (this.sortSpeedMode === 'uniform') return 1;
-        if (this.sortMode === 'bubble') return 50;
-        if (this.sortMode === 'quick') return 10;
+        // Boosters are ONLY active during the Sorting Comparison (Scenario 2) simulation.
+        if (typeof Core !== 'undefined' && Core.isSimRunning && Core.currentScenario === '2_by-sorting') {
+            if (this.sortMode === 'bubble') return 50;
+            if (this.sortMode === 'quick') return 10;
+        }
         return 1;
     },
 

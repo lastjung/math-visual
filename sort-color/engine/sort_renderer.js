@@ -204,15 +204,16 @@ const SortRenderer = {
 
         let sortTimeLabel = '0.0s / 0.0s';
         let passTimeLabel = null;
-        if (this.isSortModeAvailable() && this.sortSpeed > 0) {
+        const effectiveSpeed = typeof this.getEffectiveSortSpeed === 'function' ? this.getEffectiveSortSpeed() : (this.sortSpeed || 150);
+        if (this.isSortModeAvailable() && effectiveSpeed > 0) {
             const totalSteps = sortPlan?.totalSteps || this.getSortTotalSteps(viewState.provider);
-            const elapsedSeconds = this.sortProgress / this.sortSpeed;
-            const totalSeconds = totalSteps / this.sortSpeed;
+            const elapsedSeconds = this.sortProgress / effectiveSpeed;
+            const totalSeconds = totalSteps / effectiveSpeed;
             sortTimeLabel = `${formatSortSeconds(elapsedSeconds)} / ${formatSortSeconds(totalSeconds)}`;
 
             if (sortView && sortView.totalInPass > 0) {
-                const passElapsedSeconds = sortView.stepInPass / this.sortSpeed;
-                const passTotalSeconds = sortView.totalInPass / this.sortSpeed;
+                const passElapsedSeconds = sortView.stepInPass / effectiveSpeed;
+                const passTotalSeconds = sortView.totalInPass / effectiveSpeed;
                 passTimeLabel = `${formatSortSeconds(passElapsedSeconds)} / ${formatSortSeconds(passTotalSeconds)}`;
             }
         }

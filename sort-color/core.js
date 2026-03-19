@@ -413,6 +413,9 @@ const Core = {
             if (typeof this.simStateSnapshot.sortMode === 'string') {
                 this.currentCase.sortMode = this.simStateSnapshot.sortMode;
             }
+            if (this.simStateSnapshot.sortSpeedMode) {
+                this.currentCase.sortSpeedMode = this.simStateSnapshot.sortSpeedMode;
+            }
             if (typeof this.currentCase.resetSortState === 'function') {
                 this.currentCase.resetSortState('idle');
             }
@@ -422,6 +425,7 @@ const Core = {
             this.updateControls();
         }
         this.simStateSnapshot = null;
+        this.currentScenario = null;
         
     },
 
@@ -436,8 +440,11 @@ const Core = {
         this.simStartMs = performance.now();
         this.simStateSnapshot = {
             pointCount: this.currentCase.pointCount,
-            sortMode: this.currentCase.sortMode
+            sortMode: this.currentCase.sortMode,
+            sortSpeedMode: this.currentCase.sortSpeedMode
         };
+        this.currentCase.sortSpeedMode = 'uniform';
+        this.currentScenario = '1_rays';
         const scenarioSelect = document.getElementById('apple-scenario-select');
         if (scenarioSelect) scenarioSelect.value = '1_rays';
 
@@ -458,6 +465,25 @@ const Core = {
             };
         });
 
+        const results = [];
+        const formatSeconds = (value) => `${Math.max(0, value).toFixed(1)}s`;
+        const buildRaysTable = () => {
+            const baseDur = results[0]?.rawDur || 0.1;
+            const header = ['Target Count', 'Sim Time', 'Ratio']
+                .map(h => `<div class="sim-table-cell head">${h}</div>`).join('');
+            
+            const rows = results.map((entry) => {
+                const ratio = Math.max(1, entry.rawDur / baseDur).toFixed(1);
+                return `
+                    <div class="sim-table-cell cell-alg">${entry.label}</div>
+                    <div class="sim-table-cell cell-val">${entry.duration}</div>
+                    <div class="sim-table-cell cell-val">${ratio}x</div>
+                `;
+            }).join('');
+
+            return `<div class="sim-compare-summary sim-3col">${header}${rows}</div>`;
+        };
+
         let currentIdx = 0;
 
         const runStage = () => {
@@ -466,9 +492,9 @@ const Core = {
                     ? this.currentCase.sortMode 
                     : 'hue';
                 this.playGameSound('complete');
-                this.showSimMessage(sortLabels[finalMode] || 'Color Sort', 'Complete', 4000);
+                this.showSimMessage(sortLabels[finalMode] || 'Color Sort', 'Rays Scaling Summary', 9000, buildRaysTable());
                 
-                const tid = setTimeout(() => this.stopSimulation(), 4500);
+                const tid = setTimeout(() => this.stopSimulation(), 9400);
                 this.simTimers.push(tid);
                 return;
             }
@@ -493,6 +519,12 @@ const Core = {
             const activeSortMode = (this.currentCase.sortMode && this.currentCase.sortMode !== 'off') 
                 ? this.currentCase.sortMode 
                 : 'hue';
+            
+            // Ensure sortMode is valid before estimating steps
+            if (this.currentCase.sortMode === 'off') {
+                this.currentCase.sortMode = activeSortMode;
+            }
+
             const stageTitle = sortLabels[activeSortMode] || 'Color Sort';
             
             // Estimate duration based on current total steps and current speed
@@ -500,9 +532,10 @@ const Core = {
                 ? this.currentCase.getSortTotalSteps()
                 : (stage.n * 3);
             const sortSpeed = Math.max(1, this.currentCase.sortSpeed || 150);
-            const durationSec = (totalSteps / sortSpeed).toFixed(1);
+            const durationSecValue = (totalSteps / sortSpeed);
+            const durationSecText = durationSecValue.toFixed(1) + 's';
             
-            this.showSimMessage(stageTitle, `${stage.subtitle}: ${durationSec}s`, 2500);
+            this.showSimMessage(stageTitle, `${stage.subtitle}: ${durationSecText}`, 2500);
 
             // 3. Start Sorting after a short delay
             const tid1 = setTimeout(() => {
@@ -514,6 +547,7 @@ const Core = {
                 
                 this.currentCase.restartSort();
                 this.updateSortBar();
+                const startedAt = performance.now();
 
                 // 4. Wait for sort completion
                 const checkFinished = setInterval(() => {
@@ -523,10 +557,17 @@ const Core = {
                     }
                     if (this.currentCase.sortingStatus === 'completed') {
                         clearInterval(checkFinished);
+                        const elapsedSec = (performance.now() - startedAt) / 1000;
+                        results.push({
+                            label: `${stage.n} ${unit}`,
+                            duration: formatSeconds(elapsedSec),
+                            rawDur: elapsedSec,
+                            rawEst: durationSecValue
+                        });
                         const tid2 = setTimeout(() => {
                             currentIdx++;
                             runStage();
-                        }, 1000);
+                        }, 2000);
                         this.simTimers.push(tid2);
                     }
                 }, 100);
@@ -549,8 +590,11 @@ const Core = {
         this.simStartMs = performance.now();
         this.simStateSnapshot = {
             pointCount: this.currentCase.pointCount,
-            sortMode: this.currentCase.sortMode
+            sortMode: this.currentCase.sortMode,
+            sortSpeedMode: this.currentCase.sortSpeedMode
         };
+        this.currentCase.sortSpeedMode = 'auto';
+        this.currentScenario = '2_by-sorting';
         const scenarioSelect = document.getElementById('apple-scenario-select');
         if (scenarioSelect) scenarioSelect.value = '2_by-sorting';
         const simTitle = 'Hue Radix · Bubble Sort · Quick Sort';
@@ -565,15 +609,20 @@ const Core = {
 
         const formatSeconds = (value) => `${Math.max(0, value).toFixed(1)}s`;
         const buildCompareTable = () => {
-            const header = ['Algorithm', 'Estimated', 'Booster', 'Sim Time']
+            const baseTimeRaw = results[0]?.rawEst || 1;
+            const header = ['Algorithm', 'Estimated', 'Booster', 'Sim Time', 'Rel Scale']
                 .map(h => `<div class="sim-table-cell head">${h}</div>`).join('');
             
-            const rows = results.map((entry) => `
-                <div class="sim-table-cell cell-alg">${entry.label}</div>
-                <div class="sim-table-cell cell-val">${entry.estimatedTime}</div>
-                <div class="sim-table-cell cell-val">${entry.multiplier}x</div>
-                <div class="sim-table-cell cell-val">${entry.duration}</div>
-            `).join('');
+            const rows = results.map((entry) => {
+                const ratio = Math.max(1, entry.rawEst / baseTimeRaw).toFixed(1);
+                return `
+                    <div class="sim-table-cell cell-alg">${entry.label}</div>
+                    <div class="sim-table-cell cell-val">${entry.estimatedTime}</div>
+                    <div class="sim-table-cell cell-val">${entry.multiplier}x</div>
+                    <div class="sim-table-cell cell-val">${entry.duration}</div>
+                    <div class="sim-table-cell cell-val">${ratio}x</div>
+                `;
+            }).join('');
 
             return `<div class="sim-compare-summary">${header}${rows}</div>`;
         };
@@ -639,12 +688,13 @@ const Core = {
                             label: stage.label,
                             multiplier: sortSpeedMultiplier,
                             estimatedTime: formatSeconds(estimatedDurationSec),
-                            duration: formatSeconds(elapsedMs / 1000)
+                            duration: formatSeconds(elapsedMs / 1000),
+                            rawEst: estimatedDurationSec
                         });
                         const tid2 = setTimeout(() => {
                             currentIdx += 1;
                             runStage();
-                        }, 900);
+                        }, 1900);
                         this.simTimers.push(tid2);
                     }
                 }, 100);

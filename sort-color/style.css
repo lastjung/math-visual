@@ -794,7 +794,7 @@ button:hover {
 /* Simulation Overlay Summary Table */
 .sim-compare-summary {
   display: grid;
-  grid-template-columns: 140px 105px 74px 90px;
+  grid-template-columns: 130px 88px 72px 84px 84px;
   background: rgba(14, 18, 32, 0.72);
   border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: 18px;
@@ -829,7 +829,7 @@ button:hover {
   padding-top: 14px;
 }
 
-.sim-table-cell:nth-last-child(-n+4) {
+.sim-table-cell:nth-last-child(-n+5) {
   border-bottom: none;
 }
 
@@ -850,6 +850,10 @@ button:hover {
 
 .sim-table-cell:hover {
   background: rgba(255, 255, 255, 0.03);
+}
+
+.sim-3col {
+  grid-template-columns: 148px 115px 115px;
 }
 
 /* Full View & Hidden State Support */
