@@ -42,7 +42,7 @@ const SortRenderer = {
         const cy = h / 2;
         const radius = Math.min(w, h) * 0.48;
         const n = Math.max(0, Math.floor(this.pointCount));
-        const forceIntegerM = this.learningMode === 'gcd' || this.learningMode === 'integer-snap' || this.learningMode === 'mapping';
+        const forceIntegerM = this.learningMode === 'gcd' || this.learningMode === 'integer-snap';
         const m = (this.integersOnly || forceIntegerM) ? Math.round(this.multiplier) : this.multiplier;
         const hudM = this.learningMode === 'n-ramp' ? this.learnFixedM : m;
         const viewState = this.getViewState(w, h, cx, cy, radius, n, m, hudM);
@@ -330,7 +330,9 @@ const SortRenderer = {
 
         ctx.fillStyle = 'rgba(255,255,255,0.98)';
         ctx.font = '600 16px Inter, system-ui, sans-serif';
-        ctx.fillText(`i=${i} -> M*i=${Math.round(raw)} -> mod N=${j}`, 24, h - 28);
+        const mValStr = Number.isInteger(raw) ? raw : raw.toFixed(2);
+        const jValStr = Number.isInteger(j) ? j : j.toFixed(2);
+        ctx.fillText(`i=${i} -> M*i=${mValStr} -> mod N=${jValStr}`, 24, h - 28);
     },
 
     drawRampOverlay(ctx, viewState) {

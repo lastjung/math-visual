@@ -36,7 +36,7 @@ const SortEngine = {
 
     captureSortLockedState() {
         const n = Math.max(0, Math.floor(this.pointCount));
-        const forceIntegerM = this.learningMode === 'gcd' || this.learningMode === 'integer-snap' || this.learningMode === 'mapping';
+        const forceIntegerM = this.learningMode === 'gcd' || this.learningMode === 'integer-snap';
         const m = (this.integersOnly || forceIntegerM) ? Math.round(this.multiplier) : this.multiplier;
         this.sortLockedState = { n, m };
         return this.sortLockedState;
@@ -468,7 +468,7 @@ const SortEngine = {
 
     shuffleChords() {
         const n = Math.max(0, Math.floor(this.sortLockedState?.n || this.pointCount || 0));
-        const forceIntegerM = this.learningMode === 'gcd' || this.learningMode === 'integer-snap' || this.learningMode === 'mapping';
+        const forceIntegerM = this.learningMode === 'gcd' || this.learningMode === 'integer-snap';
         const m = typeof this.multiplier === 'number'
             ? ((this.integersOnly || forceIntegerM) ? Math.round(this.multiplier) : this.multiplier)
             : 0;

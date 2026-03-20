@@ -172,7 +172,7 @@ const CardioidCircleCase = {
                 min: 0,
                 max: 1000,
                 step: 0.001,
-                decimals: 2,
+                decimals: 3,
                 value: this.multiplier,
                 onChange: (v) => {
                     this.multiplier = v;
@@ -190,6 +190,7 @@ const CardioidCircleCase = {
                 min: -2,
                 max: 2,
                 step: 0.001,
+                decimals: 3,
                 value: this.multiplierSpeed,
                 onChange: (v) => {
                     this.multiplierSpeed = v;
@@ -340,7 +341,8 @@ const CardioidCircleCase = {
                     label: 'N Ramp: Fixed M',
                     min: 0,
                     max: 1000,
-                    step: 0.1,
+                    step: 0.001,
+                    decimals: 3,
                     value: this.learnFixedM,
                     onChange: (v) => {
                         this.learnFixedM = v;
