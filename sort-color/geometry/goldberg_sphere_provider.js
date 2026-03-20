@@ -1,6 +1,11 @@
 const GoldbergSphereGeometryProvider = {
     topologyCache: new Map(),
 
+    normalizeAngle(angle) {
+        const fullTurn = Math.PI * 2;
+        return ((angle % fullTurn) + fullTurn) % fullTurn;
+    },
+
     normalizeSpherePoint(point) {
         const len = Math.hypot(point.x, point.y, point.z) || 1;
         return {
@@ -307,6 +312,18 @@ const GoldbergSphereGeometryProvider = {
                     if (rowIndex % 2 === 1) row.reverse();
                     return row;
                 });
+        } else if (options.slotMapping === 'meridian') {
+            const stripeCount = Math.max(6, Math.min(24, frequency * 2));
+            const stripes = Array.from({ length: stripeCount }, () => []);
+            for (const index of mapping) {
+                const point = topology.points[index];
+                const longitude = this.normalizeAngle(Math.atan2(point.z, point.x));
+                const stripeIndex = Math.min(stripeCount - 1, Math.floor((longitude / (Math.PI * 2)) * stripeCount));
+                stripes[stripeIndex].push(index);
+            }
+            mapping = stripes.flatMap((stripe) => (
+                stripe.slice().sort((a, b) => topology.points[b].y - topology.points[a].y)
+            ));
         } else if (options.slotMapping === 'vertical') {
             mapping.sort((a, b) => {
                 const dx = topology.points[a].x - topology.points[b].x;

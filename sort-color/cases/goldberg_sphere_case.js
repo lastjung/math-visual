@@ -272,9 +272,10 @@ const GoldbergSphereCase = {
                 value: this.slotMapping,
                 options: [
                     { value: 'top-down', label: 'Top-down' },
-                    { value: 'top-down-zigzag', label: 'Top-down Zigzag' },
-                    { value: 'vertical', label: 'Vertical' },
-                    { value: 'sequence', label: 'Chunk' }
+                    { value: 'meridian', label: 'Vertical' },
+                    { value: 'vertical', label: 'X Sweep' },
+                    { value: 'sequence', label: 'Chunk' },
+                    { value: 'top-down-zigzag', label: 'Top-down Zigzag' }
                 ],
                 onChange: (v) => {
                     this.slotMapping = v;

@@ -44,6 +44,26 @@ const CardioidGeometryProvider = {
         };
     },
 
+    getCardioidLshVisual(i, n, m, from, to, radius, alpha) {
+        const safeN = Math.max(1, n);
+        const sourceHue = ((i / safeN) * 360 + 360) % 360;
+        const targetIndex = ((m * i) % safeN + safeN) % safeN;
+        const targetHue = ((targetIndex / safeN) * 360 + 360) % 360;
+        const len = Math.hypot(to.x - from.x, to.y - from.y);
+        const lengthRatio = Math.max(0, Math.min(1, len / Math.max(1, 2 * radius)));
+        const sourcePhase = (i / safeN) * Math.PI * 2;
+        const targetPhase = (targetIndex / safeN) * Math.PI * 2;
+        const saturation = 58 + ((Math.sin(targetPhase) + 1) * 0.5) * 28 + lengthRatio * 8;
+        const lightness = 48 + ((Math.cos(sourcePhase - targetPhase) + 1) * 0.5) * 10 + lengthRatio * 10;
+        return {
+            hue: sourceHue,
+            saturation,
+            lightness,
+            alpha,
+            color: `hsla(${sourceHue}, ${saturation}%, ${lightness}%, ${alpha})`
+        };
+    },
+
     getCardioidLineVisual(i, n, from, to, radius, alphaOverride = null) {
         const safeN = Math.max(1, n);
         const alpha = alphaOverride == null ? this.lineAlpha : alphaOverride;
@@ -67,6 +87,10 @@ const CardioidGeometryProvider = {
                 alpha,
                 color: `hsla(${hue}, 95%, 62%, ${alpha})`
             };
+        }
+
+        if (this.colorMode === 'lsh') {
+            return this.getCardioidLshVisual(i, safeN, this.multiplier, from, to, radius, alpha);
         }
 
         if (this.colorMode === 'origin') {

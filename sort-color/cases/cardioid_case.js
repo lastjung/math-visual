@@ -18,7 +18,7 @@ const CardioidCircleCase = {
     showPoints: false,
     showHud: true,
     integersOnly: false,
-    colorMode: 'angle', // monochrome | angle | length | origin
+    colorMode: 'angle', // monochrome | angle | lsh | length | origin
     renderMode: 'light', // glow | light
     sortMode: 'off', // off | hue | lsh
     sortingStatus: 'idle', // idle | running | holding | completed
@@ -230,6 +230,7 @@ const CardioidCircleCase = {
                 value: this.colorMode,
                 options: [
                     { value: 'angle', label: 'Angle' },
+                    { value: 'lsh', label: 'LSH' },
                     { value: 'length', label: 'Length' },
                     { value: 'origin', label: 'Origin' },
                     { value: 'monochrome', label: 'Monochrome' }
