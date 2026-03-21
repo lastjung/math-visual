@@ -246,6 +246,7 @@ const SortRenderer = {
             if (this.sortMode === 'hue') sortLabel = 'Hue Radix';
             if (this.sortMode === 'bubble') sortLabel = 'Bubble Sort';
             if (this.sortMode === 'quick') sortLabel = 'Quick Sort';
+            if (this.sortMode === 'insertion') sortLabel = 'Insertion Sort';
             const digitLabel = sortView.passLabel || sortPlan?.passes?.[sortView.passIndex]?.label || `Pass ${sortView.passNumber}`;
             ctx.fillText(`Sort: ${sortLabel}`, 24, nextY);
             nextY += 22;
@@ -271,6 +272,7 @@ const SortRenderer = {
             if (this.sortMode === 'hue') sortLabel = 'Hue Radix';
             if (this.sortMode === 'bubble') sortLabel = 'Bubble Sort';
             if (this.sortMode === 'quick') sortLabel = 'Quick Sort';
+            if (this.sortMode === 'insertion') sortLabel = 'Insertion Sort';
             ctx.fillText(`Sort: ${sortLabel}`, 24, nextY);
             nextY += 22;
             ctx.fillText(`Step: ${Math.floor(this.sortProgress)}`, 24, nextY);

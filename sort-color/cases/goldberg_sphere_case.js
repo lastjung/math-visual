@@ -216,7 +216,8 @@ const GoldbergSphereCase = {
                     { value: 'hue', label: 'Hue Radix' },
                     { value: 'lsh', label: 'L-S-H Radix' },
                     { value: 'bubble', label: 'Bubble Sort' },
-                    { value: 'quick', label: 'Quick Sort' }
+                    { value: 'quick', label: 'Quick Sort' },
+                    { value: 'insertion', label: 'Insertion Sort' }
                 ],
                 onChange: (v) => {
                     this.sortMode = v;
@@ -800,11 +801,21 @@ const GoldbergSphereCase = {
         const orbitDx = centroidX - centerX;
         const orbitDy = centroidY - centerY;
         const orbitLen = Math.hypot(orbitDx, orbitDy) || 1;
+        
         const orbitTangentX = -orbitDy / orbitLen;
         const orbitTangentY = orbitDx / orbitLen;
+        const orbitRadialX = orbitDx / orbitLen;
+        const orbitRadialY = orbitDy / orbitLen;
+
+        // 1. Radial Burst: Explode outward from the center
+        const radialStrength = 82; 
+        const radialBurst = pulse * radialStrength;
+        
+        // 2. Tangential Kick: Orbit movement
         const orbitKick = pulse * Math.max(12, Math.min(34, distance * 0.22));
-        const kickedCentroidX = centroidX + orbitTangentX * orbitKick * direction;
-        const kickedCentroidY = centroidY + orbitTangentY * orbitKick * direction;
+
+        const kickedCentroidX = centroidX + (orbitTangentX * orbitKick * direction) + (orbitRadialX * radialBurst);
+        const kickedCentroidY = centroidY + (orbitTangentY * orbitKick * direction) + (orbitRadialY * radialBurst);
 
         const spin = direction * pulse * Math.max(0.55, Math.min(1.35, distance / 115));
         const scale = 1 + pulse * 0.05;
@@ -929,8 +940,9 @@ const GoldbergSphereCase = {
             let sortLabel = 'Radix';
             if (this.sortMode === 'lsh') sortLabel = 'L-S-H Radix';
             if (this.sortMode === 'hue') sortLabel = 'Hue Radix';
-            if (this.sortMode === 'bubble') sortLabel = 'Bubble Sort';
-            if (this.sortMode === 'quick') sortLabel = 'Quick Sort';
+                if (this.sortMode === 'bubble') sortLabel = 'Bubble Sort';
+                if (this.sortMode === 'quick') sortLabel = 'Quick Sort';
+                if (this.sortMode === 'insertion') sortLabel = 'Insertion Sort';
             ctx.fillText(`Sort: ${sortLabel}`, 24, nextY);
             nextY += 22;
             ctx.fillText(`Pass: ${sortView.passLabel || `Pass ${sortView.passNumber}`}`, 24, nextY);
@@ -951,6 +963,7 @@ const GoldbergSphereCase = {
             if (this.sortMode === 'hue') sortLabel = 'Hue Radix';
             if (this.sortMode === 'bubble') sortLabel = 'Bubble Sort';
             if (this.sortMode === 'quick') sortLabel = 'Quick Sort';
+            if (this.sortMode === 'insertion') sortLabel = 'Insertion Sort';
             ctx.fillText(`Sort: ${sortLabel}`, 24, nextY);
             nextY += 22;
             ctx.fillText(`State: ${this.sortingStatus}`, 24, nextY);

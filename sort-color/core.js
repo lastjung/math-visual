@@ -477,7 +477,8 @@ const Core = {
             'hue': 'Hue Radix Sort',
             'lsh': 'L-S-H Radix Sort',
             'bubble': 'Bubble Sort',
-            'quick': 'Quick Sort'
+            'quick': 'Quick Sort',
+            'insertion': 'Insertion Sort'
         };
 
         const stages = [180, 360, 720, 1080].map(n => {
@@ -620,12 +621,13 @@ const Core = {
         this.currentScenario = '2_by-sorting';
         const scenarioSelect = document.getElementById('apple-scenario-select');
         if (scenarioSelect) scenarioSelect.value = '2_by-sorting';
-        const simTitle = 'Hue Radix · Bubble Sort · Quick Sort';
+        const simTitle = 'Hue Radix · Bubble Sort · Quick Sort · Insertion Sort';
 
         const stages = [
             { mode: 'hue', label: 'Hue Radix', speedMultiplier: 1 },
             { mode: 'bubble', label: 'Bubble Sort', speedMultiplier: 50 },
-            { mode: 'quick', label: 'Quick Sort', speedMultiplier: 10 }
+            { mode: 'quick', label: 'Quick Sort', speedMultiplier: 10 },
+            { mode: 'insertion', label: 'Insertion Sort', speedMultiplier: 20 }
         ];
         const results = [];
         let currentIdx = 0;
@@ -1152,7 +1154,8 @@ const Core = {
         const now = performance.now();
         const isRadix = caseRef.sortMode === 'hue' || caseRef.sortMode === 'lsh';
         const isQuick = caseRef.sortMode === 'quick';
-        const stepStride = isRadix ? 3 : (isQuick ? 2 : 3);
+        const isInsertion = caseRef.sortMode === 'insertion';
+        const stepStride = isRadix ? 3 : ((isQuick || isInsertion) ? 2 : 3);
         if (Math.floor(nextStep / stepStride) === Math.floor(prevStep / stepStride)) return;
 
         if (isRadix && Array.isArray(plan?.passes) && plan.passes.length > 0) {
@@ -1163,7 +1166,7 @@ const Core = {
             }
         }
 
-        const intervalMs = isRadix ? 95 : (isQuick ? 110 : 130);
+        const intervalMs = isRadix ? 95 : ((isQuick || isInsertion) ? 110 : 130);
         if (now - this.lastGameSfxTickAt < intervalMs) return;
 
         this.lastGameSfxTickAt = now;

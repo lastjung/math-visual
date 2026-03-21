@@ -20,7 +20,7 @@ const CardioidCircleCase = {
     integersOnly: false,
     colorMode: 'angle', // monochrome | angle | lsh | length | origin
     renderMode: 'light', // glow | light
-    sortMode: 'off', // off | hue | lsh
+    sortMode: 'off', // off | hue | lsh | bubble | quick | insertion
     sortingStatus: 'idle', // idle | running | holding | completed
     sortSpeed: 150,
     sortProgress: 0,
@@ -265,7 +265,8 @@ const CardioidCircleCase = {
                     { value: 'hue', label: 'Hue Radix' },
                     { value: 'lsh', label: 'L-S-H Radix' },
                     { value: 'bubble', label: 'Bubble Sort' },
-                    { value: 'quick', label: 'Quick Sort' }
+                    { value: 'quick', label: 'Quick Sort' },
+                    { value: 'insertion', label: 'Insertion Sort' }
                 ],
                 onChange: (v) => {
                     this.sortMode = v;
@@ -639,7 +640,7 @@ const CardioidCircleCase = {
         this._canvasInteractionsBound = true;
 
         this._handleCanvasPointerDown = (e) => {
-            if (this.sortMode === 'bubble' || this.sortMode === 'quick') return;
+            if (this.sortMode === 'bubble' || this.sortMode === 'quick' || this.sortMode === 'insertion') return;
             if (!this.isSortModeAvailable()) return;
             const layout = this.getSortPanelLayout(this.canvas.width, this.canvas.height);
             if (!layout) return;
