@@ -230,6 +230,7 @@ const CardioidCircleCase = {
                 value: this.colorMode,
                 options: [
                     { value: 'angle', label: 'Angle' },
+                    { value: 'order', label: 'Order' },
                     { value: 'lsh', label: 'LSH' },
                     { value: 'length', label: 'Length' },
                     { value: 'origin', label: 'Origin' },
@@ -730,15 +731,18 @@ const CardioidCircleCase = {
     setLearningMode(mode) {
         this.learningMode = mode || 'off';
         this.applyLearningModeState();
+        this.resetSortState('idle');
         if (typeof Core !== 'undefined' && Core.currentCase === this) Core.updateControls();
         this.draw();
     },
 
     applyLearningModeState() {
         if (this.learningMode === 'n-ramp') {
+            const forceIntegerM = this.learningMode === 'gcd' || this.learningMode === 'integer-snap';
+            const lockedM = (this.integersOnly || forceIntegerM) ? Math.round(this.multiplier) : this.multiplier;
             this.learnN = Math.max(0, Math.floor(this.pointCount));
-            this.learnFixedM = 0;
-            this.multiplier = 0;
+            this.learnFixedM = lockedM;
+            this.multiplier = lockedM;
         }
         if (this.learningMode === 'm-ramp') {
             this.mRampFixedN = Math.max(1, Math.floor(this.pointCount) || 1);

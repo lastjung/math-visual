@@ -2,12 +2,12 @@
 
 PORT="3000"
 
-# 포그라운드 실행: Ctrl+C로 즉시 종료됨
 PORT_PID=$(lsof -tiTCP:"$PORT" -sTCP:LISTEN 2>/dev/null | head -n 1)
 if [ -n "$PORT_PID" ]; then
-    echo "Port $PORT is already in use (PID: $PORT_PID)."
-    exit 1
+    echo "Stopping server on http://localhost:$PORT (PID: $PORT_PID)"
+    kill "$PORT_PID"
+    exit 0
 fi
 
-echo "Starting Server on http://localhost:$PORT..."
-exec npx serve -l "$PORT" .
+echo "Starting Python server on http://localhost:$PORT..."
+exec python3 -m http.server "$PORT"

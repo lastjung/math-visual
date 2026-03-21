@@ -1,4 +1,17 @@
 const SortRenderer = {
+    getOrderLineVisual(drawIndex, totalCount, alphaOverride = null) {
+        const safeTotal = Math.max(1, totalCount);
+        const alpha = alphaOverride == null ? this.lineAlpha : alphaOverride;
+        const hue = (((drawIndex % safeTotal) + safeTotal) % safeTotal) / safeTotal * 360;
+        return {
+            hue,
+            saturation: 95,
+            lightness: 62,
+            alpha,
+            color: `hsla(${hue}, 95%, 62%, ${alpha})`
+        };
+    },
+
     traceGeometryPath(ctx, geometry) {
         if (!geometry) return false;
         if (geometry.hidden) return false;
@@ -20,7 +33,10 @@ const SortRenderer = {
         return false;
     },
 
-    getGeometryStrokeColor(chord, geometry, radius, n) {
+    getGeometryStrokeColor(chord, geometry, radius, n, drawIndex = 0, totalCount = n) {
+        if (this.colorMode === 'order') {
+            return this.getOrderLineVisual(drawIndex, totalCount, chord?.alpha).color;
+        }
         if (geometry?.kind === 'polygon') return chord.color;
         // Check for generic line visual method instead of hardcoded Cardioid name
         if (typeof this.getGeometryLineVisual === 'function') {
@@ -123,11 +139,12 @@ const SortRenderer = {
             }
         } else if (sortingActive && sortView) {
             const lockedN = this.sortLockedState?.n || n;
-            for (const slotIndex of drawOrder) {
+            for (let drawIndex = 0; drawIndex < drawOrder.length; drawIndex++) {
+                const slotIndex = drawOrder[drawIndex];
                 const chord = sortView.drawEntries[slotIndex];
                 const slotGeometry = provider.slots[slotIndex]?.geometry;
                 if (!slotGeometry) continue;
-                const activeColor = this.getGeometryStrokeColor(chord, slotGeometry, radius, lockedN);
+                const activeColor = this.getGeometryStrokeColor(chord, slotGeometry, radius, lockedN, drawIndex, drawOrder.length);
 
                 if (slotGeometry.kind === 'polygon') {
                     ctx.fillStyle = activeColor;
@@ -173,15 +190,17 @@ const SortRenderer = {
                 }
             }
         } else {
-            for (const slotIndex of drawOrder) {
+            for (let drawIndex = 0; drawIndex < drawOrder.length; drawIndex++) {
+                const slotIndex = drawOrder[drawIndex];
                 const chord = chords[slotIndex];
                 const geometry = chord?.slotGeometry || provider.slots[slotIndex]?.geometry;
                 if (!geometry) continue;
+                const activeColor = this.getGeometryStrokeColor(chord, geometry, radius, n, drawIndex, drawOrder.length);
                 if (geometry.kind === 'polygon') {
-                    ctx.fillStyle = chord.color;
+                    ctx.fillStyle = activeColor;
                     if (this.traceGeometryPath(ctx, geometry)) ctx.fill();
                 }
-                ctx.strokeStyle = chord.color;
+                ctx.strokeStyle = activeColor;
                 if (this.traceGeometryPath(ctx, geometry)) ctx.stroke();
             }
         }
