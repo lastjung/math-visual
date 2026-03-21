@@ -66,6 +66,20 @@ const Core = {
             eyebrow: 'Geometry',
             caseRef: () => CardioidCircleCase
         },
+        spiral_disk: {
+            id: 'spiral_disk',
+            label: 'Spiral Disk',
+            panelTitle: 'Spiral Disk Inspector',
+            eyebrow: 'Geometry',
+            caseRef: () => SpiralDiskCase
+        },
+        lissajous: {
+            id: 'lissajous',
+            label: 'Lissajous',
+            panelTitle: 'Lissajous Inspector',
+            eyebrow: 'Geometry',
+            caseRef: () => LissajousCase
+        },
         goldberg_sphere: {
             id: 'goldberg_sphere',
             label: 'Goldberg Sphere',
@@ -378,6 +392,11 @@ const Core = {
 
     restoreSimulationSortSpeed() {
         if (!this.currentCase || !this.simStateSnapshot) return;
+        const initialSortSpeed = this.simStateSnapshot.initialSortSpeed;
+        if (typeof initialSortSpeed === 'number') {
+            this.currentCase.sortSpeed = initialSortSpeed;
+            return;
+        }
         if (typeof this.simStateSnapshot.sortSpeed === 'number') {
             this.currentCase.sortSpeed = this.simStateSnapshot.sortSpeed;
         }
@@ -463,6 +482,7 @@ const Core = {
             pointCount: this.currentCase.pointCount,
             sortMode: this.currentCase.sortMode,
             sortSpeed: this.currentCase.sortSpeed,
+            initialSortSpeed: this.currentCase.sortSpeed,
             sortSpeedMode: this.currentCase.sortSpeedMode
         };
         this.currentCase.sortSpeedMode = 'uniform';
@@ -615,6 +635,7 @@ const Core = {
             pointCount: this.currentCase.pointCount,
             sortMode: this.currentCase.sortMode,
             sortSpeed: this.currentCase.sortSpeed,
+            initialSortSpeed: this.currentCase.sortSpeed,
             sortSpeedMode: this.currentCase.sortSpeedMode
         };
         this.currentCase.sortSpeedMode = 'auto';
@@ -627,7 +648,7 @@ const Core = {
             { mode: 'hue', label: 'Hue Radix', speedMultiplier: 1 },
             { mode: 'bubble', label: 'Bubble Sort', speedMultiplier: 50 },
             { mode: 'quick', label: 'Quick Sort', speedMultiplier: 10 },
-            { mode: 'insertion', label: 'Insertion Sort', speedMultiplier: 20 }
+            { mode: 'insertion', label: 'Insertion Sort', speedMultiplier: 50 }
         ];
         const results = [];
         let currentIdx = 0;

@@ -33,10 +33,11 @@ const SortRenderer = {
         return false;
     },
 
-    getGeometryStrokeColor(chord, geometry, radius, n, drawIndex = 0, totalCount = n) {
+    getGeometryStrokeColor(chord, geometry, radius, n, drawIndex = 0, totalCount = n, colorIndex = drawIndex) {
         if (this.colorMode === 'order') {
-            return this.getOrderLineVisual(drawIndex, totalCount, chord?.alpha).color;
+            return this.getOrderLineVisual(colorIndex, totalCount, chord?.alpha).color;
         }
+        if (chord?.color) return chord.color;
         if (geometry?.kind === 'polygon') return chord.color;
         // Check for generic line visual method instead of hardcoded Cardioid name
         if (typeof this.getGeometryLineVisual === 'function') {
@@ -47,6 +48,13 @@ const SortRenderer = {
             return this.getCardioidLineVisual(chord.originalIndex, n, geometry.from, geometry.to, radius).color;
         }
         return chord.color || 'white';
+    },
+
+    getGeometryStrokeWidth(chord, geometry, radius, n) {
+        if (typeof this.getGeometryLineWidth === 'function') {
+            return this.getGeometryLineWidth(chord, geometry, radius, n);
+        }
+        return this.lineWidth;
     },
 
     draw() {
@@ -144,13 +152,22 @@ const SortRenderer = {
                 const chord = sortView.drawEntries[slotIndex];
                 const slotGeometry = provider.slots[slotIndex]?.geometry;
                 if (!slotGeometry) continue;
-                const activeColor = this.getGeometryStrokeColor(chord, slotGeometry, radius, lockedN, drawIndex, drawOrder.length);
+                const activeColor = this.getGeometryStrokeColor(
+                    chord,
+                    slotGeometry,
+                    radius,
+                    lockedN,
+                    drawIndex,
+                    drawOrder.length,
+                    slotIndex
+                );
 
                 if (slotGeometry.kind === 'polygon') {
                     ctx.fillStyle = activeColor;
                     if (this.traceGeometryPath(ctx, slotGeometry)) ctx.fill();
                 }
 
+                ctx.lineWidth = this.getGeometryStrokeWidth(chord, slotGeometry, radius, lockedN);
                 ctx.strokeStyle = activeColor;
                 if (this.traceGeometryPath(ctx, slotGeometry)) ctx.stroke();
 
@@ -166,7 +183,7 @@ const SortRenderer = {
                     ctx.lineWidth = Math.max(this.lineWidth + 1.5, 3);
                     ctx.strokeStyle = 'rgba(255, 209, 102, 0.95)';
                     if (this.traceGeometryPath(ctx, slotGeometry)) ctx.stroke();
-                    ctx.lineWidth = this.lineWidth;
+                    ctx.lineWidth = this.getGeometryStrokeWidth(chord, slotGeometry, radius, lockedN);
                 }
 
                 if (sortView.activeIndices && sortView.activeIndices.includes(slotIndex)) {
@@ -179,14 +196,14 @@ const SortRenderer = {
                     ctx.lineWidth = Math.max(this.lineWidth + 4, 6);
                     if (this.traceGeometryPath(ctx, slotGeometry)) ctx.stroke();
                     ctx.globalAlpha = 1;
-                    ctx.lineWidth = this.lineWidth;
+                    ctx.lineWidth = this.getGeometryStrokeWidth(chord, slotGeometry, radius, lockedN);
                 }
 
                 if (sortView.pivotIndex === slotIndex) {
                     ctx.lineWidth = Math.max(this.lineWidth + 1.5, 3);
                     ctx.strokeStyle = 'rgba(255, 209, 102, 0.95)';
                     if (this.traceGeometryPath(ctx, slotGeometry)) ctx.stroke();
-                    ctx.lineWidth = this.lineWidth;
+                    ctx.lineWidth = this.getGeometryStrokeWidth(chord, slotGeometry, radius, lockedN);
                 }
             }
         } else {
@@ -195,11 +212,20 @@ const SortRenderer = {
                 const chord = chords[slotIndex];
                 const geometry = chord?.slotGeometry || provider.slots[slotIndex]?.geometry;
                 if (!geometry) continue;
-                const activeColor = this.getGeometryStrokeColor(chord, geometry, radius, n, drawIndex, drawOrder.length);
+                const activeColor = this.getGeometryStrokeColor(
+                    chord,
+                    geometry,
+                    radius,
+                    n,
+                    drawIndex,
+                    drawOrder.length,
+                    slotIndex
+                );
                 if (geometry.kind === 'polygon') {
                     ctx.fillStyle = activeColor;
                     if (this.traceGeometryPath(ctx, geometry)) ctx.fill();
                 }
+                ctx.lineWidth = this.getGeometryStrokeWidth(chord, geometry, radius, n);
                 ctx.strokeStyle = activeColor;
                 if (this.traceGeometryPath(ctx, geometry)) ctx.stroke();
             }
