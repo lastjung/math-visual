@@ -26,30 +26,37 @@ const LissajousGeometryProvider = {
         return ((Number(this.lissajousPhaseDeg) || 90) * Math.PI) / 180;
     },
 
-    getLissajousPoint(i, n, radius, cx, cy) {
+    getLissajousPoint(i, n, radius, cx, cy, originalIndex = i) {
         const safeN = Math.max(1, n);
         const t = (Math.PI * 2 * i) / safeN;
         const a = this.getLissajousA();
         const b = this.getLissajousB();
         const phase = this.getLissajousPhaseRad();
+        
+        const ribbonData = Number(this.lissajousRibbon) || 0;
+        const ribbonPhase = ribbonData === 0 ? 0 : (ribbonData / 100) * (originalIndex / safeN) * Math.PI * 2;
+
         const amp = radius * 0.88;
+        const finalPhaseX = a * t + phase + ribbonPhase;
+        const finalPhaseY = b * t + ribbonPhase;
+        
         return {
-            x: cx + Math.sin(a * t + phase) * amp,
-            y: cy + Math.sin(b * t) * amp,
+            x: cx + Math.sin(finalPhaseX) * amp,
+            y: cy + Math.sin(finalPhaseY) * amp,
             t,
-            paramX: a * t + phase,
-            paramY: b * t
+            paramX: finalPhaseX,
+            paramY: finalPhaseY
         };
     },
 
-    getLissajousPointByIndex(index, n, radius, cx, cy) {
+    getLissajousPointByIndex(index, n, radius, cx, cy, originalIndex = index) {
         const safeN = Math.max(1, n);
         const wrapped = this.positiveMod(index, safeN);
         const i0 = Math.floor(wrapped);
         const i1 = (i0 + 1) % safeN;
         const frac = wrapped - i0;
-        const p0 = this.getLissajousPoint(i0, safeN, radius, cx, cy);
-        const p1 = this.getLissajousPoint(i1, safeN, radius, cx, cy);
+        const p0 = this.getLissajousPoint(i0, safeN, radius, cx, cy, originalIndex);
+        const p1 = this.getLissajousPoint(i1, safeN, radius, cx, cy, originalIndex);
         return {
             x: p0.x + (p1.x - p0.x) * frac,
             y: p0.y + (p1.y - p0.y) * frac
@@ -57,8 +64,8 @@ const LissajousGeometryProvider = {
     },
 
     getLissajousLineGeometry(i, n, m, radius, cx, cy) {
-        const from = this.getLissajousPoint(i, n, radius, cx, cy);
-        const to = this.getLissajousPointByIndex((m * i) % Math.max(1, n), n, radius, cx, cy);
+        const from = this.getLissajousPoint(i, n, radius, cx, cy, i);
+        const to = this.getLissajousPointByIndex((m * i) % Math.max(1, n), n, radius, cx, cy, i);
         return {
             kind: 'line',
             from,

@@ -13,7 +13,8 @@ const LissajousCase = {
     rotation: -Math.PI / 2,
     lissajousA: 3,
     lissajousB: 2,
-    lissajousPhaseDeg: 90,
+    lissajousPhaseDeg: 128,
+    lissajousRibbon: 0.5,
     guideText: [
         '[Lissajous controls]',
         '- N (Nodes): number of anchors sampled across the closed curve.',
@@ -87,7 +88,22 @@ const LissajousCase = {
                 value: this.lissajousPhaseDeg,
                 onChange: (v) => {
                     this.lissajousPhaseDeg = Math.max(0, Math.min(180, Number(v)));
-                    this.resetSortState('idle');
+                    if (typeof Core !== 'undefined' && !Core.isPhaseSimulating) {
+                        this.resetSortState('idle');
+                    }
+                    this.draw();
+                }
+            },
+            {
+                type: 'slider',
+                id: 'mc_lissajous_ribbon',
+                label: 'Ribbon',
+                min: 0,
+                max: 10,
+                step: 0.05,
+                value: this.lissajousRibbon,
+                onChange: (v) => {
+                    this.lissajousRibbon = Math.max(0, Math.min(10, Number(v)));
                     this.draw();
                 }
             }
@@ -109,7 +125,8 @@ const LissajousCase = {
         this.colorMode = 'angle';
         this.lissajousA = 3;
         this.lissajousB = 2;
-        this.lissajousPhaseDeg = 90;
+        this.lissajousPhaseDeg = 128;
+        this.lissajousRibbon = 0.5;
         this.draw();
         if (typeof Core !== 'undefined' && Core.currentCase === this) Core.updateControls();
     },
