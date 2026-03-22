@@ -83,10 +83,10 @@ const LissajousCase = {
                 label: 'Phase',
                 min: 0,
                 max: 180,
-                step: 1,
+                step: 0.1,
                 value: this.lissajousPhaseDeg,
                 onChange: (v) => {
-                    this.lissajousPhaseDeg = Math.max(0, Math.min(180, Math.floor(v)));
+                    this.lissajousPhaseDeg = Math.max(0, Math.min(180, Number(v)));
                     this.resetSortState('idle');
                     this.draw();
                 }

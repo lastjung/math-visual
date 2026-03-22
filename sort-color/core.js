@@ -980,6 +980,12 @@ const Core = {
                 header.appendChild(valueDisplay);
                 item.appendChild(header);
                 item.appendChild(input);
+
+                if (control.id === 'mc_lissajous_phase') {
+                    label.style.cursor = 'pointer';
+                    label.title = 'Click to simulate phase';
+                    label.onclick = () => this.togglePhaseSimulation(control);
+                }
             } else if (control.type === 'select') {
                 const label = document.createElement('label');
                 label.textContent = control.label;
@@ -1261,6 +1267,57 @@ const Core = {
         const minutes = Math.floor(totalSeconds / 60);
         const seconds = totalSeconds % 60;
         return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+    },
+
+    togglePhaseSimulation(control) {
+        if (this.phaseSimId) {
+            cancelAnimationFrame(this.phaseSimId);
+            this.phaseSimId = null;
+            this.isPhaseSimulating = false;
+            const item = document.querySelector(`.control-item[data-id="${control.id}"]`);
+            if (item) item.classList.remove('simulating');
+            return;
+        }
+
+        this.isPhaseSimulating = true;
+        let direction = 1;
+
+        const animate = () => {
+            if (!this.isPhaseSimulating || !this.currentCase) {
+                this.isPhaseSimulating = false;
+                this.phaseSimId = null;
+                return;
+            }
+
+            const input = document.getElementById(`input-${control.id}`);
+            const display = document.getElementById(`val-${control.id}`);
+            const item = document.querySelector(`.control-item[data-id="${control.id}"]`);
+
+            if (!input || !display) {
+                this.phaseSimId = requestAnimationFrame(animate);
+                return;
+            }
+
+            let val = parseFloat(input.value);
+            if (isNaN(val)) val = control.value;
+            val += direction * 0.3;
+
+            if (val >= 175) { val = 175; direction = -1; }
+            else if (val <= 5) { val = 5; direction = 1; }
+
+            // Bypassing onChange intentionally so it doesn't trigger resetSortState!
+            input.value = val.toFixed(2);
+            display.value = this.formatControlValue(control, val);
+            if (item) item.classList.add('simulating');
+
+            // Apply value directly to properties and trigger draw manually without breaking sort progress
+            this.currentCase.lissajousPhaseDeg = val;
+            this.currentCase.draw();
+
+            this.phaseSimId = requestAnimationFrame(animate);
+        };
+
+        this.phaseSimId = requestAnimationFrame(animate);
     }
 };
 

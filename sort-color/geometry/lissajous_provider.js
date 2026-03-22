@@ -167,8 +167,16 @@ const LissajousGeometryProvider = {
             };
         });
 
+        // Transplant logic for maintaining sorting state during Phase changes
+        const lastNonce = this._lastRevision ? this._lastRevision.split('|')[2] : null;
+        const nonceMatches = lastNonce === String(this.shuffleNonce);
+        const currentItems = (nonceMatches && this._lastProvider && this._lastRevision && this._lastRevision.split('|')[0] === String(safeN)) ? this._lastProvider.items : null;
+        const currentOrder = currentItems ? currentItems.map(it => it.originalIndex) : null;
+        
+        const finalOrder = currentOrder || shuffleOrder || Array.from({ length: safeN }, (_, i) => i);
         const activeShuffle = this.getActiveShuffleAnimation(safeN, m);
-        const orderedItems = (shuffleOrder || Array.from({ length: safeN }, (_, i) => i)).map((itemIndex, slotIndex) => {
+
+        const orderedItems = finalOrder.map((itemIndex, slotIndex) => {
             let slotGeometry = slots[slotIndex]?.geometry || this.getLissajousLineGeometry(slotIndex, safeDenominator, m, radius, cx, cy);
             if (activeShuffle) {
                 const fromSlotIndex = activeShuffle.fromSlotsByItem[itemIndex];
