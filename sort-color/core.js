@@ -571,11 +571,15 @@ const Core = {
             const stageTitle = sortLabels[activeSortMode] || 'Color Sort';
             
             // Estimate duration based on current total steps and current speed
+            const multipliers = { 'hue': 1, 'lsh': 1, 'bubble': 50, 'quick': 5, 'insertion': 50 };
+            const activeSortSpeedMultiplier = multipliers[activeSortMode] || 1;
+            
             const totalSteps = typeof this.currentCase.getSortTotalSteps === 'function'
                 ? this.currentCase.getSortTotalSteps()
                 : (stage.n * 3);
-            const sortSpeed = Math.max(1, this.currentCase.sortSpeed || 150);
-            const durationSecValue = (totalSteps / sortSpeed);
+            const baseSortSpeed = Math.max(1, this.currentCase.sortSpeed || 150);
+            const effectiveSortSpeed = baseSortSpeed * activeSortSpeedMultiplier;
+            const durationSecValue = (totalSteps / effectiveSortSpeed);
             const durationSecText = durationSecValue.toFixed(1) + 's';
             
             this.showSimMessage(stageTitle, `${stage.subtitle}: ${durationSecText}`, 2500);
@@ -590,6 +594,12 @@ const Core = {
                 
                 this.currentCase.restartSort();
                 this.updateSortBar();
+                
+                // Apply same boosters as Scenario 2 for consistent simulation speed
+                this.applySimulationSortSpeed(activeSortSpeedMultiplier);
+
+                // Ensure only subtitle remains visible during sorting, matching scenario 2
+                this.showSimMessage('', `${stage.subtitle}: ${durationSecText}`, 0);
                 const startedAt = performance.now();
 
                 // 4. Wait for sort completion
@@ -600,6 +610,7 @@ const Core = {
                     }
                     if (this.currentCase.sortingStatus === 'completed') {
                         clearInterval(checkFinished);
+                        this.restoreSimulationSortSpeed();
                         const elapsedSec = (performance.now() - startedAt) / 1000;
                         results.push({
                             label: `${stage.n} ${unit}`,
@@ -647,7 +658,7 @@ const Core = {
         const stages = [
             { mode: 'hue', label: 'Hue Radix', speedMultiplier: 1 },
             { mode: 'bubble', label: 'Bubble Sort', speedMultiplier: 50 },
-            { mode: 'quick', label: 'Quick Sort', speedMultiplier: 10 },
+            { mode: 'quick', label: 'Quick Sort', speedMultiplier: 5 },
             { mode: 'insertion', label: 'Insertion Sort', speedMultiplier: 50 }
         ];
         const results = [];
@@ -716,7 +727,7 @@ const Core = {
                     try {
                         if (!this.isSimRunning) return;
                         if (currentIdx === 0) {
-                            this.showSimMessage('', subTitleText, 0);
+                            this.showSimMessage(simTitle, subTitleText, 0);
                         }
                         const startedAt = performance.now();
                         this.currentCase.restartSort();
@@ -1280,8 +1291,7 @@ const Core = {
         }
 
         this.isPhaseSimulating = true;
-        let direction = 1;
-
+        
         const animate = () => {
             if (!this.isPhaseSimulating || !this.currentCase) {
                 this.isPhaseSimulating = false;
@@ -1300,10 +1310,9 @@ const Core = {
 
             let val = parseFloat(input.value);
             if (isNaN(val)) val = control.value;
-            val += direction * 0.3;
-
-            if (val >= 175) { val = 175; direction = -1; }
-            else if (val <= 5) { val = 5; direction = 1; }
+            
+            // Continuous one-way rotation
+            val = (val + 0.15) % 360;
 
             // Bypassing onChange intentionally so it doesn't trigger resetSortState!
             input.value = val.toFixed(2);

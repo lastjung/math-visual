@@ -83,11 +83,11 @@ const LissajousCase = {
                 id: 'mc_lissajous_phase',
                 label: 'Phase',
                 min: 0,
-                max: 180,
+                max: 360,
                 step: 0.1,
                 value: this.lissajousPhaseDeg,
                 onChange: (v) => {
-                    this.lissajousPhaseDeg = Math.max(0, Math.min(180, Number(v)));
+                    this.lissajousPhaseDeg = Math.abs(Number(v) % 360);
                     if (typeof Core !== 'undefined' && !Core.isPhaseSimulating) {
                         this.resetSortState('idle');
                     }

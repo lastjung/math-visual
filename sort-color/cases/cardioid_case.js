@@ -35,6 +35,7 @@ const CardioidCircleCase = {
     shuffleFlash: 0,
     shuffleAnimation: null,
     rotation: -Math.PI / 2,
+    circleBulge: 0,
     learningMode: 'off', // off | n-ramp | m-ramp | gcd | integer-snap | mapping | classic | ultimate | mirror-chaos
     classicTargets: [2, 3, 4, 5, 6, 7, 8, 9, 10],
     classicIndex: 0,
@@ -206,6 +207,20 @@ const CardioidCircleCase = {
                 value: this.lineAlpha,
                 onChange: (v) => {
                     this.lineAlpha = v;
+                    this.draw();
+                }
+            },
+            {
+                type: 'slider',
+                id: 'mc_bulge',
+                label: 'Bulge',
+                min: -1.5,
+                max: 1.5,
+                step: 0.01,
+                value: this.circleBulge,
+                onChange: (v) => {
+                    this.circleBulge = v;
+                    this.resetSortState('idle');
                     this.draw();
                 }
             },
@@ -592,6 +607,7 @@ const CardioidCircleCase = {
         this.multiplierSpeed = 0;
         this.lineWidth = 1.85;
         this.lineAlpha = 0.4;
+        this.circleBulge = 0;
         this.integersOnly = false;
         this.colorMode = 'angle';
         this.renderMode = 'light';

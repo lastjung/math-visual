@@ -17,7 +17,9 @@ const CardioidGeometryProvider = {
     getCardioidPoint(i, n, radius, cx, cy) {
         const safeN = Math.max(1, n);
         const t = this.rotation + (Math.PI * 2 * i) / safeN;
-        return { x: cx + radius * Math.cos(t), y: cy + radius * Math.sin(t), t };
+        const bulge = Number(this.circleBulge) || 0;
+        const currentRadius = radius * (1 + bulge * Math.cos(t - this.rotation));
+        return { x: cx + currentRadius * Math.cos(t), y: cy + currentRadius * Math.sin(t), t };
     },
 
     getCardioidPointByIndex(index, n, radius, cx, cy) {
@@ -164,7 +166,7 @@ const CardioidGeometryProvider = {
 
         return {
             providerId: 'cardioid',
-            revision: `${safeN}|${m}|${this.shuffleNonce}|${this.colorMode}`,
+            revision: `${safeN}|${m}|${this.shuffleNonce}|${this.colorMode}|${this.circleBulge}`,
             items: orderedItems,
             slots,
             points,

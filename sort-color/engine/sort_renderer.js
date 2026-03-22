@@ -313,10 +313,21 @@ const SortRenderer = {
 
         ctx.save();
         ctx.textAlign = 'right';
-        ctx.fillText(`Node: ${n}`, viewState.w - 24, 30);
-        ctx.fillText(`Mul: ${hudM.toFixed(3)}`, viewState.w - 24, 52);
-        ctx.fillText(`dM/dt: ${hudSpeed.toFixed(3)}`, viewState.w - 24, 74);
-        ctx.fillText(`Mode: ${this.learningMode === 'off' ? 'standard' : this.learningMode}`, viewState.w - 24, 96);
+        
+        if (typeof this.lissajousA !== 'undefined' && typeof this.lissajousB !== 'undefined') {
+            // Lissajous Specific HUD
+            ctx.fillText(`Node: ${n}`, viewState.w - 24, 30);
+            ctx.fillText(`Mul: ${hudM.toFixed(3)}`, viewState.w - 24, 52);
+            ctx.fillText(`Freq A B: ${this.lissajousA} ${this.lissajousB}`, viewState.w - 24, 74);
+            ctx.fillText(`Phase: ${this.lissajousPhaseDeg.toFixed(1)}°`, viewState.w - 24, 96);
+        } else {
+            // Default Cardioid HUD
+            ctx.fillText(`Node: ${n}`, viewState.w - 24, 30);
+            ctx.fillText(`Mul: ${hudM.toFixed(3)}`, viewState.w - 24, 52);
+            ctx.fillText(`dM/dt: ${hudSpeed.toFixed(3)}`, viewState.w - 24, 74);
+            ctx.fillText(`Mode: ${this.learningMode === 'off' ? 'standard' : this.learningMode}`, viewState.w - 24, 96);
+        }
+        
         ctx.restore();
     },
 
