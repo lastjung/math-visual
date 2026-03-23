@@ -71,192 +71,25 @@ const SortEngine = {
     buildSortPlanFromItems(sortItems, config = {}) {
         const sortMode = config.sortMode || this.sortMode;
         const signature = config.signature || '';
-        const n = sortItems.length;
-        let sourceOrder = sortItems;
-
         if (sortMode === 'bubble') {
-            const arr = [...sourceOrder];
-            const snapshots = [];
-            let totalSteps = 0;
-
-            for (let passIndex = 0; passIndex < n - 1; passIndex++) {
-                const innerSteps = n - 1 - passIndex;
-                snapshots.push({
-                    order: [...arr],
-                    passIndex,
-                    stepCount: innerSteps,
-                    label: `Bubble Pass ${passIndex + 1}`
-                });
-                totalSteps += innerSteps;
-
-                for (let compareIndex = 0; compareIndex < innerSteps; compareIndex++) {
-                    if (arr[compareIndex].hueKey > arr[compareIndex + 1].hueKey) {
-                        [arr[compareIndex], arr[compareIndex + 1]] = [arr[compareIndex + 1], arr[compareIndex]];
-                    }
-                }
-            }
-
-            this.sortPlan = {
-                type: 'bubble',
-                snapshots,
-                finalState: [...arr],
-                totalSteps,
-                n
-            };
-            this.sortSignature = signature;
-            return this.sortPlan;
+            return this.commitSortPlanResult(SortAlgorithms.buildBubblePlan(sortItems, signature));
         }
 
         if (sortMode === 'quick') {
-            const arr = [...sourceOrder];
-            const events = [];
-            const checkpoints = [];
-            let partitionCount = 0;
-            const checkpointEvery = 64;
-
-            const pushEvent = (meta) => {
-                events.push(meta);
-                const eventIndex = events.length - 1;
-                if (eventIndex === 0 || eventIndex % checkpointEvery === 0) {
-                    checkpoints.push({
-                        eventIndex,
-                        order: [...arr]
-                    });
-                }
-            };
-
-            const swap = (a, b) => {
-                if (a === b) return;
-                [arr[a], arr[b]] = [arr[b], arr[a]];
-            };
-
-            const stack = [];
-            if (arr.length > 1) stack.push({ low: 0, high: arr.length - 1 });
-
-            while (stack.length) {
-                const { low, high } = stack.pop();
-                if (low >= high) continue;
-
-                partitionCount += 1;
-                const partitionLabel = `Partition ${partitionCount}`;
-                const pivotIndex = high;
-                const pivotValue = arr[pivotIndex].hueKey;
-                let storeIndex = low;
-
-                for (let scanIndex = low; scanIndex < high; scanIndex++) {
-                    pushEvent({
-                        partitionLabel,
-                        activeIndices: [scanIndex, pivotIndex],
-                        pivotIndex,
-                        range: [low, high],
-                        swapIndices: null
-                    });
-
-                    if (arr[scanIndex].hueKey <= pivotValue) {
-                        swap(storeIndex, scanIndex);
-                        pushEvent({
-                            partitionLabel,
-                            activeIndices: [storeIndex, scanIndex],
-                            pivotIndex,
-                            range: [low, high],
-                            swapIndices: [storeIndex, scanIndex]
-                        });
-                        storeIndex += 1;
-                    }
-                }
-
-                swap(storeIndex, high);
-                pushEvent({
-                    partitionLabel,
-                    activeIndices: [storeIndex, high],
-                    pivotIndex: storeIndex,
-                    range: [low, high],
-                    swapIndices: [storeIndex, high],
-                    pivotSettled: true
-                });
-
-                if (storeIndex + 1 < high) stack.push({ low: storeIndex + 1, high });
-                if (low < storeIndex - 1) stack.push({ low, high: storeIndex - 1 });
-            }
-
-            this.sortPlan = {
-                type: 'quick',
-                events,
-                checkpoints,
-                initialState: sourceOrder,
-                finalState: [...arr],
-                totalSteps: events.length
-            };
-            this.sortSignature = signature;
-            return this.sortPlan;
+            return this.commitSortPlanResult(SortAlgorithms.buildQuickPlan(sortItems, signature));
         }
 
         if (sortMode === 'insertion') {
-            const arr = [...sourceOrder];
-            const snapshots = [];
-            let totalSteps = 0;
-
-            for (let passIndex = 1; passIndex < n; passIndex++) {
-                snapshots.push({
-                    order: [...arr],
-                    passIndex,
-                    stepCount: passIndex,
-                    label: `Insertion Pass ${passIndex}`
-                });
-                totalSteps += passIndex;
-
-                for (let rightIndex = passIndex; rightIndex > 0; rightIndex--) {
-                    if (arr[rightIndex - 1].hueKey > arr[rightIndex].hueKey) {
-                        [arr[rightIndex - 1], arr[rightIndex]] = [arr[rightIndex], arr[rightIndex - 1]];
-                    } else {
-                        break;
-                    }
-                }
-            }
-
-            this.sortPlan = {
-                type: 'insertion',
-                snapshots,
-                finalState: [...arr],
-                totalSteps,
-                n
-            };
-            this.sortSignature = signature;
-            return this.sortPlan;
+            return this.commitSortPlanResult(SortAlgorithms.buildInsertionPlan(sortItems, signature));
         }
 
-        const passes = [];
         const passDescriptors = this.getSortPassDescriptors(sortMode);
+        return this.commitSortPlanResult(SortAlgorithms.buildRadixPlan(sortItems, passDescriptors, signature));
+    },
 
-        for (const descriptor of passDescriptors) {
-            const buckets = Array.from({ length: 10 }, () => []);
-            const digits = [];
-
-            sourceOrder.forEach((entry) => {
-                const digit = descriptor.divisor
-                    ? Math.floor(entry[descriptor.key] / descriptor.divisor) % 10
-                    : entry[descriptor.key];
-                digits.push(digit);
-                buckets[digit].push(entry);
-            });
-
-            const order = buckets.flat();
-            passes.push({
-                digitDivisor: descriptor.divisor || 1,
-                label: descriptor.label,
-                sourceOrder,
-                digits,
-                order,
-                bucketCounts: buckets.map((bucket) => bucket.length)
-            });
-            sourceOrder = order;
-        }
-
-        this.sortPlan = {
-            passes,
-            totalSteps: passes.length * n
-        };
-        this.sortSignature = signature;
+    commitSortPlanResult(result) {
+        this.sortPlan = result?.plan || null;
+        this.sortSignature = result?.signature || '';
         return this.sortPlan;
     },
 
@@ -424,116 +257,6 @@ const SortEngine = {
 
     resetSortProgress() {
         if (!this.isSortModeAvailable()) return;
-        this.resetSortState('idle');
-    },
-
-    getShuffleSignature(n, m) {
-        return [
-            n,
-            m.toFixed(6),
-            this.learningMode,
-            this.integersOnly ? 1 : 0,
-            this.shuffleNonce
-        ].join('|');
-    },
-
-    generateShuffleOrder(n) {
-        const order = Array.from({ length: n }, (_, index) => index);
-        for (let i = order.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [order[i], order[j]] = [order[j], order[i]];
-        }
-        return order;
-    },
-
-    invertShuffleOrder(order) {
-        const slotsByItem = Array.from({ length: order.length }, () => -1);
-        for (let slotIndex = 0; slotIndex < order.length; slotIndex++) {
-            slotsByItem[order[slotIndex]] = slotIndex;
-        }
-        return slotsByItem;
-    },
-
-    getShuffleFocusItem(fromSlotsByItem, toSlotsByItem) {
-        let bestItemIndex = 0;
-        let bestDistance = -1;
-        for (let itemIndex = 0; itemIndex < fromSlotsByItem.length; itemIndex++) {
-            const distance = Math.abs((toSlotsByItem[itemIndex] ?? 0) - (fromSlotsByItem[itemIndex] ?? 0));
-            if (distance > bestDistance) {
-                bestDistance = distance;
-                bestItemIndex = itemIndex;
-            }
-        }
-        return bestItemIndex;
-    },
-
-    ensureShuffleOrder(n, m) {
-        if (n <= 0) {
-            this.shuffleOrder = null;
-            this.shuffleSignature = '';
-            return null;
-        }
-
-        const signature = this.getShuffleSignature(n, m);
-        if (this.shuffleOrder && this.shuffleSignature === signature && this.shuffleOrder.length === n) {
-            return this.shuffleOrder;
-        }
-
-        const order = this.generateShuffleOrder(n);
-        this.shuffleOrder = order;
-        this.shuffleSignature = signature;
-        return order;
-    },
-
-    getActiveShuffleAnimation(n, m) {
-        const animation = this.shuffleAnimation;
-        if (!animation || animation.n !== n || animation.m !== m) return null;
-        return animation;
-    },
-
-    updateShuffleAnimation(dt) {
-        if (!this.shuffleAnimation) return;
-        const duration = Math.max(0.001, this.shuffleAnimation.duration || 0.9);
-        this.shuffleAnimation.progress = Math.min(1, this.shuffleAnimation.progress + (dt / duration));
-        if (this.shuffleAnimation.progress >= 1) {
-            this.shuffleAnimation = null;
-        }
-    },
-
-    shuffleChords() {
-        const n = Math.max(0, Math.floor(this.sortLockedState?.n || this.pointCount || 0));
-        const forceIntegerM = this.learningMode === 'gcd' || this.learningMode === 'integer-snap';
-        const m = typeof this.multiplier === 'number'
-            ? ((this.integersOnly || forceIntegerM) ? Math.round(this.multiplier) : this.multiplier)
-            : 0;
-        const currentOrder = (this.ensureShuffleOrder(n, m) || Array.from({ length: n }, (_, index) => index)).slice();
-        let nextOrder = this.generateShuffleOrder(n);
-
-        if (n > 1) {
-            let guard = 0;
-            while (guard < 4 && nextOrder.every((itemIndex, slotIndex) => itemIndex === currentOrder[slotIndex])) {
-                nextOrder = this.generateShuffleOrder(n);
-                guard += 1;
-            }
-        }
-
-        this.shuffleNonce += 1;
-        this.shuffleOrder = nextOrder;
-        this.shuffleSignature = this.getShuffleSignature(n, m);
-        const fromSlotsByItem = this.invertShuffleOrder(currentOrder);
-        const toSlotsByItem = this.invertShuffleOrder(nextOrder);
-        this.shuffleAnimation = {
-            n,
-            m,
-            fromOrder: currentOrder,
-            toOrder: nextOrder,
-            fromSlotsByItem,
-            toSlotsByItem,
-            focusItemIndex: this.getShuffleFocusItem(fromSlotsByItem, toSlotsByItem),
-            progress: 0,
-            duration: 0.9
-        };
-        this.shuffleFlash = 1;
         this.resetSortState('idle');
     },
 
@@ -929,5 +652,9 @@ const SortEngine = {
         }
     }
 };
+
+if (typeof SortShuffleManager !== 'undefined') {
+    Object.assign(SortEngine, SortShuffleManager);
+}
 
 const CardioidCircleSorting = SortEngine;

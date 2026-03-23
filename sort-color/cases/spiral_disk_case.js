@@ -23,41 +23,7 @@ const SpiralDiskCase = {
     ].join('\n'),
 
     get uiConfig() {
-        const controls = this.getBaseControls();
-        this.appendLearningModeControls(controls);
-        return controls;
-    },
-
-    getBaseControls() {
-        const controls = CardioidCircleCase.getBaseControls.call(this);
-        const nControl = controls.find((control) => control.id === 'mc_n');
-        if (nControl) nControl.label = 'N (Nodes)';
-        const mControl = controls.find((control) => control.id === 'mc_m');
-        if (mControl) mControl.label = 'M (Link)';
-        const speedControl = controls.find((control) => control.id === 'mc_speed');
-        if (speedControl) speedControl.label = 'M Speed';
-
-        const speedIndex = controls.findIndex((control) => control.id === 'mc_speed');
-        const turnsControl = {
-            type: 'slider',
-            id: 'mc_spiral_turns',
-            label: 'Spiral Turns',
-            min: 1.5,
-            max: 12,
-            step: 0.1,
-            decimals: 1,
-            value: this.spiralTurns,
-            onChange: (v) => {
-                this.spiralTurns = Math.max(1.5, v);
-                this.resetSortState('idle');
-                this.draw();
-            }
-        };
-
-        if (speedIndex >= 0) controls.splice(speedIndex + 1, 0, turnsControl);
-        else controls.push(turnsControl);
-
-        return controls;
+        return SortColorControlFactory.createSpiralDiskControls(this);
     },
 
     reset() {

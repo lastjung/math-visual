@@ -7,62 +7,62 @@ const CardioidCircleCase = {
     ctx: null,
     animationId: null,
     lastTimeMs: 0,
-    isPaused: false,
+    isPaused: CardioidCaseDefaults.isPaused,
 
-    pointCount: 250,
-    multiplier: 0,
-    multiplierSpeed: 0,
-    lineWidth: 1.85,
-    lineAlpha: 0.4,
-    pointRadius: 1.1,
-    showPoints: false,
-    showHud: true,
-    integersOnly: false,
-    colorMode: 'angle', // monochrome | angle | lsh | length | origin
-    renderMode: 'light', // glow | light
-    sortMode: 'off', // off | hue | lsh | bubble | quick | insertion
-    sortingStatus: 'idle', // idle | running | holding | completed
-    sortSpeed: 150,
-    sortProgress: 0,
-    sortPlan: null,
-    sortSignature: '',
-    sortLockedState: null,
-    sortPanelPosition: null,
-    sortPanelDrag: null,
-    shuffleNonce: 0,
-    shuffleOrder: null,
-    shuffleSignature: '',
-    shuffleFlash: 0,
-    shuffleAnimation: null,
-    rotation: -Math.PI / 2,
-    circleBulge: 0,
-    learningMode: 'off', // off | n-ramp | m-ramp | gcd | integer-snap | mapping | classic | ultimate | mirror-chaos
-    classicTargets: [2, 3, 4, 5, 6, 7, 8, 9, 10],
-    classicIndex: 0,
-    classicDuration: 5.0,
-    classicTimer: 0,
-    ultimateTargets: [2, 2.1, 1.618, 2.5, 3, 3.14159, 3.5, 4, 5, 8, 13, 21, 34, 55, 67, 89, 99],
-    ultimateIndex: 0,
-    ultimateTimer: 0,
-    ultimateDuration: 5.0,
-    mirrorTargets: [2.5, 3.5, 4.5, 6.66, 13.13, 181, 181.5, 359, 359.7],
-    mirrorIndex: 0,
-    mirrorTimer: 0,
-    mirrorDuration: 5.0,
-    learnFixedM: 0,
-    learnN: 0,
-    nRampSlowRate: 12,
-    nRampFastRate: 220,
-    nRampSwitchN: 120,
-    nRampMaxN: 1200,
-    mRampFixedN: 420,
-    mRampRate: 0.7,
-    mRampAccel: 0.035,
-    mRampEffectiveRate: 0.7,
-    snapRate: 0.45,
-    demoIndex: 0,
-    demoAuto: true,
-    demoRate: 4.0,
+    pointCount: CardioidCaseDefaults.pointCount,
+    multiplier: CardioidCaseDefaults.multiplier,
+    multiplierSpeed: CardioidCaseDefaults.multiplierSpeed,
+    lineWidth: CardioidCaseDefaults.lineWidth,
+    lineAlpha: CardioidCaseDefaults.lineAlpha,
+    pointRadius: CardioidCaseDefaults.pointRadius,
+    showPoints: CardioidCaseDefaults.showPoints,
+    showHud: CardioidCaseDefaults.showHud,
+    integersOnly: CardioidCaseDefaults.integersOnly,
+    colorMode: CardioidCaseDefaults.colorMode, // monochrome | angle | lsh | length | origin
+    renderMode: CardioidCaseDefaults.renderMode, // glow | light
+    sortMode: CardioidCaseDefaults.sortMode, // off | hue | lsh | bubble | quick | insertion
+    sortingStatus: CardioidCaseDefaults.sortingStatus, // idle | running | holding | completed
+    sortSpeed: CardioidCaseDefaults.sortSpeed,
+    sortProgress: CardioidCaseDefaults.sortProgress,
+    sortPlan: CardioidCaseDefaults.sortPlan,
+    sortSignature: CardioidCaseDefaults.sortSignature,
+    sortLockedState: CardioidCaseDefaults.sortLockedState,
+    sortPanelPosition: CardioidCaseDefaults.sortPanelPosition,
+    sortPanelDrag: CardioidCaseDefaults.sortPanelDrag,
+    shuffleNonce: CardioidCaseDefaults.shuffleNonce,
+    shuffleOrder: CardioidCaseDefaults.shuffleOrder,
+    shuffleSignature: CardioidCaseDefaults.shuffleSignature,
+    shuffleFlash: CardioidCaseDefaults.shuffleFlash,
+    shuffleAnimation: CardioidCaseDefaults.shuffleAnimation,
+    rotation: CardioidCaseDefaults.rotation,
+    circleBulge: CardioidCaseDefaults.circleBulge,
+    learningMode: CardioidCaseDefaults.learningMode, // off | n-ramp | m-ramp | gcd | integer-snap | mapping | classic | ultimate | mirror-chaos
+    classicTargets: CardioidCaseDefaults.classicTargets.slice(),
+    classicIndex: CardioidCaseDefaults.classicIndex,
+    classicDuration: CardioidCaseDefaults.classicDuration,
+    classicTimer: CardioidCaseDefaults.classicTimer,
+    ultimateTargets: CardioidCaseDefaults.ultimateTargets.slice(),
+    ultimateIndex: CardioidCaseDefaults.ultimateIndex,
+    ultimateTimer: CardioidCaseDefaults.ultimateTimer,
+    ultimateDuration: CardioidCaseDefaults.ultimateDuration,
+    mirrorTargets: CardioidCaseDefaults.mirrorTargets.slice(),
+    mirrorIndex: CardioidCaseDefaults.mirrorIndex,
+    mirrorTimer: CardioidCaseDefaults.mirrorTimer,
+    mirrorDuration: CardioidCaseDefaults.mirrorDuration,
+    learnFixedM: CardioidCaseDefaults.learnFixedM,
+    learnN: CardioidCaseDefaults.learnN,
+    nRampSlowRate: CardioidCaseDefaults.nRampSlowRate,
+    nRampFastRate: CardioidCaseDefaults.nRampFastRate,
+    nRampSwitchN: CardioidCaseDefaults.nRampSwitchN,
+    nRampMaxN: CardioidCaseDefaults.nRampMaxN,
+    mRampFixedN: CardioidCaseDefaults.mRampFixedN,
+    mRampRate: CardioidCaseDefaults.mRampRate,
+    mRampAccel: CardioidCaseDefaults.mRampAccel,
+    mRampEffectiveRate: CardioidCaseDefaults.mRampEffectiveRate,
+    snapRate: CardioidCaseDefaults.snapRate,
+    demoIndex: CardioidCaseDefaults.demoIndex,
+    demoAuto: CardioidCaseDefaults.demoAuto,
+    demoRate: CardioidCaseDefaults.demoRate,
     guideText: [
         '[Cardioid Circle 컨트롤 설명]',
         '- Pattern Mode: 패턴 변화/학습 표현 모드 선택.',
@@ -100,407 +100,8 @@ const CardioidCircleCase = {
         '3. 황금비 (Golden Ratio): (N=1200, M=1.618) *공식: M = 1.618'
     ].join('\n'),
 
-    init() {
-        this.canvas = document.getElementById('mathCanvas');
-        if (!this.canvas) return;
-        this.ctx = this.canvas.getContext('2d');
-        this.bindCanvasInteractions();
-        this.resize();
-        this.draw();
-    },
-
     get uiConfig() {
-        const controls = this.getBaseControls();
-        this.appendLearningModeControls(controls);
-        return controls;
-    },
-
-    getBaseControls() {
-        return [
-            {
-                type: 'button',
-                id: 'cd_play_toggle',
-                label: '',
-                value: this.isPaused ? 'PLAY (Resume)' : 'HOLD (Stop)',
-                onClick: () => {
-                    if (!this.animationId) this.start();
-                    this.setPaused(!this.isPaused);
-                    if (typeof Core !== 'undefined' && Core.currentCase === this) Core.updateControls();
-                }
-            },
-            {
-                type: 'select',
-                id: 'mc_mode',
-                label: 'Pattern Mode',
-                value: this.learningMode,
-                options: [
-                    { value: 'off', label: 'Standard' },
-                    { value: 'n-ramp', label: 'N Ramp' },
-                    { value: 'm-ramp', label: 'M Ramp' },
-                    { value: 'gcd', label: 'GCD Loops' },
-                    { value: 'integer-snap', label: 'Integer Snap' },
-                    { value: 'mapping', label: 'Mapping' },
-                    { value: 'classic', label: 'Classic' },
-                    { value: 'ultimate', label: 'Ultimate' },
-                    { value: 'mirror-chaos', label: 'Mirror & Chaos' }
-                ],
-                onChange: (v) => {
-                    this.setLearningMode(v);
-                }
-            },
-            {
-                type: 'slider',
-                id: 'mc_n',
-                label: 'N (Points)',
-                min: 0,
-                max: this.learningMode === 'n-ramp' ? 1000 : 1500,
-                step: 1,
-                value: this.pointCount,
-                onChange: (v) => {
-                    if (this.learningMode === 'n-ramp') {
-                        this.learnN = Math.max(0, Math.floor(v));
-                    } else {
-                        this.pointCount = Math.max(0, Math.floor(v));
-                    }
-                    this.resetSortState('idle');
-                    this.draw();
-                }
-            },
-            {
-                type: 'slider',
-                id: 'mc_m',
-                label: 'M (Multiplier)',
-                min: 0,
-                max: 1000,
-                step: 0.001,
-                decimals: 3,
-                value: this.multiplier,
-                onChange: (v) => {
-                    this.multiplier = v;
-                    if (this.learningMode === 'n-ramp') {
-                        this.learnFixedM = v;
-                    }
-                    this.resetSortState('idle');
-                    this.draw();
-                }
-            },
-            {
-                type: 'slider',
-                id: 'mc_speed',
-                label: 'M Speed',
-                min: -2,
-                max: 2,
-                step: 0.001,
-                decimals: 3,
-                value: this.multiplierSpeed,
-                onChange: (v) => {
-                    this.multiplierSpeed = v;
-                }
-            },
-            {
-                type: 'slider',
-                id: 'mc_alpha',
-                label: 'Line Alpha',
-                min: 0.05,
-                max: 1,
-                step: 0.01,
-                value: this.lineAlpha,
-                onChange: (v) => {
-                    this.lineAlpha = v;
-                    this.draw();
-                }
-            },
-            {
-                type: 'slider',
-                id: 'mc_bulge',
-                label: 'Bulge',
-                min: -1.5,
-                max: 1.5,
-                step: 0.01,
-                value: this.circleBulge,
-                onChange: (v) => {
-                    this.circleBulge = v;
-                    this.resetSortState('idle');
-                    this.draw();
-                }
-            },
-            {
-                type: 'select',
-                id: 'mc_render',
-                label: 'Render',
-                value: this.renderMode,
-                options: [
-                    { value: 'glow', label: 'LGT' },
-                    { value: 'light', label: 'Source Over' }
-                ],
-                onChange: (v) => {
-                    this.renderMode = v;
-                    this.draw();
-                }
-            },
-            {
-                type: 'select',
-                id: 'mc_color',
-                label: 'Color',
-                value: this.colorMode,
-                options: [
-                    { value: 'angle', label: 'Angle' },
-                    { value: 'order', label: 'Order' },
-                    { value: 'lsh', label: 'LSH' },
-                    { value: 'length', label: 'Length' },
-                    { value: 'origin', label: 'Origin' },
-                    { value: 'monochrome', label: 'Monochrome' }
-                ],
-                onChange: (v) => {
-                    this.colorMode = v;
-                    this.resetSortState('idle');
-                    this.draw();
-                }
-            },
-            {
-                type: 'divider',
-                id: 'mc_sort_divider',
-                label: 'Sorting',
-                actionLabel: 'Shuffle',
-                onAction: () => {
-                    if (typeof Core !== 'undefined' && typeof Core.playGameSound === 'function') {
-                        Core.playGameSound('shuffle');
-                    }
-                    this.shuffleScene();
-                    this.draw();
-                }
-            },
-            {
-                type: 'select',
-                id: 'mc_sort',
-                label: 'Method',
-                value: this.sortMode,
-                options: [
-                    { value: 'off', label: 'Off' },
-                    { value: 'hue', label: 'Hue Radix' },
-                    { value: 'lsh', label: 'L-S-H Radix' },
-                    { value: 'bubble', label: 'Bubble Sort' },
-                    { value: 'quick', label: 'Quick Sort' },
-                    { value: 'insertion', label: 'Insertion Sort' }
-                ],
-                onChange: (v) => {
-                    this.sortMode = v;
-                    this.resetSortState('idle');
-                    this.draw();
-                }
-            },
-            {
-                type: 'slider',
-                id: 'mc_sort_speed',
-                label: 'Sort Speed',
-                min: 4,
-                max: 1000,
-                step: 1,
-                value: this.sortSpeed,
-                onChange: (v) => {
-                    this.sortSpeed = Math.max(1, v);
-                }
-            },
-            {
-                type: 'select',
-                id: 'mc_int',
-                label: 'Integers Only',
-                value: this.integersOnly ? 'on' : 'off',
-                options: [
-                    { value: 'off', label: 'Off' },
-                    { value: 'on', label: 'On' }
-                ],
-                onChange: (v) => {
-                    this.integersOnly = v === 'on';
-                    this.restartSort();
-                    this.draw();
-                }
-            },
-            {
-                type: 'select',
-                id: 'mc_hud',
-                label: 'HUD',
-                value: this.showHud ? 'on' : 'off',
-                options: [
-                    { value: 'off', label: 'Off' },
-                    { value: 'on', label: 'On' }
-                ],
-                onChange: (v) => {
-                    this.showHud = v === 'on';
-                    this.draw();
-                }
-            },
-            {
-                type: 'button',
-                id: 'mc_help',
-                label: 'Guide',
-                value: '설명서 보기',
-                onClick: () => this.showGuide()
-            },
-            {
-                type: 'button',
-                id: 'mc_sort_restart',
-                label: 'Restart Sorting',
-                value: 'Sorting 다시 시작',
-                onClick: () => {
-                    this.restartSort();
-                    this.draw();
-                }
-            }
-        ];
-    },
-
-    appendLearningModeControls(controls) {
-        if (this.learningMode === 'n-ramp') {
-            controls.push(
-                {
-                    type: 'slider',
-                    id: 'mc_nr_m',
-                    label: 'N Ramp: Fixed M',
-                    min: 0,
-                    max: 1000,
-                    step: 0.001,
-                    decimals: 3,
-                    value: this.learnFixedM,
-                    onChange: (v) => {
-                        this.learnFixedM = v;
-                        this.multiplier = v;
-                        this.draw();
-                    }
-                },
-                {
-                    type: 'slider',
-                    id: 'mc_nr_slow',
-                    label: 'N Ramp: Slow Speed',
-                    min: 1,
-                    max: 80,
-                    step: 1,
-                    value: this.nRampSlowRate,
-                    onChange: (v) => { this.nRampSlowRate = v; }
-                },
-                {
-                    type: 'slider',
-                    id: 'mc_nr_fast',
-                    label: 'N Ramp: Fast Speed',
-                    min: 20,
-                    max: 500,
-                    step: 1,
-                    value: this.nRampFastRate,
-                    onChange: (v) => { this.nRampFastRate = v; }
-                },
-                {
-                    type: 'slider',
-                    id: 'mc_nr_switch',
-                    label: 'N Ramp: Switch At N',
-                    min: 10,
-                    max: 1000,
-                    step: 1,
-                    value: this.nRampSwitchN,
-                    onChange: (v) => { this.nRampSwitchN = Math.floor(v); }
-                },
-                {
-                    type: 'button',
-                    id: 'mc_nr_restart',
-                    label: 'Restart N Ramp',
-                    value: 'N Ramp 재시작',
-                    onClick: () => {
-                        this.learnN = 0;
-                        this.pointCount = 0;
-                        this.multiplier = this.learnFixedM;
-                        this.resetSortState('idle');
-                        this.draw();
-                    }
-                }
-            );
-        }
-        if (this.learningMode === 'm-ramp') {
-            controls.push(
-                {
-                    type: 'slider',
-                    id: 'mc_mr_n',
-                    label: 'M Ramp: Fixed N',
-                    min: 1,
-                    max: 1500,
-                    step: 1,
-                    value: this.mRampFixedN,
-                    onChange: (v) => {
-                        this.mRampFixedN = Math.max(1, Math.floor(v));
-                        this.pointCount = this.mRampFixedN;
-                        this.draw();
-                    }
-                },
-                {
-                    type: 'slider',
-                    id: 'mc_mr_speed',
-                    label: 'M Ramp: M Speed',
-                    min: -4,
-                    max: 4,
-                    step: 0.01,
-                    value: this.mRampRate,
-                    onChange: (v) => { this.mRampRate = v; }
-                },
-                {
-                    type: 'slider',
-                    id: 'mc_mr_accel',
-                    label: 'M Ramp: Accel',
-                    min: 0,
-                    max: 0.2,
-                    step: 0.005,
-                    value: this.mRampAccel,
-                    onChange: (v) => { this.mRampAccel = v; }
-                }
-            );
-        }
-        if (this.learningMode === 'integer-snap') {
-            controls.push({
-                type: 'slider',
-                id: 'mc_snap_speed',
-                label: 'Integer Snap Speed',
-                min: -3,
-                max: 3,
-                step: 0.01,
-                value: this.snapRate,
-                onChange: (v) => { this.snapRate = v; }
-            });
-        }
-        if (this.learningMode === 'mapping') {
-            controls.push(
-                {
-                    type: 'slider',
-                    id: 'mc_demo_i',
-                    label: 'Mapping i',
-                    min: 0,
-                    max: Math.max(0, Math.floor(this.pointCount) - 1),
-                    step: 1,
-                    value: Math.floor(this.demoIndex),
-                    onChange: (v) => {
-                        this.demoIndex = Math.floor(v);
-                        this.draw();
-                    }
-                },
-                {
-                    type: 'select',
-                    id: 'mc_demo_auto',
-                    label: 'Mapping Auto Step',
-                    value: this.demoAuto ? 'on' : 'off',
-                    options: [
-                        { value: 'on', label: 'On' },
-                        { value: 'off', label: 'Off' }
-                    ],
-                    onChange: (v) => { this.demoAuto = v === 'on'; }
-                },
-                {
-                    type: 'slider',
-                    id: 'mc_demo_rate',
-                    label: 'Mapping Step Speed',
-                    min: 0.5,
-                    max: 20,
-                    step: 0.5,
-                    value: this.demoRate,
-                    onChange: (v) => { this.demoRate = v; }
-                }
-            );
-        }
+        return SortColorControlFactory.createCardioidControls(this);
     },
 
     showGuide() {
@@ -570,85 +171,14 @@ const CardioidCircleCase = {
         document.body.appendChild(modal);
     },
 
-    resize() {
-        if (!this.canvas || !this.canvas.parentElement) return;
-        this.canvas.width = this.canvas.parentElement.clientWidth;
-        this.canvas.height = this.canvas.parentElement.clientHeight;
-        this.draw();
-    },
-
-    start() {
-        if (this.animationId) return;
-        this.lastTimeMs = performance.now();
-        const loop = (now) => {
-            const dt = Math.min(0.05, (now - this.lastTimeMs) / 1000);
-            this.lastTimeMs = now;
-            this.updateSimulation(dt);
-            this.draw();
-            this.animationId = requestAnimationFrame(loop);
-        };
-        this.animationId = requestAnimationFrame(loop);
-    },
-
-    setPaused(paused) {
-        this.isPaused = !!paused;
-        this.lastTimeMs = performance.now();
-    },
-
-    stop() {
-        if (!this.animationId) return;
-        cancelAnimationFrame(this.animationId);
-        this.animationId = null;
-    },
-
     reset() {
-        this.pointCount = 250;
-        this.multiplier = 0;
-        this.multiplierSpeed = 0;
-        this.lineWidth = 1.85;
-        this.lineAlpha = 0.4;
-        this.circleBulge = 0;
-        this.integersOnly = false;
-        this.colorMode = 'angle';
-        this.renderMode = 'light';
-        this.sortMode = 'off';
-        this.sortSpeed = 150;
-        this.sortProgress = 0;
-        this.sortPlan = null;
-        this.sortSignature = '';
-        this.sortLockedState = null;
-        this.sortPanelPosition = null;
-        this.sortPanelDrag = null;
-        this.shuffleNonce = 0;
-        this.shuffleOrder = null;
-        this.shuffleSignature = '';
-        this.shuffleFlash = 0;
-        this.shuffleAnimation = null;
-        this.showHud = true;
-        this.isPaused = false;
-        this.sortingStatus = 'idle';
-        this.learningMode = 'off';
-        this.learnFixedM = 0;
-        this.learnN = 0;
-        this.nRampSlowRate = 12;
-        this.nRampFastRate = 220;
-        this.nRampSwitchN = 120;
-        this.nRampMaxN = 1200;
-        this.mRampFixedN = 420;
-        this.mRampRate = 0.7;
-        this.mRampAccel = 0.035;
-        this.mRampEffectiveRate = 0.7;
-        this.snapRate = 0.45;
-        this.demoIndex = 0;
-        this.demoAuto = true;
-        this.demoRate = 4.0;
+        Object.assign(this, CardioidCaseDefaults, {
+            classicTargets: CardioidCaseDefaults.classicTargets.slice(),
+            ultimateTargets: CardioidCaseDefaults.ultimateTargets.slice(),
+            mirrorTargets: CardioidCaseDefaults.mirrorTargets.slice()
+        });
         this.draw();
         if (typeof Core !== 'undefined' && Core.currentCase === this) Core.updateControls();
-    },
-
-    destroy() {
-        this.unbindCanvasInteractions();
-        this.stop();
     },
 
     bindCanvasInteractions() {
@@ -727,66 +257,6 @@ const CardioidCircleCase = {
         return this.getCardioidLineColor(i, n, from, to, radius);
     },
 
-    gcd(a, b) {
-        let x = Math.abs(Math.floor(a));
-        let y = Math.abs(Math.floor(b));
-        if (!x) return y;
-        if (!y) return x;
-        while (y !== 0) {
-            const t = x % y;
-            x = y;
-            y = t;
-        }
-        return x;
-    },
-
-    positiveMod(v, n) {
-        if (n <= 0) return 0;
-        return ((v % n) + n) % n;
-    },
-
-    setLearningMode(mode) {
-        this.learningMode = mode || 'off';
-        this.applyLearningModeState();
-        this.resetSortState('idle');
-        if (typeof Core !== 'undefined' && Core.currentCase === this) Core.updateControls();
-        this.draw();
-    },
-
-    applyLearningModeState() {
-        if (this.learningMode === 'n-ramp') {
-            const forceIntegerM = this.learningMode === 'gcd' || this.learningMode === 'integer-snap';
-            const lockedM = (this.integersOnly || forceIntegerM) ? Math.round(this.multiplier) : this.multiplier;
-            this.learnN = Math.max(0, Math.floor(this.pointCount));
-            this.learnFixedM = lockedM;
-            this.multiplier = lockedM;
-        }
-        if (this.learningMode === 'm-ramp') {
-            this.mRampFixedN = Math.max(1, Math.floor(this.pointCount) || 1);
-        }
-        if (this.learningMode === 'mapping') {
-            this.demoIndex = 0;
-        }
-        if (this.learningMode === 'classic') {
-            this.classicTimer = 0;
-            this.classicIndex = 0;
-            this.multiplier = this.classicTargets[this.classicIndex];
-            this.pointCount = 360;
-        }
-        if (this.learningMode === 'ultimate') {
-            this.ultimateTimer = 0;
-            this.ultimateIndex = 0;
-            this.multiplier = this.ultimateTargets[this.ultimateIndex];
-            this.pointCount = 360;
-        }
-        if (this.learningMode === 'mirror-chaos') {
-            this.mirrorTimer = 0;
-            this.mirrorIndex = 0;
-            this.multiplier = this.mirrorTargets[this.mirrorIndex];
-            this.pointCount = 360;
-        }
-    },
-
     updateSimulation(dt) {
         if (!this.isPaused) {
             this.updateGeometryState(dt);
@@ -798,118 +268,11 @@ const CardioidCircleCase = {
         this.shuffleChords();
     },
 
-    updateGeometryState(dt) {
-        if (this.updateLearningModeSimulation(dt)) return;
-        this.updateFreeRunMultiplier(dt);
-    },
-
     updateVisualState(dt) {
         this.updateSortingState(dt);
         this.updateShuffleAnimation(dt);
         this.updateShuffleFlash(dt);
     },
-
-    updateLearningModeSimulation(dt) {
-        if (this.learningMode === 'n-ramp') {
-            this.multiplier = this.learnFixedM;
-            const speed = this.learnN < this.nRampSwitchN ? this.nRampSlowRate : this.nRampFastRate;
-            this.learnN += speed * dt;
-            if (this.learnN > this.nRampMaxN) this.learnN = 0;
-            this.pointCount = Math.max(0, Math.floor(this.learnN));
-            return true;
-        }
-        if (this.learningMode === 'm-ramp') {
-            this.pointCount = Math.max(1, Math.floor(this.mRampFixedN));
-            const sign = this.mRampRate === 0 ? 0 : Math.sign(this.mRampRate);
-            const base = Math.abs(this.mRampRate);
-            const growth = 1 + Math.max(0, Math.abs(this.multiplier)) * this.mRampAccel;
-            this.mRampEffectiveRate = sign * base * growth;
-            this.multiplier += this.mRampEffectiveRate * dt;
-            if (this.multiplier >= 100) {
-                this.multiplier = 100;
-                if (this.mRampEffectiveRate > 0) this.mRampEffectiveRate = 0;
-            } else if (this.multiplier <= 0) {
-                this.multiplier = 0;
-                if (this.mRampEffectiveRate < 0) this.mRampEffectiveRate = 0;
-            }
-            return true;
-        }
-        if (this.learningMode === 'integer-snap') {
-            this.multiplier += this.snapRate * dt;
-            return true;
-        }
-        if (this.learningMode === 'mapping') {
-            if (this.demoAuto && this.pointCount > 0) {
-                this.demoIndex += this.demoRate * dt;
-                const n = Math.max(1, Math.floor(this.pointCount));
-                if (this.demoIndex >= n) this.demoIndex = this.demoIndex % n;
-            }
-            this.multiplier += this.multiplierSpeed * dt;
-            return true;
-        }
-        if (this.learningMode === 'classic') {
-            this.updateTimedLearningMode(dt, {
-                timerKey: 'classicTimer',
-                duration: this.classicDuration,
-                indexKey: 'classicIndex',
-                targets: this.classicTargets,
-                holdTime: 2.0
-            });
-            return true;
-        }
-        if (this.learningMode === 'ultimate') {
-            this.updateTimedLearningMode(dt, {
-                timerKey: 'ultimateTimer',
-                duration: this.ultimateDuration,
-                indexKey: 'ultimateIndex',
-                targets: this.ultimateTargets,
-                holdTime: 1.0
-            });
-            return true;
-        }
-        if (this.learningMode === 'mirror-chaos') {
-            this.updateTimedLearningMode(dt, {
-                timerKey: 'mirrorTimer',
-                duration: this.mirrorDuration,
-                indexKey: 'mirrorIndex',
-                targets: this.mirrorTargets,
-                holdTime: 1.0
-            });
-            return true;
-        }
-        return false;
-    },
-
-    updateTimedLearningMode(dt, config) {
-        this[config.timerKey] += dt;
-        if (this[config.timerKey] >= config.duration) {
-            this[config.timerKey] = 0;
-            this[config.indexKey] = (this[config.indexKey] + 1) % config.targets.length;
-        }
-
-        const currentM = config.targets[this[config.indexKey]];
-        if (this[config.timerKey] < config.holdTime) {
-            this.multiplier = currentM;
-            return;
-        }
-
-        const t = (this[config.timerKey] - config.holdTime) / (config.duration - config.holdTime);
-        const ease = 0.5 - 0.5 * Math.cos(t * Math.PI);
-        const nextIndex = (this[config.indexKey] + 1) % config.targets.length;
-        const nextM = config.targets[nextIndex];
-        this.multiplier = currentM + (nextM - currentM) * ease;
-    },
-
-    updateShuffleFlash(dt) {
-        if (this.shuffleFlash > 0) {
-            this.shuffleFlash = Math.max(0, this.shuffleFlash - dt * 1.8);
-        }
-    },
-
-    updateFreeRunMultiplier(dt) {
-        this.multiplier += this.multiplierSpeed * dt;
-    },
-
 };
 
 if (typeof CardioidGeometryProvider !== 'undefined') {
@@ -926,4 +289,12 @@ if (typeof SortEngine !== 'undefined') {
 
 if (typeof SortRenderer !== 'undefined') {
     Object.assign(CardioidCircleCase, SortRenderer);
+}
+
+if (typeof SortColorCaseBase !== 'undefined') {
+    Object.assign(CardioidCircleCase, SortColorCaseBase);
+}
+
+if (typeof CardioidLearningManager !== 'undefined') {
+    Object.assign(CardioidCircleCase, CardioidLearningManager);
 }

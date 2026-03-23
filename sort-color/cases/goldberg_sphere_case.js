@@ -3,63 +3,54 @@ const GoldbergSphereCase = {
     ctx: null,
     animationId: null,
     lastTimeMs: 0,
-    isPaused: false,
+    isPaused: GoldbergSphereDefaults.isPaused,
 
-    pointCount: 180,
-    multiplier: 0,
-    multiplierSpeed: 0,
-    lineWidth: 1.2,
-    lineAlpha: 0.8,
-    pointRadius: 1.4,
-    showPoints: false,
-    showHud: true,
-    showIndices: 'off',
-    integersOnly: false,
-    colorGenerator: 'index-mod',
-    colorMode: 'angle',
-    renderMode: 'light',
-    slotMapping: 'top-down',
-    sortMode: 'off',
-    sortingStatus: 'idle',
-    sortSpeed: 150,
-    sortProgress: 0,
-    sortPlan: null,
-    sortSignature: '',
-    sortLockedState: null,
-    sortPanelPosition: null,
-    sortPanelDrag: null,
-    shuffleNonce: 0,
-    shuffleOrder: null,
-    shuffleSignature: '',
-    shuffleFlash: 0,
-    shuffleAnimation: null,
-    sortPassRotationKey: '',
-    sortPassSlowTimer: 0,
-    rotation: -Math.PI / 2,
-    learningMode: 'off',
-    sphereFrequencyOverride: 0,
-    rotX: -0.35,
-    rotY: 0.45,
-    rotationSpeed: 0.16,
-    autoTrack: false,
-    autoRotate: true,
-    isDraggingSphere: false,
-    lastPointerX: 0,
-    lastPointerY: 0,
+    pointCount: GoldbergSphereDefaults.pointCount,
+    multiplier: GoldbergSphereDefaults.multiplier,
+    multiplierSpeed: GoldbergSphereDefaults.multiplierSpeed,
+    lineWidth: GoldbergSphereDefaults.lineWidth,
+    lineAlpha: GoldbergSphereDefaults.lineAlpha,
+    pointRadius: GoldbergSphereDefaults.pointRadius,
+    showPoints: GoldbergSphereDefaults.showPoints,
+    showHud: GoldbergSphereDefaults.showHud,
+    showIndices: GoldbergSphereDefaults.showIndices,
+    integersOnly: GoldbergSphereDefaults.integersOnly,
+    colorGenerator: GoldbergSphereDefaults.colorGenerator,
+    colorMode: GoldbergSphereDefaults.colorMode,
+    renderMode: GoldbergSphereDefaults.renderMode,
+    slotMapping: GoldbergSphereDefaults.slotMapping,
+    sortMode: GoldbergSphereDefaults.sortMode,
+    sortingStatus: GoldbergSphereDefaults.sortingStatus,
+    sortSpeed: GoldbergSphereDefaults.sortSpeed,
+    sortProgress: GoldbergSphereDefaults.sortProgress,
+    sortPlan: GoldbergSphereDefaults.sortPlan,
+    sortSignature: GoldbergSphereDefaults.sortSignature,
+    sortLockedState: GoldbergSphereDefaults.sortLockedState,
+    sortPanelPosition: GoldbergSphereDefaults.sortPanelPosition,
+    sortPanelDrag: GoldbergSphereDefaults.sortPanelDrag,
+    shuffleNonce: GoldbergSphereDefaults.shuffleNonce,
+    shuffleOrder: GoldbergSphereDefaults.shuffleOrder,
+    shuffleSignature: GoldbergSphereDefaults.shuffleSignature,
+    shuffleFlash: GoldbergSphereDefaults.shuffleFlash,
+    shuffleAnimation: GoldbergSphereDefaults.shuffleAnimation,
+    sortPassRotationKey: GoldbergSphereDefaults.sortPassRotationKey,
+    sortPassSlowTimer: GoldbergSphereDefaults.sortPassSlowTimer,
+    rotation: GoldbergSphereDefaults.rotation,
+    learningMode: GoldbergSphereDefaults.learningMode,
+    sphereFrequencyOverride: GoldbergSphereDefaults.sphereFrequencyOverride,
+    rotX: GoldbergSphereDefaults.rotX,
+    rotY: GoldbergSphereDefaults.rotY,
+    rotationSpeed: GoldbergSphereDefaults.rotationSpeed,
+    autoTrack: GoldbergSphereDefaults.autoTrack,
+    autoRotate: GoldbergSphereDefaults.autoRotate,
+    isDraggingSphere: GoldbergSphereDefaults.isDraggingSphere,
+    lastPointerX: GoldbergSphereDefaults.lastPointerX,
+    lastPointerY: GoldbergSphereDefaults.lastPointerY,
     trackingHistory: [],
-    trackingSmoothedPoint: null,
-    trackingVelX: 0,
-    trackingVelY: 0,
-    trackingLocked: false,
-
-    init() {
-        this.canvas = document.getElementById('mathCanvas');
-        if (!this.canvas) return;
-        this.ctx = this.canvas.getContext('2d');
-        this.bindCanvasInteractions();
-        this.resize();
-        this.draw();
-    },
+    trackingSmoothedPoint: GoldbergSphereDefaults.trackingSmoothedPoint,
+    trackingVelX: GoldbergSphereDefaults.trackingVelX,
+    trackingVelY: GoldbergSphereDefaults.trackingVelY,
+    trackingLocked: GoldbergSphereDefaults.trackingLocked,
 
     draw() {
         const savedLearningMode = this.learningMode;
@@ -74,305 +65,16 @@ const GoldbergSphereCase = {
     },
 
     get uiConfig() {
-        return [
-            {
-                type: 'slider',
-                id: 'mc_sphere_count',
-                label: 'Target Faces',
-                min: 12,
-                max: 1000,
-                step: 1,
-                value: this.pointCount,
-                onChange: (v) => {
-                    this.pointCount = Math.max(12, Math.floor(v));
-                    this.resetSortState('idle');
-                    this.draw();
-                }
-            },
-            {
-                type: 'slider',
-                id: 'mc_sphere_freq',
-                label: 'Frequency',
-                min: 0,
-                max: 10,
-                step: 1,
-                value: this.sphereFrequencyOverride,
-                onChange: (v) => {
-                    this.sphereFrequencyOverride = Math.max(0, Math.floor(v));
-                    this.resetSortState('idle');
-                    this.draw();
-                }
-            },
-            {
-                type: 'checkbox',
-                id: 'mc_sphere_auto_track',
-                label: 'Auto Track',
-                value: this.autoTrack,
-                onChange: (checked) => {
-                    this.autoTrack = !!checked;
-                    if (!this.autoTrack) this.resetAutoTrackingState();
-                }
-            },
-            {
-                type: 'checkbox',
-                id: 'mc_sphere_auto_rotate',
-                label: 'Auto Rotate',
-                value: this.autoRotate,
-                onChange: (checked) => {
-                    this.autoRotate = !!checked;
-                }
-            },
-            {
-                type: 'slider',
-                id: 'mc_sphere_rot',
-                label: 'Rotation Speed',
-                min: -1.2,
-                max: 1.2,
-                step: 0.01,
-                value: this.rotationSpeed,
-                onChange: (v) => {
-                    this.rotationSpeed = v;
-                }
-            },
-            {
-                type: 'slider',
-                id: 'mc_alpha',
-                label: 'Face Alpha',
-                min: 0.1,
-                max: 1,
-                step: 0.01,
-                value: this.lineAlpha,
-                onChange: (v) => {
-                    this.lineAlpha = v;
-                    this.draw();
-                }
-            },
-            {
-                type: 'select',
-                id: 'mc_render',
-                label: 'Render',
-                value: this.renderMode,
-                options: [
-                    { value: 'glow', label: 'LGT' },
-                    { value: 'light', label: 'Source Over' }
-                ],
-                onChange: (v) => {
-                    this.renderMode = v;
-                    this.draw();
-                }
-            },
-            {
-                type: 'select',
-                id: 'mc_color_generator',
-                label: 'Color Gen',
-                value: this.colorGenerator,
-                options: [
-                    { value: 'index-mod', label: 'Sequence' },
-                    { value: 'spatial', label: 'Position' }
-                ],
-                onChange: (v) => {
-                    this.colorGenerator = v;
-                    this.resetSortState('idle');
-                    this.draw();
-                }
-            },
-            {
-                type: 'select',
-                id: 'mc_color',
-                label: 'Color',
-                value: this.colorMode,
-                options: [
-                    { value: 'angle', label: 'Longitude' },
-                    { value: 'length', label: 'Northness' },
-                    { value: 'origin', label: 'Latitude' },
-                    { value: 'monochrome', label: 'Monochrome' }
-                ],
-                onChange: (v) => {
-                    this.colorMode = v;
-                    this.resetSortState('idle');
-                    this.draw();
-                }
-            },
-            {
-                type: 'divider',
-                id: 'mc_sort_divider',
-                label: 'Sorting',
-                actionLabel: 'Shuffle',
-                onAction: () => {
-                    if (typeof Core !== 'undefined' && typeof Core.playGameSound === 'function') {
-                        Core.playGameSound('shuffle');
-                    }
-                    this.shuffleScene();
-                    this.draw();
-                }
-            },
-            {
-                type: 'select',
-                id: 'mc_sort',
-                label: 'Method',
-                value: this.sortMode,
-                options: [
-                    { value: 'off', label: 'Off' },
-                    { value: 'hue', label: 'Hue Radix' },
-                    { value: 'lsh', label: 'L-S-H Radix' },
-                    { value: 'bubble', label: 'Bubble Sort' },
-                    { value: 'quick', label: 'Quick Sort' },
-                    { value: 'insertion', label: 'Insertion Sort' }
-                ],
-                onChange: (v) => {
-                    this.sortMode = v;
-                    this.resetSortState('idle');
-                    this.draw();
-                }
-            },
-            {
-                type: 'slider',
-                id: 'mc_sort_speed',
-                label: 'Sort Speed',
-                min: 4,
-                max: 1000,
-                step: 1,
-                value: this.sortSpeed,
-                onChange: (v) => {
-                    this.sortSpeed = Math.max(1, v);
-                }
-            },
-            {
-                type: 'select',
-                id: 'mc_hud',
-                label: 'HUD',
-                value: this.showHud ? 'on' : 'off',
-                options: [
-                    { value: 'off', label: 'Off' },
-                    { value: 'on', label: 'On' }
-                ],
-                onChange: (v) => {
-                    this.showHud = v === 'on';
-                    this.draw();
-                }
-            },
-            {
-                type: 'select',
-                id: 'mc_indices',
-                label: 'Indices',
-                value: this.showIndices || 'off',
-                options: [
-                    { value: 'off', label: 'Off' },
-                    { value: 'slot', label: 'Slot Index' },
-                    { value: 'original', label: 'Original Index' }
-                ],
-                onChange: (v) => {
-                    this.showIndices = v;
-                    this.draw();
-                }
-            },
-            {
-                type: 'select',
-                id: 'mc_slot_mapping',
-                label: 'Slot Mapping',
-                value: this.slotMapping,
-                options: [
-                    { value: 'top-down', label: 'Top-down' },
-                    { value: 'meridian', label: 'Vertical' },
-                    { value: 'vertical', label: 'X Sweep' },
-                    { value: 'sequence', label: 'Chunk' },
-                    { value: 'top-down-zigzag', label: 'Top-down Zigzag' }
-                ],
-                onChange: (v) => {
-                    this.slotMapping = v;
-                    this.resetSortState('idle');
-                    this.draw();
-                }
-            },
-            {
-                type: 'button',
-                id: 'mc_sort_restart',
-                label: 'Restart Sorting',
-                value: 'Sorting 다시 시작',
-                onClick: () => {
-                    this.restartSort();
-                    this.draw();
-                }
-            }
-        ];
-    },
-
-    resize() {
-        if (!this.canvas || !this.canvas.parentElement) return;
-        this.canvas.width = this.canvas.parentElement.clientWidth;
-        this.canvas.height = this.canvas.parentElement.clientHeight;
-        this.draw();
-    },
-
-    start() {
-        if (this.animationId) return;
-        this.lastTimeMs = performance.now();
-        const loop = (now) => {
-            const dt = Math.min(0.05, (now - this.lastTimeMs) / 1000);
-            this.lastTimeMs = now;
-            this.updateSimulation(dt);
-            this.draw();
-            this.animationId = requestAnimationFrame(loop);
-        };
-        this.animationId = requestAnimationFrame(loop);
-    },
-
-    setPaused(paused) {
-        this.isPaused = !!paused;
-        this.lastTimeMs = performance.now();
-    },
-
-    stop() {
-        if (!this.animationId) return;
-        cancelAnimationFrame(this.animationId);
-        this.animationId = null;
+        return SortColorControlFactory.createGoldbergControls(this);
     },
 
     reset() {
-        this.pointCount = 180;
-        this.multiplier = 0;
-        this.multiplierSpeed = 0;
-        this.lineWidth = 1.2;
-        this.lineAlpha = 0.8;
-        this.integersOnly = false;
-        this.colorGenerator = 'index-mod';
-        this.colorMode = 'angle';
-        this.renderMode = 'light';
-        this.showIndices = 'off';
-        this.slotMapping = 'top-down';
-        this.sortMode = 'off',
-        this.sortSpeed = 150;
-        this.sphereFrequencyOverride = 0;
-        this.rotX = -0.35;
-        this.rotY = 0.45;
-        this.rotationSpeed = 0.16;
-        this.autoTrack = false;
-        this.autoRotate = true;
-        this.isDraggingSphere = false;
-        this.sortProgress = 0;
-        this.sortPlan = null;
-        this.sortSignature = '';
-        this.sortLockedState = null;
-        this.sortPanelPosition = null;
-        this.sortPanelDrag = null;
-        this.shuffleNonce = 0;
-        this.shuffleOrder = null;
-        this.shuffleSignature = '';
-        this.shuffleFlash = 0;
-        this.shuffleAnimation = null;
-        this.sortPassRotationKey = '';
-        this.sortPassSlowTimer = 0;
+        Object.assign(this, GoldbergSphereDefaults, {
+            trackingHistory: []
+        });
         this.resetAutoTrackingState();
-        this.showHud = true;
-        this.isPaused = false;
-        this.sortingStatus = 'idle';
         this.draw();
         if (typeof Core !== 'undefined' && Core.currentCase === this) Core.updateControls();
-    },
-
-    destroy() {
-        this.unbindCanvasInteractions();
-        this.stop();
     },
 
     bindCanvasInteractions() {
@@ -451,194 +153,10 @@ const GoldbergSphereCase = {
         window.removeEventListener('pointerup', this._handleWindowPointerUp);
     },
 
-    updateSimulation(dt) {
-        if (!this.isPaused && !this.isDraggingSphere) {
-            const provider = (this.autoTrack || this.autoRotate) ? this.getCurrentGeometryProvider() : null;
-            const sortPlan = provider ? this.ensureSortPlan(provider) : null;
-            const trackingApplied = this.autoTrack ? this.updateAutoTracking(dt, provider, sortPlan) : false;
-            if (!trackingApplied && this.autoRotate) {
-                const rotationMultiplier = this.sortingStatus === 'running' ? 5 : 1;
-                let effectiveMultiplier = rotationMultiplier;
-                const isRadixSort = this.sortMode === 'hue' || this.sortMode === 'lsh';
-                if (rotationMultiplier > 1 && isRadixSort) {
-                    const sortView = sortPlan ? this.getSortViewState(sortPlan) : null;
-                    if (sortView) {
-                        const passKey = `${sortView.passIndex}:${sortView.passLabel || ''}`;
-                        if (passKey !== this.sortPassRotationKey) {
-                            this.sortPassRotationKey = passKey;
-                            this.sortPassSlowTimer = 0.3;
-                        }
-                    }
-                    if (this.sortPassSlowTimer > 0) {
-                        effectiveMultiplier = 1;
-                        this.sortPassSlowTimer = Math.max(0, this.sortPassSlowTimer - dt);
-                    }
-                } else {
-                    this.sortPassRotationKey = '';
-                    this.sortPassSlowTimer = 0;
-                }
-                this.rotY += this.rotationSpeed * effectiveMultiplier * dt;
-            }
-            this.clampPitch();
-        } else if (this.isDraggingSphere) {
-            this.trackingVelX = 0;
-            this.trackingVelY = 0;
-        }
-        this.updateSortingState(dt);
-        this.updateShuffleAnimation(dt);
-        this.updateShuffleFlash(dt);
-    },
-
-    updateShuffleFlash(dt) {
-        if (this.shuffleFlash > 0) {
-            this.shuffleFlash = Math.max(0, this.shuffleFlash - dt * 1.8);
-        }
-    },
-
     captureSortLockedState() {
         const n = Math.max(12, Math.floor(this.pointCount));
         this.sortLockedState = { n, m: 0 };
         return this.sortLockedState;
-    },
-
-    positiveMod(v, n) {
-        if (n <= 0) return 0;
-        return ((v % n) + n) % n;
-    },
-
-    gcd(a, b) {
-        let x = Math.abs(Math.floor(a));
-        let y = Math.abs(Math.floor(b));
-        if (!x) return y;
-        if (!y) return x;
-        while (y !== 0) {
-            const t = x % y;
-            x = y;
-            y = t;
-        }
-        return x;
-    },
-
-    wrapAngle(angle) {
-        return Math.atan2(Math.sin(angle), Math.cos(angle));
-    },
-
-    resetAutoTrackingState() {
-        this.trackingHistory = [];
-        this.trackingSmoothedPoint = null;
-        this.trackingVelX = 0;
-        this.trackingVelY = 0;
-        this.trackingLocked = false;
-    },
-
-    getSortTrackingTarget(provider, sortPlan) {
-        if (!this.autoTrack || this.sortingStatus !== 'running' || !provider || !sortPlan) return null;
-        const sortView = this.getSortViewState(sortPlan);
-        if (!sortView || !Array.isArray(provider.slots) || !provider.slots.length) return null;
-
-        const centers = [];
-        const pushSlotCenter = (slotIndex) => {
-            if (!Number.isInteger(slotIndex)) return;
-            const slot = provider.slots[slotIndex];
-            const center = slot?.meta?.center;
-            if (!center) return;
-            centers.push(center);
-        };
-
-        if (this.sortMode === 'bubble' && Array.isArray(sortView.activeIndices) && sortView.activeIndices.length) {
-            pushSlotCenter(sortView.activeIndices[sortView.activeIndices.length - 1]);
-        } else if (Array.isArray(sortView.activeIndices) && sortView.activeIndices.length) {
-            sortView.activeIndices.forEach(pushSlotCenter);
-        } else if (Number.isInteger(sortView.pivotIndex)) {
-            pushSlotCenter(sortView.pivotIndex);
-        } else if (Number.isInteger(sortView.coloredCount)) {
-            pushSlotCenter(Math.min(provider.slots.length - 1, sortView.coloredCount));
-        }
-
-        if (!centers.length) return null;
-
-        const averaged = centers.reduce((acc, center) => {
-            acc.x += center.x;
-            acc.y += center.y;
-            acc.z += center.z;
-            return acc;
-        }, { x: 0, y: 0, z: 0 });
-        const len = Math.hypot(averaged.x, averaged.y, averaged.z) || 1;
-        return {
-            x: averaged.x / len,
-            y: averaged.y / len,
-            z: averaged.z / len
-        };
-    },
-
-    updateAutoTracking(dt, provider, sortPlan) {
-        const targetPoint = this.getSortTrackingTarget(provider, sortPlan);
-        if (!targetPoint) {
-            this.trackingHistory = [];
-            this.trackingSmoothedPoint = null;
-            this.trackingLocked = false;
-            this.trackingVelX *= 0.85;
-            this.trackingVelY *= 0.85;
-            return false;
-        }
-
-        this.trackingHistory.push(targetPoint);
-        if (this.trackingHistory.length > 6) this.trackingHistory.shift();
-
-        const averaged = this.trackingHistory.reduce((acc, point) => {
-            acc.x += point.x;
-            acc.y += point.y;
-            acc.z += point.z;
-            return acc;
-        }, { x: 0, y: 0, z: 0 });
-        averaged.x /= this.trackingHistory.length;
-        averaged.y /= this.trackingHistory.length;
-        averaged.z /= this.trackingHistory.length;
-
-        if (!this.trackingSmoothedPoint) {
-            this.trackingSmoothedPoint = { ...averaged };
-        } else {
-            const emaAlpha = 1 - Math.exp(-dt / 0.22);
-            this.trackingSmoothedPoint.x += (averaged.x - this.trackingSmoothedPoint.x) * emaAlpha;
-            this.trackingSmoothedPoint.y += (averaged.y - this.trackingSmoothedPoint.y) * emaAlpha;
-            this.trackingSmoothedPoint.z += (averaged.z - this.trackingSmoothedPoint.z) * emaAlpha;
-        }
-
-        const smoothed = this.trackingSmoothedPoint;
-        const smoothedLen = Math.hypot(smoothed.x, smoothed.y, smoothed.z) || 1;
-        smoothed.x /= smoothedLen;
-        smoothed.y /= smoothedLen;
-        smoothed.z /= smoothedLen;
-
-        const gain = 4.8;
-        const maxVel = 2.2;
-        const deadZone = 0.012;
-        const velAlpha = 1 - Math.exp(-dt / 0.14);
-
-        const zNew = Math.hypot(smoothed.x, smoothed.z);
-        if (zNew > 0.001) {
-            const targetAngleY = Math.atan2(-smoothed.x, smoothed.z);
-            let dY = this.wrapAngle(targetAngleY - this.rotY);
-            if (Math.abs(dY) < deadZone) dY = 0;
-            const desiredVelY = Math.max(-maxVel, Math.min(maxVel, dY * gain));
-            this.trackingVelY += (desiredVelY - this.trackingVelY) * velAlpha;
-        }
-
-        const targetAngleX = Math.atan2(smoothed.y, zNew);
-        let dX = this.wrapAngle(targetAngleX - this.rotX);
-        if (Math.abs(dX) < deadZone) dX = 0;
-        const desiredVelX = Math.max(-maxVel, Math.min(maxVel, dX * gain));
-        this.trackingVelX += (desiredVelX - this.trackingVelX) * velAlpha;
-
-        this.rotY += this.trackingVelY * dt;
-        this.rotX += this.trackingVelX * dt;
-        return true;
-    },
-
-    clampPitch() {
-        const limit = 1.35;
-        if (this.rotX > limit) this.rotX = limit;
-        if (this.rotX < -limit) this.rotX = -limit;
     },
 
     shuffleGoldbergSlots() {
@@ -1066,11 +584,7 @@ const GoldbergSphereCaseOverrides = {
     draw: GoldbergSphereCase.draw,
     bindCanvasInteractions: GoldbergSphereCase.bindCanvasInteractions,
     unbindCanvasInteractions: GoldbergSphereCase.unbindCanvasInteractions,
-    updateSimulation: GoldbergSphereCase.updateSimulation,
-    updateShuffleFlash: GoldbergSphereCase.updateShuffleFlash,
     captureSortLockedState: GoldbergSphereCase.captureSortLockedState,
-    wrapAngle: GoldbergSphereCase.wrapAngle,
-    clampPitch: GoldbergSphereCase.clampPitch,
     getSphereVisual: GoldbergSphereCase.getSphereVisual,
     buildGeometryProvider: GoldbergSphereCase.buildGeometryProvider,
     buildCardioidProvider: GoldbergSphereCase.buildCardioidProvider,
@@ -1091,6 +605,14 @@ if (typeof SortEngine !== 'undefined') {
 
 if (typeof SortRenderer !== 'undefined') {
     Object.assign(GoldbergSphereCase, SortRenderer);
+}
+
+if (typeof SortColorCaseBase !== 'undefined') {
+    Object.assign(GoldbergSphereCase, SortColorCaseBase);
+}
+
+if (typeof GoldbergTrackingManager !== 'undefined') {
+    Object.assign(GoldbergSphereCase, GoldbergTrackingManager);
 }
 
 Object.assign(GoldbergSphereCase, GoldbergSphereCaseOverrides);
