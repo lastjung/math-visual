@@ -66,8 +66,14 @@ const SortColorScenarioManager = {
             if (typeof this.simStateSnapshot.pointCount === 'number') {
                 this.currentCase.pointCount = this.simStateSnapshot.pointCount;
             }
+            if (typeof this.simStateSnapshot.multiplier === 'number') {
+                this.currentCase.multiplier = this.simStateSnapshot.multiplier;
+            }
             if (typeof this.simStateSnapshot.sortMode === 'string') {
                 this.currentCase.sortMode = this.simStateSnapshot.sortMode;
+            }
+            if (typeof this.simStateSnapshot.learningMode === 'string') {
+                this.currentCase.learningMode = this.simStateSnapshot.learningMode;
             }
             this.restoreSimulationSortSpeed();
             if (this.simStateSnapshot.sortSpeedMode) {
@@ -96,7 +102,9 @@ const SortColorScenarioManager = {
         this.simStartMs = performance.now();
         this.simStateSnapshot = {
             pointCount: this.currentCase.pointCount,
+            multiplier: this.currentCase.multiplier,
             sortMode: this.currentCase.sortMode,
+            learningMode: this.currentCase.learningMode,
             sortSpeed: this.currentCase.sortSpeed,
             initialSortSpeed: this.currentCase.sortSpeed,
             sortSpeedMode: this.currentCase.sortSpeedMode
@@ -112,7 +120,8 @@ const SortColorScenarioManager = {
             lsh: 'L-S-H Radix Sort',
             bubble: 'Bubble Sort',
             quick: 'Quick Sort',
-            insertion: 'Insertion Sort'
+            insertion: 'Insertion Sort',
+            selection: 'Selection Sort'
         };
         const stages = [180, 360, 720, 1080].map((n) => ({ n, subtitle: `${n} ${unit}` }));
         const results = [];
@@ -168,7 +177,7 @@ const SortColorScenarioManager = {
             }
 
             const stageTitle = sortLabels[activeSortMode] || 'Color Sort';
-            const multipliers = { hue: 1, lsh: 1, bubble: 50, quick: 5, insertion: 50 };
+            const multipliers = { hue: 1, lsh: 1, bubble: 50, quick: 5, insertion: 50, selection: 50 };
             const activeSortSpeedMultiplier = multipliers[activeSortMode] || 1;
             const totalSteps = typeof this.currentCase.getSortTotalSteps === 'function'
                 ? this.currentCase.getSortTotalSteps()
@@ -211,7 +220,7 @@ const SortColorScenarioManager = {
                         const tid2 = setTimeout(() => {
                             currentIdx += 1;
                             runStage();
-                        }, 2000);
+                        }, 3000);
                         this.simTimers.push(tid2);
                     }
                 }, 100);
@@ -234,7 +243,9 @@ const SortColorScenarioManager = {
         this.simStartMs = performance.now();
         this.simStateSnapshot = {
             pointCount: this.currentCase.pointCount,
+            multiplier: this.currentCase.multiplier,
             sortMode: this.currentCase.sortMode,
+            learningMode: this.currentCase.learningMode,
             sortSpeed: this.currentCase.sortSpeed,
             initialSortSpeed: this.currentCase.sortSpeed,
             sortSpeedMode: this.currentCase.sortSpeedMode
@@ -244,12 +255,13 @@ const SortColorScenarioManager = {
         const scenarioSelect = document.getElementById('apple-scenario-select');
         if (scenarioSelect) scenarioSelect.value = '2_by-sorting';
 
-        const simTitle = 'Hue Radix · Bubble Sort · Quick Sort · Insertion Sort';
+        const simTitle = '5 Sorting Methods';
         const stages = [
             { mode: 'hue', label: 'Hue Radix', speedMultiplier: 1 },
             { mode: 'bubble', label: 'Bubble Sort', speedMultiplier: 50 },
             { mode: 'quick', label: 'Quick Sort', speedMultiplier: 5 },
-            { mode: 'insertion', label: 'Insertion Sort', speedMultiplier: 50 }
+            { mode: 'insertion', label: 'Insertion Sort', speedMultiplier: 50 },
+            { mode: 'selection', label: 'Selection Sort', speedMultiplier: 50 }
         ];
         const results = [];
         const formatSeconds = (value) => `${Math.max(0, value).toFixed(1)}s`;
@@ -277,7 +289,7 @@ const SortColorScenarioManager = {
                 if (!this.isSimRunning || currentIdx >= stages.length) {
                     this.restoreSimulationSortSpeed();
                     this.playGameSound('complete');
-                    this.showSimMessage(simTitle, 'Sorting Comparison Summary', 9000, buildCompareTable());
+                    this.showSimMessage('', 'Sorting Comparison Summary', 9000, buildCompareTable());
                     const tid = setTimeout(() => this.stopSimulation(), 9400);
                     this.simTimers.push(tid);
                     return;
@@ -359,6 +371,319 @@ const SortColorScenarioManager = {
             } catch (error) {
                 this.failSimulation(error);
             }
+        };
+
+        runStage();
+    },
+
+    runMSimmSimulation() {
+        if (this.isSimRunning) {
+            this.stopSimulation();
+            return;
+        }
+        if (!this.currentCase) return;
+
+        this.isSimRunning = true;
+        this.simStartMs = performance.now();
+        this.simStateSnapshot = {
+            pointCount: this.currentCase.pointCount,
+            multiplier: this.currentCase.multiplier,
+            sortMode: this.currentCase.sortMode,
+            learningMode: this.currentCase.learningMode,
+            sortSpeed: this.currentCase.sortSpeed,
+            initialSortSpeed: this.currentCase.sortSpeed,
+            sortSpeedMode: this.currentCase.sortSpeedMode
+        };
+        this.currentCase.sortSpeedMode = 'uniform';
+        this.currentScenario = '3_m-simm';
+        const scenarioSelect = document.getElementById('apple-scenario-select');
+        if (scenarioSelect) scenarioSelect.value = '3_m-simm';
+
+        const defaultClassicTargets = [2, 3, 4, 5, 6, 7, 8, 9, 10];
+        const getSortLabel = (sortMode) => {
+            const sortLabels = {
+                hue: 'Hue Radix',
+                lsh: 'L-S-H Radix',
+                bubble: 'Bubble Sort',
+                quick: 'Quick Sort',
+                insertion: 'Insertion Sort',
+                selection: 'Selection Sort',
+                off: 'Hue Radix'
+            };
+            return sortLabels[sortMode] || 'Color Sort';
+        };
+        const getStageLabel = (multiplier) => {
+            const rounded = Number(multiplier);
+            if (rounded === 2) return `Heart · M = ${rounded}`;
+            if (rounded === 3) return `Triad · M = ${rounded}`;
+            if (Number.isInteger(rounded) && rounded >= 4) {
+                return `${rounded - 1}-Petal Flower · M = ${rounded}`;
+            }
+            return `M = ${rounded.toFixed(3).replace(/\.?0+$/, '')}`;
+        };
+        const stages = (Array.isArray(this.currentCase.classicTargets) && this.currentCase.classicTargets.length
+            ? this.currentCase.classicTargets
+            : defaultClassicTargets
+        ).map((multiplier, index) => ({
+            multiplier,
+            subtitle: getStageLabel(multiplier)
+        }));
+        const animateStageMultiplier = (targetMultiplier, durationMs, onDone) => {
+            const startMultiplier = Number(this.currentCase.multiplier) || 0;
+            const totalDuration = Math.max(200, durationMs || 2200);
+            const startedAt = performance.now();
+            const tick = setInterval(() => {
+                if (!this.isSimRunning) {
+                    clearInterval(tick);
+                    return;
+                }
+                const elapsed = performance.now() - startedAt;
+                const t = Math.max(0, Math.min(1, elapsed / totalDuration));
+                const ease = 0.5 - 0.5 * Math.cos(t * Math.PI);
+                this.currentCase.multiplier = startMultiplier + (targetMultiplier - startMultiplier) * ease;
+                if (typeof this.currentCase.draw === 'function') {
+                    this.currentCase.draw();
+                }
+                if (t >= 1) {
+                    clearInterval(tick);
+                    this.currentCase.multiplier = targetMultiplier;
+                    if (typeof onDone === 'function') onDone();
+                }
+            }, 16);
+            this.simTimers.push(tick);
+        };
+
+        let currentIdx = 0;
+        const runStage = () => {
+            if (!this.isSimRunning || currentIdx >= stages.length) {
+                this.playGameSound('complete');
+                this.showSimMessage('', 'Simulation Completed', 2400);
+                const tid = setTimeout(() => this.stopSimulation(), 2600);
+                this.simTimers.push(tid);
+                return;
+            }
+
+            const stage = stages[currentIdx];
+            if (typeof this.currentCase.resetSortState === 'function') {
+                this.currentCase.resetSortState('idle');
+            }
+            if (typeof this.currentCase.learningMode === 'string') {
+                this.currentCase.learningMode = 'off';
+            }
+            if (typeof this.simStateSnapshot?.pointCount === 'number') {
+                this.currentCase.pointCount = this.simStateSnapshot.pointCount;
+            }
+            this.showSimMessage('', `${stage.subtitle}`, 0);
+            this.updateControls();
+
+            animateStageMultiplier(stage.multiplier, 2200, () => {
+                if (!this.isSimRunning) return;
+                if (typeof this.currentCase.resetSortState === 'function') {
+                    this.currentCase.resetSortState('idle');
+                }
+                this.currentCase.draw();
+                this.updateControls();
+
+                const activeSortMode = (this.currentCase.sortMode && this.currentCase.sortMode !== 'off')
+                    ? this.currentCase.sortMode
+                    : 'hue';
+                if (this.currentCase.sortMode === 'off') {
+                    this.currentCase.sortMode = activeSortMode;
+                }
+                const multipliers = { hue: 1, lsh: 1, bubble: 50, quick: 5, insertion: 50, selection: 50 };
+                const activeSortSpeedMultiplier = multipliers[activeSortMode] || 1;
+                this.showSimMessage('', `${stage.subtitle}`, 900);
+
+                const tid1 = setTimeout(() => {
+                    if (!this.isSimRunning) return;
+
+                    this.currentCase.restartSort();
+                    this.updateSortBar();
+                    this.applySimulationSortSpeed(activeSortSpeedMultiplier);
+                    this.showSimMessage('', `${stage.subtitle}`, 0);
+
+                    const checkFinished = setInterval(() => {
+                        if (!this.isSimRunning) {
+                            clearInterval(checkFinished);
+                            return;
+                        }
+                        if (this.currentCase.sortingStatus === 'completed') {
+                            clearInterval(checkFinished);
+                            this.restoreSimulationSortSpeed();
+                            const tid2 = setTimeout(() => {
+                                currentIdx += 1;
+                                runStage();
+                            }, 2400);
+                            this.simTimers.push(tid2);
+                        }
+                    }, 100);
+                    this.simTimers.push(checkFinished);
+                }, 1000);
+                this.simTimers.push(tid1);
+            });
+        };
+
+        runStage();
+    },
+
+    runNStepsSimulation() {
+        if (this.isSimRunning) {
+            this.stopSimulation();
+            return;
+        }
+        if (!this.currentCase) return;
+
+        this.isSimRunning = true;
+        this.simStartMs = performance.now();
+        this.simStateSnapshot = {
+            pointCount: this.currentCase.pointCount,
+            multiplier: this.currentCase.multiplier,
+            sortMode: this.currentCase.sortMode,
+            learningMode: this.currentCase.learningMode,
+            sortSpeed: this.currentCase.sortSpeed,
+            initialSortSpeed: this.currentCase.sortSpeed,
+            sortSpeedMode: this.currentCase.sortSpeedMode
+        };
+        this.currentCase.sortSpeedMode = 'uniform';
+        this.currentScenario = '4_n-steps';
+        const scenarioSelect = document.getElementById('apple-scenario-select');
+        if (scenarioSelect) scenarioSelect.value = '4_n-steps';
+
+        const getGeometryLabel = () => {
+            const entry = this.geometryRegistry?.[this.currentGeometryId];
+            return entry?.label || 'Geometry';
+        };
+        const getSortLabel = (sortMode) => {
+            const sortLabels = {
+                hue: 'Hue Radix',
+                lsh: 'L-S-H Radix',
+                bubble: 'Bubble Sort',
+                quick: 'Quick Sort',
+                insertion: 'Insertion Sort',
+                selection: 'Selection Sort',
+                off: 'Hue Radix'
+            };
+            return sortLabels[sortMode] || 'Color Sort';
+        };
+        const baseN = Math.max(12, Math.floor(this.simStateSnapshot.pointCount || this.currentCase.pointCount || 180));
+        const stageCandidates = [
+            Math.round(baseN * 0.5),
+            Math.round(baseN * 0.75),
+            baseN,
+            Math.round(baseN * 1.5),
+            Math.round(baseN * 2),
+            Math.round(baseN * 2.5)
+        ];
+        const stages = [...new Set(stageCandidates.map((value) => Math.max(12, value)))]
+            .sort((a, b) => a - b)
+            .map((pointCount) => ({
+                pointCount,
+                subtitle: `N = ${pointCount}`
+            }));
+
+        const animateStagePointCount = (targetPointCount, durationMs, onDone) => {
+            const startPointCount = Math.max(12, Math.floor(this.currentCase.pointCount || 12));
+            const totalDuration = Math.max(200, durationMs || 2200);
+            const startedAt = performance.now();
+            const tick = setInterval(() => {
+                if (!this.isSimRunning) {
+                    clearInterval(tick);
+                    return;
+                }
+                const elapsed = performance.now() - startedAt;
+                const t = Math.max(0, Math.min(1, elapsed / totalDuration));
+                const ease = 0.5 - 0.5 * Math.cos(t * Math.PI);
+                const nextPointCount = Math.max(12, Math.round(startPointCount + (targetPointCount - startPointCount) * ease));
+                this.currentCase.pointCount = nextPointCount;
+                if (typeof this.currentCase.draw === 'function') {
+                    this.currentCase.draw();
+                }
+                if (t >= 1) {
+                    clearInterval(tick);
+                    this.currentCase.pointCount = targetPointCount;
+                    if (typeof onDone === 'function') onDone();
+                }
+            }, 16);
+            this.simTimers.push(tick);
+        };
+
+        let currentIdx = 0;
+        const runStage = () => {
+            if (!this.isSimRunning || currentIdx >= stages.length) {
+                this.playGameSound('complete');
+                this.showSimMessage('', 'Simulation Completed', 2400);
+                const tid = setTimeout(() => this.stopSimulation(), 2600);
+                this.simTimers.push(tid);
+                return;
+            }
+
+            const stage = stages[currentIdx];
+            if (typeof this.currentCase.resetSortState === 'function') {
+                this.currentCase.resetSortState('idle');
+            }
+            if (typeof this.currentCase.learningMode === 'string') {
+                this.currentCase.learningMode = 'off';
+            }
+            if (typeof this.simStateSnapshot?.multiplier === 'number') {
+                this.currentCase.multiplier = this.simStateSnapshot.multiplier;
+            }
+            this.updateControls();
+
+            const activeSortMode = (this.currentCase.sortMode && this.currentCase.sortMode !== 'off')
+                ? this.currentCase.sortMode
+                : 'hue';
+            if (this.currentCase.sortMode === 'off') {
+                this.currentCase.sortMode = activeSortMode;
+            }
+            const simTitle = `${getGeometryLabel()} N Steps · ${getSortLabel(activeSortMode)}`;
+            const multipliers = { hue: 1, lsh: 1, bubble: 50, quick: 5, insertion: 50, selection: 50 };
+            const activeSortSpeedMultiplier = multipliers[activeSortMode] || 1;
+            this.showSimMessage(currentIdx === 0 ? simTitle : '', `${stage.subtitle}`, 0);
+
+            animateStagePointCount(stage.pointCount, 2200, () => {
+                if (!this.isSimRunning) return;
+                if (typeof this.currentCase.resetSortState === 'function') {
+                    this.currentCase.resetSortState('idle');
+                }
+                this.currentCase.draw();
+                this.updateControls();
+
+                const totalSteps = typeof this.currentCase.getSortTotalSteps === 'function'
+                    ? this.currentCase.getSortTotalSteps()
+                    : (this.currentCase.pointCount * 3);
+                const baseSortSpeed = Math.max(1, this.currentCase.sortSpeed || 150);
+                const effectiveSortSpeed = baseSortSpeed * activeSortSpeedMultiplier;
+                const durationSecValue = totalSteps / effectiveSortSpeed;
+                const durationSecText = `${durationSecValue.toFixed(1)}s`;
+                this.showSimMessage('', `${stage.subtitle} · ${durationSecText}`, 900);
+
+                const tid1 = setTimeout(() => {
+                    if (!this.isSimRunning) return;
+
+                    this.currentCase.restartSort();
+                    this.updateSortBar();
+                    this.applySimulationSortSpeed(activeSortSpeedMultiplier);
+                    this.showSimMessage('', `${stage.subtitle} · ${durationSecText}`, 0);
+
+                    const checkFinished = setInterval(() => {
+                        if (!this.isSimRunning) {
+                            clearInterval(checkFinished);
+                            return;
+                        }
+                        if (this.currentCase.sortingStatus === 'completed') {
+                            clearInterval(checkFinished);
+                            this.restoreSimulationSortSpeed();
+                            const tid2 = setTimeout(() => {
+                                currentIdx += 1;
+                                runStage();
+                            }, 2400);
+                            this.simTimers.push(tid2);
+                        }
+                    }, 100);
+                    this.simTimers.push(checkFinished);
+                }, 1000);
+                this.simTimers.push(tid1);
+            });
         };
 
         runStage();

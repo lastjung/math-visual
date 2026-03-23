@@ -153,6 +153,45 @@ const SortAlgorithms = {
         };
     },
 
+    buildSelectionPlan(sortItems, signature = '') {
+        const arr = [...sortItems];
+        const snapshots = [];
+        let totalSteps = 0;
+
+        for (let passIndex = 0; passIndex < arr.length - 1; passIndex++) {
+            const compareCount = arr.length - 1 - passIndex;
+            const stepCount = compareCount + 1;
+            snapshots.push({
+                order: [...arr],
+                passIndex,
+                stepCount,
+                label: `Selection Pass ${passIndex + 1}`
+            });
+            totalSteps += stepCount;
+
+            let minIndex = passIndex;
+            for (let scanIndex = passIndex + 1; scanIndex < arr.length; scanIndex++) {
+                if (arr[scanIndex].hueKey < arr[minIndex].hueKey) {
+                    minIndex = scanIndex;
+                }
+            }
+            if (minIndex !== passIndex) {
+                [arr[passIndex], arr[minIndex]] = [arr[minIndex], arr[passIndex]];
+            }
+        }
+
+        return {
+            plan: {
+                type: 'selection',
+                snapshots,
+                finalState: [...arr],
+                totalSteps,
+                n: arr.length
+            },
+            signature
+        };
+    },
+
     buildRadixPlan(sortItems, passDescriptors, signature = '') {
         const passes = [];
         let sourceOrder = sortItems;

@@ -155,6 +155,16 @@ const Core = {
                     this.updateSortBar();
                     return;
                 }
+                if (scenarioSelect && scenarioSelect.value === '3_m-simm') {
+                    this.runMSimmSimulation();
+                    this.updateSortBar();
+                    return;
+                }
+                if (scenarioSelect && scenarioSelect.value === '4_n-steps') {
+                    this.runNStepsSimulation();
+                    this.updateSortBar();
+                    return;
+                }
                 if (this.currentCase && typeof this.currentCase.sortMode !== 'undefined') {
                     this.currentCase.toggleSortPlayback();
                     this.updateSortBar();
@@ -231,7 +241,7 @@ const Core = {
             scenarioSelect.onchange = (e) => {
                 this.playGameSound('tap');
                 const val = e.target.value;
-                if (val !== '1_rays' && val !== '2_by-sorting') {
+                if (val !== '1_rays' && val !== '2_by-sorting' && val !== '3_m-simm' && val !== '4_n-steps') {
                     this.stopSimulation();
                 }
             };
@@ -302,6 +312,14 @@ const Core = {
                 e.preventDefault();
                 this.runBySortingSimulation();
             }
+            if (e.code === 'Digit3' && this.aHeld) {
+                e.preventDefault();
+                this.runMSimmSimulation();
+            }
+            if (e.code === 'Digit4' && this.aHeld) {
+                e.preventDefault();
+                this.runNStepsSimulation();
+            }
 
             if (e.code === 'KeyA') {
                 this.aHeld = true;
@@ -317,6 +335,16 @@ const Core = {
                 }
                 if (scenarioSelect && scenarioSelect.value === '2_by-sorting') {
                     this.runBySortingSimulation();
+                    this.updateSortBar();
+                    return;
+                }
+                if (scenarioSelect && scenarioSelect.value === '3_m-simm') {
+                    this.runMSimmSimulation();
+                    this.updateSortBar();
+                    return;
+                }
+                if (scenarioSelect && scenarioSelect.value === '4_n-steps') {
+                    this.runNStepsSimulation();
                     this.updateSortBar();
                     return;
                 }
@@ -750,7 +778,8 @@ const Core = {
         const isRadix = caseRef.sortMode === 'hue' || caseRef.sortMode === 'lsh';
         const isQuick = caseRef.sortMode === 'quick';
         const isInsertion = caseRef.sortMode === 'insertion';
-        const stepStride = isRadix ? 3 : ((isQuick || isInsertion) ? 2 : 3);
+        const isSelection = caseRef.sortMode === 'selection';
+        const stepStride = isRadix ? 3 : ((isQuick || isInsertion || isSelection) ? 2 : 3);
         if (Math.floor(nextStep / stepStride) === Math.floor(prevStep / stepStride)) return;
 
         if (isRadix && Array.isArray(plan?.passes) && plan.passes.length > 0) {
@@ -761,7 +790,7 @@ const Core = {
             }
         }
 
-        const intervalMs = isRadix ? 95 : ((isQuick || isInsertion) ? 110 : 130);
+        const intervalMs = isRadix ? 95 : ((isQuick || isInsertion || isSelection) ? 110 : 130);
         if (now - this.lastGameSfxTickAt < intervalMs) return;
 
         this.lastGameSfxTickAt = now;

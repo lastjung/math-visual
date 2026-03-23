@@ -242,8 +242,7 @@ const SortRenderer = {
         const hudSpeed = this.learningMode === 'm-ramp' ? this.mRampEffectiveRate : this.multiplierSpeed;
         const simElapsedLabel = (typeof Core !== 'undefined' && Core.isSimRunning && typeof Core.getSimulationElapsedMs === 'function')
             ? Core.formatRecordingTimeMMSS(Core.getSimulationElapsedMs())
-            : null;
-
+            : '--:--';
         ctx.fillStyle = 'rgba(255,255,255,0.92)';
         ctx.font = '600 14px Inter, system-ui, sans-serif';
 
@@ -263,70 +262,43 @@ const SortRenderer = {
             }
         }
 
+        let currentSortLabel = 'Radix';
+        if (this.sortMode === 'lsh') currentSortLabel = 'L-S-H Radix';
+        if (this.sortMode === 'hue') currentSortLabel = 'Hue Radix';
+        if (this.sortMode === 'bubble') currentSortLabel = 'Bubble Sort';
+        if (this.sortMode === 'quick') currentSortLabel = 'Quick Sort';
+        if (this.sortMode === 'insertion') currentSortLabel = 'Insertion Sort';
+        if (this.sortMode === 'selection') currentSortLabel = 'Selection Sort';
+
         let nextY = 30;
+        ctx.fillText(`Sort: ${currentSortLabel}`, 24, nextY);
+        nextY += 22;
+        ctx.fillText(`Sim Time: ${simElapsedLabel}`, 24, nextY);
+        nextY += 22;
         ctx.fillText(`Sort Time: ${sortTimeLabel}`, 24, nextY);
         nextY += 22;
         if (sortingActive && sortView) {
-            let sortLabel = 'Radix';
-            if (this.sortMode === 'lsh') sortLabel = 'L-S-H Radix';
-            if (this.sortMode === 'hue') sortLabel = 'Hue Radix';
-            if (this.sortMode === 'bubble') sortLabel = 'Bubble Sort';
-            if (this.sortMode === 'quick') sortLabel = 'Quick Sort';
-            if (this.sortMode === 'insertion') sortLabel = 'Insertion Sort';
             const digitLabel = sortView.passLabel || sortPlan?.passes?.[sortView.passIndex]?.label || `Pass ${sortView.passNumber}`;
-            ctx.fillText(`Sort: ${sortLabel}`, 24, nextY);
-            nextY += 22;
-            ctx.fillText(`Pass: ${digitLabel}`, 24, nextY);
-            nextY += 22;
+            let detailLabel = `Pass: ${digitLabel}`;
             if (sortView.activeDigit != null) {
-                ctx.fillText(`Bucket: ${sortView.activeDigit}`, 24, nextY);
-                nextY += 22;
+                detailLabel = `Bucket: ${sortView.activeDigit}`;
             } else if (sortView.activeIndices) {
-                ctx.fillText(`Pair: ${sortView.activeIndices[0]} ↔ ${sortView.activeIndices[1]}`, 24, nextY);
-                nextY += 22;
-                if (typeof sortView.sortedSuffixCount === 'number') {
-                    ctx.fillText(`Sorted: ${sortView.sortedSuffixCount} / ${n}`, 24, nextY);
-                    nextY += 22;
-                } else if (sortView.pivotIndex != null) {
-                    ctx.fillText(`Pivot: ${sortView.pivotIndex}`, 24, nextY);
-                    nextY += 22;
-                }
+                detailLabel = `Pair: ${sortView.activeIndices[0]} ↔ ${sortView.activeIndices[1]}`;
+            } else if (sortView.pivotIndex != null) {
+                detailLabel = `Pivot: ${sortView.pivotIndex}`;
             }
+            ctx.fillText(detailLabel, 24, nextY);
+            nextY += 22;
         } else if (this.isSortModeAvailable()) {
-            let sortLabel = 'Radix';
-            if (this.sortMode === 'lsh') sortLabel = 'L-S-H Radix';
-            if (this.sortMode === 'hue') sortLabel = 'Hue Radix';
-            if (this.sortMode === 'bubble') sortLabel = 'Bubble Sort';
-            if (this.sortMode === 'quick') sortLabel = 'Quick Sort';
-            if (this.sortMode === 'insertion') sortLabel = 'Insertion Sort';
-            ctx.fillText(`Sort: ${sortLabel}`, 24, nextY);
-            nextY += 22;
-            ctx.fillText(`Step: ${Math.floor(this.sortProgress)}`, 24, nextY);
-            nextY += 22;
             ctx.fillText(`State: ${this.sortingStatus}`, 24, nextY);
             nextY += 22;
-        }
-
-        if (simElapsedLabel) {
-            ctx.fillText(`Sim Time: ${simElapsedLabel}`, 24, nextY);
         }
 
         ctx.save();
         ctx.textAlign = 'right';
         
-        if (typeof this.lissajousA !== 'undefined' && typeof this.lissajousB !== 'undefined') {
-            // Lissajous Specific HUD
-            ctx.fillText(`Node: ${n}`, viewState.w - 24, 30);
-            ctx.fillText(`Mul: ${hudM.toFixed(3)}`, viewState.w - 24, 52);
-            ctx.fillText(`Freq A B: ${this.lissajousA} ${this.lissajousB}`, viewState.w - 24, 74);
-            ctx.fillText(`Phase: ${this.lissajousPhaseDeg.toFixed(1)}°`, viewState.w - 24, 96);
-        } else {
-            // Default Cardioid HUD
-            ctx.fillText(`Node: ${n}`, viewState.w - 24, 30);
-            ctx.fillText(`Mul: ${hudM.toFixed(3)}`, viewState.w - 24, 52);
-            ctx.fillText(`dM/dt: ${hudSpeed.toFixed(3)}`, viewState.w - 24, 74);
-            ctx.fillText(`Mode: ${this.learningMode === 'off' ? 'standard' : this.learningMode}`, viewState.w - 24, 96);
-        }
+        ctx.fillText(`Node: ${n}`, viewState.w - 24, 30);
+        ctx.fillText(`Mul: ${hudM.toFixed(3)}`, viewState.w - 24, 52);
         
         ctx.restore();
     },

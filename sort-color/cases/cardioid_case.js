@@ -20,7 +20,7 @@ const CardioidCircleCase = {
     integersOnly: CardioidCaseDefaults.integersOnly,
     colorMode: CardioidCaseDefaults.colorMode, // monochrome | angle | lsh | length | origin
     renderMode: CardioidCaseDefaults.renderMode, // glow | light
-    sortMode: CardioidCaseDefaults.sortMode, // off | hue | lsh | bubble | quick | insertion
+    sortMode: CardioidCaseDefaults.sortMode, // off | hue | lsh | bubble | quick | insertion | selection
     sortingStatus: CardioidCaseDefaults.sortingStatus, // idle | running | holding | completed
     sortSpeed: CardioidCaseDefaults.sortSpeed,
     sortProgress: CardioidCaseDefaults.sortProgress,
@@ -186,7 +186,7 @@ const CardioidCircleCase = {
         this._canvasInteractionsBound = true;
 
         this._handleCanvasPointerDown = (e) => {
-            if (this.sortMode === 'bubble' || this.sortMode === 'quick' || this.sortMode === 'insertion') return;
+            if (this.sortMode === 'bubble' || this.sortMode === 'quick' || this.sortMode === 'insertion' || this.sortMode === 'selection') return;
             if (!this.isSortModeAvailable()) return;
             const layout = this.getSortPanelLayout(this.canvas.width, this.canvas.height);
             if (!layout) return;

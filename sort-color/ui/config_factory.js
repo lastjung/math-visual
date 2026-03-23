@@ -96,6 +96,20 @@ const SortColorControlFactory = {
             },
             {
                 type: 'slider',
+                id: 'mc_line_width',
+                label: 'Line Width',
+                min: 0.2,
+                max: 6,
+                step: 0.05,
+                decimals: 2,
+                value: caseRef.lineWidth,
+                onChange: (v) => {
+                    caseRef.lineWidth = Math.max(0.2, Number(v));
+                    caseRef.draw();
+                }
+            },
+            {
+                type: 'slider',
                 id: 'mc_bulge',
                 label: 'Bulge',
                 min: -1.5,
@@ -165,7 +179,8 @@ const SortColorControlFactory = {
                     { value: 'lsh', label: 'L-S-H Radix' },
                     { value: 'bubble', label: 'Bubble Sort' },
                     { value: 'quick', label: 'Quick Sort' },
-                    { value: 'insertion', label: 'Insertion Sort' }
+                    { value: 'insertion', label: 'Insertion Sort' },
+                    { value: 'selection', label: 'Selection Sort' }
                 ],
                 onChange: (v) => {
                     caseRef.sortMode = v;
@@ -642,7 +657,8 @@ const SortColorControlFactory = {
                     { value: 'lsh', label: 'L-S-H Radix' },
                     { value: 'bubble', label: 'Bubble Sort' },
                     { value: 'quick', label: 'Quick Sort' },
-                    { value: 'insertion', label: 'Insertion Sort' }
+                    { value: 'insertion', label: 'Insertion Sort' },
+                    { value: 'selection', label: 'Selection Sort' }
                 ],
                 onChange: (v) => {
                     caseRef.sortMode = v;

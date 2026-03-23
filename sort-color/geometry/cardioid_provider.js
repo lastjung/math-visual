@@ -18,7 +18,11 @@ const CardioidGeometryProvider = {
         const safeN = Math.max(1, n);
         const t = this.rotation + (Math.PI * 2 * i) / safeN;
         const bulge = Number(this.circleBulge) || 0;
-        const currentRadius = radius * (1 + bulge * Math.cos(t - this.rotation));
+        const normalizedBulge = bulge / (1 + Math.abs(bulge));
+        const bulgeBoost = 1 + (Math.abs(normalizedBulge) * 0.1);
+        const currentRadius = radius
+            * ((1 + normalizedBulge * Math.cos(t - this.rotation)) / (1 + Math.abs(normalizedBulge)))
+            * bulgeBoost;
         return { x: cx + currentRadius * Math.cos(t), y: cy + currentRadius * Math.sin(t), t };
     },
 

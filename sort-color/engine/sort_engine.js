@@ -9,7 +9,7 @@ const SortEngine = {
     },
 
     getSortPanelLayout(w, h) {
-        if (this.sortMode === 'bubble' || this.sortMode === 'quick' || this.sortMode === 'insertion') return null;
+        if (this.sortMode === 'bubble' || this.sortMode === 'quick' || this.sortMode === 'insertion' || this.sortMode === 'selection') return null;
         const panelW = 216;
         const panelH = 124;
         const panelX = this.sortPanelPosition?.x ?? (w - panelW - 24);
@@ -18,7 +18,7 @@ const SortEngine = {
     },
 
     isSortModeAvailable() {
-        return this.sortMode === 'hue' || this.sortMode === 'lsh' || this.sortMode === 'bubble' || this.sortMode === 'quick' || this.sortMode === 'insertion';
+        return this.sortMode === 'hue' || this.sortMode === 'lsh' || this.sortMode === 'bubble' || this.sortMode === 'quick' || this.sortMode === 'insertion' || this.sortMode === 'selection';
     },
 
     canRunSort() {
@@ -81,6 +81,10 @@ const SortEngine = {
 
         if (sortMode === 'insertion') {
             return this.commitSortPlanResult(SortAlgorithms.buildInsertionPlan(sortItems, signature));
+        }
+
+        if (sortMode === 'selection') {
+            return this.commitSortPlanResult(SortAlgorithms.buildSelectionPlan(sortItems, signature));
         }
 
         const passDescriptors = this.getSortPassDescriptors(sortMode);
@@ -428,6 +432,79 @@ const SortEngine = {
             };
         }
 
+        if (plan.type === 'selection') {
+            const totalSteps = plan.totalSteps;
+            const progress = Math.max(0, Math.min(totalSteps, Math.floor(this.sortProgress)));
+
+            if (progress >= totalSteps) {
+                return {
+                    passIndex: Math.max(0, plan.n - 2),
+                    passNumber: Math.max(1, plan.n - 1),
+                    totalPasses: Math.max(1, plan.n - 1),
+                    passLabel: 'Completed',
+                    stepInPass: 0,
+                    totalInPass: 0,
+                    activeDigit: null,
+                    activeIndices: null,
+                    completed: true,
+                    drawEntries: plan.finalState,
+                    coloredCount: plan.finalState.length,
+                    sortedPrefixCount: plan.n
+                };
+            }
+
+            let passIndex = 0;
+            let accumulated = 0;
+            while (passIndex < plan.snapshots.length) {
+                const stepCount = plan.snapshots[passIndex].stepCount;
+                if (progress < accumulated + stepCount) break;
+                accumulated += stepCount;
+                passIndex += 1;
+            }
+
+            const snapshot = plan.snapshots[Math.min(passIndex, plan.snapshots.length - 1)];
+            if (!snapshot) return null;
+
+            const stepInPass = progress - accumulated;
+            const currentArr = [...snapshot.order];
+            const compareCount = Math.max(0, snapshot.stepCount - 1);
+            let minIndex = snapshot.passIndex;
+            let activeIndices = [snapshot.passIndex, snapshot.passIndex];
+
+            const comparisonsToRun = Math.min(stepInPass, compareCount);
+            for (let offset = 0; offset < comparisonsToRun; offset++) {
+                const scanIndex = snapshot.passIndex + 1 + offset;
+                if (scanIndex >= currentArr.length) break;
+                if (currentArr[scanIndex].hueKey < currentArr[minIndex].hueKey) {
+                    minIndex = scanIndex;
+                }
+                activeIndices = [minIndex, scanIndex];
+            }
+
+            if (stepInPass >= compareCount && compareCount > 0) {
+                activeIndices = [snapshot.passIndex, minIndex];
+                if (minIndex !== snapshot.passIndex) {
+                    [currentArr[snapshot.passIndex], currentArr[minIndex]] = [currentArr[minIndex], currentArr[snapshot.passIndex]];
+                }
+            }
+
+            return {
+                passIndex,
+                passNumber: passIndex + 1,
+                totalPasses: plan.snapshots.length,
+                passLabel: snapshot.label,
+                stepInPass,
+                totalInPass: snapshot.stepCount,
+                activeDigit: null,
+                activeIndices,
+                completed: false,
+                drawEntries: currentArr,
+                coloredCount: 0,
+                sortedPrefixCount: snapshot.passIndex + (stepInPass >= compareCount ? 1 : 0),
+                selectionMinIndex: minIndex
+            };
+        }
+
         if (plan.type === 'quick') {
             const totalSteps = plan.totalSteps;
             const progress = Math.max(0, Math.min(totalSteps, Math.floor(this.sortProgress)));
@@ -538,7 +615,7 @@ const SortEngine = {
     },
 
     drawSortBuckets(ctx, w, h, sortView) {
-        if (!sortView || this.sortMode === 'bubble' || this.sortMode === 'quick' || this.sortMode === 'insertion') return;
+        if (!sortView || this.sortMode === 'bubble' || this.sortMode === 'quick' || this.sortMode === 'insertion' || this.sortMode === 'selection') return;
 
         const layout = this.getSortPanelLayout(w, h);
         if (!layout) return;
