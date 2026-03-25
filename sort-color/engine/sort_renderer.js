@@ -298,7 +298,14 @@ const SortRenderer = {
         ctx.textAlign = 'right';
         
         ctx.fillText(`Node: ${n}`, viewState.w - 24, 30);
-        ctx.fillText(`Mul: ${hudM.toFixed(3)}`, viewState.w - 24, 52);
+        if (viewState.provider && viewState.provider.providerId === 'lissajous') {
+            const a = typeof this.getLissajousA === 'function' ? this.getLissajousA() : (this.lissajousA || 0);
+            const b = typeof this.getLissajousB === 'function' ? this.getLissajousB() : (this.lissajousB || 0);
+            ctx.fillText(`Mul: ${hudM.toFixed(3)}`, viewState.w - 24, 52);
+            ctx.fillText(`Freq A B : ${a}  ${b}`, viewState.w - 24, 74);
+        } else {
+            ctx.fillText(`Mul: ${hudM.toFixed(3)}`, viewState.w - 24, 52);
+        }
         
         ctx.restore();
     },
