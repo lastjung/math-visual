@@ -179,7 +179,7 @@ export const SHAPE_REGISTRY = {
                 options: { sourceDirection: 'outward',  }
             },
             'online': {
-                pointer: { sourcePos: { x: 0, y: { unit: 'size', value: -1.0 } } },
+                pointer: { sourcePos: { x: 0, y: { unit: 'size', value: -0.816 } } },
                 sliders: { spread: 1.0472 },
                 options: { sourceDirection: 'inward',  }
             }
@@ -238,7 +238,7 @@ export const SHAPE_REGISTRY = {
                 options: { sourceDirection: 'outward',  }
             },
             'online': {
-                pointer: { sourcePos: { x: 0, y: { unit: 'size', value: -0.86 } } },
+                pointer: { sourcePos: { x: 0, y: { unit: 'size', value: -0.816 } } },
                 sliders: { spread: 1.0472 },
                 options: { sourceDirection: 'inward',  }
             }
@@ -297,7 +297,7 @@ export const SHAPE_REGISTRY = {
                 options: { sourceDirection: 'outward',  }
             },
             'online': {
-                pointer: { sourcePos: { x: { unit: 'size', value: -1.0 }, y: 0 } },
+                pointer: { sourcePos: { x: { unit: 'size', value: -0.99 }, y: 0 } },
                 sliders: { spread: 1.0472 },
                 options: { sourceDirection: 'inward',  }
             }

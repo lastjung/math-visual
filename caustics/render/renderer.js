@@ -573,8 +573,8 @@ export const Renderer = {
         }
         ctx.restore();
 
-        // Oval Foci (Visible only when AXES is ON)
-        if ((state.showAxes && state.shape === 'ellipse') || state.shape === 'v-oval' || state.shape === 'vv-oval') {
+        // Oval Foci (Always faintly visible)
+        if (state.shape === 'ellipse' || state.shape === 'v-oval' || state.shape === 'vv-oval') {
             const isVert = state.shape === 'v-oval' || state.shape === 'vv-oval';
             const rx = state.shape === 'ellipse' ? 1.1 : Physics.VV_OVAL_OUTER.rx;
             const ry = state.shape === 'ellipse' ? 0.66 : Physics.VV_OVAL_OUTER.ry;
@@ -583,7 +583,7 @@ export const Renderer = {
             const fDist = Math.sqrt(Math.abs(major * major - minor * minor));
             
             ctx.save();
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)'; ctx.lineWidth = 1;
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.18)'; ctx.lineWidth = 1;
             const spots = isVert ? [{x:0, y:-fDist}, {x:0, y:fDist}] : [{x:-fDist, y:0}, {x:fDist, y:0}];
             
             spots.forEach(f => {

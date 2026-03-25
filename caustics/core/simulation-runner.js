@@ -29,8 +29,15 @@ export function finishSimulation(app, finalHold = 4000) {
         app.overlayMessage = null;
         app.isSimRunning = false;
         app.isSimulationMode = false;
-        app.isLightVisible = false;
+        app.isLightVisible = true; 
         app.isFlowing = false;
+        
+        // Restore snapshot if available
+        if (app._simSnapshot) {
+            app.applyScene(app._simSnapshot);
+            app._simSnapshot = null;
+        }
+        
         UI.update(app);
     }, finalHold));
 }
@@ -43,6 +50,13 @@ export function stopSimulation(app) {
     app.overlayMessage = null;
     app.isLightVisible = true;
     app.isFlowing = false;
+    
+    // Restore snapshot if available (Manually stopped)
+    if (app._simSnapshot) {
+        app.applyScene(app._simSnapshot);
+        app._simSnapshot = null;
+    }
+    
     if (window.audioManager) window.audioManager.pause();
     UI.update(app);
 }
@@ -53,12 +67,12 @@ export function startA0Simulation(app) {
         return;
     }
 
-    const method = `${app.shape}_A0_simm`;
+    const method = `${app.shape.replace(/-/g, '_')}_A0_simm`;
     if (typeof app[method] === 'function') {
         app[method]();
     } else {
         console.warn(`No A0 simulation defined for ${app.shape}, falling back to universal.`);
-        app.universal_journey_simm();
+        app.runUniversalJourneySimulation();
     }
 }
 
@@ -502,5 +516,151 @@ export function runTriangleA0Simulation(app) {
         }, 4000));
     };
 
+    runStage();
+}
+export function runVOvalA0Simulation(app) {
+    if (app.isSimRunning) return;
+    app.isSimRunning = true;
+    app.isSimulationMode = true;
+    resumeAudioIfAvailable();
+
+    const sizeMult = app.isWindowFull ? 0.45 : 0.35;
+    const size = Math.min(app.canvas.width, app.canvas.height) * sizeMult;
+    const fDist = size * 0.6324;
+    const midY = -0.816 * size;
+
+    app._simSnapshot = app.readCurrentScene();
+
+    const stages = [
+        {
+            subtitle: '1. Upper Focus: Focal Convergence',
+            apply: () => {
+                app.updatePointer({ sourcePos: { x: 0, y: -fDist } });
+                app.updateOption('autoMode', { key: 'rotation', value: true });
+                app.updateOption('autoMode', { key: 'spread', value: true });
+                app.updateSlider('sourceRotation', 100 * Math.PI / 180, false);
+                app.updateSlider('maxBounces', 500, false); 
+            },
+            duration: 20000 
+        },
+        {
+            subtitle: '2. Out of Focus: Orbital Resonance',
+            apply: () => {
+                app.updatePointer({ sourcePos: { x: 0, y: midY } });
+                app.updateSlider('maxBounces', 500, false);
+                app.updateSlider('sourceRotation', 100 * Math.PI / 180, false);
+                app.updateOption('autoMode', { key: 'rotation', value: false });
+                app.updateOption('autoMode', { key: 'spread', value: false });
+            },
+            duration: 24000
+        },
+        {
+            subtitle: '3. Focus In: Core Resonance',
+            apply: () => {
+                app.updatePointer({ sourcePos: { x: 0, y: -fDist * 0.5 } });
+                app.updateSlider('maxBounces', 500, false);
+                app.updateSlider('sourceRotation', 100 * Math.PI / 180, false);
+                app.updateOption('autoMode', { key: 'rotation', value: false });
+                app.updateOption('autoMode', { key: 'spread', value: false });
+            },
+            duration: 24000
+        }
+    ];
+
+    let idx = 0;
+    const runStage = () => {
+        if (idx >= stages.length) { finishSimulation(app); return; }
+        const stage = stages[idx];
+        clearScene(app);
+        
+        // Restore from base snapshot before each stage to ensure independence
+        if (app._simSnapshot) {
+            app.applyScene(app._simSnapshot);
+        }
+        
+        app.isLightVisible = false;
+        app.isFlowing = false;
+        stage.apply();
+        app.overlayMessage = idx === 0 ? ['Vertical Oval Simulation', stage.subtitle] : stage.subtitle;
+        UI.update(app);
+        registerTimer(app, setTimeout(() => {
+            app.overlayMessage = null; app.growth = 0; app.isLightVisible = true; app.isFlowing = true; UI.update(app);
+            registerTimer(app, setTimeout(() => { idx++; runStage(); }, stage.duration));
+        }, 4000));
+    };
+    runStage();
+}
+
+export function runEllipseA0Simulation(app) {
+    if (app.isSimRunning) return;
+    app.isSimRunning = true;
+    app.isSimulationMode = true;
+    resumeAudioIfAvailable();
+
+    const sizeMult = app.isWindowFull ? 0.45 : 0.35;
+    const size = Math.min(app.canvas.width, app.canvas.height) * sizeMult;
+    const fDist = size * 0.88;
+    const midX = -0.99 * size;
+
+    app._simSnapshot = app.readCurrentScene();
+
+    const stages = [
+        {
+            subtitle: '1. Primary Focus: Study of Convergence',
+            apply: () => {
+                app.updateOption('sourcePattern', 'single');
+                app.updatePointer({ sourcePos: { x: -fDist, y: 0 } });
+                app.updateSlider('spread', 0.5, false);
+                app.updateOption('autoMode', { key: 'rotation', value: true });
+            },
+            duration: 20000
+        },
+        {
+            subtitle: '2. Boundary Study: The Long Echo',
+            apply: () => {
+                app.updatePointer({ sourcePos: { x: midX, y: 0 } });
+                app.updateSlider('spread', 0, false);
+                app.updateSlider('rayNumber', 1, false);
+                app.updateSlider('maxBounces', 100, false);
+                app.updateSlider('raySpeed', 60, false);
+                app.updateOption('autoMode', { key: 'rotation', value: false });
+            },
+            duration: 24000
+        },
+        {
+            subtitle: '3. Depth Scan: Focus-Center Midpoint',
+            apply: () => {
+                app.updatePointer({ sourcePos: { x: -fDist * 0.5, y: 0 } });
+                app.updateSlider('spread', 0, false);
+                app.updateSlider('rayNumber', 1, false);
+                app.updateSlider('maxBounces', 100, false);
+                app.updateSlider('raySpeed', 60, false);
+                app.updateOption('autoMode', { key: 'rotation', value: false });
+            },
+            duration: 24000
+        }
+    ];
+
+    let idx = 0;
+    const runStage = () => {
+        if (idx >= stages.length) { finishSimulation(app); return; }
+        const stage = stages[idx];
+        clearScene(app);
+        
+        // Restore from base snapshot before each stage
+        if (app._simSnapshot) {
+            app.applyScene(app._simSnapshot);
+        }
+        
+        app.isLightVisible = false;
+        app.isFlowing = false;
+        stage.apply();
+        app.overlayMessage = idx === 0 ? ['Ellipse Study Simulation', stage.subtitle] : stage.subtitle;
+        UI.update(app);
+        registerTimer(app, setTimeout(() => {
+            app.overlayMessage = null; app.growth = 0; app.isLightVisible = true; app.isFlowing = true; UI.update(app);
+            registerTimer(app, setTimeout(() => { idx++; runStage(); }, stage.duration));
+        }, 4000));
+    };
     runStage();
 }

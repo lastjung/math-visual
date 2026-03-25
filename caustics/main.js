@@ -19,6 +19,8 @@ import {
 } from './core/shape-config.js';
 import { buildPersistedState, persistState, restoreState } from './core/persistence.js';
 import { readCurrentScene, applyScene, applyPattern, applySourceOption, updateOption, updateSlider, updatePointer } from './core/state-mapper.js';
+import { SHAPE_REGISTRY } from './config/shape-registry.js';
+import { GLOBAL_DEFAULTS } from './config/app-defaults.js';
 
 
 
@@ -29,6 +31,8 @@ import {
     runRayCountSimulation,
     runRectA0Simulation,
     runUniversalJourneySimulation,
+    runVOvalA0Simulation,
+    runEllipseA0Simulation,
     runVvOvalFocusSimulation,
     runTriangleA0Simulation,
     startA0Simulation,
@@ -78,7 +82,8 @@ const App = {
     alphaIntensity: 1.0,
     isPaintMode: false, 
     isPaint2Mode: false, 
-    isLightMode: false,  
+    isLightMode: true,  
+    renderMode: 'light',
     isSimulationMode: false,
     isWindowFull: false,
     MAX_BOUNCES: 10, // 반사 효과 켬 (기본 10회)
@@ -438,6 +443,11 @@ const App = {
     startA0Simulation() {
         return startA0Simulation(this);
     },
+    v_oval_A0_simm() { return runVOvalA0Simulation(this); },
+    ellipse_A0_simm() { return runEllipseA0Simulation(this); },
+    vv_oval_A0_simm() { return runVvOvalFocusSimulation(this); },
+    rect_A0_simm() { return runRectA0Simulation(this); },
+    triangle_A0_simm() { return runTriangleA0Simulation(this); },
 
     startNarrativeSimulation() {
         return startNarrativeSimulation(this);
@@ -482,14 +492,21 @@ const App = {
     },
 
     reset() {
+        console.log('[DEBUG] App.reset() called');
         this.stopSimulation();
         this.isSimulationMode = false;
 
         // 1. Reset to Global & Shape-specific Defaults
+        const defaults = this.getShapeDefaults(this.shape);
+        console.log('[DEBUG] defaults:', defaults);
+        
         const shapeData = SHAPE_REGISTRY[this.shape];
+        console.log('[DEBUG] shapeData found:', !!shapeData);
+        
         if (shapeData && shapeData.defaults) {
             // Apply shape-specific options/pointer if they exist
             if (shapeData.defaults.options) {
+                console.log('[DEBUG] applying shapeData.defaults.options');
                 for (const [k, v] of Object.entries(shapeData.defaults.options)) {
                     this.updateOption(k, v);
                 }
@@ -497,9 +514,11 @@ const App = {
         }
 
         // 2. Apply the 'basic' sub-preset (Position, Spread, Direction)
+        console.log('[DEBUG] applySourceOption(basic)');
         this.applySourceOption('basic');
 
         // 3. Reset common sliders and options to global defaults
+        console.log('[DEBUG] resetting sliders to global defaults');
         this.rayNumber = GLOBAL_DEFAULTS.sliders.rayNumber;
         this.raySpeed = GLOBAL_DEFAULTS.sliders.raySpeed;
         this.beamWidth = GLOBAL_DEFAULTS.sliders.beamWidth;
@@ -507,18 +526,20 @@ const App = {
         this.alphaIntensity = GLOBAL_DEFAULTS.sliders.alphaIntensity;
         this.sourceRotation = GLOBAL_DEFAULTS.sliders.sourceRotation;
         
-        this.renderMode = 'none';
+        this.renderMode = 'light';
         this.isPaintMode = false;
         this.isPaint2Mode = false;
-        this.isLightMode = false;
+        this.isLightMode = true;
         
         // 4. Reset Audio
         if (window.audioManager) {
+            console.log('[DEBUG] resetting audio');
             window.audioManager.stop();
             this.nextBGM(true, false); // Start a fresh track
         }
         
         // 5. Clear Rays and Canvas
+        console.log('[DEBUG] clear rays and canvas');
         this.resetRays(true);
         this.isFlowing = false;
         this.patternId = null;
@@ -542,8 +563,11 @@ const App = {
         };
         this.autoTimer = 0;
         this.sourceRotation = defaults.sourceRotation;
+        console.log('[DEBUG] UI.update starts');
         UI.update(this);
+        console.log('[DEBUG] persistence starts');
         this.persistState();
+        console.log('[DEBUG] App.reset() end');
     },
 
     /**

@@ -11,7 +11,7 @@ export const GLOBAL_DEFAULTS = {
         colorDistribution: 'frequency',
         baseStyle: 'line',
         flowMode: 'none',
-        renderMode: 'flow'           // Proposed unified render mode
+        renderMode: 'light'           // Default to Light mode (LGT)
     },
     sliders: {
         rayNumber: 30,
