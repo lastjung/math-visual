@@ -165,6 +165,11 @@ const Core = {
                     this.updateSortBar();
                     return;
                 }
+                if (scenarioSelect && scenarioSelect.value === '5_disks') {
+                    this.runDisksSimulation();
+                    this.updateSortBar();
+                    return;
+                }
                 if (this.currentCase && typeof this.currentCase.sortMode !== 'undefined') {
                     this.currentCase.toggleSortPlayback();
                     this.updateSortBar();
@@ -319,6 +324,10 @@ const Core = {
             if (e.code === 'Digit4' && this.aHeld) {
                 e.preventDefault();
                 this.runNStepsSimulation();
+            }
+            if (e.code === 'Digit5' && this.aHeld) {
+                e.preventDefault();
+                this.runDisksSimulation();
             }
 
             if (e.code === 'KeyA') {
@@ -807,7 +816,7 @@ const Core = {
     },
 
     changeMusicTrack() {
-        this.pickMusicTrack(true, true);
+        this.pickMusicTrack(true, false);
         this.syncAudioButton();
     },
 

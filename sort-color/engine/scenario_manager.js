@@ -687,5 +687,152 @@ const SortColorScenarioManager = {
         };
 
         runStage();
+    },
+
+    runDisksSimulation() {
+        if (this.isSimRunning) {
+            this.stopSimulation();
+            return;
+        }
+        if (!this.currentCase) return;
+
+        this.isSimRunning = true;
+        this.simStartMs = performance.now();
+        this.simStateSnapshot = {
+            pointCount: this.currentCase.pointCount,
+            multiplier: this.currentCase.multiplier,
+            sortMode: this.currentCase.sortMode,
+            learningMode: this.currentCase.learningMode,
+            sortSpeed: this.currentCase.sortSpeed,
+            initialSortSpeed: this.currentCase.sortSpeed,
+            sortSpeedMode: this.currentCase.sortSpeedMode
+        };
+        this.currentCase.sortSpeedMode = 'uniform';
+        this.currentScenario = '5_disks';
+        const scenarioSelect = document.getElementById('apple-scenario-select');
+        if (scenarioSelect) scenarioSelect.value = '5_disks';
+
+        const getGeometryLabel = () => {
+            const entry = this.geometryRegistry?.[this.currentGeometryId];
+            return entry?.label || 'Geometry';
+        };
+        const getSortLabel = (sortMode) => {
+            const sortLabels = {
+                hue: 'Hue Radix',
+                lsh: 'L-S-H Radix',
+                bubble: 'Bubble Sort',
+                quick: 'Quick Sort',
+                insertion: 'Insertion Sort',
+                selection: 'Selection Sort',
+                off: 'Hue Radix'
+            };
+            return sortLabels[sortMode] || 'Color Sort';
+        };
+
+        const stages = [
+            { multiplier: 181, n: 720, label: 'Saturn Ring' },
+            { multiplier: 121, n: 720, label: 'Twin Ring' },
+            { multiplier: 91, n: 720, label: 'Triad Ring' },
+            { multiplier: 61, n: 720, label: 'Quadra Ring' },
+            { multiplier: 361, n: 720, label: 'Pulsar Eye' }
+        ];
+
+        const animateStageMultiplier = (targetMultiplier, durationMs, onDone) => {
+            const startMultiplier = Number(this.currentCase.multiplier) || 0;
+            const totalDuration = Math.max(200, durationMs || 2200);
+            const startedAt = performance.now();
+            const tick = setInterval(() => {
+                if (!this.isSimRunning) {
+                    clearInterval(tick);
+                    return;
+                }
+                const elapsed = performance.now() - startedAt;
+                const t = Math.max(0, Math.min(1, elapsed / totalDuration));
+                const ease = 0.5 - 0.5 * Math.cos(t * Math.PI);
+                this.currentCase.multiplier = startMultiplier + (targetMultiplier - startMultiplier) * ease;
+                if (typeof this.currentCase.draw === 'function') {
+                    this.currentCase.draw();
+                }
+                if (t >= 1) {
+                    clearInterval(tick);
+                    this.currentCase.multiplier = targetMultiplier;
+                    if (typeof onDone === 'function') onDone();
+                }
+            }, 16);
+            this.simTimers.push(tick);
+        };
+
+        const simTitle = 'Flying Saucer Journey';
+        let currentIdx = 0;
+        const runStage = () => {
+            if (!this.isSimRunning || currentIdx >= stages.length) {
+                this.playGameSound('complete');
+                this.showSimMessage(simTitle, 'Simulation Completed', 2400);
+                const tid = setTimeout(() => this.stopSimulation(), 2600);
+                this.simTimers.push(tid);
+                return;
+            }
+
+            const stage = stages[currentIdx];
+            if (typeof this.currentCase.resetSortState === 'function') {
+                this.currentCase.resetSortState('idle');
+            }
+            if (typeof this.currentCase.learningMode === 'string') {
+                this.currentCase.learningMode = 'off';
+            }
+            this.currentCase.pointCount = stage.n;
+            const subTitleText = `${stage.label} · N=${stage.n}, M=${stage.multiplier}`;
+
+            this.showSimMessage(currentIdx === 0 ? simTitle : '', subTitleText, currentIdx === 0 ? 2200 : 0);
+            this.updateControls();
+
+            animateStageMultiplier(stage.multiplier, 2200, () => {
+                if (!this.isSimRunning) return;
+                if (typeof this.currentCase.resetSortState === 'function') {
+                    this.currentCase.resetSortState('idle');
+                }
+                this.currentCase.draw();
+                this.updateControls();
+
+                const activeSortMode = (this.currentCase.sortMode && this.currentCase.sortMode !== 'off')
+                    ? this.currentCase.sortMode
+                    : 'hue';
+                if (this.currentCase.sortMode === 'off') {
+                    this.currentCase.sortMode = activeSortMode;
+                }
+                const multipliers = { hue: 1, lsh: 1, bubble: 50, quick: 5, insertion: 50, selection: 50 };
+                const activeSortSpeedMultiplier = multipliers[activeSortMode] || 1;
+                this.showSimMessage('', subTitleText, 900);
+
+                const tid1 = setTimeout(() => {
+                    if (!this.isSimRunning) return;
+
+                    this.currentCase.restartSort();
+                    this.updateSortBar();
+                    this.applySimulationSortSpeed(activeSortSpeedMultiplier);
+                    this.showSimMessage('', subTitleText, 0);
+
+                    const checkFinished = setInterval(() => {
+                        if (!this.isSimRunning) {
+                            clearInterval(checkFinished);
+                            return;
+                        }
+                        if (this.currentCase.sortingStatus === 'completed') {
+                            clearInterval(checkFinished);
+                            this.restoreSimulationSortSpeed();
+                            const tid2 = setTimeout(() => {
+                                currentIdx += 1;
+                                runStage();
+                            }, 2400);
+                            this.simTimers.push(tid2);
+                        }
+                    }, 100);
+                    this.simTimers.push(checkFinished);
+                }, 1000);
+                this.simTimers.push(tid1);
+            });
+        };
+
+        runStage();
     }
 };

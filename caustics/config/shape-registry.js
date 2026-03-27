@@ -53,7 +53,7 @@ export const SHAPE_REGISTRY = {
             'basic': {
                 pointer: { sourcePreset: 'shape-focus' },
                 sliders: { spread: 1.0472 },
-                options: { sourceDirection: 'inward',  }
+                options: { sourceDirection: 'parallel',  }
             },
             'center': {
                 pointer: { anchorPreset: 'shape-center', sourcePos: { x: 0, y: 0 } },
@@ -63,7 +63,7 @@ export const SHAPE_REGISTRY = {
             'online': {
                 pointer: { sourcePos: { x: 0, y: { unit: 'size', value: -1.0 } } },
                 sliders: { spread: 1.0472 },
-                options: { sourceDirection: 'inward',  }
+                options: { sourceDirection: 'parallel',  }
             }
         }
     },
@@ -112,7 +112,7 @@ export const SHAPE_REGISTRY = {
             'basic': {
                 pointer: { sourcePreset: 'shape-focus' },
                 sliders: { spread: 1.0472 },
-                options: { sourceDirection: 'inward',  }
+                options: { sourceDirection: 'parallel',  }
             },
             'center': {
                 pointer: { anchorPreset: 'shape-center', sourcePos: { x: 0, y: 0 } },
@@ -122,7 +122,7 @@ export const SHAPE_REGISTRY = {
             'online': {
                 pointer: { sourcePos: { x: 0, y: { unit: 'size', value: -1.0 } } },
                 sliders: { spread: 1.0472 },
-                options: { sourceDirection: 'inward',  }
+                options: { sourceDirection: 'parallel',  }
             }
         }
     },
@@ -171,7 +171,7 @@ export const SHAPE_REGISTRY = {
             'basic': {
                 pointer: { sourcePreset: 'shape-focus' },
                 sliders: { spread: 1.0472 },
-                options: { sourceDirection: 'inward',  }
+                options: { sourceDirection: 'parallel',  }
             },
             'center': {
                 pointer: { anchorPreset: 'shape-center', sourcePos: { x: 0, y: 0 } },
@@ -181,7 +181,7 @@ export const SHAPE_REGISTRY = {
             'online': {
                 pointer: { sourcePos: { x: 0, y: { unit: 'size', value: -0.816 } } },
                 sliders: { spread: 1.0472 },
-                options: { sourceDirection: 'inward',  }
+                options: { sourceDirection: 'parallel',  }
             }
         }
     },
@@ -230,7 +230,7 @@ export const SHAPE_REGISTRY = {
             'basic': {
                 pointer: { sourcePreset: 'shape-focus' },
                 sliders: { spread: 1.0472 },
-                options: { sourceDirection: 'inward',  }
+                options: { sourceDirection: 'parallel',  }
             },
             'center': {
                 pointer: { anchorPreset: 'shape-center', sourcePos: { x: 0, y: 0 } },
@@ -240,7 +240,7 @@ export const SHAPE_REGISTRY = {
             'online': {
                 pointer: { sourcePos: { x: 0, y: { unit: 'size', value: -0.816 } } },
                 sliders: { spread: 1.0472 },
-                options: { sourceDirection: 'inward',  }
+                options: { sourceDirection: 'parallel',  }
             }
         }
     },
@@ -289,7 +289,7 @@ export const SHAPE_REGISTRY = {
             'basic': {
                 pointer: { sourcePreset: 'shape-focus' },
                 sliders: { spread: 1.0472 },
-                options: { sourceDirection: 'inward',  }
+                options: { sourceDirection: 'parallel',  }
             },
             'center': {
                 pointer: { anchorPreset: 'shape-center', sourcePos: { x: 0, y: 0 } },
@@ -299,7 +299,7 @@ export const SHAPE_REGISTRY = {
             'online': {
                 pointer: { sourcePos: { x: { unit: 'size', value: -0.99 }, y: 0 } },
                 sliders: { spread: 1.0472 },
-                options: { sourceDirection: 'inward',  }
+                options: { sourceDirection: 'parallel',  }
             }
         }
     },
@@ -342,7 +342,7 @@ export const SHAPE_REGISTRY = {
             'basic': {
                 pointer: { sourcePreset: 'shape-focus' },
                 sliders: { spread: 3.1416 },
-                options: { sourceDirection: 'outward',  } // Special case: Parabola Out
+                options: { sourceDirection: 'parallel',  } 
             },
             'center': {
                 pointer: { anchorPreset: 'shape-center', sourcePos: { x: 0, y: { unit: 'size', value: 0.25 } } },
@@ -352,7 +352,7 @@ export const SHAPE_REGISTRY = {
             'online': {
                 pointer: { sourcePos: { x: 0, y: { unit: 'size', value: 0.75 } } },
                 sliders: { spread: 1.0472 },
-                options: { sourceDirection: 'inward',  }
+                options: { sourceDirection: 'parallel',  }
             }
         }
     },
@@ -401,7 +401,7 @@ export const SHAPE_REGISTRY = {
             'basic': {
                 pointer: { sourcePos: { x: { unit: 'size', value: -0.4 }, y: 0 } },
                 sliders: { spread: 1.0472 },
-                options: { sourceDirection: 'inward',  }
+                options: { sourceDirection: 'parallel',  }
             },
             'center': {
                 pointer: { anchorPreset: 'shape-center', sourcePos: { x: { unit: 'size', value: 0.5 }, y: 0 } },
@@ -411,7 +411,7 @@ export const SHAPE_REGISTRY = {
             'online': {
                 pointer: { sourcePos: { x: { unit: 'size', value: -0.24 }, y: 0 } },
                 sliders: { spread: 1.0472 },
-                options: { sourceDirection: 'inward',  }
+                options: { sourceDirection: 'parallel',  }
             }
         }
     },
@@ -467,7 +467,7 @@ export const SHAPE_REGISTRY = {
             'basic': {
                 pointer: { sourcePos: { x: 0, y: { unit: 'size', value: -0.4 } } },
                 sliders: { spread: 1.0472 },
-                options: { sourceDirection: 'inward',  }
+                options: { sourceDirection: 'parallel',  }
             },
             'center': {
                 pointer: { anchorPreset: 'shape-center', sourcePos: { x: 0, y: { unit: 'size', value: 0.2 } } },
@@ -477,7 +477,7 @@ export const SHAPE_REGISTRY = {
             'online': {
                 pointer: { sourcePos: { x: 0, y: { unit: 'size', value: -0.97 } } },
                 sliders: { spread: 1.0472 },
-                options: { sourceDirection: 'inward',  }
+                options: { sourceDirection: 'parallel',  }
             }
         }
     }
