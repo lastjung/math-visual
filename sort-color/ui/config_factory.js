@@ -449,13 +449,29 @@ const SortColorControlFactory = {
             {
                 type: 'slider',
                 id: 'mc_lissajous_phase',
-                label: 'Phase',
+                label: 'Phase A',
                 min: 0,
                 max: 360,
                 step: 0.1,
                 value: caseRef.lissajousPhaseDeg,
                 onChange: (v) => {
                     caseRef.lissajousPhaseDeg = Math.abs(Number(v) % 360);
+                    if (typeof Core !== 'undefined' && !Core.isPhaseSimulating) {
+                        caseRef.resetSortState('idle');
+                    }
+                    caseRef.draw();
+                }
+            },
+            {
+                type: 'slider',
+                id: 'mc_lissajous_phase_b',
+                label: 'Phase B',
+                min: 0,
+                max: 360,
+                step: 0.1,
+                value: caseRef.lissajousPhaseBDeg,
+                onChange: (v) => {
+                    caseRef.lissajousPhaseBDeg = Math.abs(Number(v) % 360);
                     if (typeof Core !== 'undefined' && !Core.isPhaseSimulating) {
                         caseRef.resetSortState('idle');
                     }

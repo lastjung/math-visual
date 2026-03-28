@@ -22,8 +22,9 @@ const SortEngine = {
     },
 
     canRunSort() {
+        const nFixedModes = ['factor_1', 'factor_2', 'mirror-chaos', 'classic', 'ultimate'];
         return this.isSortModeAvailable()
-            && (this.learningMode === 'off' || this.isPaused);
+            && (this.learningMode === 'off' || this.isPaused || nFixedModes.includes(this.learningMode));
     },
 
     getSortSpeedMultiplier() {

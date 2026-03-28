@@ -14,6 +14,7 @@ const LissajousCase = {
     lissajousA: 3,
     lissajousB: 2,
     lissajousPhaseDeg: 128,
+    lissajousPhaseBDeg: 0,
     lissajousRibbon: 0.5,
     guideText: [
         '[Lissajous controls]',
@@ -48,6 +49,7 @@ const LissajousCase = {
         this.lissajousA = 3;
         this.lissajousB = 2;
         this.lissajousPhaseDeg = 128;
+        this.lissajousPhaseBDeg = 0;
         this.lissajousRibbon = 0.5;
         this.draw();
         if (typeof Core !== 'undefined' && Core.currentCase === this) Core.updateControls();

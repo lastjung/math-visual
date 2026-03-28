@@ -588,8 +588,13 @@ const Core = {
 
                 if (control.id === 'mc_lissajous_phase') {
                     label.style.cursor = 'pointer';
-                    label.title = 'Click to simulate phase';
+                    label.title = 'Click to simulate phase A';
                     label.onclick = () => this.togglePhaseSimulation(control);
+                }
+                if (control.id === 'mc_lissajous_phase_b') {
+                    label.style.cursor = 'pointer';
+                    label.title = 'Click to simulate phase B';
+                    label.onclick = () => this.togglePhaseBSimulation(control);
                 }
             } else if (control.type === 'select') {
                 const label = document.createElement('label');
@@ -875,53 +880,76 @@ const Core = {
         return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
     },
 
+    // Shared phase animation loop - runs once per frame, updates A and/or B
+    _startPhaseLoop() {
+        if (this._phaseLoopId) return; // Already running
+
+        // Cache DOM refs once
+        const inputA   = document.getElementById('input-mc_lissajous_phase');
+        const displayA = document.getElementById('val-mc_lissajous_phase');
+        const itemA    = document.querySelector('.control-item[data-id="mc_lissajous_phase"]');
+        const inputB   = document.getElementById('input-mc_lissajous_phase_b');
+        const displayB = document.getElementById('val-mc_lissajous_phase_b');
+        const itemB    = document.querySelector('.control-item[data-id="mc_lissajous_phase_b"]');
+
+        // Init tracked values from current DOM state
+        if (this._phaseAVal == null) this._phaseAVal = parseFloat(inputA?.value) || 0;
+        if (this._phaseBVal == null) this._phaseBVal = parseFloat(inputB?.value) || 0;
+
+        const animate = () => {
+            if (!this.isPhaseSimulating && !this.isPhaseBSimulating) {
+                this._phaseLoopId = null;
+                return;
+            }
+            if (!this.currentCase) {
+                this._phaseLoopId = null;
+                return;
+            }
+
+            if (this.isPhaseSimulating && inputA) {
+                this._phaseAVal = (this._phaseAVal + 0.15) % 360;
+                inputA.value = this._phaseAVal.toFixed(2);
+                if (displayA) displayA.value = this._phaseAVal.toFixed(1);
+                if (itemA) itemA.classList.add('simulating');
+                this.currentCase.lissajousPhaseDeg = this._phaseAVal;
+            }
+
+            if (this.isPhaseBSimulating && inputB) {
+                this._phaseBVal = (this._phaseBVal + 0.1) % 360;
+                inputB.value = this._phaseBVal.toFixed(2);
+                if (displayB) displayB.value = this._phaseBVal.toFixed(1);
+                if (itemB) itemB.classList.add('simulating');
+                this.currentCase.lissajousPhaseBDeg = this._phaseBVal;
+            }
+
+            this.currentCase.draw();
+            this._phaseLoopId = requestAnimationFrame(animate);
+        };
+        this._phaseLoopId = requestAnimationFrame(animate);
+    },
+
     togglePhaseSimulation(control) {
-        if (this.phaseSimId) {
-            cancelAnimationFrame(this.phaseSimId);
-            this.phaseSimId = null;
+        if (this.isPhaseSimulating) {
             this.isPhaseSimulating = false;
             const item = document.querySelector(`.control-item[data-id="${control.id}"]`);
             if (item) item.classList.remove('simulating');
             return;
         }
-
+        this._phaseAVal = parseFloat(document.getElementById('input-mc_lissajous_phase')?.value) || 0;
         this.isPhaseSimulating = true;
-        
-        const animate = () => {
-            if (!this.isPhaseSimulating || !this.currentCase) {
-                this.isPhaseSimulating = false;
-                this.phaseSimId = null;
-                return;
-            }
+        this._startPhaseLoop();
+    },
 
-            const input = document.getElementById(`input-${control.id}`);
-            const display = document.getElementById(`val-${control.id}`);
+    togglePhaseBSimulation(control) {
+        if (this.isPhaseBSimulating) {
+            this.isPhaseBSimulating = false;
             const item = document.querySelector(`.control-item[data-id="${control.id}"]`);
-
-            if (!input || !display) {
-                this.phaseSimId = requestAnimationFrame(animate);
-                return;
-            }
-
-            let val = parseFloat(input.value);
-            if (isNaN(val)) val = control.value;
-            
-            // Continuous one-way rotation
-            val = (val + 0.15) % 360;
-
-            // Bypassing onChange intentionally so it doesn't trigger resetSortState!
-            input.value = val.toFixed(2);
-            display.value = this.formatControlValue(control, val);
-            if (item) item.classList.add('simulating');
-
-            // Apply value directly to properties and trigger draw manually without breaking sort progress
-            this.currentCase.lissajousPhaseDeg = val;
-            this.currentCase.draw();
-
-            this.phaseSimId = requestAnimationFrame(animate);
-        };
-
-        this.phaseSimId = requestAnimationFrame(animate);
+            if (item) item.classList.remove('simulating');
+            return;
+        }
+        this._phaseBVal = parseFloat(document.getElementById('input-mc_lissajous_phase_b')?.value) || 0;
+        this.isPhaseBSimulating = true;
+        this._startPhaseLoop();
     }
 };
 

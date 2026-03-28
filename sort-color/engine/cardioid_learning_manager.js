@@ -87,7 +87,7 @@ const CardioidLearningManager = {
             }
             this.factorTimer = 0;
             this.factorIndex = 0;
-            this.factorDuration = 3.0;
+            this.factorDuration = 4.0;
             this.multiplier = (this.factorTargets && this.factorTargets.length > 0) ? this.factorTargets[0] : this.multiplier;
         }
     },
@@ -175,10 +175,10 @@ const CardioidLearningManager = {
             if (!this.factorTargets || this.factorTargets.length === 0) return false;
             this.updateTimedLearningMode(dt, {
                 timerKey: 'factorTimer',
-                duration: this.factorDuration || 3.0,
+                duration: this.factorDuration || 4.0,
                 indexKey: 'factorIndex',
                 targets: this.factorTargets,
-                holdTime: 1.0
+                holdTime: 2.0
             });
             return true;
         }

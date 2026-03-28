@@ -26,19 +26,24 @@ const LissajousGeometryProvider = {
         return ((Number(this.lissajousPhaseDeg) || 90) * Math.PI) / 180;
     },
 
+    getLissajousPhaseBRad() {
+        return ((Number(this.lissajousPhaseBDeg) || 0) * Math.PI) / 180;
+    },
+
     getLissajousPoint(i, n, radius, cx, cy, originalIndex = i) {
         const safeN = Math.max(1, n);
         const t = (Math.PI * 2 * i) / safeN;
         const a = this.getLissajousA();
         const b = this.getLissajousB();
-        const phase = this.getLissajousPhaseRad();
+        const phase  = this.getLissajousPhaseRad();
+        const phaseB = this.getLissajousPhaseBRad();
         
         const ribbonData = Number(this.lissajousRibbon) || 0;
         const ribbonPhase = ribbonData === 0 ? 0 : (ribbonData / 100) * (originalIndex / safeN) * Math.PI * 2;
 
         const amp = radius * 0.88;
-        const finalPhaseX = a * t + phase + ribbonPhase;
-        const finalPhaseY = b * t + ribbonPhase;
+        const finalPhaseX = a * t + phase  + ribbonPhase;
+        const finalPhaseY = b * t + phaseB + ribbonPhase;
         
         return {
             x: cx + Math.sin(finalPhaseX) * amp,
