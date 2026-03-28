@@ -26,7 +26,9 @@ const SortColorControlFactory = {
                     { value: 'mapping', label: 'Mapping' },
                     { value: 'classic', label: 'Classic' },
                     { value: 'ultimate', label: 'Ultimate' },
-                    { value: 'mirror-chaos', label: 'Mirror & Chaos' }
+                    { value: 'mirror-chaos', label: 'Mirror & Chaos' },
+                    { value: 'factor_1', label: 'Factor + 1' },
+                    { value: 'factor_2', label: 'Factor - 1' }
                 ],
                 onChange: (v) => {
                     caseRef.setLearningMode(v);
