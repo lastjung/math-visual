@@ -445,7 +445,7 @@ export const SHAPE_REGISTRY = {
                 label: 'Edge Sweep',
                 note: 'A parallel sweep across one side of the triangle that makes stripe families easy to read.',
                 options: { lightSourceMode: 'parallel' },
-                pointer: { sourcePos: { x: { unit: 'size', value: -0.3 }, y: { unit: 'size', value: 0.18 } } },
+                pointer: { sourcePos: { x: { unit: 'size', value: -0.3 }, y: { unit: 'size', value: 0.2 } } },
                 sliders: { spread: 0, sourceRotation: -Math.PI / 3 }
             },
             'vertex-graze': {

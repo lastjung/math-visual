@@ -123,6 +123,10 @@ export function updateUI(app) {
         btn.classList.toggle('active', btn.dataset.value === app.colorDistribution);
     });
 
+    UIElements.queryAll('.mode-tab').forEach((btn) => {
+        btn.classList.toggle('active', btn.dataset.mode === app.colorMode);
+    });
+
     UIElements.queryAll('#group-source-single-option .mini-tab').forEach((btn) => {
         const presetId = btn.dataset.value;
         const shapeData = SHAPE_REGISTRY[app.shape];

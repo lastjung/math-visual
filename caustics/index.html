@@ -233,16 +233,36 @@
                             <button class="shape-preset-btn" id="shape-preset-index-1">Wide Sweep</button>
                             <button class="shape-preset-btn" id="shape-preset-index-2">Dense Echo</button>
                         </div>
-                        <div class="shape-preset-note" id="shape-preset-note">
-                            Preset note appears here.
-                        </div>
-                        <div style="margin-top: 24px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 20px;">
-                            <button class="apple-btn-shell primary w-full" id="btn-start-journey" style="width: 100%; justify-content: center; padding: 12px; font-weight: 700; letter-spacing: 0.05em;">
-                                START JOURNEY
-                            </button>
+                        <div class="shape-preset-note" id="shape-preset-note" style="margin-top: 10px; min-height: 32px;">
+                            <!-- Preset description will appear here -->
                         </div>
                     </div>
                 </section>
+
+                <!-- Simulation Narrative (Always Visible at Bottom) -->
+                <div class="setting-row" style="margin-top: 24px; padding: 0 4px;">
+                    <div class="setting-label-group">
+                        <label class="setting-label">JOURNEY SELECTOR</label>
+                    </div>
+                    <select id="select-narrative" class="apple-select">
+                        <option value="none" selected>None (No Subtitle)</option>
+                        <option value="The Secret Foci of Ovals">The Secret Foci of Ovals</option>
+                        <option value="Double Oval: Shared Foci, Split Light">Double Oval: Shared Foci, Split Light</option>
+                        <option value="The Parabolic Point">The Parabolic Point</option>
+                        <option value="Reflections of Order">Reflections of Order</option>
+                        <option value="Circle of Infinite Light">Circle of Infinite Light</option>
+                        <option value="The Radiant Pulse of Heart">The Radiant Pulse of Heart</option>
+                        <option value="The Hidden Soul of Beams">The Hidden Soul of Beams</option>
+                        <option value="Dance of the Photons">Dance of the Photons</option>
+                        <option value="The Triple Symmetry of Light">The Triple Symmetry of Light</option>
+                    </select>
+                </div>
+
+                <div style="margin-top: 16px; padding: 0 4px 8px;">
+                    <button class="apple-btn-shell primary w-full" id="btn-start-journey" style="width: 100%; justify-content: center; padding: 12px; font-weight: 700; letter-spacing: 0.05em;">
+                        START JOURNEY
+                    </button>
+                </div>
 
             </div>
         </aside>
@@ -377,30 +397,18 @@
                     </div>
                 </div>
 
-                <!-- Simulation Narrative (Moved back to bottom) -->
-                <div class="setting-row" style="margin-bottom: 12px;">
-                    <div class="setting-label-group">
-                        <label class="setting-label">JOURNEY</label>
-                    </div>
-                    <select id="select-narrative" class="apple-select">
-                        <option value="none" selected>None (No Subtitle)</option>
-                        <option value="The Secret Foci of Ovals">The Secret Foci of Ovals</option>
-                        <option value="Double Oval: Shared Foci, Split Light">Double Oval: Shared Foci, Split Light</option>
-                        <option value="The Parabolic Point">The Parabolic Point</option>
-                        <option value="Reflections of Order">Reflections of Order</option>
-                        <option value="Circle of Infinite Light">Circle of Infinite Light</option>
-                        <option value="The Radiant Pulse of Heart">The Radiant Pulse of Heart</option>
-                        <option value="The Hidden Soul of Beams">The Hidden Soul of Beams</option>
-                        <option value="Dance of the Photons">Dance of the Photons</option>
-                        <option value="The Triple Symmetry of Light">The Triple Symmetry of Light</option>
-                    </select>
-                </div>
-
-                <!-- Color Modes (Absolute Bottom) -->
-                <div class="mode-tabs" style="margin-top: 16px; margin-bottom: 0;">
-                    <button class="mode-tab" data-mode="cyan">Cyan</button>
+                <!-- Color Modes (Vibrant & Premium Lineup) -->
+                <div class="mode-tabs" style="margin-top: 16px; margin-bottom: 8px;">
                     <button class="mode-tab active" data-mode="rainbow">Rainbow</button>
+                    <button class="mode-tab" data-mode="cyan">Cyan</button>
                     <button class="mode-tab" data-mode="sunset">Sunset</button>
+                    <button class="mode-tab" data-mode="lime">Lime</button>
+                </div>
+                <div class="mode-tabs" style="margin-top: 0; margin-bottom: 0;">
+                    <button class="mode-tab" data-mode="twilight">Twilight</button>
+                    <button class="mode-tab" data-mode="cosmic">Cosmic</button>
+                    <button class="mode-tab" data-mode="emerald">Emerald</button>
+                    <button class="mode-tab" data-mode="aurora">Aurora</button>
                 </div>
             </div>
         </aside>

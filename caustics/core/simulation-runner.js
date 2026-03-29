@@ -433,57 +433,39 @@ export function runTriangleA0Simulation(app) {
 
     const stages = [
         {
-            subtitle: 'Periodic Orbit: The Median Loop',
+            subtitle: 'Geometric Origin: Vertex Center Outward',
             apply: () => {
-                app.applyPattern('center-path');
-                app.updateOption('renderMode', 'flow');
-                app.updateOption('flowMode', 'none');
-                app.updateSlider('rayNumber', 72, false);
-                app.updateSlider('spread', 0.08, false);
-                app.updateSlider('sourceRotation', 0, false);
-                app.updateSlider('raySpeed', 9, false);
-                app.updateSlider('maxBounces', 18, false);
+                app.updateOption('lightSourceMode', 'point');
+                app.updateOption('sourcePattern', 'single'); 
+                app.applySourceOption('center'); // Correct centroid and spread
+                app.updateOption('sourceDirection', 'outward');
             },
-            duration: 11000
-        },
-        {
-            subtitle: 'Edge Family: Parallel Side Sweep',
-            apply: () => {
-                app.applyPattern('edge-sweep');
-                app.updateOption('renderMode', 'paint1');
-                app.updateOption('flowMode', 'none');
-                app.updateSlider('rayNumber', 280, false);
-                app.updateSlider('spread', 0, false);
-                app.updateSlider('raySpeed', 16, false);
-                app.updateSlider('maxBounces', 12, false);
-            },
-            duration: 14000
+            duration: 15000
         },
         {
             subtitle: 'Vertex Instability: Grazing the Corner',
             apply: () => {
                 app.applyPattern('vertex-graze');
-                app.updateOption('renderMode', 'flow');
-                app.updateOption('flowMode', 'pulse');
-                app.updateSlider('rayNumber', 120, false);
-                app.updateSlider('spread', 0.12, false);
-                app.updateSlider('raySpeed', 13, false);
-                app.updateSlider('maxBounces', 16, false);
             },
             duration: 11000
         },
         {
             subtitle: 'Three-Fold Symmetry: Vertex Normals',
             apply: () => {
-                app.applyPattern('triad-edge');
-                app.updateOption('renderMode', 'paint2');
-                app.updateOption('flowMode', 'none');
-                app.updateSlider('rayNumber', 240, false);
-                app.updateSlider('spread', Math.PI / 7, false);
-                app.updateSlider('raySpeed', 12, false);
-                app.updateSlider('maxBounces', 10, false);
+                app.updateOption('lightSourceMode', 'point');
+                app.updateOption('sourcePattern', 'triad'); 
+                app.applySourceOption('basic');
+                app.updateOption('sourceDirection', 'inward');
+                app.updateSlider('sourceRotation', 0, false);
             },
             duration: 15000
+        },
+        {
+            subtitle: 'Edge Family: Parallel Side Sweep',
+            apply: () => {
+                app.applyPattern('edge-sweep');
+            },
+            duration: 14000
         }
     ];
 

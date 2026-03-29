@@ -181,6 +181,18 @@ const App = {
                 : config.localIndex / (config.localCount - 1);
         }
 
+        const interpolate = (t, stops) => {
+            const idx = t * (stops.length - 1);
+            const low = Math.floor(idx);
+            const high = Math.ceil(idx);
+            const f = idx - low;
+            let h1 = stops[low];
+            let h2 = stops[high];
+            if (h2 > h1 + 180) h1 += 360;
+            if (h1 > h2 + 180) h2 += 360;
+            return (h1 + (h2 - h1) * f + flowOffset * 0.5) % 360;
+        };
+
         if (this.colorMode === 'rainbow') {
             return (distributionT * 360 + flowOffset * 0.5) % 360;
         }
@@ -189,6 +201,21 @@ const App = {
         }
         if (this.colorMode === 'sunset') {
             return 10 + Math.sin(distributionT * 3 + flowOffset * 0.1) * 30;
+        }
+        if (this.colorMode === 'twilight') {
+            return interpolate(distributionT, [55, 30, 330, 270, 250]);
+        }
+        if (this.colorMode === 'cosmic') {
+            return interpolate(distributionT, [180, 220, 280, 320]);
+        }
+        if (this.colorMode === 'emerald') {
+            return interpolate(distributionT, [55, 90, 130, 170]);
+        }
+        if (this.colorMode === 'lime') {
+            return interpolate(distributionT, [85, 145, 195, 235]);
+        }
+        if (this.colorMode === 'aurora') {
+            return interpolate(distributionT, [110, 185, 265, 315]);
         }
         return 200;
     },
