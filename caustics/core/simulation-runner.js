@@ -76,6 +76,16 @@ export function startA0Simulation(app) {
     }
 }
 
+export function startA1Simulation(app) {
+    if (app.isSimRunning) {
+        stopSimulation(app);
+        return;
+    }
+
+    // Always use the universal Color Simulation regardless of shape
+    runColorSimulation(app);
+}
+
 export function startNarrativeSimulation(app) {
     startA0Simulation(app);
 }
@@ -498,6 +508,78 @@ export function runTriangleA0Simulation(app) {
         }, 4000));
     };
 
+    runStage();
+}
+
+/**
+ * A+1: Universal Color Simulation
+ * Cycles through 5 premium color modes while respecting all current user settings.
+ */
+export function runColorSimulation(app) {
+    if (app.isSimRunning) return;
+    app.isSimRunning = true;
+    app.isSimulationMode = true;
+    app._simSnapshot = app.readCurrentScene();
+    
+    // Force active state
+    app.isFlowing = true;
+    app.isLightVisible = true;
+    resumeAudioIfAvailable();
+
+    const stages = [
+        { subtitle: 'Twilight', colorMode: 'twilight', duration: 15000 },
+        { subtitle: 'Cosmic', colorMode: 'cosmic', duration: 15000 },
+        { subtitle: 'Amber', colorMode: 'amber', duration: 15000 },
+        { subtitle: 'Aurora', colorMode: 'aurora', duration: 15000 },
+        { subtitle: 'Rainbow', colorMode: 'rainbow', duration: 15000 }
+    ];
+
+    let idx = 0;
+    const runStage = () => {
+        if (idx >= stages.length) {
+            finishSimulation(app);
+            return;
+        }
+
+        const stage = stages[idx];
+
+        // Restore from base snapshot before each stage to keep the color demo isolated
+        if (app._simSnapshot) {
+            app.applyScene(app._simSnapshot);
+        }
+        
+        // Use native half-reset to flawlessly clear the canvas and reset internal flow timing
+        app.resetRays(false, true);
+        
+        // Maintain active flow after half-reset
+        app.isFlowing = true;
+        app.isLightVisible = true;
+        
+        // Instant visual update
+        app.updateOption('colorMode', stage.colorMode);
+        app.overlayMessage = idx === 0 ? ['Color Simulation', stage.subtitle] : stage.subtitle;
+        
+        // For Paint 2 mode (Simulator), we MUST re-emit to pick up the new color palette
+        if (app.isPaint2Mode && typeof Simulator !== 'undefined') {
+            Simulator.initRays(app);
+        }
+        
+        UI.update(app);
+
+        if (idx === 0) {
+            registerTimer(app, setTimeout(() => {
+                app.overlayMessage = stage.subtitle;
+                UI.update(app);
+            }, 2500));
+        }
+
+        registerTimer(app, setTimeout(() => {
+            idx++;
+            runStage();
+        }, stage.duration));
+    };
+
+    // Run first stage immediately
     runStage();
 }
 export function runVOvalA0Simulation(app) {

@@ -368,6 +368,11 @@ export function setupControls(app, ui) {
             return;
         }
 
+        if (aHeld && e.code === 'Digit1') {
+            e.preventDefault();
+            app.startA1Simulation();
+            return;
+        }
         if (aHeld && e.code === 'Digit3') {
             e.preventDefault();
             app['3_beam_spread_simm']();

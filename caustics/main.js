@@ -31,10 +31,10 @@ import {
     runRectA0Simulation,
     runUniversalJourneySimulation,
     runVOvalA0Simulation,
-    runEllipseA0Simulation,
-    runVvOvalFocusSimulation,
+    runColorSimulation,
     runTriangleA0Simulation,
     startA0Simulation,
+    startA1Simulation,
     startNarrativeSimulation,
     stopSimulation
 } from './core/simulation-runner.js';
@@ -415,11 +415,15 @@ const App = {
     startA0Simulation() {
         return startA0Simulation(this);
     },
+    startA1Simulation() {
+        return startA1Simulation(this);
+    },
     v_oval_A0_simm() { return runVOvalA0Simulation(this); },
     ellipse_A0_simm() { return runEllipseA0Simulation(this); },
     vv_oval_A0_simm() { return runVvOvalFocusSimulation(this); },
     rect_A0_simm() { return runRectA0Simulation(this); },
     triangle_A0_simm() { return runTriangleA0Simulation(this); },
+    triangle_A1_simm() { return runColorSimulation(this); },
 
     startNarrativeSimulation() {
         return startNarrativeSimulation(this);
