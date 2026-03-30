@@ -185,16 +185,14 @@ export const GLOBAL_DEFAULTS = {
 - `vertex > basic`
   - 해당 도형의 canonical vertex set
 - `vertex > center`
-  - 편의상 현재는 `vertex > basic`과 동일하게 취급
+  - vertex 집합의 광원 중심을 도형 center에 배치
 - `vertex > online`
   - 인접 vertex pair 사이의 side/arc 위 대표점 집합
-
-이 `vertex > center = basic` 규칙은 의미론적으로 완전한 최종형이라기보다, 현재 UI 구조를 유지하기 위한 운영상 편의 규칙이다.
 
 - `strip > basic`
   - 맨위 꼭지점 기준 anchor를 사용
 - `strip > center`
-  - center를 지나는 strip
+  - strip의 광원 중심을 도형 center에 배치
 - `strip > online`
   - side 위 anchor를 기준으로 strip을 배치
 
@@ -208,6 +206,8 @@ export const GLOBAL_DEFAULTS = {
 
 - UI의 `DIR`은 `direction`을 뜻한다.
 - `direction`은 광선의 발사 방향 규칙이며, 위치나 배치 자체를 뜻하지 않는다.
+- `direction`은 광원 중심 기준이 아니라 개별 광원 기준으로 계산한다.
+- 즉 `option`이 배치 중심을 정한 뒤, `direction`은 각 광원이 어디로 쏘는지 개별적으로 정한다.
 - 현재 코드는 `options.sourceDirection`으로 저장/복원한다.
 - 왼쪽 `DIR` UI에서 `Down`은 내부값 `down`에 대응한다.
 - 대표 값:

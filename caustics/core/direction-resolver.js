@@ -10,6 +10,8 @@ export function getTriangleLaunchAngle(app, origin, size, localT = 0.5) {
         return baseAngle + spreadOffset;
     }
 
+    // Direction is resolved per emitted source, not from the multi-source group center.
+    // `origin` is the concrete source point after pattern layout has been applied.
     const dx = layoutCenter.x - origin.x;
     const dy = layoutCenter.y - origin.y;
     const dist = Math.hypot(dx, dy);

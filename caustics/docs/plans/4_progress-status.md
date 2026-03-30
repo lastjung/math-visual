@@ -42,6 +42,8 @@
 - `basic / center / online` 규칙 문서화 완료
 - `vertex > online` 근사 계산 반영 완료
 - `strip` anchor 계산 반영 완료
+- 멀티 광원 패턴의 `center`는 광원 중심 배치 기준으로 재정리
+- `direction`은 광원 중심이 아니라 개별 광원 기준으로 재정리
 - `parabola` 일부 예외는 남아 있으나 현재는 보류
 
 ### 4. 활성 계획 상태

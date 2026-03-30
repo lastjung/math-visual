@@ -229,6 +229,9 @@ export function applySourceOption(app, presetId) {
             updateSlider(app, key, val, false);
         }
     }
+    if (app.sourcePattern === 'vertex' && presetId === 'center') {
+        updateSlider(app, 'spread', Math.PI / 3, false);
+    }
     if (resolved.pointer) {
         updatePointer(app, resolved.pointer);
     }
