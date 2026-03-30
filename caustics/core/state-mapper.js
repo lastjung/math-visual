@@ -1,6 +1,6 @@
 import { SHAPE_REGISTRY } from '../config/shape-registry.js';
 import { resolvePattern } from '../config/pattern-resolver.js';
-import { getStripAnchorPoint } from './shape-config.js';
+import { getStripAnchorPoint } from './pattern-layout.js';
 
 function normalizePatternId(patternId) {
     if (patternId === 'triad-edge') return 'vertex-edge';

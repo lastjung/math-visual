@@ -48,12 +48,51 @@
 
 - `2_광원구조계획`
   - 규칙 확정 단계는 상당 부분 완료
-  - 실제 구조 리팩토링은 아직 시작 전
-  - 다음 작업은 `pattern-layout`, `direction-resolver`, `source-mode-resolver` 분리
+  - Phase 1 완료
+  - Phase 2 완료
+  - Phase 3 완료
+  - Phase 4 완료
+  - 함수 경계 식별 완료
+  - `shape geometry`, `pattern layout`, `direction`, `sourceMode` 책임 분류를 문서에 반영 완료
+  - `pattern-layout.js` 분리 완료
+  - `direction-resolver.js` 분리 완료
+  - `source-mode-resolver.js` 분리 완료
+  - 광원 구조 1차 분리 완료
 
 - `3_CSS계획`
   - 아직 시작 전
   - 광원 구조 안정화 이후 진행 예정
+
+### 5. 이번 단계 결과
+
+- `2_광원구조계획`의 Phase 1을 진행함
+- 현재 분류 결론:
+  - `shape-config.js`는 geometry와 layout이 섞여 있음
+  - `getTriangleLaunchAngle`는 direction 계층 후보로 확정
+  - `buildLaunchRayConfigs`는 sourceMode 계층 후보로 확정
+  - 첫 실제 분리 대상은 `pattern-layout.js`
+
+### 6. 최근 반영
+
+- `2_광원구조계획`의 Phase 2를 진행함
+- `caustics/core/pattern-layout.js`를 신설함
+- `vertex online`, `strip anchor`, source origin 계산을 새 파일로 이동함
+- `shape-config.js`는 geometry와 direction 중심으로 축소됨
+
+### 7. 최근 반영
+
+- `2_광원구조계획`의 Phase 3을 진행함
+- `caustics/core/direction-resolver.js`를 신설함
+- `down / inward / outward / edge-normal` 계산을 새 파일로 이동함
+- `shape-config.js`는 geometry helper 중심으로 더 축소됨
+
+### 8. 최근 반영
+
+- `2_광원구조계획`의 Phase 4를 진행함
+- `caustics/core/source-mode-resolver.js`를 신설함
+- `point / parallel / converge` launch 계산을 새 파일로 이동함
+- `parallelRange` 계산과 `normalizeLightSourceMode`도 함께 이동함
+- 광원 구조 1차 분리가 완료됨
 
 ## 보류 메모
 

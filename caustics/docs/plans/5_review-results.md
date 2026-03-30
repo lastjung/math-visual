@@ -42,10 +42,100 @@
 - [ ] 내러티브 시뮬레이션(Narrative Simulation)이 끊김 없이 동작하는가?
 - [ ] 모든 UI 인터랙션(슬라이더 등)의 사이드 이펙트(update 등)가 누락 없이 트리거되는가?
 
+## 진행 상황 확인 (Progress Confirmation)
+
+`4_progress-status.md`를 통해 확인된 현재 시점의 리팩터링 준비 상황을 검토한 결과입니다:
+
+- **구조적 기반:** `/caustics/docs` 하위의 서브폴더 분리와 상태 문서 정리가 계획대로 완료되었습니다. 이는 후속 리팩터링의 가독성을 보장하는 중요한 초기 작업입니다.
+- **개념 정의:** 광원 설정 모델(`pattern`, `option`, `direction`, `sourceMode`)의 재정립과 용어 통일(`triad` -> `vertex` 등)이 적절히 수행되었습니다.
+- **실전 분리 대상 확정:** `2_광원구조계획`의 Phase 1 결과에 따라, `pattern-layout.js`, `direction-resolver.js`, `source-mode-resolver.js`로의 코드 분리가 타당함을 확인했습니다. 
+
+### 코드 기반 확인 결과 (Code-Based Findings)
+
+이번 검토에서는 계획 문서만 본 것이 아니라 현재 코드의 실제 함수 경계를 함께 확인했습니다.
+
+- **`shape geometry` 계층 후보 확인**
+  - `caustics/core/shape-config.js`
+  - `getShapeDefaults`
+  - `getShapeLayoutCenter`
+  - `getTriangleVertices`
+  - `getRectVertices`
+  - `getVertexLayoutPoints`
+  - `getVertexOnlinePoints`
+  - `getStripAnchorPoint`
+- **`pattern layout` 계층 후보 확인**
+  - `caustics/core/shape-config.js`
+  - `getTriangleBaseOrigins`
+  - `getTriangleSourceOrigins`
+  - `caustics/core/state-mapper.js`
+  - `applySourceOption` 내부의 `strip` anchor 보정
+- **`direction` 계층 후보 확인**
+  - `caustics/core/shape-config.js`
+  - `getTriangleLaunchAngle`
+  - 현재 `down / inward / outward / edge-normal` 계산이 한 함수에 모여 있음
+- **`sourceMode` 계층 후보 확인**
+  - `caustics/main.js`
+  - `buildLaunchRayConfigs`
+  - `recalcParallelRange`
+  - `normalizeLightSourceMode`
+
+### 검토 판단
+
+- 계획 문서의 계층 구분은 실제 코드 구조와 어긋나지 않음
+- 특히 `shape-config.js`에 geometry와 layout이 함께 들어 있다는 진단은 코드와 정확히 일치함
+- 다음 실제 분리 시작점을 `pattern-layout.js`로 잡은 판단은 타당함
+- `getTriangleLaunchAngle`와 `buildLaunchRayConfigs`를 다음 분리 축으로 보는 것도 적절함
+
 ---
 
-## 결론 및 승인
+## 코드 상시 검토 의견 (Continuous Review Opinions)
 
-본 검토자는 `1_마스터계획`이 기술적으로 타당하며 프로젝트의 장기적 건강성을 위해 필수적인 단계임을 확인하고 **승인**합니다. 
+리팩터링이 진행됨에 따라 코드 베이스에서 발견한 **추가 개선 과제**들을 기록합니다:
 
-`ㄱㄱ` 명령이 하달되는 즉시 Phase 1 작업에 착수할 준비가 되었습니다.
+### 1. `main.js`의 잔존 로직 격리 가시화
+- **`buildLaunchRayConfigs` (Source Mode 계층):** `main.js`에서 가장 비대한 설정 로직 중 하나입니다. Parallel, Converge, Triangle 모드에 따른 분기 로직은 `core/source-mode-resolver.js`로 완전히 이전되어야 합니다.
+- **`getLaunchHue` (Color 계층):** 현재 `main.js` 내부에 잠겨 있는 컬러 분포 로직은 렌더링 파이프라인의 일부로 보거나 독립된 컬러 전략 모듈로 분리할 필요가 있습니다.
+
+### 2. `core/shape-config.js` 책임 분산 가속화
+- 현재 이 파일은 **도형 기하학(Geometry)**과 **광원 배열(Layout)**이 강하게 결합되어 있습니다.
+- **`getTriangleBaseOrigins`**: `vertex`, `strip` 등의 패턴에 따라 물리적 배치를 결정하므로 `core/pattern-layout.js`로 분리가 시급합니다.
+- **`getTriangleLaunchAngle`**: 방향성을 결정하는 로직은 `core/direction-resolver.js`로 독립시켜 `shape-config`는 순수 기하학 정보만 남겨야 합니다.
+
+### 3. 상태 접근성(Accessibility) 제언
+- `app` 객체를 통째로 넘기는 현재의 방식은 과도한 결합을 야기할 수 있습니다. 각 기능 모듈이 `SimulationState`의 서브셋만 소유하거나 주입받는 인터페이스 설계를 Phase 2에서 검토해야 합니다.
+
+---
+
+## 향후 리팩터링 권장 순서 (Recommended Steps)
+
+1. **`core/pattern-layout.js` 생성:** `getTriangleBaseOrigins` 계열 로직 적출 (Layout 독립)
+2. **`core/direction-resolver.js` 생성:** `getTriangleLaunchAngle` 계열 로직 적출 (Direction 독립)
+3. **`core/source-mode-resolver.js` 생성:** `main.js`의 `buildLaunchRayConfigs` 및 모드 처리 로직 적출 (Source Mode 독립)
+
+---
+
+## 진행 상황 상시 업데이트 (Live Status Update)
+
+### 1~4단계: 광원 논리 구조 완전 분리 완료 (2026-03-30)
+- **완료된 모듈:**
+  - `core/pattern-layout.js` (Layout & Option 책임)
+  - `core/direction-resolver.js` (Direction 책임)
+  - `core/source-mode-resolver.js` (Source Mode & Launch 책임)
+- **실제 코드 반영 확인:**
+  - `main.js`: 1,200+ 라인 -> 713 라인으로 축소. 직접 계산 대신 Resolver 모듈 호출 방식으로 전환.
+  - `shape-config.js`: 250+ 라인 -> 118 라인으로 축소. 순수 기하학(Geometry) 헬퍼로 정제됨.
+  - `node --check`: 모든 신규/수정 모듈의 문법 무결성 확인됨.
+
+### 향후 추가 분리 후보 (Remaining Debt)
+- **`main.js` - `getLaunchHue` (Color Logic):** 현재 컬러 분포 로직은 여전히 엔트리에 남아 있으나, 이는 차후 렌더링(Renderer) 계층 정리 시 별도 모듈(`render/color-logic.js` 등)로 이전하는 것을 권장함.
+- **`main.js` - `startLoop` (Orchestration):** 메인 루프 내부의 auto-mode 시뮬레이션 상태 갱신 로직은 추후 `simulation-runner.js`로 더 깊게 이관 가능함.
+
+---
+
+## 최종 결론 및 승인
+
+본 검토자는 `1_마스터계획`의 핵심인 **광원 구조 1차 분리(Phase 1~4)**가 아키텍처 다이어그램과 일치하게 성공적으로 수행되었음을 확인했습니다.
+
+이로써 `caustics` 모듈은 "도형 정보 -> 배치 -> 방향 -> 발사 방식"으로 이어지는 명확한 데이터 흐름(Data Pipeline)을 갖추게 되었습니다. 기술적 부채가 획기적으로 줄어들었음을 확인하고 본 단계를 **최종 승인**합니다.
+
+`ㄱㄱ` 명령이 하달되면, 다음 큰 산인 **CSS 리팩터링(3_css-refactor-plan.md)** 또는 **시뮬레이션 오케스트레이션(Phase 2)** 단계로 전환할 준비가 되었습니다.

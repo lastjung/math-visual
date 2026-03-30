@@ -2,7 +2,6 @@
  * LIGHT FLOW LAB: Standalone Core Logic
  * Custom: Free Source Movement
  */
-import { Physics } from './sim/physics.js';
 import { Renderer } from './render/renderer.js';
 import { UI } from './ui.js';
 import { Simulator } from './sim/simulator.js';
@@ -10,13 +9,13 @@ import { LightDensity } from './render/light-density.js';
 import { BGM_BASE_PATH, BGM_TRACKS, formatTime, initAudio, nextBGM } from './core/audio-controller.js';
 import {
     getDefaultSourcePos,
-    getTriangleBaseOrigins,
     getShapeLayoutCenter,
     getShapeDefaults,
-    getTriangleLaunchAngle,
-    getTriangleSourceOrigins,
     getTriangleVertices
 } from './core/shape-config.js';
+import { getTriangleBaseOrigins, getTriangleSourceOrigins } from './core/pattern-layout.js';
+import { getTriangleLaunchAngle } from './core/direction-resolver.js';
+import { buildLaunchRayConfigs, normalizeLightSourceMode, recalcParallelRange } from './core/source-mode-resolver.js';
 import { buildPersistedState, persistState, restoreState } from './core/persistence.js';
 import { readCurrentScene, applyScene, applyPattern, applySourceOption, updateOption, updateSlider, updatePointer } from './core/state-mapper.js';
 import { SHAPE_REGISTRY } from './config/shape-registry.js';
@@ -222,58 +221,7 @@ const App = {
     },
 
     buildLaunchRayConfigs(rayCount, size, flowOffset = this.flowOffset) {
-        const totalCount = Math.max(1, Math.floor(rayCount));
-        const aimAngle = Math.PI / 2;
-        const configs = [];
-        const origins = this.getTriangleSourceOrigins(size);
-        const groupCount = origins.length;
-
-        const basePerGroup = Math.floor(totalCount / groupCount);
-        const remainder = totalCount % groupCount;
-
-        origins.forEach((origin, groupIndex) => {
-            const localCount = basePerGroup + (groupIndex < remainder ? 1 : 0);
-            for (let localIndex = 0; localIndex < localCount; localIndex++) {
-                const t = localCount <= 1 ? 0.5 : localIndex / (localCount - 1);
-                const tGlobal = totalCount <= 1 ? 0 : configs.length / (totalCount - 1);
-                
-                let sPos, angle;
-
-                if (this.lightSourceMode === 'parallel') {
-                    const d = this.parallelRange.min + t * (this.parallelRange.max - this.parallelRange.min);
-                    const cosR = Math.cos(this.sourceRotation);
-                    const sinR = Math.sin(this.sourceRotation);
-                    sPos = { x: origin.x + d * cosR, y: origin.y + d * sinR };
-                    angle = this.sourceRotation + Math.PI / 2;
-                } else if (this.lightSourceMode === 'converge') {
-                    const targetPos = origin;
-                    const baseAngle = aimAngle + this.sourceRotation + (t - 0.5) * this.spread;
-                    const hit = Physics.getConvergeLaunchPoint(targetPos, baseAngle, this.shape, size);
-                    if (hit) {
-                        sPos = { x: hit.x, y: hit.y };
-                        angle = baseAngle + Math.PI;
-                    } else {
-                        sPos = { x: targetPos.x, y: targetPos.y };
-                        angle = baseAngle;
-                    }
-                } else {
-                    angle = this.getTriangleLaunchAngle(origin, size, t);
-                    sPos = { x: origin.x, y: origin.y };
-                }
-
-                configs.push({
-                    sPos: Physics.offsetRayStart(sPos, angle, size),
-                    angle,
-                    t: tGlobal,
-                    groupIndex,
-                    groupCount,
-                    localIndex,
-                    localCount
-                });
-            }
-        });
-
-        return configs;
+        return buildLaunchRayConfigs(this, rayCount, size, flowOffset);
     },
 
     sanitizeSourcePosition() {
@@ -332,10 +280,7 @@ const App = {
     },
 
     normalizeLightSourceMode() {
-        if (this.isPaint2Mode && this.lightSourceMode === 'converge') {
-            this.lightSourceMode = 'point';
-            Simulator.clear();
-        }
+        return normalizeLightSourceMode(this);
     },
 
     buildPersistedState() {
@@ -602,41 +547,7 @@ const App = {
      * Following user optimization: calculated once per state change.
      */
     recalcParallelRange() {
-        if (!this.canvas) return;
-        const size = this.getShapeSize();
-        const origin = this.sourcePos;
-        const cosR = Math.cos(this.sourceRotation);
-        const sinR = Math.sin(this.sourceRotation);
-        
-        let minD = Infinity;
-        let maxD = -Infinity;
-        const scanStep = 2; // Finer scan for precision
-        const scanLimit = size * 3; 
-
-        // Scan along the rotated axis to find intersections with the shape
-        for (let d = -scanLimit; d <= scanLimit; d += scanStep) {
-            const px = origin.x + d * cosR;
-            const py = origin.y + d * sinR;
-            if (Physics.isInside(px, py, this.shape, size)) {
-                if (d < minD) minD = d;
-                if (d > maxD) maxD = d;
-            }
-        }
-
-        if (!Number.isFinite(minD) || !Number.isFinite(maxD)) {
-            this.parallelRange = { min: -size * 0.5, max: size * 0.5 };
-            return;
-        }
-
-        // Apply a small "inner" margin (95% of width) per user request
-        const margin = 0.95;
-        const halfWidth = (maxD - minD) * 0.5;
-        const centerD = (minD + maxD) * 0.5;
-        
-        this.parallelRange = {
-            min: centerD - (halfWidth * margin),
-            max: centerD + (halfWidth * margin)
-        };
+        return recalcParallelRange(this);
     },
 
     rect_A0_simm() {

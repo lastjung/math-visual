@@ -183,6 +183,46 @@ caustics/core/
 
 - 어떤 함수가 어느 계층에 속하는지 문서와 코드에서 일치
 
+진행 결과:
+
+- 완료
+
+Phase 1 분류 결과:
+
+- `shape geometry`
+  - `caustics/core/shape-config.js`
+  - `getShapeDefaults`
+  - `getShapeLayoutCenter`
+  - `getTriangleVertices`
+  - `getRectVertices`
+  - `getVertexLayoutPoints`
+  - `getVertexOnlinePoints`
+  - `getStripAnchorPoint`
+- `pattern layout`
+  - `caustics/core/shape-config.js`
+  - `getTriangleBaseOrigins`
+  - `getTriangleSourceOrigins`
+  - 현재는 `single / vertex / strip` source point 계산이 이 둘에 섞여 있음
+  - `caustics/core/state-mapper.js`
+  - `applySourceOption` 안의 `strip` anchor 보정
+- `direction`
+  - `caustics/core/shape-config.js`
+  - `getTriangleLaunchAngle`
+  - 현재 `down / inward / outward / edge-normal` 계산이 한 함수에 모여 있음
+- `sourceMode`
+  - `caustics/main.js`
+  - `buildLaunchRayConfigs`
+  - 내부 `point / parallel / converge` 분기
+  - `recalcParallelRange`
+  - `normalizeLightSourceMode`
+
+Phase 1 결론:
+
+- `shape-config.js`는 이미 geometry helper와 layout helper가 혼재되어 있다
+- `main.js`는 launch config 조립과 `sourceMode` 분기를 동시에 맡고 있다
+- 다음 실제 분리 시작점은 `pattern-layout.js`가 맞다
+- `direction-resolver.js`는 `getTriangleLaunchAngle`를 직접 분해하는 방식으로 가면 된다
+
 ### Phase 2. `pattern-layout.js` 도입
 
 목표:
@@ -198,6 +238,28 @@ caustics/core/
 완료 기준:
 
 - source point 생성이 `pattern-layout.js` 한 파일에서 읽힘
+
+진행 결과:
+
+- 완료
+
+Phase 2 반영 내용:
+
+- `caustics/core/pattern-layout.js` 신규 생성
+- 아래 함수 이동 완료
+  - `getVertexOnlinePoints`
+  - `getStripAnchorPoint`
+  - `getTriangleBaseOrigins`
+  - `getTriangleSourceOrigins`
+- `caustics/core/shape-config.js`는 geometry와 direction 위주로 축소
+- `caustics/main.js`는 source origin 계산을 `pattern-layout.js`에서 직접 가져오도록 변경
+- `caustics/core/state-mapper.js`는 `strip` anchor 계산을 `pattern-layout.js`에서 가져오도록 변경
+
+Phase 2 메모:
+
+- `getVertexLayoutPoints`는 아직 `shape-config.js`에 남겨두었다
+- 이유: 현재 단계에서는 이를 geometry helper로 유지하는 편이 분리 리스크가 적다
+- 다음 단계는 `direction-resolver.js` 도입이다
 
 ### Phase 3. `direction-resolver.js` 도입
 
@@ -215,6 +277,23 @@ caustics/core/
 
 - 방향 계산이 layout 파일에 섞여 있지 않음
 
+진행 결과:
+
+- 완료
+
+Phase 3 반영 내용:
+
+- `caustics/core/direction-resolver.js` 신규 생성
+- `getTriangleLaunchAngle` 이동 완료
+- `caustics/main.js`는 direction 계산을 새 모듈에서 직접 가져오도록 변경
+- `caustics/core/shape-config.js`는 geometry helper 위주로 더 축소
+
+Phase 3 메모:
+
+- 현재 `direction-resolver.js`는 `getShapeLayoutCenter`를 참조한다
+- `strip`의 anchor-shared 방향 규칙과 `vertex`의 point-wise 계산은 기존 동작을 유지한 채 새 파일로 이동했다
+- 다음 단계는 `source-mode-resolver.js` 도입이다
+
 ### Phase 4. `source-mode-resolver.js` 도입
 
 목표:
@@ -230,6 +309,25 @@ caustics/core/
 완료 기준:
 
 - `main.js`는 조립 위주가 되고, 광원 생성 분기는 resolver로 빠짐
+
+진행 결과:
+
+- 완료
+
+Phase 4 반영 내용:
+
+- `caustics/core/source-mode-resolver.js` 신규 생성
+- 아래 함수 이동 완료
+  - `buildLaunchRayConfigs`
+  - `normalizeLightSourceMode`
+  - `recalcParallelRange`
+- `caustics/main.js`는 wrapper만 남기고 source mode 분기를 새 모듈로 위임
+
+Phase 4 메모:
+
+- `point / parallel / converge` 계산은 이제 `source-mode-resolver.js`에서 읽힌다
+- `parallelRange` 계산도 같은 계층으로 이동했다
+- 광원 구조 1차 분리 기준은 충족됐다
 
 ## 검증 포인트
 
