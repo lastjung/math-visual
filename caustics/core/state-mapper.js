@@ -18,6 +18,7 @@ export function readCurrentScene(app) {
         options: {
             lightSourceMode: app.lightSourceMode,
             sourcePattern: app.sourcePattern,
+            sourceOption: app.sourceOption || null,
             sourceDirection: app.sourceDirection,
             colorDistribution: app.colorDistribution,
             baseStyle: app.baseStyle,
@@ -89,6 +90,7 @@ export function applyScene(app, scene) {
         const o = scene.options;
         if (o.lightSourceMode !== undefined) app.lightSourceMode = o.lightSourceMode;
         if (normalizedSourcePattern !== undefined) app.sourcePattern = normalizedSourcePattern;
+        if (o.sourceOption !== undefined) app.sourceOption = o.sourceOption;
         if (o.sourceDirection !== undefined) app.sourceDirection = o.sourceDirection;
         if (o.colorDistribution !== undefined) app.colorDistribution = o.colorDistribution;
         if (o.baseStyle !== undefined) app.baseStyle = o.baseStyle;
@@ -176,6 +178,7 @@ export function applyPattern(app, patternId, shapeId = app.shape) {
 
     // Record patternId
     app.patternId = patternId;
+    app.sourceOption = null;
 
     // Apply resolved state through centralized paths to handle remapping and side effects
     if (resolved.options) {
@@ -226,6 +229,7 @@ export function applySourceOption(app, presetId) {
         updatePointer(app, resolved.pointer);
     }
 
+    app.sourceOption = presetId;
     app.patternId = null;
     if (typeof app.resetRays === 'function') app.resetRays(true);
 }

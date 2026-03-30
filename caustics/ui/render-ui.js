@@ -1,7 +1,5 @@
 import { UIElements } from './elements.js';
 import { shapePanelContent, shapePresets, trianglePanelContent } from './panels.js';
-import { SHAPE_REGISTRY } from '../config/shape-registry.js';
-import { resolvePattern } from '../config/pattern-resolver.js';
 
 export function updateUI(app) {
     syncShapePanel(app);
@@ -128,25 +126,7 @@ export function updateUI(app) {
     });
 
     UIElements.queryAll('#group-source-single-option .mini-tab').forEach((btn) => {
-        const presetId = btn.dataset.value;
-        const shapeData = SHAPE_REGISTRY[app.shape];
-        if (!shapeData || !shapeData.sourceOptions) return;
-        
-        const preset = shapeData.sourceOptions[presetId];
-        if (!preset) return;
-
-        const resolved = resolvePattern(app, app.shape, preset);
-        if (resolved.pointer && resolved.pointer.sourcePos) {
-            const posMatch = Math.hypot(app.sourcePos.x - resolved.pointer.sourcePos.x, app.sourcePos.y - resolved.pointer.sourcePos.y) < 2;
-            let slidersMatch = true;
-            if (resolved.sliders && resolved.sliders.spread !== undefined) {
-                slidersMatch = Math.abs(app.spread - resolved.sliders.spread) < 0.01;
-            }
-            
-            // Only position and spread are used to determine if the location-based option is active.
-            // Direction and pattern changes are treated as child updates and won't turn off the parent option light.
-            btn.classList.toggle('active', posMatch && slidersMatch);
-        }
+        btn.classList.toggle('active', btn.dataset.value === app.sourceOption);
     });
 
     const cTrail = UIElements.get('check-trail');

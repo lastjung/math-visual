@@ -70,6 +70,7 @@ const App = {
     flowMode: 'none',
     lightSourceMode: 'point', // 'point' or 'parallel'
     sourcePattern: 'single',
+    sourceOption: 'basic',
     sourceDirection: 'parallel',
     colorDistribution: 'frequency',
     trianglePointCount: 5,
@@ -283,11 +284,8 @@ const App = {
         // 1. Preserve: Temporarily store current critical settings
         const snapshot = {
             sourcePattern: this.sourcePattern,
-            sourceOption: 'basic'
+            sourceOption: this.sourceOption || 'basic'
         };
-        
-        const optionBtn = document.querySelector('#group-source-single-option .mini-tab.active');
-        if (optionBtn) snapshot.sourceOption = optionBtn.dataset.value;
 
         // 2. Switch: Stop interactions and change shape
         this.stopSimulation();

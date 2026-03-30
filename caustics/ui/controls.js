@@ -217,13 +217,11 @@ export function setupControls(app, ui) {
         btn.onclick = (e) => {
             const nextPattern = e.currentTarget.dataset.value;
             app.updateOption('sourcePattern', nextPattern);
-            
-            // If no option is active after pattern change, default to basic
-            const hasActiveOption = [...document.querySelectorAll('#group-source-single-option .mini-tab')].some(b => b.classList.contains('active'));
-            if (!hasActiveOption) {
+
+            if (!app.sourceOption) {
                 app.applySourceOption('basic');
             }
-            
+
             ui.update(app);
         };
     });

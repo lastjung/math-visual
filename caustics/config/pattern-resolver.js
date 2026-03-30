@@ -1,3 +1,5 @@
+import { Physics } from '../sim/physics.js';
+
 /**
  * Pattern Resolver (Phase 3)
  * Resolves abstract scene schema values (tokens, units) into concrete application values.
@@ -40,6 +42,14 @@ export function resolvePointer(app, shapeId, pointerData) {
     if (pointerData.sourcePreset === 'shape-focus') {
         const defaults = app.getShapeDefaults(shapeId);
         result.sourcePos = { ...defaults.sourcePos };
+    }
+
+    if (pointerData.sourcePreset === 'shape-y-axis-top') {
+        const reach = size * 4;
+        const hit = Physics.findBoundaryIntersection(0, -reach, Math.PI / 2, shapeId, size);
+        result.sourcePos = hit
+            ? { x: hit.x, y: hit.y }
+            : { x: 0, y: 0 };
     }
     
     if (pointerData.anchorPreset === 'shape-center') {

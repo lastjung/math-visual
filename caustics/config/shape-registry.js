@@ -59,7 +59,7 @@ export const SHAPE_REGISTRY = {
                 sliders: { spread: 6.2832 }
             },
             'online': {
-                pointer: { sourcePos: { x: { unit: 'size', value: -0.72 }, y: { unit: 'size', value: -0.72 } } },
+                pointer: { sourcePreset: 'shape-y-axis-top' },
                 sliders: { spread: 1.0472 }
             }
         }
@@ -115,7 +115,7 @@ export const SHAPE_REGISTRY = {
                 sliders: { spread: 6.2832 }
             },
             'online': {
-                pointer: { sourcePos: { x: { unit: 'size', value: -0.6 }, y: { unit: 'size', value: -0.92 } } },
+                pointer: { sourcePreset: 'shape-y-axis-top' },
                 sliders: { spread: 1.0472 }
             }
         }
@@ -171,7 +171,7 @@ export const SHAPE_REGISTRY = {
                 sliders: { spread: 6.2832 }
             },
             'online': {
-                pointer: { sourcePos: { x: { unit: 'size', value: -0.42 }, y: { unit: 'size', value: -0.78 } } },
+                pointer: { sourcePreset: 'shape-y-axis-top' },
                 sliders: { spread: 1.0472 }
             }
         }
@@ -227,7 +227,7 @@ export const SHAPE_REGISTRY = {
                 sliders: { spread: 6.2832 }
             },
             'online': {
-                pointer: { sourcePos: { x: { unit: 'size', value: -0.42 }, y: { unit: 'size', value: -0.78 } } },
+                pointer: { sourcePreset: 'shape-y-axis-top' },
                 sliders: { spread: 1.0472 }
             }
         }
@@ -275,7 +275,7 @@ export const SHAPE_REGISTRY = {
         },
         sourceOptions: {
             'basic': {
-                pointer: { sourcePos: { x: 0, y: { unit: 'size', value: -0.88 } } },
+                pointer: { sourcePos: { x: { unit: 'size', value: -0.88 }, y: 0 } },
                 sliders: { spread: 1.0472 }
             },
             'center': {
@@ -283,7 +283,7 @@ export const SHAPE_REGISTRY = {
                 sliders: { spread: 6.2832 }
             },
             'online': {
-                pointer: { sourcePos: { x: { unit: 'size', value: -0.72 }, y: { unit: 'size', value: -0.26 } } },
+                pointer: { sourcePreset: 'shape-y-axis-top' },
                 sliders: { spread: 1.0472 }
             }
         }
@@ -333,7 +333,7 @@ export const SHAPE_REGISTRY = {
                 sliders: { spread: 6.2832 }
             },
             'online': {
-                pointer: { sourcePos: { x: { unit: 'size', value: -0.42 }, y: { unit: 'size', value: 0.1 } } },
+                pointer: { sourcePreset: 'shape-y-axis-top' },
                 sliders: { spread: 1.0472 }
             }
         }
@@ -389,7 +389,7 @@ export const SHAPE_REGISTRY = {
                 sliders: { spread: 6.2832 }
             },
             'online': {
-                pointer: { sourcePos: { x: { unit: 'size', value: -0.28 }, y: { unit: 'size', value: -0.2 } } },
+                pointer: { sourcePreset: 'shape-y-axis-top' },
                 sliders: { spread: 1.0472 }
             }
         }
@@ -452,7 +452,7 @@ export const SHAPE_REGISTRY = {
                 sliders: { spread: 6.2832 }
             },
             'online': {
-                pointer: { sourcePos: { x: { unit: 'size', value: -0.36 }, y: { unit: 'size', value: -0.62 } } },
+                pointer: { sourcePreset: 'shape-y-axis-top' },
                 sliders: { spread: 1.0472 }
             }
         }
