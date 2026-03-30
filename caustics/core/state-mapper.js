@@ -1,6 +1,11 @@
 import { SHAPE_REGISTRY } from '../config/shape-registry.js';
 import { resolvePattern } from '../config/pattern-resolver.js';
 
+function normalizePatternId(patternId) {
+    if (patternId === 'triad-edge') return 'vertex-edge';
+    return patternId;
+}
+
 /**
  * Capture current application state into a structured Scene object.
  * @param {Object} app - The main App object
@@ -9,7 +14,7 @@ import { resolvePattern } from '../config/pattern-resolver.js';
 export function readCurrentScene(app) {
     return {
         shape: app.shape,
-        patternId: app.patternId || null,
+        patternId: normalizePatternId(app.patternId || null),
         options: {
             lightSourceMode: app.lightSourceMode,
             sourcePattern: app.sourcePattern,
@@ -64,20 +69,26 @@ export function readCurrentScene(app) {
  */
 export function applyScene(app, scene) {
     if (!scene) return;
+    const normalizedSourcePattern = scene.options?.sourcePattern === 'triple-axis'
+        ? 'single'
+        : scene.options?.sourcePattern === 'triad'
+            ? 'vertex'
+            : scene.options?.sourcePattern;
+    const normalizedPatternId = normalizePatternId(scene.patternId);
 
     // 1. Shape
     if (scene.shape) {
         app.shape = scene.shape;
     }
-    if (scene.patternId) {
-        app.patternId = scene.patternId;
+    if (normalizedPatternId) {
+        app.patternId = normalizedPatternId;
     }
 
     // 2. Options
     if (scene.options) {
         const o = scene.options;
         if (o.lightSourceMode !== undefined) app.lightSourceMode = o.lightSourceMode;
-        if (o.sourcePattern !== undefined) app.sourcePattern = o.sourcePattern;
+        if (normalizedSourcePattern !== undefined) app.sourcePattern = normalizedSourcePattern;
         if (o.sourceDirection !== undefined) app.sourceDirection = o.sourceDirection;
         if (o.colorDistribution !== undefined) app.colorDistribution = o.colorDistribution;
         if (o.baseStyle !== undefined) app.baseStyle = o.baseStyle;
@@ -152,6 +163,7 @@ export function applyScene(app, scene) {
  * @param {string} shapeId - Shape ID (defaults to current app shape)
  */
 export function applyPattern(app, patternId, shapeId = app.shape) {
+    patternId = normalizePatternId(patternId);
     const shapeData = SHAPE_REGISTRY[shapeId];
     if (!shapeData || !shapeData.patterns) return;
     
@@ -226,6 +238,11 @@ export function applySourceOption(app, presetId) {
  */
 export function updateOption(app, key, value) {
     let appKey = key;
+
+    if (key === 'sourcePattern') {
+        if (value === 'triple-axis') value = 'single';
+        if (value === 'triad') value = 'vertex';
+    }
     
     // Remapping
     

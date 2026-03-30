@@ -453,7 +453,7 @@ export function runTriangleA0Simulation(app) {
             subtitle: 'Three-Fold Symmetry: Vertex Normals',
             apply: () => {
                 app.updateOption('lightSourceMode', 'point');
-                app.updateOption('sourcePattern', 'triad'); 
+                app.updateOption('sourcePattern', 'vertex');
                 app.applySourceOption('basic');
                 app.updateOption('sourceDirection', 'inward');
                 app.updateSlider('sourceRotation', 0, false);

@@ -3,7 +3,7 @@ import { SHAPE_REGISTRY } from '../config/shape-registry.js';
 export function trianglePanelContent(app, baseContent) {
     const sourceLabels = {
         single: 'Single Point',
-        triad: 'Vertex',
+        vertex: 'Vertex',
         strip: 'Source Strip'
     };
     const directionLabels = {
@@ -35,8 +35,8 @@ export function trianglePanelContent(app, baseContent) {
                 : app.sourceDirection === 'outward'
                     ? 'Each source points away from the center, producing more explosive edge-first reflections.'
                     : 'All sources share the same launch direction, so the whole pattern reads like one coordinated beam field.',
-        note: app.sourcePattern === 'triad'
-            ? 'Tip: triad is locked to the three vertices, so direction mode makes the biggest visual difference here.'
+        note: app.sourcePattern === 'vertex'
+            ? 'Tip: vertex mode is locked to the three vertices, so direction mode makes the biggest visual difference here.'
             : 'Tip: strip uses point count and vertex bias together, so increase count first and then tune the spread.'
     };
 }
@@ -64,4 +64,3 @@ export function shapePanelContent(shape) {
     const data = SHAPE_REGISTRY[shape] || SHAPE_REGISTRY.circle;
     return data.copy;
 }
-

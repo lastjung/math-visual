@@ -90,7 +90,7 @@ export function getTriangleBaseOrigins(app, size) {
             ? { ...app.sourceAnchorPos }
             : getShapeLayoutCenter(app.shape, size));
 
-    if (app.sourcePattern === 'triad') {
+    if (app.sourcePattern === 'vertex') {
         const layoutCenter = getShapeLayoutCenter(app.shape, size);
         const offset = {
             x: base.x - layoutCenter.x,
@@ -118,20 +118,6 @@ export function getTriangleBaseOrigins(app, size) {
                 y: base.y + dy * offset
             };
         });
-    }
-
-    if (app.sourcePattern === 'triple-axis') {
-        const isVert = app.shape === 'v-oval' || app.shape === 'vv-oval';
-        const isEllipse = app.shape === 'ellipse';
-        let fDist = 0;
-        if (isEllipse) fDist = size * 0.88;
-        else if (isVert) fDist = size * 0.6324;
-        
-        return [
-            isVert ? { x: 0, y: -fDist } : { x: -fDist, y: 0 },
-            { x: 0, y: 0 },
-            isVert ? { x: 0, y: fDist } : { x: fDist, y: 0 }
-        ];
     }
 
     return [base];

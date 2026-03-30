@@ -297,6 +297,8 @@ const App = {
         }
 
         this.shape = nextShape;
+        this.sourceAnchorPos = this.getShapeLayoutCenter(this.shape);
+        this.resetTriangleSourceOffsets();
 
         // 3. Apply: Re-apply the stored settings to the new shape
         this.sourcePattern = snapshot.sourcePattern;
