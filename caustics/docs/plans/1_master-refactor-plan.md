@@ -1,9 +1,14 @@
-# Caustics Refactor Plan
+# 1_마스터계획
 
 ## 문서 목적
 
 `caustics` 모듈이 현재 기능은 유지하고 있지만, 파일 길이와 책임 혼재 때문에 수정 비용이 빠르게 커지고 있다.  
 이 문서는 검토용 계획서이며, 실제 리팩터링 전에 구조 분해 기준과 검증 기준을 합의하는 것을 목표로 한다.
+
+검토 및 검수:
+
+- 검토자: 재민
+- 검수 및 테스트: 재민
 
 중요 전제:
 
@@ -61,6 +66,23 @@
 - UI 디자인 변경
 - preset 값 튜닝
 - CSS 전면 개편
+
+## 실행
+
+활성 계획은 아래 순서로 진행한다.
+
+1. [2_light-source-architecture-plan.md](/Users/eric/PG/math-visual/caustics/docs/plans/2_light-source-architecture-plan.md)
+   - 광원 구조 정리
+   - `shape -> pattern+option -> direction -> sourceMode` 경계 확정
+2. [3_css-refactor-plan.md](/Users/eric/PG/math-visual/caustics/docs/plans/3_css-refactor-plan.md)
+   - 스타일 구조 정리
+   - 기능 구조가 먼저 안정된 뒤 진행
+
+완료된 이전 계획은 `plans/completed/` 아래에 보관한다.
+
+진행 현황은 아래 문서에서 관리한다.
+
+- [4_progress-status.md](/Users/eric/PG/math-visual/caustics/docs/plans/4_progress-status.md)
 
 ## 제안 구조
 

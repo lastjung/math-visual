@@ -1,6 +1,6 @@
 # Caustics Lab: 구현 상태 로그 (Implementation Status Log)
 
-이 문서는 `docs/caustics-centralized-settings-and-lgt-refinement-plan.md` 계획에 따른 작업 진행 상황을 기록합니다.
+이 문서는 `caustics/docs/plans/completed/caustics-centralized-settings-and-lgt-refinement-plan.md` 계획에 따른 작업 진행 상황을 기록합니다.
 
 ---
 
@@ -20,7 +20,7 @@
 **목표**: 새 scene schema의 키 이름과 경계를 확정하고 매핑표 완성.
 
 ### 1. 주요 산출물
-- **`docs/caustics-config-model-specification.md`**: 최종 스키마 드래프트 및 매핑표 작성.
+- **`caustics/docs/specs/caustics-config-model-specification.md`**: 최종 스키마 드래프트 및 매핑표 작성.
 - **`caustics/config/app-defaults.js`**: 전역 기본값 초안 파일 생성.
 - **`renderMode` 통합안**: `isPaintMode`, `isPaint2Mode`, `isLightMode`를 하나로 합치는 설계 제안 완료.
 

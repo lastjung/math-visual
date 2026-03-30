@@ -379,6 +379,9 @@ export function updateSlider(app, key, value, disableAuto = true) {
 export function updatePointer(app, pointerUpdate) {
     if (pointerUpdate.sourcePos) {
         app.sourcePos = { ...pointerUpdate.sourcePos };
+        if (!pointerUpdate.sourceAnchorPos && app.sourcePattern !== 'single') {
+            app.sourceAnchorPos = { ...pointerUpdate.sourcePos };
+        }
     }
     if (pointerUpdate.sourceAnchorPos) {
         app.sourceAnchorPos = { ...pointerUpdate.sourceAnchorPos };

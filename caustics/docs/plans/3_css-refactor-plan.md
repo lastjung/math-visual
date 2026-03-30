@@ -1,4 +1,4 @@
-# Caustics CSS Refactor Plan
+# 3_CSS계획
 
 ## 문서 목적
 

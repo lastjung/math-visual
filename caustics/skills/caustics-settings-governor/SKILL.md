@@ -24,8 +24,8 @@ This skill is for any task that touches:
 
 Before making changes, read only the relevant parts of:
 
-1. `/Users/eric/PG/math-visual/docs/caustics-centralized-settings-and-lgt-refinement-plan.md`
-2. `/Users/eric/PG/math-visual/docs/caustics-config-model-specification.md`
+1. `/Users/eric/PG/math-visual/caustics/docs/plans/completed/caustics-centralized-settings-and-lgt-refinement-plan.md`
+2. `/Users/eric/PG/math-visual/caustics/docs/specs/caustics-config-model-specification.md`
 3. `/Users/eric/PG/math-visual/caustics/core/state-mapper.js`
 4. `/Users/eric/PG/math-visual/caustics/config/shape-registry.js`
 5. `/Users/eric/PG/math-visual/caustics/config/pattern-resolver.js`
