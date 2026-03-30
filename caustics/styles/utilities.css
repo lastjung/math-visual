@@ -1,0 +1,12 @@
+/* Utilities */
+.flash-active {
+  animation: emit-flash 0.4s ease-out;
+}
+
+body.window-full .header,
+body.window-full .controls-sidebar,
+body.window-full .apple-player,
+body.window-full .player-restore-tab,
+body.window-full .drag-hint {
+  display: none !important;
+}

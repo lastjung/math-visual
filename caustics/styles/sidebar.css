@@ -1,0 +1,92 @@
+/* Sidebar */
+.controls-sidebar {
+  position: absolute;
+  top: 20px;
+  width: 298px;
+  max-height: calc(100vh - 40px);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  z-index: 50;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 4px;
+  transition: opacity 0.6s, transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
+}
+
+.controls-sidebar.right {
+  right: 20px;
+}
+
+.controls-sidebar.left {
+  left: 20px;
+}
+
+.controls-sidebar::-webkit-scrollbar {
+  width: 4px;
+}
+
+.controls-sidebar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.controls-sidebar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+}
+
+.controls-sidebar::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.sidebar-grip {
+  width: 36px;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 2px;
+  margin: 0 auto 8px;
+  cursor: grab;
+  transition: background 0.2s;
+}
+
+.sidebar-grip:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.sidebar-grip:active {
+  cursor: grabbing;
+}
+
+.controls-sidebar.right.hidden {
+  transform: translateX(340px);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.controls-sidebar.left.hidden {
+  transform: translateX(-340px);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.sidebar-close {
+  width: 18px;
+  height: 18px;
+  background: rgba(255, 255, 255, 0.05);
+  border: none;
+  border-radius: 50%;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0.3;
+  transition: all 0.2s;
+}
+
+.sidebar-close:hover {
+  opacity: 1;
+  background: rgba(255, 69, 58, 0.9);
+}

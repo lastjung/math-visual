@@ -1,0 +1,28 @@
+/* Base */
+:root {
+  --bg-deep: #020205;
+  --bg-card: rgba(18, 18, 24, 0.85);
+  --accent-cyan: #06b6d2;
+  --accent-rose: #f43f5e;
+  --accent-indigo: #6366f1;
+  --text-primary: #ffffff;
+  --text-muted: rgba(255, 255, 255, 0.4);
+  --border-white: rgba(255, 255, 255, 0.1);
+  --font-sans: 'Inter', -apple-system, system-ui, sans-serif;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background-color: var(--bg-deep);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}

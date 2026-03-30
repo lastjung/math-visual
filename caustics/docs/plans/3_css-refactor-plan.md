@@ -199,6 +199,114 @@ CSS 분리 완료 판단은 아래 항목으로 한다.
 
 - 각 selector가 어느 파일로 갈지 결정된다
 
+진행 결과:
+
+- 완료
+
+Phase 1 분류 결과:
+
+- `base.css`
+  - `:root`
+  - `*`
+  - `body`
+- `layout.css`
+  - `.header`
+  - `.logo-group`
+  - `.logo-icon`
+  - `.logo-text h1`
+  - `.logo-text p`
+  - `.shape-tabs`
+  - `.shape-tab`
+  - `.main-stage`
+- `canvas.css`
+  - `.canvas-area`
+  - `canvas`
+  - `.drag-hint`
+  - `@keyframes pulse`
+  - `.hud-timer`
+  - `.hud-speed`
+  - `.hud-bounces`
+- `panels.css`
+  - `.control-panel`
+  - `.panel-header`
+  - `.info-box`
+  - `.info-title`
+  - `.info-desc`
+  - `.apple-select`
+- `controls.css`
+  - `.setting-row`
+  - `.setting-row-inline`
+  - `.setting-label-group`
+  - `.setting-label`
+  - `.setting-value`
+  - `.row-*`
+  - `input[type=range]`
+  - `.mode-tabs`
+  - `.mode-tab`
+  - `.mode-tabs-mini`
+  - `.mini-tab`
+  - `.toggle-btn`
+  - `.toggle-option`
+  - `.toggle-track`
+  - `.checkbox-group`
+  - `.chip-checkbox`
+  - `.action-group`
+  - `.reset-btn`
+  - `.play-btn`
+  - `#btn-light`
+  - `#btn-play`
+  - `.flash-active`
+  - `@keyframes emit-flash`
+- `shape-panel.css`
+  - `.shape-badge`
+  - `.shape-badge-sub`
+  - `.shape-options-section`
+  - `.shape-accordion*`
+  - `.shape-option-card*`
+  - `.shape-preset-*`
+  - `.source-layout-*`
+  - `.source-strip-controls`
+  - `.source-direction-row`
+  - `@keyframes tooltipFadeInHeader`
+- `player.css`
+  - `.apple-player`
+  - `.player-restore-tab`
+  - `.player-close`
+  - `.player-grip`
+  - `.player-main`
+  - `.player-controls-row`
+  - `.volume-group`
+  - `.track-name-inline`
+  - `.time-label`
+  - `.icon-volume`
+  - `.apple-slider-vol`
+  - `.playback-group`
+  - `.player-btn-*`
+  - `.extra-group`
+  - `.player-timeline-row`
+  - `.timeline-container`
+  - `.timeline-progress`
+  - `#apple-play.active .play-svg-wrapper`
+- `sidebar.css`
+  - `.controls-sidebar`
+  - `.controls-sidebar.left`
+  - `.controls-sidebar.right`
+  - `.controls-sidebar::-webkit-scrollbar*`
+  - `.sidebar-grip`
+  - `.sidebar-close`
+- `utilities.css`
+  - `.hidden`
+  - `.visible`
+  - `.active`
+  - `body.window-full ...`
+  - 단, 상태와 컴포넌트가 강하게 결합된 selector는 원래 파일에 남김
+
+Phase 1 메모:
+
+- `.source-layout-panel.visible`가 두 번 선언되어 있어 Phase 2 이전에 중복 정리가 필요하다
+- `.time-label`도 player 구간에서 두 번 선언되어 있어 player 파일 분리 시 하나로 합칠 수 있다
+- `body.window-full`은 utility 성격이 강하지만 header/sidebar/player/canvas를 함께 건드리므로 마지막 단계에서 이동하는 편이 안전하다
+
 ### Phase 2. 기본 구조 분리
 
 작업:
@@ -210,6 +318,26 @@ CSS 분리 완료 판단은 아래 항목으로 한다.
 완료 기준:
 
 - reset / layout / canvas 계층이 분리된다
+
+진행 결과:
+
+- 완료
+
+Phase 2 반영 내용:
+
+- `caustics/styles/base.css` 신규 생성
+- `caustics/styles/layout.css` 신규 생성
+- `caustics/styles/canvas.css` 신규 생성
+- `caustics/styles/style.css` 상단을 import 허브 형태로 전환 시작
+  - `@import './base.css';`
+  - `@import './layout.css';`
+  - `@import './canvas.css';`
+
+Phase 2 메모:
+
+- 현재 `style.css`는 완전한 import 허브는 아니고, 남은 panel/control/player/sidebar selector를 계속 포함한다
+- 이번 단계는 상단 3개 계층만 안전하게 분리하는 데 목적이 있다
+- 다음 단계는 `panels.css`, `controls.css`, `shape-panel.css` 분리다
 
 ### Phase 3. 패널 및 컨트롤 분리
 
@@ -223,6 +351,27 @@ CSS 분리 완료 판단은 아래 항목으로 한다.
 
 - control sidebar와 shape panel 관련 selector가 분리된다
 
+진행 결과:
+
+- 완료
+
+Phase 3 반영 내용:
+
+- `caustics/styles/panels.css` 신규 생성
+- `caustics/styles/controls.css` 신규 생성
+- `caustics/styles/shape-panel.css` 신규 생성
+- `caustics/styles/style.css`에 아래 import 추가
+  - `@import './panels.css';`
+  - `@import './controls.css';`
+  - `@import './shape-panel.css';`
+- `style.css`에서 panel/control/shape-panel selector 제거 완료
+
+Phase 3 메모:
+
+- `source-layout-panel.visible` 중복은 제거되어 현재 `shape-panel.css`에만 남는다
+- `time-label`은 아직 player 구간에서 중복 선언되어 있으며, 다음 player 분리 단계에서 정리한다
+- 현재 `style.css`에는 주로 `sidebar`와 `player` 관련 selector가 남아 있다
+
 ### Phase 4. 인터랙티브 UI 분리
 
 작업:
@@ -235,6 +384,25 @@ CSS 분리 완료 판단은 아래 항목으로 한다.
 
 - floating UI 스타일이 별도 파일로 분리된다
 
+진행 결과:
+
+- 완료
+
+Phase 4 반영 내용:
+
+- `caustics/styles/sidebar.css` 신규 생성
+- `caustics/styles/player.css` 신규 생성
+- `caustics/styles/style.css`에 아래 import 추가
+  - `@import './sidebar.css';`
+  - `@import './player.css';`
+- `style.css`에서 sidebar/player selector 제거 완료
+
+Phase 4 메모:
+
+- `time-label` 중복은 `player.css`로 모이면서 하나의 값으로 정리되었다
+- `body.window-full` fullscreen hide rule은 `player.css`에 함께 이동했다
+- 현재 `style.css`는 9줄짜리 import 허브로 축소되었다
+
 ### Phase 5. 상태 클래스 및 엔트리 정리
 
 작업:
@@ -246,6 +414,24 @@ CSS 분리 완료 판단은 아래 항목으로 한다.
 완료 기준:
 
 - `style.css`가 엔트리 역할만 수행한다
+
+진행 결과:
+
+- 완료
+
+Phase 5 반영 내용:
+
+- `caustics/styles/utilities.css` 신규 생성
+- `caustics/styles/legacy-notes.md` 신규 생성
+- `caustics/styles/style.css`에 `@import './utilities.css';` 추가
+- `style.css`는 최종 import 허브 역할만 수행
+
+Phase 5 메모:
+
+- `.flash-active`와 `body.window-full ...`는 `utilities.css`로 이동
+- `.hidden / .visible / .active`는 전역 utility로 일괄 승격하지 않았다
+- 이유: 현재 프로젝트에서는 이 상태 클래스들이 단순 display 토글이 아니라 component-specific transition과 visual override를 함께 담당하기 때문
+- 남은 상태 클래스의 이유와 후속 정리 방향은 `legacy-notes.md`에 기록했다
 
 ## 실제 작업 순서
 

@@ -60,8 +60,18 @@
   - 광원 구조 1차 분리 완료
 
 - `3_CSS계획`
-  - 아직 시작 전
-  - 광원 구조 안정화 이후 진행 예정
+  - Phase 1 완료
+  - Phase 2 완료
+  - Phase 3 완료
+  - Phase 4 완료
+  - Phase 5 완료
+  - selector 분류 완료
+  - `base.css`, `layout.css`, `canvas.css` 분리 완료
+  - `panels.css`, `controls.css`, `shape-panel.css` 분리 완료
+  - `player.css`, `sidebar.css` 분리 완료
+  - `style.css`는 import 허브 수준으로 축소
+  - `utilities.css`, `legacy-notes.md` 정리 완료
+  - CSS 구조 정리 1차 완료
 
 ### 5. 이번 단계 결과
 
@@ -93,6 +103,43 @@
 - `point / parallel / converge` launch 계산을 새 파일로 이동함
 - `parallelRange` 계산과 `normalizeLightSourceMode`도 함께 이동함
 - 광원 구조 1차 분리가 완료됨
+
+### 9. 최근 반영
+
+- `3_CSS계획`의 Phase 1을 진행함
+- `style.css` selector를 역할 기준으로 분류함
+- `base / layout / canvas / panels / controls / player / sidebar / shape-panel / utilities` 매핑을 문서에 기록함
+- 다음 시작점은 `base.css`, `layout.css`, `canvas.css` 분리임
+
+### 10. 최근 반영
+
+- `3_CSS계획`의 Phase 2를 진행함
+- `base.css`, `layout.css`, `canvas.css`를 신설함
+- `style.css` 상단을 import 허브 형태로 전환하기 시작함
+- 다음 시작점은 `panels.css`, `controls.css`, `shape-panel.css` 분리임
+
+### 11. 최근 반영
+
+- `3_CSS계획`의 Phase 3을 진행함
+- `panels.css`, `controls.css`, `shape-panel.css`를 신설함
+- `style.css`에서 panel/control/shape 관련 selector를 제거함
+- 다음 시작점은 `player.css`, `sidebar.css` 분리임
+
+### 12. 최근 반영
+
+- `3_CSS계획`의 Phase 4를 진행함
+- `player.css`, `sidebar.css`를 신설함
+- `style.css`는 9줄짜리 import 허브로 축소됨
+- slider, preset card, player, sidebar가 모두 별도 파일로 분리됨
+- 다음 시작점은 `utilities.css`와 `legacy-notes.md`
+
+### 13. 최근 반영
+
+- `3_CSS계획`의 Phase 5를 진행함
+- `utilities.css`와 `legacy-notes.md`를 신설함
+- `style.css`는 최종 import 허브 역할만 수행하게 정리됨
+- 전역 utility 승격이 위험한 상태 클래스는 문서에 이유를 남김
+- CSS 구조 정리 1차가 완료됨
 
 ## 보류 메모
 

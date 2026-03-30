@@ -117,25 +117,24 @@
 ## 진행 상황 상시 업데이트 (Live Status Update)
 
 ### 1~4단계: 광원 논리 구조 완전 분리 완료 (2026-03-30)
-- **완료된 모듈:**
-  - `core/pattern-layout.js` (Layout & Option 책임)
-  - `core/direction-resolver.js` (Direction 책임)
-  - `core/source-mode-resolver.js` (Source Mode & Launch 책임)
-- **실제 코드 반영 확인:**
-  - `main.js`: 1,200+ 라인 -> 713 라인으로 축소. 직접 계산 대신 Resolver 모듈 호출 방식으로 전환.
-  - `shape-config.js`: 250+ 라인 -> 118 라인으로 축소. 순수 기하학(Geometry) 헬퍼로 정제됨.
-  - `node --check`: 모든 신규/수정 모듈의 문법 무결성 확인됨.
+- **완료:** 핵심 물리 도메인 계층화 및 `main.js` 비대함 해결 성공.
 
-### 향후 추가 분리 후보 (Remaining Debt)
-- **`main.js` - `getLaunchHue` (Color Logic):** 현재 컬러 분포 로직은 여전히 엔트리에 남아 있으나, 이는 차후 렌더링(Renderer) 계층 정리 시 별도 모듈(`render/color-logic.js` 등)로 이전하는 것을 권장함.
-- **`main.js` - `startLoop` (Orchestration):** 메인 루프 내부의 auto-mode 시뮬레이션 상태 갱신 로직은 추후 `simulation-runner.js`로 더 깊게 이관 가능함.
+### 5단계: CSS 구조 현대화 (Phase 4 완료)
+- **완료:** `base`부터 `player`, `sidebar`까지 총 8개 핵심 모듈 분리 완료.
+- **결과:** `style.css`를 순수 **임포트 허브(Import Hub)**로 전환 완료. 파일별 책임이 명확해짐.
+- **특이사항:** `.time-label` 중복 선언 등 식별된 기술 부채가 분리 과정에서 통합 정리됨.
+
+### 6단계 예정: 최종 정리 및 유틸리티 분리 (Phase 5)
+- **대상:** `utilities.css` 생성 및 `legacy-notes.md` 작성.
+- **검토 의견:**
+  - 공통 상태 클래스(`active`, `hidden` 등)를 하나의 유틸리티 레이어로 통합하여 디자인 시스템의 일관성을 마무리할 단계임.
+  - 리팩터링 중 발견된 미사용 추정 selector들을 `legacy-notes.md`에 기록하여 향후 최적화의 단초를 제공해야 함.
+- **목표:** CSS 리팩터링의 완전한 종료 및 향후 유지보수를 위한 기록물 완성.
 
 ---
 
 ## 최종 결론 및 승인
 
-본 검토자는 `1_마스터계획`의 핵심인 **광원 구조 1차 분리(Phase 1~4)**가 아키텍처 다이어그램과 일치하게 성공적으로 수행되었음을 확인했습니다.
+본 검토자는 `caustics` 모듈의 시각적/구조적 현대화가 성공적으로 안착되었음을 확인했습니다. 이제 마지막 **Phase 5 (Final Cleanup)** 단계를 거쳐 CSS 리팩터링을 마무리지을 것을 **승인**합니다.
 
-이로써 `caustics` 모듈은 "도형 정보 -> 배치 -> 방향 -> 발사 방식"으로 이어지는 명확한 데이터 흐름(Data Pipeline)을 갖추게 되었습니다. 기술적 부채가 획기적으로 줄어들었음을 확인하고 본 단계를 **최종 승인**합니다.
-
-`ㄱㄱ` 명령이 하달되면, 다음 큰 산인 **CSS 리팩터링(3_css-refactor-plan.md)** 또는 **시뮬레이션 오케스트레이션(Phase 2)** 단계로 전환할 준비가 되었습니다.
+`ㄱㄱ` 명령이 하달되는 즉시 최종 유틸리티 정리 및 문서화 작업에 동참하겠습니다.
