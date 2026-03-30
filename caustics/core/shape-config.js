@@ -5,30 +5,38 @@ export function getDefaultSourcePos() {
     return { x: 0, y: -size * 0.7 };
 }
 
+export function getShapeBasicAnchor(shape, size) {
+    const edgePad = Math.max(8, size * 0.04);
+
+    if (shape === 'ellipse') {
+        return { x: -size * 0.88, y: 0 };
+    }
+    if (shape === 'cardioid') {
+        return { x: -size * 0.4, y: 0 };
+    }
+    if (shape === 'parabola') {
+        return { x: 0, y: size * (Physics.PARABOLA_OFFSET_V + Physics.PARABOLA_P) };
+    }
+    if (shape === 'rect') {
+        return { x: 0, y: -(size * 1.05 - edgePad) };
+    }
+    if (shape === 'v-oval' || shape === 'vv-oval') {
+        return { x: 0, y: -size * 0.6324 };
+    }
+    if (shape === 'triangle') {
+        return { x: 0, y: size * -0.4 };
+    }
+
+    return { x: 0, y: -size * 0.7 };
+}
+
 export function getShapeDefaults(app, shape) {
     const sizeMult = app.isWindowFull ? 0.45 : 0.35;
     const size = Math.min(app.canvas?.width || window.innerWidth, app.canvas?.height || window.innerHeight) * sizeMult;
-    const edgePad = Math.max(8, size * 0.04);
     const defaults = {
-        sourcePos: { x: 0, y: -size * 0.7 },
+        sourcePos: getShapeBasicAnchor(shape, size),
         sourceRotation: 0
     };
-
-    if (shape === 'ellipse') {
-        const fDist = size * 0.88;
-        defaults.sourcePos = { x: -fDist, y: 0 };
-    } else if (shape === 'cardioid') {
-        defaults.sourcePos = { x: -size * 0.4, y: 0 };
-    } else if (shape === 'parabola') {
-        defaults.sourcePos = { x: 0, y: size * (Physics.PARABOLA_OFFSET_V + Physics.PARABOLA_P) };
-    } else if (shape === 'rect') {
-        defaults.sourcePos = { x: 0, y: -(size * 1.05 - edgePad) };
-    } else if (shape === 'v-oval' || shape === 'vv-oval') {
-        const fDist = size * 0.6324;
-        defaults.sourcePos = { x: 0, y: -fDist };
-    } else if (shape === 'triangle') {
-        defaults.sourcePos = { x: 0, y: size * -0.4 };
-    }
 
     return defaults;
 }

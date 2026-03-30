@@ -1,5 +1,5 @@
 import { Physics } from '../sim/physics.js';
-import { getShapeLayoutCenter, getVertexLayoutPoints } from './shape-config.js';
+import { getShapeBasicAnchor, getShapeLayoutCenter, getVertexLayoutPoints } from './shape-config.js';
 
 function getOrderedVertexBoundaryAngles(shape) {
     if (shape === 'circle' || shape === 'ellipse' || shape === 'v-oval' || shape === 'vv-oval') {
@@ -63,6 +63,10 @@ export function getStripAnchorPoint(shape, size, optionId) {
     if (optionId === 'online') {
         const sidePoint = getTopmostPoint(getVertexOnlinePoints(shape, size));
         if (sidePoint) return sidePoint;
+    }
+
+    if (optionId === 'basic') {
+        return getShapeBasicAnchor(shape, size);
     }
 
     const vertexPoint = getTopmostPoint(getVertexLayoutPoints(shape, size));
