@@ -63,6 +63,10 @@ export function setupPlayer(app, ui) {
     if (btnPartialReset) {
         btnPartialReset.onclick = () => {
             app.resetRays(true);
+            if (window.audioManager) {
+                window.audioManager.stop();
+                app.nextBGM(false, false); // Pick a new track in the background
+            }
             ui.update(app);
         };
     }
