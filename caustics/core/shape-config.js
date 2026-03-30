@@ -83,6 +83,50 @@ export function getVertexLayoutPoints(shape, size) {
         .map((rad) => Physics.getShapePoint(rad, shape, size));
 }
 
+function getOrderedVertexBoundaryAngles(shape) {
+    if (shape === 'circle' || shape === 'ellipse' || shape === 'v-oval' || shape === 'vv-oval') {
+        return [-Math.PI / 2, -Math.PI / 2 + (Math.PI * 2) / 3, -Math.PI / 2 + (Math.PI * 4) / 3];
+    }
+    if (shape === 'cardioid') {
+        return [Math.PI, (Math.PI * 5) / 3, Math.PI / 3];
+    }
+    return null;
+}
+
+export function getVertexOnlinePoints(shape, size) {
+    const vertices = getVertexLayoutPoints(shape, size);
+    if (!Array.isArray(vertices) || vertices.length < 2) return vertices;
+
+    if (shape === 'triangle' || shape === 'rect') {
+        return vertices.map((vertex, index) => {
+            const next = vertices[(index + 1) % vertices.length];
+            return {
+                x: (vertex.x + next.x) * 0.5,
+                y: (vertex.y + next.y) * 0.5
+            };
+        });
+    }
+
+    const boundaryAngles = getOrderedVertexBoundaryAngles(shape);
+    if (Array.isArray(boundaryAngles) && boundaryAngles.length === vertices.length) {
+        return boundaryAngles.map((rad, index) => {
+            let nextRad = boundaryAngles[(index + 1) % boundaryAngles.length];
+            if (nextRad <= rad) nextRad += Math.PI * 2;
+            const midRad = rad + (nextRad - rad) * 0.5;
+            return Physics.getShapePoint(midRad, shape, size);
+        });
+    }
+
+    // Fallback for shapes without a simple boundary-arc parameterization.
+    return vertices.map((vertex, index) => {
+        const next = vertices[(index + 1) % vertices.length];
+        return {
+            x: (vertex.x + next.x) * 0.5,
+            y: (vertex.y + next.y) * 0.5
+        };
+    });
+}
+
 export function getTriangleBaseOrigins(app, size) {
     const base = app.sourcePattern === 'single'
         ? { ...app.sourcePos }
@@ -96,8 +140,11 @@ export function getTriangleBaseOrigins(app, size) {
             x: base.x - layoutCenter.x,
             y: base.y - layoutCenter.y
         };
+        const vertexPoints = app.sourceOption === 'online'
+            ? getVertexOnlinePoints(app.shape, size)
+            : getVertexLayoutPoints(app.shape, size);
 
-        return getVertexLayoutPoints(app.shape, size).map((vertex) => ({
+        return vertexPoints.map((vertex) => ({
             x: vertex.x + offset.x,
             y: vertex.y + offset.y
         }));

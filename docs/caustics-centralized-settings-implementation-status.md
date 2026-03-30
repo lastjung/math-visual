@@ -117,3 +117,37 @@ Caustics 앱의 상태 관리와 UI 제어 경로는 중앙 집중형 Scene Sche
 - [caustics-settings-governor](/Users/eric/PG/math-visual/caustics/skills/caustics-settings-governor/SKILL.md)
 
 이 스킬은 설정을 `shape / patternId / options / auto / pointer / sliders`로 분류하고, 각 변경이 어느 파일과 경로를 통해 들어가야 하는지 고정한다.
+
+---
+
+## 🟡 2026-03-30: Pattern / Option 규칙 재고정 (문서화 완료)
+
+**목표**: 최근 대화에서 확정한 `pattern`, `option`, `preset` 의미를 현재 코드 기준으로 다시 고정.
+
+### 반영된 규칙
+
+- `sourcePattern`은 광원 형태다: `single | vertex | strip`
+- `sourceOption`은 세부 위치 옵션이다: `basic | center | online`
+- `patternId`는 왼쪽 프리셋 버튼이 선택하는 scene preset이다
+
+### option 규칙
+
+- `basic`: 가능한 경우 `focus`, 없으면 `center` 수직선 위 canonical point
+- `center`: 각 도형이 정한 canonical center
+- `online`: `y`축 상단에서 도형 경계와 만나는 점
+
+### pattern별 보정 규칙
+
+- `vertex > center`는 현재 편의상 `vertex > basic`과 동일하게 취급한다.
+- 이유: `vertex` 패턴에서 `center`를 별도 의미로 엄밀히 정의하면 개념 충돌이 커지므로, 현재 UI 구조를 유지하면서 규칙을 단순화하기 위함.
+
+### 코드 반영 메모
+
+- `sourceOption`은 현재 scene state에 포함된다
+- `online`은 `shape-y-axis-top` 토큰으로 공통 처리된다
+- `ellipse basic`은 타원 내부 초점 쪽으로 수정 완료
+
+### 다음 구조 작업 메모
+
+- `shape geometry`와 `pattern layout` 분리는 아직 미실행
+- 이 작업은 별도 리팩토링 턴에서 수행

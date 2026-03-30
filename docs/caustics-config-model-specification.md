@@ -121,3 +121,100 @@ export const GLOBAL_DEFAULTS = {
 
 ## 5. 다음 단계 실행을 위한 state-mapper.js 업데이트 (예정)
 1단계 명세가 확정되면, `state-mapper.js`의 `readCurrentScene`과 `applyScene`에서 `triangleSourceMode` -> `sourceLayout` 등의 이름 변경을 반영할 예정입니다.
+
+---
+
+## 6. 2026-03-30 운영 규칙 고정
+
+이 섹션은 현재 `caustics` 코드와 최근 합의된 용어를 기준으로 실제 운영 규칙을 고정한다.
+
+### 6.1 핵심 계층
+
+- `shape`: 도형 자체. 각 도형은 자기 기준의 `center`, `vertex`, `focus` 규칙을 가진다.
+- `pattern`: 광원의 큰 배치 형태.
+- `option`: 해당 pattern 안에서 쓰는 세부 위치 세팅.
+- `patternId`: 화면 왼쪽 프리셋 버튼이 선택하는 장면 단위 preset.
+
+현재 코드 기준 용어는 아래를 사용한다.
+
+- `options.sourcePattern`: `single | vertex | strip`
+- `options.sourceOption`: `basic | center | online`
+- `patternId`: 예: `center-orbit`, `edge-sweep`, `vertex-edge`
+
+### 6.2 Pattern 의미
+
+- `single`: 광원 1개 배치
+- `vertex`: 도형의 vertex 집합 기반 다중 배치
+- `strip`: 한 축을 따라 여러 광원을 선형 배치
+
+주의:
+
+- `vertex`는 "항상 삼각형"을 뜻하지 않는다.
+- 각 도형은 자기 규칙에 따라 vertex 집합을 정의할 수 있다.
+- 실제 구현은 `caustics/core/shape-config.js`의 도형별 분기로 관리한다.
+
+### 6.3 Option 의미
+
+`sourceOption`은 `single` 패턴의 세부 위치 규칙으로 취급한다.
+
+- `basic`
+  - 원칙: 가능한 경우 `focus`
+  - `focus`가 없는 도형은 `center` 수직선 위의 canonical point
+- `center`
+  - 각 도형이 정한 canonical `center`
+  - 이 값의 의미는 도형별 규칙에 따른다
+- `online`
+  - `y`축과 도형이 만나는 상단 경계점
+
+현재 코드에서는 `online`이 공통 토큰 `shape-y-axis-top`으로 해석된다.
+
+### 6.3.a Pattern별 option 해석 메모
+
+현재 `option`은 pattern마다 해석이 달라질 수 있다.
+
+- `single > basic`
+  - 가능한 경우 `focus`
+  - 없으면 `center` 수직선 위 canonical point
+- `single > center`
+  - 해당 도형이 정한 canonical center
+- `single > online`
+  - `y`축 상단 경계 교점
+
+- `vertex > basic`
+  - 해당 도형의 canonical vertex set
+- `vertex > center`
+  - 편의상 현재는 `vertex > basic`과 동일하게 취급
+- `vertex > online`
+  - 인접 vertex pair 사이의 side/arc 위 대표점 집합
+
+이 `vertex > center = basic` 규칙은 의미론적으로 완전한 최종형이라기보다, 현재 UI 구조를 유지하기 위한 운영상 편의 규칙이다.
+
+### 6.4 Preset naming rule
+
+- `patternId`는 scene/preset 이름이다.
+- `pattern` 이름과 `preset` 이름을 섞지 않는다.
+- 가능하면 preset 이름은 동작이나 장면 성격을 말하고, pattern 자체 이름을 중복하지 않는다.
+
+예:
+
+- 좋은 예: `edge-sweep`, `corner-echo`, `focus-lock`
+- 나쁜 예: pattern 의미를 다시 반복하는 과도한 이름
+
+### 6.5 구조 리팩토링 방향
+
+큰 리팩토링 전까지는 아래 책임을 유지한다.
+
+- `caustics/core/shape-config.js`
+  - 도형별 `center`, `vertex`, 기본 기하 규칙
+- `caustics/config/shape-registry.js`
+  - `patternId`, `sourceOption`, UI copy
+- `caustics/config/pattern-resolver.js`
+  - token 해석 (`shape-focus`, `shape-center`, `shape-y-axis-top`)
+- `caustics/core/state-mapper.js`
+  - `sourcePattern`, `sourceOption`, `patternId`의 공식 적용 경로
+
+다음 구조 개편 턴에서 목표로 삼을 것은 다음이다.
+
+- shape geometry API 분리
+- pattern layout 생성기 분리
+- `single / vertex / strip`의 origin 생성 로직 통합
