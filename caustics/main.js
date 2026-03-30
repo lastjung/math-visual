@@ -208,8 +208,8 @@ const App = {
         if (this.colorMode === 'cosmic') {
             return interpolate(distributionT, [180, 220, 280, 320]);
         }
-        if (this.colorMode === 'emerald') {
-            return interpolate(distributionT, [55, 90, 130, 170]);
+        if (this.colorMode === 'amber') {
+            return interpolate(distributionT, [24, 34, 44, 56]);
         }
         if (this.colorMode === 'lime') {
             return interpolate(distributionT, [85, 145, 195, 235]);

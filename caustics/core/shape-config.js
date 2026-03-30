@@ -88,6 +88,7 @@ export function getVertexLayoutPoints(shape, size) {
     if (shape === 'parabola') {
         return [0, Math.PI, Math.PI * 2].map((rad) => Physics.getShapePoint(rad, shape, size));
     }
+    // Original vertical-aligned vertices (Top point exists)
     return [-Math.PI / 2, -Math.PI / 2 + (Math.PI * 2) / 3, -Math.PI / 2 + (Math.PI * 4) / 3]
         .map((rad) => Physics.getShapePoint(rad, shape, size));
 }

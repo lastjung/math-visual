@@ -229,11 +229,18 @@ export function applySourceOption(app, presetId) {
             updateSlider(app, key, val, false);
         }
     }
-    if (app.sourcePattern === 'vertex' && presetId === 'center') {
-        updateSlider(app, 'spread', Math.PI / 3, false);
-    }
     if (resolved.pointer) {
         updatePointer(app, resolved.pointer);
+    }
+
+    // VERTEX special case: always stay centered specifically for ONLINE mode
+    if (app.sourcePattern === 'vertex' && presetId === 'online') {
+        const center = app.getShapeLayoutCenter(app.shape);
+        updatePointer(app, {
+            sourceAnchorPos: center,
+            sourcePos: center
+        });
+        updateSlider(app, 'spread', Math.PI / 3, false);
     }
 
     if (app.sourcePattern === 'strip') {

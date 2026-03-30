@@ -1,21 +1,33 @@
 import { Physics } from '../sim/physics.js';
 import { getShapeBasicAnchor, getShapeLayoutCenter, getVertexLayoutPoints } from './shape-config.js';
 
-function getOrderedVertexBoundaryAngles(shape) {
-    if (shape === 'circle' || shape === 'ellipse' || shape === 'v-oval' || shape === 'vv-oval') {
-        return [-Math.PI / 2, -Math.PI / 2 + (Math.PI * 2) / 3, -Math.PI / 2 + (Math.PI * 4) / 3];
-    }
-    if (shape === 'cardioid') {
-        return [Math.PI, (Math.PI * 5) / 3, Math.PI / 3];
-    }
-    return null;
+function recenterPoints(points, targetCenter) {
+    if (!Array.isArray(points) || points.length === 0) return points;
+
+    const centroid = points.reduce((acc, point) => ({
+        x: acc.x + point.x,
+        y: acc.y + point.y
+    }), { x: 0, y: 0 });
+
+    const currentCenter = {
+        x: centroid.x / points.length,
+        y: centroid.y / points.length
+    };
+
+    const dx = targetCenter.x - currentCenter.x;
+    const dy = targetCenter.y - currentCenter.y;
+
+    return points.map((point) => ({
+        x: point.x + dx,
+        y: point.y + dy
+    }));
 }
 
 export function getVertexOnlinePoints(shape, size) {
     const vertices = getVertexLayoutPoints(shape, size);
-    if (!Array.isArray(vertices) || vertices.length < 2) return vertices;
+    if (!Array.isArray(vertices) || vertices.length === 0) return vertices;
 
-    if (shape === 'triangle' || shape === 'rect') {
+    if (shape === 'triangle' || shape === 'rect' || shape === 'parabola') {
         return vertices.map((vertex, index) => {
             const next = vertices[(index + 1) % vertices.length];
             return {
@@ -25,22 +37,35 @@ export function getVertexOnlinePoints(shape, size) {
         });
     }
 
-    const boundaryAngles = getOrderedVertexBoundaryAngles(shape);
-    if (Array.isArray(boundaryAngles) && boundaryAngles.length === vertices.length) {
-        return boundaryAngles.map((rad, index) => {
-            let nextRad = boundaryAngles[(index + 1) % boundaryAngles.length];
-            if (nextRad <= rad) nextRad += Math.PI * 2;
-            const midRad = rad + (nextRad - rad) * 0.5;
-            return Physics.getShapePoint(midRad, shape, size);
+    if (shape === 'circle' || shape === 'ellipse') {
+        // Special Case: Vertex Online for Circle/Ellipse should be X-axis symmetric (Horizontal)
+        return [0, (Math.PI * 2) / 3, (Math.PI * 4) / 3].map((rad) => {
+            const point = Physics.getShapePoint(rad, shape, size);
+            return point;
         });
     }
 
-    // Fallback for shapes without a simple boundary-arc parameterization.
-    return vertices.map((vertex, index) => {
-        const next = vertices[(index + 1) % vertices.length];
+    if (shape === 'cardioid') {
+        const center = getShapeLayoutCenter(shape, size);
+        const cusp = vertices[0];
+        return recenterPoints([
+            cusp,
+            {
+                x: center.x + (vertices[1].x - center.x) * 1.0,
+                y: center.y + (vertices[1].y - center.y) * 1.0
+            },
+            {
+                x: center.x + (vertices[2].x - center.x) * 1.0,
+                y: center.y + (vertices[2].y - center.y) * 1.0
+            }
+        ], center);
+    }
+
+    const layoutCenter = getShapeLayoutCenter(shape, size);
+    return vertices.map((vertex) => {
         return {
-            x: (vertex.x + next.x) * 0.5,
-            y: (vertex.y + next.y) * 0.5
+            x: layoutCenter.x + (vertex.x - layoutCenter.x) * 1.0,
+            y: layoutCenter.y + (vertex.y - layoutCenter.y) * 1.0
         };
     });
 }
