@@ -13,7 +13,7 @@
   "options": {
     "lightSourceMode": "string",   // 'point', 'parallel', 'converge'
     "sourceLayout": "string",      // 'single', 'triad', 'strip' (구 triangleSourceMode)
-    "sourceDirection": "string",   // 'parallel', 'inward', 'outward', 'edge-normal' (구 triangleDirectionMode)
+    "sourceDirection": "string",   // 'down', 'inward', 'outward', 'edge-normal' (구 triangleDirectionMode)
     "baseStyle": "string",         // 'line', 'dot'
     "flowMode": "string",          // 'none', 'pulse', 'random'
     "renderMode": "string"         // 'flow', 'paint', 'paint2', 'light' (결합 모드)
@@ -77,7 +77,7 @@ export const GLOBAL_DEFAULTS = {
     options: {
         lightSourceMode: 'point',
         sourceLayout: 'single',
-        sourceDirection: 'parallel',
+        sourceDirection: 'down',
         baseStyle: 'line',
         flowMode: 'none',
         renderMode: 'flow' 
@@ -133,12 +133,14 @@ export const GLOBAL_DEFAULTS = {
 - `shape`: 도형 자체. 각 도형은 자기 기준의 `center`, `vertex`, `focus` 규칙을 가진다.
 - `pattern`: 광원의 큰 배치 형태.
 - `option`: 해당 pattern 안에서 쓰는 세부 위치 세팅.
+- `direction`: 광선이 어떤 방향 규칙으로 발사되는지 결정하는 레이어.
 - `patternId`: 화면 왼쪽 프리셋 버튼이 선택하는 장면 단위 preset.
 
 현재 코드 기준 용어는 아래를 사용한다.
 
 - `options.sourcePattern`: `single | vertex | strip`
 - `options.sourceOption`: `basic | center | online`
+- `options.sourceDirection`: `down | inward | outward | edge-normal`
 - `patternId`: 예: `center-orbit`, `edge-sweep`, `vertex-edge`
 
 ### 6.2 Pattern 의미
@@ -189,11 +191,30 @@ export const GLOBAL_DEFAULTS = {
 
 이 `vertex > center = basic` 규칙은 의미론적으로 완전한 최종형이라기보다, 현재 UI 구조를 유지하기 위한 운영상 편의 규칙이다.
 
+- `strip > basic`
+  - 맨위 꼭지점 기준 anchor를 사용
+- `strip > center`
+  - center를 지나는 strip
+- `strip > online`
+  - side 위 anchor를 기준으로 strip을 배치
+
 ### 6.4 Preset naming rule
 
 - `patternId`는 scene/preset 이름이다.
 - `pattern` 이름과 `preset` 이름을 섞지 않는다.
 - 가능하면 preset 이름은 동작이나 장면 성격을 말하고, pattern 자체 이름을 중복하지 않는다.
+
+### 6.4.a Direction 규칙
+
+- UI의 `DIR`은 `direction`을 뜻한다.
+- `direction`은 광선의 발사 방향 규칙이며, 위치나 배치 자체를 뜻하지 않는다.
+- 현재 코드는 `options.sourceDirection`으로 저장/복원한다.
+- 왼쪽 `DIR` UI에서 `Down`은 내부값 `down`에 대응한다.
+- 대표 값:
+  - `down`
+  - `inward`
+  - `outward`
+  - `edge-normal`
 
 예:
 

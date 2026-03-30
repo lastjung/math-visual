@@ -1,5 +1,6 @@
 import { SHAPE_REGISTRY } from '../config/shape-registry.js';
 import { resolvePattern } from '../config/pattern-resolver.js';
+import { getStripAnchorPoint } from './shape-config.js';
 
 function normalizePatternId(patternId) {
     if (patternId === 'triad-edge') return 'vertex-edge';
@@ -75,6 +76,9 @@ export function applyScene(app, scene) {
         : scene.options?.sourcePattern === 'triad'
             ? 'vertex'
             : scene.options?.sourcePattern;
+    const normalizedSourceDirection = scene.options?.sourceDirection === 'parallel'
+        ? 'down'
+        : scene.options?.sourceDirection;
     const normalizedPatternId = normalizePatternId(scene.patternId);
 
     // 1. Shape
@@ -91,7 +95,7 @@ export function applyScene(app, scene) {
         if (o.lightSourceMode !== undefined) app.lightSourceMode = o.lightSourceMode;
         if (normalizedSourcePattern !== undefined) app.sourcePattern = normalizedSourcePattern;
         if (o.sourceOption !== undefined) app.sourceOption = o.sourceOption;
-        if (o.sourceDirection !== undefined) app.sourceDirection = o.sourceDirection;
+        if (normalizedSourceDirection !== undefined) app.sourceDirection = normalizedSourceDirection;
         if (o.colorDistribution !== undefined) app.colorDistribution = o.colorDistribution;
         if (o.baseStyle !== undefined) app.baseStyle = o.baseStyle;
         if (o.flowMode !== undefined) app.flowMode = o.flowMode;
@@ -229,6 +233,12 @@ export function applySourceOption(app, presetId) {
         updatePointer(app, resolved.pointer);
     }
 
+    if (app.sourcePattern === 'strip') {
+        updatePointer(app, {
+            sourceAnchorPos: getStripAnchorPoint(app.shape, app.getShapeSize(), presetId)
+        });
+    }
+
     app.sourceOption = presetId;
     app.patternId = null;
     if (typeof app.resetRays === 'function') app.resetRays(true);
@@ -246,6 +256,10 @@ export function updateOption(app, key, value) {
     if (key === 'sourcePattern') {
         if (value === 'triple-axis') value = 'single';
         if (value === 'triad') value = 'vertex';
+    }
+
+    if (key === 'sourceDirection' && value === 'parallel') {
+        value = 'down';
     }
     
     // Remapping

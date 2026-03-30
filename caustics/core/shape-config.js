@@ -46,6 +46,7 @@ export function getTriangleVertices(size) {
 export function getShapeLayoutCenter(shape, size) {
     if (shape === 'triangle') return { x: 0, y: size * 0.2 };
     if (shape === 'cardioid') return { x: size * 0.5, y: 0 };
+    if (shape === 'parabola') return { x: 0, y: size * Physics.PARABOLA_OFFSET_V };
     return { x: 0, y: 0 };
 }
 
@@ -127,6 +128,32 @@ export function getVertexOnlinePoints(shape, size) {
     });
 }
 
+function getTopmostPoint(points) {
+    if (!Array.isArray(points) || points.length === 0) return null;
+    return points.reduce((best, point) => {
+        if (!best) return point;
+        if (point.y < best.y) return point;
+        if (point.y === best.y && point.x < best.x) return point;
+        return best;
+    }, null);
+}
+
+export function getStripAnchorPoint(shape, size, optionId) {
+    if (optionId === 'center') {
+        return getShapeLayoutCenter(shape, size);
+    }
+
+    if (optionId === 'online') {
+        const sidePoint = getTopmostPoint(getVertexOnlinePoints(shape, size));
+        if (sidePoint) return sidePoint;
+    }
+
+    const vertexPoint = getTopmostPoint(getVertexLayoutPoints(shape, size));
+    if (vertexPoint) return vertexPoint;
+
+    return getShapeLayoutCenter(shape, size);
+}
+
 export function getTriangleBaseOrigins(app, size) {
     const base = app.sourcePattern === 'single'
         ? { ...app.sourcePos }
@@ -192,7 +219,7 @@ export function getTriangleLaunchAngle(app, origin, size, localT = 0.5) {
     const spreadOffset = (localT - 0.5) * app.spread;
     const layoutCenter = getShapeLayoutCenter(app.shape, size);
 
-    if (app.sourceDirection === 'parallel') {
+    if (app.sourceDirection === 'down') {
         return baseAngle + spreadOffset;
     }
 

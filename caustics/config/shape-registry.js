@@ -326,10 +326,10 @@ export const SHAPE_REGISTRY = {
         sourceOptions: {
             'basic': {
                 pointer: { sourcePos: { x: 0, y: { unit: 'size', value: -0.5 } } },
-                sliders: { spread: 3.1416 }
+                sliders: { spread: 1.0472 }
             },
             'center': {
-                pointer: { anchorPreset: 'shape-center', sourcePos: { x: 0, y: { unit: 'size', value: 0.25 } } },
+                pointer: { anchorPreset: 'shape-center', sourcePos: { x: 0, y: { unit: 'size', value: 0.75 } } },
                 sliders: { spread: 6.2832 }
             },
             'online': {
@@ -430,7 +430,7 @@ export const SHAPE_REGISTRY = {
             'vertex-graze': {
                 label: 'Vertex Graze',
                 note: 'A near-corner launch that reveals how quickly a triangle becomes unstable when a path approaches a vertex.',
-                options: { lightSourceMode: 'point',  sourceDirection: 'parallel' },
+                options: { lightSourceMode: 'point',  sourceDirection: 'down' },
                 pointer: { sourcePos: { x: { unit: 'size', value: -0.12 }, y: { unit: 'size', value: -0.38 } } },
                 sliders: { spread: 0.16, sourceRotation: -0.82 }
             },

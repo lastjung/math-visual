@@ -7,7 +7,7 @@ export function trianglePanelContent(app, baseContent) {
         strip: 'Source Strip'
     };
     const directionLabels = {
-        parallel: 'Parallel',
+        down: 'Down',
         inward: 'Inward',
         outward: 'Outward',
         'edge-normal': 'Edge Normal'
@@ -26,7 +26,7 @@ export function trianglePanelContent(app, baseContent) {
 
     return {
         ...baseContent,
-        meta: `${sourceLabels[app.sourcePattern] || 'Multi Source'} / ${directionLabels[app.sourceDirection] || 'Parallel'}`,
+        meta: `${sourceLabels[app.sourcePattern] || 'Multi Source'} / ${directionLabels[app.sourceDirection] || 'Down'}`,
         cardTitle: `${sourceLabels[app.sourcePattern] || 'Multi Source'} Layout`,
         cardCopy: app.sourceDirection === 'edge-normal'
             ? 'Sources are aligned by the nearest edge normal, which usually gives the cleanest triangular caustic structure.'
@@ -34,7 +34,7 @@ export function trianglePanelContent(app, baseContent) {
                 ? 'Each source is aimed toward the triangle center, which emphasizes convergence and interior crossings.'
                 : app.sourceDirection === 'outward'
                     ? 'Each source points away from the center, producing more explosive edge-first reflections.'
-                    : 'All sources share the same launch direction, so the whole pattern reads like one coordinated beam field.',
+                    : 'Most sources start near the upper side, so this mode sends the whole set downward with one shared launch angle.',
         note: app.sourcePattern === 'vertex'
             ? 'Tip: vertex mode is locked to the three vertices, so direction mode makes the biggest visual difference here.'
             : 'Tip: strip uses point count and vertex bias together, so increase count first and then tune the spread.'

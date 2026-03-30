@@ -71,7 +71,7 @@ const App = {
     lightSourceMode: 'point', // 'point' or 'parallel'
     sourcePattern: 'single',
     sourceOption: 'basic',
-    sourceDirection: 'parallel',
+    sourceDirection: 'down',
     colorDistribution: 'frequency',
     trianglePointCount: 5,
     triangleVertexBias: 0.6,

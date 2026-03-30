@@ -7,7 +7,7 @@ export const GLOBAL_DEFAULTS = {
     options: {
         lightSourceMode: 'point',
         sourcePattern: 'single',      // Formerly sourceLayout
-        sourceDirection: 'parallel',    // Formerly triangleDirectionMode
+        sourceDirection: 'down',
         colorDistribution: 'frequency',
         baseStyle: 'line',
         flowMode: 'none',

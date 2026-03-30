@@ -128,6 +128,7 @@ Caustics 앱의 상태 관리와 UI 제어 경로는 중앙 집중형 Scene Sche
 
 - `sourcePattern`은 광원 형태다: `single | vertex | strip`
 - `sourceOption`은 세부 위치 옵션이다: `basic | center | online`
+- `sourceDirection`은 광선 방향 규칙이다
 - `patternId`는 왼쪽 프리셋 버튼이 선택하는 scene preset이다
 
 ### option 규칙
@@ -140,6 +141,9 @@ Caustics 앱의 상태 관리와 UI 제어 경로는 중앙 집중형 Scene Sche
 
 - `vertex > center`는 현재 편의상 `vertex > basic`과 동일하게 취급한다.
 - 이유: `vertex` 패턴에서 `center`를 별도 의미로 엄밀히 정의하면 개념 충돌이 커지므로, 현재 UI 구조를 유지하면서 규칙을 단순화하기 위함.
+- `strip > basic`: 맨위 꼭지점 기준
+- `strip > center`: center 기준
+- `strip > online`: side 위 anchor 기준
 
 ### 코드 반영 메모
 
