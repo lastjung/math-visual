@@ -529,7 +529,7 @@ export function runColorSimulation(app) {
     const stages = [
         { subtitle: 'Twilight', colorMode: 'twilight', duration: 15000 },
         { subtitle: 'Cosmic', colorMode: 'cosmic', duration: 15000 },
-        { subtitle: 'Amber', colorMode: 'amber', duration: 15000 },
+        { subtitle: 'Sunset', colorMode: 'sunset', duration: 15000 },
         { subtitle: 'Aurora', colorMode: 'aurora', duration: 15000 },
         { subtitle: 'Rainbow', colorMode: 'rainbow', duration: 15000 }
     ];
