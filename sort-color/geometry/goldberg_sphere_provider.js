@@ -274,12 +274,20 @@ const GoldbergSphereGeometryProvider = {
             const projectedCell = rotatedCell.map((point) => this.projectSpherePointToCanvas(point, cx, cy, radius, scaleBoost));
             const rotatedCenter = rotatedPoints[index];
             const theta = Math.acos(Math.max(-1, Math.min(1, topology.points[index].y)));
+            
+            // Visual logic (Scheme support)
+            const visual = this.getGoldbergVisual(index, topology.points.length, topology.points[index], options.alpha || 0.92);
+
             return {
                 originalIndex: index,
                 center: topology.points[index],
                 rotatedCenter,
                 depth: rotatedCenter.z,
                 hidden: rotatedCenter.z < -0.18,
+                hue: visual.hue,
+                saturation: visual.saturation,
+                lightness: visual.lightness,
+                color: visual.color,
                 geometry: {
                     kind: 'polygon',
                     points: projectedCell,
@@ -293,6 +301,7 @@ const GoldbergSphereGeometryProvider = {
                 }
             };
         });
+
 
         let mapping = Array.from({ length: topology.faceCells.length }, (_, index) => index);
         if (options.slotMapping === 'top-down') {
@@ -336,21 +345,24 @@ const GoldbergSphereGeometryProvider = {
             const raw = entriesRaw[originalIndex];
             return {
                 slotIndex,
-                geometry: raw.geometry,
+                originalIndex,
                 meta: {
+                    index: originalIndex,
                     center: raw.center,
-                    ...raw.meta,
-                    originalIndex,
-                    rotatedCenter: raw.rotatedCenter,
                     depth: raw.depth,
-                    hidden: raw.hidden
-                }
+                    hidden: raw.hidden,
+                    northness: raw.meta.northness,
+                    theta: raw.meta.theta
+                },
+
+                geometry: raw.geometry
             };
         });
 
         const items = mapping.map((originalIndex, slotIndex) => {
             const slot = slots[slotIndex];
-            const hue = (originalIndex / Math.max(1, topology.points.length)) * 360;
+            const raw = entriesRaw[originalIndex];
+            const alpha = slot.meta.hidden ? 0.12 : (raw.alpha || 0.92);
             return {
                 id: `sphere-face-${originalIndex}`,
                 originalIndex,
@@ -360,14 +372,15 @@ const GoldbergSphereGeometryProvider = {
                     kind: 'polygon',
                     points: topology.faceCells[originalIndex]
                 },
-                hue,
-                saturation: 90,
-                lightness: 58,
-                alpha: slot.meta.hidden ? 0.12 : 0.92,
-                color: `hsla(${hue}, 90%, 58%, ${slot.meta.hidden ? 0.12 : 0.92})`,
+                hue: raw.hue,
+                saturation: raw.saturation || 90,
+                lightness: raw.lightness || 58,
+                alpha,
+                color: raw.color.replace(/[\d.]+\)$/, `${alpha})`),
                 meta: slot.meta
             };
         });
+
 
         const drawOrder = Array.from({ length: items.length }, (_, index) => index)
             .sort((a, b) => slots[a].meta.depth - slots[b].meta.depth);
@@ -383,23 +396,45 @@ const GoldbergSphereGeometryProvider = {
             slots,
             drawOrder,
             points: points2D,
-            providerMeta: {
-                label: 'Goldberg Sphere',
-                itemCount: items.length,
-                targetCount,
-                frequency,
-                rotX,
-                rotY,
-                northPole: {
-                    point: northPole2D,
-                    hidden: rotatedNorthPole.z < -0.18
-                },
-                southPole: {
-                    point: southPole2D,
-                    hidden: rotatedSouthPole.z < -0.18
-                }
-            }
+            pole: { north: northPole2D, south: southPole2D },
+            meta: { frequency, rotX, rotY, radius, cx, cy, options }
         };
+    },
+
+    getGoldbergVisual(i, n, point, alpha = 0.92) {
+        const safeN = Math.max(1, n);
+        
+        if (this.colorMode === 'scheme' && typeof ColorSchemeManager !== 'undefined') {
+            const hue = ColorSchemeManager.getHue(i / safeN);
+            return {
+                hue,
+                saturation: 100,
+                lightness: 50,
+                alpha,
+                color: `hsla(${hue}, 100%, 50%, ${alpha})`
+            };
+        }
+
+        if (this.colorMode === 'monochrome') {
+            return { hue: 200, saturation: 20, lightness: 85, color: `hsla(200, 20%, 85%, ${alpha})` };
+        }
+
+        if (this.colorMode === 'origin' || this.colorMode === 'length') {
+            // Latitude-based
+            const hue = ((point.y + 1) * 0.5) * 360;
+            return { hue, saturation: 90, lightness: 60, color: `hsla(${hue}, 90%, 60%, ${alpha})` };
+        }
+
+        if (this.colorMode === 'angle') {
+            // Longitude-based
+            const hue = GoldbergSphereGeometryProvider.normalizeAngle(Math.atan2(point.z, point.x)) / (Math.PI * 2) * 360;
+            return { hue, saturation: 95, lightness: 62, color: `hsla(${hue}, 95%, 62%, ${alpha})` };
+        }
+
+
+        // Default 'order'
+        const hue = (i / safeN) * 360;
+        return { hue, saturation: 90, lightness: 58, color: `hsla(${hue}, 90%, 58%, ${alpha})` };
     }
 };
 

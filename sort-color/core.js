@@ -252,11 +252,13 @@ const Core = {
             scenarioSelect.onchange = (e) => {
                 this.playGameSound('tap');
                 const val = e.target.value;
-                if (val !== '1_rays' && val !== '2_by-sorting' && val !== '3_m-simm' && val !== '4_n-steps') {
+                const standardScenarios = ['1_rays', '2_by-sorting', '3_m-simm', '4_n-steps', '5_disks', '6_color', '7_gravity', '8_waves'];
+                if (!standardScenarios.includes(val)) {
                     this.stopSimulation();
                 }
             };
         }
+
 
         if (gameSfxToggle) {
             gameSfxToggle.onclick = () => {
