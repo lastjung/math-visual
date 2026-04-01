@@ -214,6 +214,20 @@ const GoldbergSphereCase = {
 
     getSphereVisual(point, index, total) {
         const alpha = this.lineAlpha;
+        if (this.colorMode === 'scheme' && typeof ColorSchemeManager !== 'undefined') {
+            const t = this.colorGenerator === 'spatial'
+                ? (point.y + 1) * 0.5
+                : (index / Math.max(1, total));
+            const hue = ColorSchemeManager.getHue(t);
+            return {
+                hue,
+                saturation: 100,
+                lightness: 50,
+                alpha,
+                color: `hsla(${hue}, 100%, 50%, ${alpha})`
+            };
+        }
+
         if (this.colorMode === 'monochrome') {
             return {
                 hue: 180,

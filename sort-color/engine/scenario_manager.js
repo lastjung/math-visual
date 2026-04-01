@@ -834,5 +834,113 @@ const SortColorScenarioManager = {
         };
 
         runStage();
+    },
+
+    runColorSimulation() {
+        if (this.isSimRunning) {
+            this.stopSimulation();
+            return;
+        }
+        if (!this.currentCase) return;
+
+        this.isSimRunning = true;
+        this.simStartMs = performance.now();
+        this.simStateSnapshot = {
+            pointCount: this.currentCase.pointCount,
+            multiplier: this.currentCase.multiplier,
+            sortMode: this.currentCase.sortMode,
+            learningMode: this.currentCase.learningMode,
+            sortSpeed: this.currentCase.sortSpeed,
+            initialSortSpeed: this.currentCase.sortSpeed,
+            sortSpeedMode: this.currentCase.sortSpeedMode
+        };
+        this.currentCase.sortSpeedMode = 'uniform';
+        this.currentScenario = '6_color';
+        const scenarioSelect = document.getElementById('apple-scenario-select');
+        if (scenarioSelect) scenarioSelect.value = '6_color';
+
+        const stages = [
+            { id: 'aurora',   label: 'Aurora Mystic' },
+            { id: 'twilight', label: 'Twilight Horizon' },
+            { id: 'cosmic',   label: 'Cosmic Nebula' },
+            { id: 'cyan',     label: 'Cyan Ocean' },
+            { id: 'sunset',   label: 'Sunset Glow' },
+            { id: 'lime',     label: 'Lime Energy' },
+            { id: 'amethyst', label: 'Amethyst Radiance' },
+            { id: 'rainbow',  label: 'Rainbow Essence' }
+        ];
+
+        const simTitle = 'Premium Color Journey';
+        let currentIdx = 0;
+        const runStage = () => {
+            if (!this.isSimRunning || currentIdx >= stages.length) {
+                this.playGameSound('complete');
+                this.showSimMessage(simTitle, 'Color Exploration Completed', 2400);
+                const tid = setTimeout(() => this.stopSimulation(), 2600);
+                this.simTimers.push(tid);
+                return;
+            }
+
+            const stage = stages[currentIdx];
+            if (typeof this.currentCase.resetSortState === 'function') {
+                this.currentCase.resetSortState('idle');
+            }
+            if (typeof this.currentCase.learningMode === 'string') {
+                this.currentCase.learningMode = 'off';
+            }
+            
+            if (typeof ColorSchemeManager !== 'undefined') {
+                ColorSchemeManager.setScheme(stage.id);
+                this.syncColorSchemeMenu();
+            }
+
+            const subTitleText = `${stage.label}`;
+            this.showSimMessage(currentIdx === 0 ? simTitle : '', subTitleText, currentIdx === 0 ? 2200 : 0);
+            this.updateControls();
+
+            const tid0 = setTimeout(() => {
+                if (!this.isSimRunning) return;
+                
+                const activeSortMode = (this.currentCase.sortMode && this.currentCase.sortMode !== 'off')
+                    ? this.currentCase.sortMode
+                    : 'hue';
+                if (this.currentCase.sortMode === 'off') {
+                    this.currentCase.sortMode = activeSortMode;
+                }
+                const multipliers = { hue: 1, lsh: 1, bubble: 50, quick: 5, insertion: 50, selection: 50 };
+                const activeSortSpeedMultiplier = multipliers[activeSortMode] || 1;
+                this.showSimMessage('', subTitleText, 900);
+
+                const tid1 = setTimeout(() => {
+                    if (!this.isSimRunning) return;
+
+                    this.currentCase.restartSort();
+                    this.updateSortBar();
+                    this.applySimulationSortSpeed(activeSortSpeedMultiplier);
+                    this.showSimMessage('', subTitleText, 0);
+
+                    const checkFinished = setInterval(() => {
+                        if (!this.isSimRunning) {
+                            clearInterval(checkFinished);
+                            return;
+                        }
+                        if (this.currentCase.sortingStatus === 'completed') {
+                            clearInterval(checkFinished);
+                            this.restoreSimulationSortSpeed();
+                            const tid2 = setTimeout(() => {
+                                currentIdx += 1;
+                                runStage();
+                            }, 2400);
+                            this.simTimers.push(tid2);
+                        }
+                    }, 100);
+                    this.simTimers.push(checkFinished);
+                }, 1000);
+                this.simTimers.push(tid1);
+            }, 1200);
+            this.simTimers.push(tid0);
+        };
+
+        runStage();
     }
 };

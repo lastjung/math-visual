@@ -23,6 +23,12 @@ const SortColorCaseBase = {
         const loop = (now) => {
             const dt = Math.min(0.05, (now - this.lastTimeMs) / 1000);
             this.lastTimeMs = now;
+            
+            // Global color scheme flow update
+            if (typeof ColorSchemeManager !== 'undefined') {
+                ColorSchemeManager.update(dt);
+            }
+
             this.updateSimulation(dt);
             this.draw();
             this.animationId = requestAnimationFrame(loop);

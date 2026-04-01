@@ -74,6 +74,17 @@ const CardioidGeometryProvider = {
         const safeN = Math.max(1, n);
         const alpha = alphaOverride == null ? this.lineAlpha : alphaOverride;
 
+        if (this.colorMode === 'scheme' && typeof ColorSchemeManager !== 'undefined') {
+            const hue = ColorSchemeManager.getHue(i / safeN);
+            return {
+                hue,
+                saturation: 100,
+                lightness: 50,
+                alpha,
+                color: `hsla(${hue}, 100%, 50%, ${alpha})`
+            };
+        }
+
         if (this.colorMode === 'monochrome') {
             return {
                 hue: 160,

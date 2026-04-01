@@ -53,6 +53,7 @@ const Core = {
         this.bindToolbar();
         this.bindSidePanels();
         this.bindGlobalToolbar();
+        this.initColorSchemeMenu();
         this.loadGeometryCase(this.currentGeometryId);
         window.addEventListener('resize', () => {
             if (this.currentCase && typeof this.currentCase.resize === 'function') {
@@ -501,7 +502,8 @@ const Core = {
         if (!control || !control.id) return false;
         const globalIds = new Set([
             'mc_render',
-            'mc_color'
+            'mc_color',
+            'mc_color_scheme'
         ]);
         return globalIds.has(control.id);
     },
@@ -670,6 +672,7 @@ const Core = {
         this.renderControlList(globalHost, globalControls);
         this.renderControlList(sortingHost, sortingControls);
         this.renderControlList(generatorHost, generatorControls);
+        this.syncColorSchemeMenu();
 
         this.syncGeometryMeta();
 
@@ -798,17 +801,60 @@ const Core = {
 
         if (isRadix && Array.isArray(plan?.passes) && plan.passes.length > 0) {
             const passLength = plan.passes[0]?.sourceOrder?.length || 0;
-            if (passLength > 0) {
-                const nextPassStep = nextStep % passLength;
-                if (nextPassStep <= 8) return;
-            }
+            const itemPerSound = Math.max(1, Math.floor(passLength / 30));
+            if (nextStep % itemPerSound !== 0) return;
+
+            const t = (nextStep / passLength);
+            window.gameSfx.playPiano(t);
+        } else {
+            const throttleMs = 45;
+            if (now - this.lastGameSfxTickAt < throttleMs) return;
+            this.lastGameSfxTickAt = now;
+            window.gameSfx.play('tick');
         }
+    },
 
-        const intervalMs = isRadix ? 95 : ((isQuick || isInsertion || isSelection) ? 110 : 130);
-        if (now - this.lastGameSfxTickAt < intervalMs) return;
+    initColorSchemeMenu() {
+        const grid = document.getElementById('color-scheme-grid');
+        if (!grid || typeof ColorSchemeManager === 'undefined') return;
 
-        this.lastGameSfxTickAt = now;
-        this.playGameSound('tick');
+        grid.innerHTML = '';
+        Object.keys(ColorSchemeManager.schemes).forEach((id) => {
+            const theme = ColorSchemeManager.schemes[id];
+            const btn = document.createElement('button');
+            btn.className = 'scheme-btn';
+            btn.id = `scheme-${id}`;
+            btn.title = theme.label;
+            
+            const preview = document.createElement('div');
+            preview.className = `scheme-preview preview-${id}`;
+            btn.appendChild(preview);
+
+            btn.onclick = () => {
+                ColorSchemeManager.setScheme(id);
+                this.playGameSound('tap');
+                if (this.currentCase) {
+                    this.currentCase.colorMode = 'scheme';
+                    this.currentCase.resetSortState('idle');
+                    this.currentCase.draw();
+                }
+                this.updateControls();
+            };
+            grid.appendChild(btn);
+        });
+    },
+
+    syncColorSchemeMenu() {
+        if (typeof ColorSchemeManager === 'undefined') return;
+        const current = ColorSchemeManager.currentScheme;
+        const isSchemeMode = this.currentCase && this.currentCase.colorMode === 'scheme';
+        
+        Object.keys(ColorSchemeManager.schemes).forEach((id) => {
+            const btn = document.getElementById(`scheme-${id}`);
+            if (btn) {
+                btn.classList.toggle('active', isSchemeMode && id === current);
+            }
+        });
     },
 
     syncGameSoundButton() {

@@ -145,6 +145,7 @@ const SortColorControlFactory = {
                 value: caseRef.colorMode,
                 options: [
                     { value: 'angle', label: 'Angle' },
+                    { value: 'scheme', label: 'Scheme' },
                     { value: 'order', label: 'Order' },
                     { value: 'lsh', label: 'LSH' },
                     { value: 'length', label: 'Length' },
@@ -641,6 +642,7 @@ const SortColorControlFactory = {
                 value: caseRef.colorMode,
                 options: [
                     { value: 'angle', label: 'Longitude' },
+                    { value: 'scheme', label: 'Scheme' },
                     { value: 'length', label: 'Northness' },
                     { value: 'origin', label: 'Latitude' },
                     { value: 'monochrome', label: 'Monochrome' }
