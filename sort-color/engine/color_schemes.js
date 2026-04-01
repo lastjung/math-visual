@@ -12,13 +12,13 @@ const ColorSchemeManager = {
             label: 'Rainbow',
             getHue: (t, flow) => (t * 360 + flow * 0.5) % 360
         },
-        twilight: {
-            label: 'Twilight',
-            stops: [55, 30, 330, 270, 250]
-        },
         cosmic: {
             label: 'Cosmic',
             stops: [180, 220, 280, 320]
+        },
+        twilight: {
+            label: 'Twilight',
+            stops: [55, 30, 330, 270, 250]
         },
         aurora: {
             label: 'Aurora',
@@ -39,6 +39,10 @@ const ColorSchemeManager = {
         amethyst: {
             label: 'Amethyst',
             stops: [260, 280, 295, 315, 330]
+        },
+        rainbow: {
+            label: 'Rainbow',
+            getHue: (t, flow) => (t * 360 + flow * 0.5) % 360
         }
     },
 
