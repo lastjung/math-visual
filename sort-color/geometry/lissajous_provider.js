@@ -213,9 +213,13 @@ const LissajousGeometryProvider = {
             };
         });
 
+        const schemeRevision = this.colorMode === 'scheme' && typeof ColorSchemeManager !== 'undefined'
+            ? ColorSchemeManager.currentScheme || 'rainbow'
+            : 'none';
+
         return {
             providerId: 'lissajous',
-            revision: `${safeN}|${m}|${this.shuffleNonce}|${this.colorMode}|${this.getLissajousA()}|${this.getLissajousB()}|${this.getLissajousPhaseRad().toFixed(4)}`,
+            revision: `${safeN}|${m}|${this.shuffleNonce}|${this.colorMode}|${schemeRevision}|${this.getLissajousA()}|${this.getLissajousB()}|${this.getLissajousPhaseRad().toFixed(4)}`,
             items: orderedItems,
             slots,
             points,

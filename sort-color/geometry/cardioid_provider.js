@@ -179,9 +179,13 @@ const CardioidGeometryProvider = {
             };
         });
 
+        const schemeRevision = this.colorMode === 'scheme' && typeof ColorSchemeManager !== 'undefined'
+            ? ColorSchemeManager.currentScheme || 'rainbow'
+            : 'none';
+
         return {
             providerId: 'cardioid',
-            revision: `${safeN}|${m}|${this.shuffleNonce}|${this.colorMode}|${this.circleBulge}`,
+            revision: `${safeN}|${m}|${this.shuffleNonce}|${this.colorMode}|${schemeRevision}|${this.circleBulge}`,
             items: orderedItems,
             slots,
             points,

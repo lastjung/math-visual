@@ -254,9 +254,13 @@ const SpiralDiskGeometryProvider = {
             };
         });
 
+        const schemeRevision = this.colorMode === 'scheme' && typeof ColorSchemeManager !== 'undefined'
+            ? ColorSchemeManager.currentScheme || 'rainbow'
+            : 'none';
+
         return {
             providerId: 'spiral_disk',
-            revision: `${safeN}|${m}|${this.shuffleNonce}|${this.colorMode}|${this.getSpiralTurns().toFixed(3)}`,
+            revision: `${safeN}|${m}|${this.shuffleNonce}|${this.colorMode}|${schemeRevision}|${this.getSpiralTurns().toFixed(3)}`,
             items: orderedItems,
             slots,
             points,

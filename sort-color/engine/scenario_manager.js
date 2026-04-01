@@ -860,22 +860,19 @@ const SortColorScenarioManager = {
         if (scenarioSelect) scenarioSelect.value = '6_color';
 
         const stages = [
-            { id: 'aurora',   label: 'Aurora Mystic' },
-            { id: 'twilight', label: 'Twilight Horizon' },
-            { id: 'cosmic',   label: 'Cosmic Nebula' },
-            { id: 'cyan',     label: 'Cyan Ocean' },
-            { id: 'sunset',   label: 'Sunset Glow' },
-            { id: 'lime',     label: 'Lime Energy' },
-            { id: 'amethyst', label: 'Amethyst Radiance' },
-            { id: 'rainbow',  label: 'Rainbow Essence' }
+            { id: 'cosmic', label: 'Cosmic Drift' },
+            { id: 'twilight', label: 'Twilight Bloom' },
+            { id: 'aurora', label: 'Aurora Veil' },
+            { id: 'cyan', label: 'Cyan Pulse' },
+            { id: 'rainbow', label: 'Rainbow Arc' }
         ];
 
-        const simTitle = 'Premium Color Journey';
+        const simTitle = 'Color Scheme Journey';
         let currentIdx = 0;
         const runStage = () => {
             if (!this.isSimRunning || currentIdx >= stages.length) {
                 this.playGameSound('complete');
-                this.showSimMessage(simTitle, 'Color Exploration Completed', 2400);
+                this.showSimMessage(simTitle, 'Simulation Completed', 2400);
                 const tid = setTimeout(() => this.stopSimulation(), 2600);
                 this.simTimers.push(tid);
                 return;
@@ -894,7 +891,8 @@ const SortColorScenarioManager = {
                 this.syncColorSchemeMenu();
             }
 
-            const subTitleText = `${stage.label}`;
+            this.currentCase.colorMode = 'scheme';
+            const subTitleText = stage.label;
             this.showSimMessage(currentIdx === 0 ? simTitle : '', subTitleText, currentIdx === 0 ? 2200 : 0);
             this.updateControls();
 

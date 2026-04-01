@@ -171,6 +171,11 @@ const Core = {
                     this.updateSortBar();
                     return;
                 }
+                if (scenarioSelect && scenarioSelect.value === '6_color') {
+                    this.runColorSimulation();
+                    this.updateSortBar();
+                    return;
+                }
                 if (this.currentCase && typeof this.currentCase.sortMode !== 'undefined') {
                     this.currentCase.toggleSortPlayback();
                     this.updateSortBar();
@@ -330,6 +335,10 @@ const Core = {
                 e.preventDefault();
                 this.runDisksSimulation();
             }
+            if (e.code === 'Digit6' && this.aHeld) {
+                e.preventDefault();
+                this.runColorSimulation();
+            }
 
             if (e.code === 'KeyA') {
                 this.aHeld = true;
@@ -355,6 +364,16 @@ const Core = {
                 }
                 if (scenarioSelect && scenarioSelect.value === '4_n-steps') {
                     this.runNStepsSimulation();
+                    this.updateSortBar();
+                    return;
+                }
+                if (scenarioSelect && scenarioSelect.value === '5_disks') {
+                    this.runDisksSimulation();
+                    this.updateSortBar();
+                    return;
+                }
+                if (scenarioSelect && scenarioSelect.value === '6_color') {
+                    this.runColorSimulation();
                     this.updateSortBar();
                     return;
                 }
@@ -805,7 +824,11 @@ const Core = {
             if (nextStep % itemPerSound !== 0) return;
 
             const t = (nextStep / passLength);
-            window.gameSfx.playPiano(t);
+            if (typeof window.gameSfx.playPiano === 'function') {
+                window.gameSfx.playPiano(t);
+            } else {
+                window.gameSfx.play('tick');
+            }
         } else {
             const throttleMs = 45;
             if (now - this.lastGameSfxTickAt < throttleMs) return;

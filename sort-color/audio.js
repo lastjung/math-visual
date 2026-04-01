@@ -80,6 +80,10 @@ class AudioManager {
     }
 
     toggleMute() {
+        if (this.fadeInterval) {
+            clearInterval(this.fadeInterval);
+            this.fadeInterval = null;
+        }
         this.isMuted = !this.isMuted;
         if (this.isMuted) {
             if (!this.audio.paused) {
@@ -99,6 +103,10 @@ class AudioManager {
     }
 
     setTargetVolume(volume) {
+        if (this.fadeInterval) {
+            clearInterval(this.fadeInterval);
+            this.fadeInterval = null;
+        }
         const parsed = Number(volume);
         if (Number.isNaN(parsed)) return this.targetVolume;
         const clamped = Math.max(0, Math.min(1, parsed));
@@ -130,6 +138,7 @@ class AudioManager {
     fadeIn() {
         if (this.isMuted) return;
         if (this.fadeInterval) clearInterval(this.fadeInterval);
+        this.fadeInterval = null;
         
         this.audio.volume = 0;
         this.audio.play().catch(e => console.log("Autoplay blocked"));
@@ -140,6 +149,7 @@ class AudioManager {
             if (vol >= this.targetVolume) {
                 vol = this.targetVolume;
                 clearInterval(this.fadeInterval);
+                this.fadeInterval = null;
             }
             this.audio.volume = vol;
         }, 50); // Faster tick (was 100)
@@ -147,6 +157,7 @@ class AudioManager {
 
     fadeOut(callback) {
         if (this.fadeInterval) clearInterval(this.fadeInterval);
+        this.fadeInterval = null;
         if (this.audio.paused) {
             if (callback) callback();
             return;
@@ -159,6 +170,7 @@ class AudioManager {
                 vol = 0;
                 this.audio.pause();
                 clearInterval(this.fadeInterval);
+                this.fadeInterval = null;
                 if (callback) callback();
             } else {
                 this.audio.volume = vol;
@@ -259,6 +271,36 @@ class GameSfxManager {
             osc.start(start);
             osc.stop(end + 0.02);
         });
+    }
+
+    playPiano(progress = 0) {
+        if (!this.enabled) return;
+        const context = this.ensureContext();
+        if (!context || !this.masterGain) return;
+
+        const normalized = Math.max(0, Math.min(1, Number(progress) || 0));
+        const notes = [
+            261.63, 293.66, 329.63, 392.0, 440.0, 523.25,
+            587.33, 659.25, 783.99, 880.0, 1046.5
+        ];
+        const noteIndex = Math.min(notes.length - 1, Math.floor(normalized * notes.length));
+        const freq = notes[noteIndex];
+        const now = context.currentTime;
+        const osc = context.createOscillator();
+        const gain = context.createGain();
+
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(freq, now);
+        osc.frequency.linearRampToValueAtTime(freq * 0.995, now + 0.12);
+
+        gain.gain.setValueAtTime(0.0001, now);
+        gain.gain.linearRampToValueAtTime(0.08, now + 0.01);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.12);
+
+        osc.connect(gain);
+        gain.connect(this.masterGain);
+        osc.start(now);
+        osc.stop(now + 0.14);
     }
 }
 

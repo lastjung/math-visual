@@ -372,9 +372,13 @@ const GoldbergSphereGeometryProvider = {
         const drawOrder = Array.from({ length: items.length }, (_, index) => index)
             .sort((a, b) => slots[a].meta.depth - slots[b].meta.depth);
 
+        const schemeRevision = this.colorMode === 'scheme' && typeof ColorSchemeManager !== 'undefined'
+            ? ColorSchemeManager.currentScheme || 'rainbow'
+            : 'none';
+
         return {
             providerId: 'goldberg-sphere',
-            revision: `gp|${frequency}|${items.length}|${options.slotMapping || 'sequence'}`,
+            revision: `gp|${frequency}|${items.length}|${options.slotMapping || 'sequence'}|${this.colorMode}|${schemeRevision}`,
             items,
             slots,
             drawOrder,
