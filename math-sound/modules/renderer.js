@@ -490,7 +490,8 @@ export function getCategoryColor(category) {
         sound: '#6366f1',    // Indigo (Synth)
         math: '#dc2626',     // Pure Red
         bytebeat: '#4b5563',  // Dark Gray
-        amazing: '#f59e0b'   // Amber/Gold
+        amazing: '#f59e0b',   // Amber/Gold
+        beautiful: '#d946ef'  // Fuchsia
     };
     return colors[category] || '#3b82f6';
 }

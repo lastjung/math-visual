@@ -406,8 +406,8 @@ function renderFunctionButtons(category) {
                 <button class="card-fav ${favoriteSet.has(funcKey) ? 'active' : ''}" title="즐겨찾기">★</button>
             </div>
             <div class="card-tags">
-                <span class="tag">${categoryLabel}</span>
-                <span class="tag">${func.type}</span>
+                <span class="tag" data-category="${func.category}">${categoryLabel}</span>
+                <span class="tag" data-type="${func.type}">${func.type}</span>
             </div>
             <div class="card-formula">${func.formula}</div>
         `;

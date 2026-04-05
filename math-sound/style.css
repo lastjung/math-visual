@@ -713,13 +713,13 @@ body.is-fullscreen .controls {
 }
 
 /* Category-specific Active Tab Text & Border */
-.category-tab.active[data-category="waves"] { border-color: var(--waves-color); color: var(--waves-color); }
-.category-tab.active[data-category="curves"] { border-color: var(--curves-color); color: var(--curves-color); }
-.category-tab.active[data-category="art"] { border-color: var(--art-color); color: var(--art-color); }
-.category-tab.active[data-category="sound"] { border-color: var(--sound-color); color: var(--sound-color); }
-.category-tab.active[data-category="math"] { border-color: var(--math-color); color: var(--math-color); }
-.category-tab.active[data-category="amazing"] { border-color: var(--amazing-color); color: var(--amazing-color); }
-.category-tab.active[data-category="beautiful"] { border-color: var(--beautiful-color); color: var(--beautiful-color); }
+.category-tab.active[data-category="waves"] { border-color: var(--waves-color); color: var(--waves-color); box-shadow: 0 8px 16px rgba(16, 185, 129, 0.15); }
+.category-tab.active[data-category="curves"] { border-color: var(--curves-color); color: var(--curves-color); box-shadow: 0 8px 16px rgba(236, 72, 153, 0.15); }
+.category-tab.active[data-category="art"] { border-color: var(--art-color); color: var(--art-color); box-shadow: 0 8px 16px rgba(139, 92, 246, 0.15); }
+.category-tab.active[data-category="sound"] { border-color: var(--sound-color); color: var(--sound-color); box-shadow: 0 8px 16px rgba(99, 102, 241, 0.15); }
+.category-tab.active[data-category="math"] { border-color: var(--math-color); color: var(--math-color); box-shadow: 0 8px 16px rgba(220, 38, 38, 0.15); }
+.category-tab.active[data-category="amazing"] { border-color: var(--amazing-color); color: var(--amazing-color); box-shadow: 0 8px 16px rgba(245, 158, 11, 0.15); }
+.category-tab.active[data-category="beautiful"] { border-color: var(--beautiful-color); color: var(--beautiful-color); box-shadow: 0 8px 16px rgba(217, 70, 239, 0.2); }
 
 /* Browser Bar */
 .browser-bar {
@@ -891,11 +891,27 @@ body.is-fullscreen .controls {
 
 .tag {
     font-size: 0.7rem;
-    padding: 2px 6px;
-    border-radius: 10px;
+    padding: 2px 8px;
+    border-radius: 8px;
     background: rgba(0,0,0,0.05);
     color: var(--text-muted);
+    font-weight: 500;
 }
+
+/* Category-specific Tag Styles */
+.tag[data-category="waves"] { background: rgba(16, 185, 129, 0.1); color: #10b981; }
+.tag[data-category="curves"] { background: rgba(236, 72, 153, 0.1); color: #ec4899; }
+.tag[data-category="art"] { background: rgba(139, 92, 246, 0.1); color: #8b5cf6; }
+.tag[data-category="sound"] { background: rgba(99, 102, 241, 0.1); color: #6366f1; }
+.tag[data-category="math"] { background: rgba(220, 38, 38, 0.1); color: #dc2626; }
+.tag[data-category="amazing"] { background: rgba(245, 158, 11, 0.1); color: #f59e0b; }
+.tag[data-category="beautiful"] { background: rgba(217, 70, 239, 0.12); color: #d946ef; }
+.tag[data-category="ani"] { background: rgba(244, 63, 94, 0.1); color: #f43f5e; }
+
+/* Type-specific Tag Styles */
+.tag[data-type="cartesian"] { background: rgba(0,0,0,0.04); color: #6b7280; }
+.tag[data-type="parametric"] { background: rgba(0,0,0,0.04); color: #6b7280; }
+.tag[data-type="polar"] { background: rgba(0,0,0,0.04); color: #6b7280; }
 
 .card-formula {
     font-size: 0.75rem;
