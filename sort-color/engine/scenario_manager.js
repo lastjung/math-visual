@@ -872,8 +872,8 @@ const SortColorScenarioManager = {
         const runStage = () => {
             if (!this.isSimRunning || currentIdx >= stages.length) {
                 this.playGameSound('complete');
-                this.showSimMessage(simTitle, 'Simulation Completed', 2400);
-                const tid = setTimeout(() => this.stopSimulation(), 2600);
+                this.showSimMessage(simTitle, 'Simulation Completed', 3400);
+                const tid = setTimeout(() => this.stopSimulation(), 3600);
                 this.simTimers.push(tid);
                 return;
             }
@@ -928,7 +928,7 @@ const SortColorScenarioManager = {
                             const tid2 = setTimeout(() => {
                                 currentIdx += 1;
                                 runStage();
-                            }, 2400);
+                            }, 3400);
                             this.simTimers.push(tid2);
                         }
                     }, 100);
@@ -938,6 +938,7 @@ const SortColorScenarioManager = {
             }, 1200);
             this.simTimers.push(tid0);
         };
+
 
         runStage();
     }
