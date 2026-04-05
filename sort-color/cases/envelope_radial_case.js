@@ -92,8 +92,12 @@ const EnvelopeRadialCase = {
     },
 
     toggleBuildPlayback() {
-        if (this.envelopeConstructionComplete) return;
-        this.setPaused(!this.isPaused);
+        if (this.envelopeConstructionComplete) {
+            this.replayConstruction();
+            this.setPaused(false);
+        } else {
+            this.setPaused(!this.isPaused);
+        }
         if (typeof Core !== 'undefined' && Core.currentCase === this) {
             Core.updateControls();
             Core.updateSortBar();

@@ -159,7 +159,6 @@ const EnvelopeRadialGeometryProvider = {
         this.syncEnvelopeItemCount();
         const itemCount = this.getEnvelopeItemCount();
         const safeItemCount = Math.max(0, itemCount);
-        const safeDenominator = Math.max(1, safeItemCount);
         const visibleCount = this.getEnvelopeVisibleCount();
         const shuffleOrder = this.ensureShuffleOrder(safeItemCount, m);
 

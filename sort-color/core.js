@@ -440,18 +440,15 @@ const Core = {
             if (geometryMode) {
                 const buildComplete = !!this.currentCase?.envelopeConstructionComplete;
                 const isPaused = !!this.currentCase?.isPaused;
-                if (buildComplete) {
+                // If complete OR paused, show Play icon. Only show Hold icon when constructing AND not paused.
+                if (buildComplete || isPaused) {
                     applePlay.classList.remove('is-playing');
                     playIconSvg.innerHTML = `<svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>`;
-                    applePlay.title = 'Play';
-                } else if (!isPaused) {
+                    applePlay.title = buildComplete ? 'Replay Build' : 'Play';
+                } else {
                     applePlay.classList.add('is-playing');
                     playIconSvg.innerHTML = `<svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>`;
                     applePlay.title = 'Hold';
-                } else {
-                    applePlay.classList.remove('is-playing');
-                    playIconSvg.innerHTML = `<svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>`;
-                    applePlay.title = 'Play';
                 }
                 return;
             }
