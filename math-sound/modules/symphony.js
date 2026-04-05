@@ -747,5 +747,163 @@ export const SYMPHONY_FUNCTIONS = {
         viewBox: { xMin: -4, xMax: 4, yMin: -4, yMax: 4 },
         audioScale: 110,
         baseFreq: 660
+    },
+    
+    // ========== 🌟 INCREDIBLE (High-Duration Dynamics) ==========
+    dynamicInterference: {
+        category: 'incredible',
+        name: 'Dynamic Interference',
+        type: 'cartesian',
+        fn: (x, loopIndex = 0) => {
+            const k3 = (loopIndex % 80) * 0.1;
+            return Math.tan(Math.sin(2 * x) * Math.cos(k3 * x)) + Math.sin(k3 * x);
+        },
+        formula: 'y = tan(sin(2x)cos(kx)) + sin(kx)',
+        latex: 'y = \\tan(\\sin(2x)\\cos(kx)) + \\sin(kx)',
+        range: { xMin: -10, xMax: 10, yMin: -5, yMax: 5 },
+        audioScale: 100,
+        baseFreq: 220
+    },
+    surfaceRippleField: {
+        category: 'incredible',
+        name: 'Surface Ripple Field',
+        type: 'implicit',
+        f: (x, y, loopIndex = 0) => {
+            const k7 = (loopIndex % 80) * 0.1;
+            return y - 5 * Math.sin(x - Math.PI) * Math.cos(k7 * y);
+        },
+        formula: 'y = 5sin(x-π)cos(ky)',
+        latex: 'y = 5\\sin(x-\\pi)\\cos(ky)',
+        viewBox: { xMin: -10, xMax: 10, yMin: -10, yMax: 10 },
+        audioScale: 120,
+        baseFreq: 240
+    },
+    globalImplicitGate: {
+        category: 'incredible',
+        name: 'Global Implicit Gate',
+        type: 'implicit',
+        f: (x, y, loopIndex = 0) => {
+            const k9 = (loopIndex % 20) * 0.5 + 1; // 1 to 10
+            return (k9 * Math.sin(Math.cos(y) + Math.sin(x))) - (Math.cos(x) + Math.sin(y));
+        },
+        formula: 'ksin(cos y + sin x) = cos x + sin y',
+        latex: 'k\\sin(\\cos y + \\sin x) = \\cos x + \\sin y',
+        viewBox: { xMin: -15, xMax: 15, yMin: -15, yMax: 15 },
+        audioScale: 150,
+        baseFreq: 330
+    },
+    concentricModulation: {
+        category: 'incredible',
+        name: 'Concentric Modulation',
+        type: 'implicit',
+        f: (x, y, loopIndex = 0) => {
+            const k17 = (loopIndex % 80) * 0.2;
+            return Math.sin(k17 * x) - Math.sin(x * x + y * y);
+        },
+        formula: 'sin(kx) = sin(x² + y²)',
+        latex: '\\sin(kx) = \\sin(x^2 + y^2)',
+        viewBox: { xMin: -8, xMax: 8, yMin: -8, yMax: 8 },
+        audioScale: 130,
+        baseFreq: 260
+    },
+    chaosStarGrid: {
+        category: 'incredible',
+        name: 'Chaos Star Grid',
+        type: 'implicit',
+        f: (x, y, loopIndex = 0) => {
+            const k18 = (loopIndex % 80) * 0.1;
+            return Math.sin(x * x + y * y) - (k18 * Math.cos(x * y));
+        },
+        formula: 'sin(x² + y²) = k·cos(xy)',
+        latex: '\\sin(x^2 + y^2) = k\\cos(xy)',
+        viewBox: { xMin: -8, xMax: 8, yMin: -8, yMax: 8 },
+        audioScale: 140,
+        baseFreq: 440
+    },
+
+    // ========== 🤯 INCOMPREHENSIBLE (Extreme Density) ==========
+    saturnOrbit: {
+        category: 'incomprehensible',
+        name: 'Saturn Orbit',
+        type: 'parametric',
+        x: (t) => Math.sin(t),
+        y: (t, loopIndex = 0) => {
+            const v1 = (loopIndex % 20) * 0.314;
+            return 2 * Math.sin(t + 2 * v1) + Math.cos(t);
+        },
+        formula: '(sin t, 2sin(t+2v) + cos t)',
+        latex: '(\\sin t, 2\\sin(t+2v) + \\cos t)',
+        tRange: { min: 0, max: 2 * Math.PI },
+        viewBox: { xMin: -2, xMax: 2, yMin: -4, yMax: 4 },
+        audioScale: 110,
+        baseFreq: 180
+    },
+    waveTangentTwist: {
+        category: 'incomprehensible',
+        name: 'Wave Tangent Twist',
+        type: 'parametric',
+        x: (t) => Math.sin(t) + Math.cos(t),
+        y: (t, loopIndex = 0) => {
+            const v3 = (loopIndex % 20) * 0.172;
+            const v6 = (loopIndex % 20) * 0.314;
+            return Math.tan(v3 * t / 2) * Math.cos(3 * v3 * t) + Math.sin(v3 * t + v6);
+        },
+        formula: '(sin t+cos t, tan(vt/2)cos(3vt)+sin(vt+v6))',
+        latex: '(\\sin t+\\cos t, \\tan(vt/2)\\cos(3vt)+\\sin(vt+v_6))',
+        tRange: { min: 0, max: 4 * Math.PI },
+        viewBox: { xMin: -3, xMax: 3, yMin: -10, yMax: 10 },
+        audioScale: 90,
+        baseFreq: 330
+    },
+    rotatingOvals: {
+        category: 'incomprehensible',
+        name: 'Rotating Ovals',
+        type: 'parametric',
+        x: (t) => Math.sin(0.98 * t) + Math.cos(t),
+        y: (t, loopIndex = 0) => {
+            const v5 = (loopIndex % 20) * 0.25;
+            return Math.cos(10 * v5 + t);
+        },
+        formula: '(sin(0.98t)+cos t, cos(10v+t))',
+        latex: '(\\sin(0.98t)+\\cos t, \\cos(10v+t))',
+        tRange: { min: 0, max: 60 * Math.PI },
+        viewBox: { xMin: -3, xMax: 3, yMin: -2, yMax: 2 },
+        audioScale: 130,
+        baseFreq: 220
+    },
+    higherDimensionEight: {
+        category: 'incomprehensible',
+        name: 'Higher Dimension 8',
+        type: 'parametric',
+        x: (t) => Math.tan(20.5 * t),
+        y: (t, loopIndex = 0) => {
+            const v7 = (loopIndex % 10) * 0.2;
+            return (1 / Math.cos(t)) + Math.sin(41 * t) * Math.tan(v7 * t / 2);
+        },
+        formula: '(tan(20.5t), sec t + sin(41t)tan(vt/2))',
+        latex: '(\\tan(20.5t), \\sec t + \\sin(41t)\\tan(vt/2))',
+        tRange: { min: 0, max: 4 * Math.PI },
+        viewBox: { xMin: -15, xMax: 15, yMin: -15, yMax: 15 },
+        audioScale: 80,
+        baseFreq: 440
+    },
+    finalChapterDense: {
+        category: 'incomprehensible',
+        name: 'Final Chapter Dense',
+        type: 'parametric',
+        x: (t, loopIndex = 0) => {
+            const v10 = (loopIndex % 30) * 0.1;
+            return Math.tan(50 * t + v10 * Math.PI) / 4 + Math.sin(t + v10 * Math.PI);
+        },
+        y: (t, loopIndex = 0) => {
+            const v10 = (loopIndex % 30) * 0.1;
+            return (1 / Math.sin(t)) + Math.sin(100 * t) * Math.cos(1.2 * t + v10 * Math.PI);
+        },
+        formula: '(tan(50t+vπ)/4+sin(t+vπ), csc t+sin(100t)cos(1.2t+vπ))',
+        latex: '(\\frac{\\tan(50t+v\\pi)}{4}+\\sin(t+v\\pi), \\csc t+\\sin(100t)\\cos(1.2t+v\\pi))',
+        tRange: { min: 0, max: 2 * Math.PI },
+        viewBox: { xMin: -10, xMax: 10, yMin: -10, yMax: 10 },
+        audioScale: 70,
+        baseFreq: 520
     }
 };

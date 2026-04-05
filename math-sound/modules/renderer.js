@@ -556,8 +556,7 @@ export function animate() {
         let varText = "";
         
         // Symphony 변수 로직 자동 매칭 (사용자께서 정의하신 symphony.js 로직 보조)
-        // Symphony 변수 로직 자동 매칭 (사용자께서 정의하신 symphony.js 로직 보조)
-        if (['amazing', 'beautiful', 'harmonic', 'fusion', 'hyper', 'insane', 'fantastic'].includes(cat)) {
+        if (['amazing', 'beautiful', 'harmonic', 'fusion', 'hyper', 'insane', 'fantastic', 'incredible', 'incomprehensible'].includes(cat)) {
             const name = funcData.name || "";
             const nextIdx = loopIdx + 1;
 
@@ -638,6 +637,22 @@ export function animate() {
                 varText = `(a = ${loopIdx % 10 + 1}) → ${nextIdx % 10 + 1}`;
             } else if (name.includes('Twist') || name.includes('Galaxy') || name.includes('Star Core') || name.includes('Geometric') || name.includes('Pulsating')) {
                 varText = `(v = ${(loopIdx % 20 * 0.2).toFixed(2)}) → ${(nextIdx % 20 * 0.2).toFixed(2)}`;
+            } else if (name === 'Dynamic Interference' || name === 'Surface Ripple Field' || name === 'Chaos Star Grid') {
+                varText = `(k = ${(loopIdx % 80 * 0.1).toFixed(1)}) → ${(nextIdx % 80 * 0.1).toFixed(1)}`;
+            } else if (name === 'Concentric Modulation') {
+                varText = `(k = ${(loopIdx % 80 * 0.2).toFixed(1)}) → ${(nextIdx % 80 * 0.2).toFixed(1)}`;
+            } else if (name === 'Global Implicit Gate') {
+                varText = `(k = ${(loopIdx % 20 * 0.5 + 1).toFixed(1)}) → ${(nextIdx % 20 * 0.5 + 1).toFixed(1)}`;
+            } else if (name === 'Saturn Orbit') {
+                varText = `(v = ${(loopIdx % 20 * 0.314).toFixed(3)}) → ${(nextIdx % 20 * 0.314).toFixed(3)}`;
+            } else if (name === 'Wave Tangent Twist') {
+                varText = `(v3 = ${(loopIdx % 20 * 0.172).toFixed(3)}, v6 = ${(loopIdx % 20 * 0.314).toFixed(3)})`;
+            } else if (name === 'Rotating Ovals') {
+                varText = `(v = ${(loopIdx % 20 * 0.25).toFixed(2)}) → ${(nextIdx % 20 * 0.25).toFixed(2)}`;
+            } else if (name === 'Higher Dimension 8') {
+                varText = `(v = ${(loopIdx % 10 * 0.2).toFixed(1)}) → ${(nextIdx % 10 * 0.2).toFixed(1)}`;
+            } else if (name === 'Final Chapter Dense') {
+                varText = `(v = ${(loopIdx % 30 * 0.1).toFixed(1)}) → ${(nextIdx % 30 * 0.1).toFixed(1)}`;
             }
         }
         
@@ -720,7 +735,9 @@ export function getCategoryColor(category) {
         fusion: '#06b6d4',    // Cyan
         hyper: '#8b5cf6',     // Purple
         insane: '#f43f5e',    // Rose Pink
-        fantastic: '#10b981'   // Green
+        fantastic: '#10b981',   // Green
+        incredible: '#f97316',  // Orange
+        incomprehensible: '#6366f1' // Indigo
     };
     return colors[category] || '#3b82f6';
 }

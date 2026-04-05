@@ -1172,7 +1172,9 @@ export const CATEGORIES = {
     fusion: { name: '🌀 Fusion', functions: [] },
     hyper: { name: '✨ Hyper', functions: [] },
     insane: { name: '👹 Insane', functions: [] },
-    fantastic: { name: '✨ Fantastic', functions: [] }
+    fantastic: { name: '✨ Fantastic', functions: [] },
+    incredible: { name: '🌟 Incredible', functions: [] },
+    incomprehensible: { name: '🤯 Incomprehensible', functions: [] }
 };
 
 // Initialize categories

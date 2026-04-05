@@ -2,32 +2,47 @@
 
 ## Purpose
 
-This document records what has already been implemented in the current `math-symphony` rebuild, what design decisions were made during implementation, and what should happen next.
+This document records the current implementation state of the `math-symphony` rebuild.
 
-It should be read as a practical status document, not a brainstorm.
+It is meant to answer four practical questions:
+
+- what already works
+- what architectural decisions have already been made
+- what is still weak or missing
+- where the next work session should resume
+
+This is a runtime status document, not a brainstorm.
 
 ---
 
 ## Current Direction
 
-The project is now being built as a score-first runtime rather than a loose formula archive.
+`math-symphony` is now being built as a score-first runtime, not a loose formula archive.
 
-The current runtime model is:
+The active structure is:
 
-- `score/` = source archive and extracted reference material
+- `score/` = reference archive and extracted score notes
 - `catalog/` = normalized runtime score data
-- `engine/` = reusable runtime helpers
-- `app/` = browser explorer and playback shell
+- `engine/` = reusable controller, sampling, preview, and audio helpers
+- `app/` = browser playback shell
+- `docs/` = planning and implementation notes
 
-This means the implementation has already moved beyond archive-only usage.
+The core runtime model is:
+
+- `Score`
+- `Scene`
+- `Controller`
+- `Expression`
+
+That direction should be kept.
 
 ---
 
 ## What Has Been Built
 
-### 1. Normalized Score Catalog
+### 1. Normalized Catalog Layer
 
-A normalized catalog layer now exists.
+The catalog layer now exists and is active.
 
 Implemented files:
 
@@ -35,136 +50,128 @@ Implemented files:
 - `catalog/index.js`
 - `catalog/01_amazing_part3.js`
 - `catalog/02_more_beautiful.js`
+- `catalog/03_parametric_focused.js`
 
 Current normalized scores:
 
 - `01_amazing_part3`
 - `02_more_beautiful`
+- `03_parametric_focused`
 
-Current catalog structure includes:
+Each score can now carry:
 
-- score id
-- score title
-- source Desmos URL
+- id
+- number
+- title
+- theme
+- source URL
 - palette
-- scene list
-- controller list
-- expression list
+- controllers
+- scenes
 
-Each expression now carries:
+Each scene can now carry:
+
+- title
+- summary
+- duration
+- active controller list
+- expressions
+- `scripts`
+- `caption`
+- `focusNote`
+
+Each expression can now carry:
 
 - type
 - formula
 - latex
 - bounds
 - parameter keys
-- runtime sampling hooks where available
+- runtime sample functions
 
-This is the first real shift away from manually hardcoded app-specific formula objects.
-
----
+This is the first usable runtime data layer for the rebuild.
 
 ### 2. Controller Runtime
 
-Basic time-based controller logic is implemented in:
+The controller engine exists in:
 
 - `engine/controllers.js`
 
-Supported controller modes right now:
+Supported controller modes:
 
 - `static`
 - `play_once`
 - `loop`
 - `reverse_loop`
 
-Current behavior:
+Current controller behavior:
 
 - score duration is derived from scene durations
-- current scene is resolved from score time
-- controller values are computed from elapsed time
+- current scene is resolved from elapsed score time
+- controller values are generated from elapsed time
 - controller values are formatted for UI display
 
-This gives the project an actual runtime interpretation of score timing rather than static metadata.
+This is now the base timing model for the app.
 
----
+### 3. Shared Expression Sampling
 
-### 3. Expression Sampling Layer
-
-A shared expression sampling layer now exists in:
+The shared sampling layer exists in:
 
 - `engine/sampleExpression.js`
 
-Supported expression families right now:
+Supported expression families:
 
 - `cartesian`
 - `parametric`
 - `polar`
 - `implicit`
 
-This layer is important because both rendering and audio can now read from the same sampled expression model.
+This layer matters because preview rendering and preview audio now read from the same expression model.
 
-That is a major architectural improvement over ad hoc per-feature logic.
+That coupling should remain.
 
----
+### 4. Preview Renderer
 
-### 4. Visual Preview Renderer
-
-A basic preview renderer now exists in:
+The canvas preview renderer exists in:
 
 - `engine/renderPreview.js`
 
-Current behavior:
+Current preview behavior:
 
-- draws active scene expressions to a canvas
+- draws active scene expressions
 - supports all current expression families
-- draws axes from merged bounds
-- supports scene fade-in
-- de-emphasizes non-focused expressions
-- highlights the focused expression more strongly
+- merges bounds for a shared viewport
+- draws axes
+- fades scenes in
+- emphasizes the focused expression
+- de-emphasizes supporting expressions
+- progressively reveals curves with scene progress
 
-This is not yet a production renderer.
-It is a score inspection renderer.
+The reveal pass was important for `03_parametric_focused`, because otherwise controller-light scenes felt too static.
 
-Its job is currently:
+This is still an inspection renderer, not a final performance renderer.
 
-- confirm that the normalized score model is viable
-- make scene structure visible
-- expose expression grouping issues early
+### 5. Preview Audio Engine
 
----
-
-### 5. Audio Preview Engine
-
-A minimal audio preview engine now exists in:
+The audio preview engine exists in:
 
 - `engine/audioPreview.js`
 
-Current behavior:
+Current audio behavior:
 
 - starts Web Audio on playback
 - creates one oscillator path per active expression
-- updates pitch and level from sampled expression state
+- maps sampled expression state into pitch and gain
 - supports master volume control
-- fades old scene entries out on scene changes
-- suspends active sound on pause/reset
+- fades old scene audio out when scenes change
+- suspends audio on pause and reset
+- emphasizes the focused expression more strongly than the supporting ones
 
-Important note:
-
-This is still preview audio, not final sound design.
-
-The current engine is mainly useful for:
-
-- validating timing
-- confirming that expression changes are audible
-- catching scene transition problems
-
-It is not yet a polished instrument or composition engine.
-
----
+This is verification audio, not final composition audio.
 
 ### 6. Browser Playback Shell
 
-The browser shell now exists in:
+The browser shell exists in:
 
 - `index.html`
 - `app/main.js`
@@ -181,55 +188,105 @@ Current UI behavior includes:
 - volume control
 - expression on/off toggles
 - active scene preview canvas
-- active scene expression list
-- controller state panel
-- script or caption panel
-- focus label for the current expression
+- expression list near the graph
+- controller panel
+- scene narration panel
+- focused expression label
+- hero facts driven from catalog data
 
-This means the project already has a real runtime inspection surface, not just data files.
+This is now a real runtime inspection surface, not just a static archive page.
+
+### 7. Runtime Semantics Already Corrected
+
+The following runtime behaviors were already corrected and should not be accidentally regressed:
+
+- `Play Scene` stops at the current scene boundary
+- `Play Score` continues through the whole score
+- expression enable state is stored per score and per scene
+- focus is derived from scene progress
+- focus is reflected in both preview and audio
+- non-script scenes can use `caption` and `focusNote`
+
+These are part of the product behavior now, not temporary hacks.
+
+### 8. `03_parametric_focused` Motion Pass
+
+`03_parametric_focused` originally felt weak in playback because:
+
+- its scenes had no controllers
+- the preview renderer drew the full curve immediately
+
+This was improved in two ways:
+
+- preview rendering now reveals expressions progressively
+- `03_parametric_focused` now has score-specific controllers:
+  - `phase`
+  - `drift`
+
+Those controllers are wired into the sample functions, so the score now has real internal motion instead of only transport motion.
+
+This establishes a useful rule for future scores:
+
+- if a score feels too static, add subtle score-specific controllers
+- let preview and audio both consume those controllers
+- do not rely on transport alone to create motion
 
 ---
 
-## Important Implementation Decisions Already Made
+## Important Decisions Already Made
 
-### 1. `Play Scene` and `Play Score` must stay separate
+### 1. General Formula and Current Parameter Value Must Stay Separate
 
-This was corrected during implementation.
+The runtime should show the formula in general form, while current controller values are shown separately.
 
-Reason:
+Example:
 
-- users expect current scene playback to stop at the scene boundary
-- score playback should continue through scene boundaries
+- formula: `y = cos(ax)`
+- current value: `a = 7.20`
 
-This distinction should remain.
+Do not go back to globally injecting static strings like `(a = 1)` into unrelated formulas.
 
-### 2. Expression focus is a runtime concept
+### 2. `Play Scene` and `Play Score` Must Stay Separate
 
-Multi-expression scenes are currently difficult to read if every expression is treated equally.
+Users expect:
 
-So the runtime now computes a focused expression from scene progress and uses that to:
+- current scene playback to stop at the scene boundary
+- score playback to continue through all scenes
 
-- emphasize one curve in the canvas
+That distinction is already implemented and should remain.
+
+### 3. Focus Is a Runtime Concept
+
+Multi-expression scenes are too hard to read if everything has equal weight.
+
+The runtime now computes a focused expression from scene progress and uses it to:
+
+- emphasize one curve
 - emphasize one expression card
-- describe current focus in the script panel
+- strengthen one audio path
+- describe the current focus in narration
 
-This should remain part of the design.
+This should remain part of the system design.
 
-### 3. Expression enable state belongs to score and scene state
+### 4. Rendering and Audio Must Share Sampling Logic
 
-Expression toggles are now stored by score id and scene id.
-
-That is correct.
-
-It should not be treated as a global toggle across the whole application.
-
-### 4. Preview rendering and preview audio should share sampling logic
-
-This is already partially true through `engine/sampleExpression.js`.
+Rendering and audio are already partially unified through shared expression sampling.
 
 This must continue.
 
-If rendering and audio drift apart, the runtime becomes unreliable very quickly.
+If the visual engine and audio engine drift apart, score playback becomes unreliable.
+
+### 5. Catalog Data Should Own Scene Copy
+
+Narration-related text belongs in score data, not hardcoded UI logic.
+
+That means:
+
+- `scripts` when the score has explicit narration beats
+- `caption` when it needs a stable scene description
+- `focusNote` when focus language should be hand-authored
+
+That decision should remain.
 
 ---
 
@@ -237,11 +294,10 @@ If rendering and audio drift apart, the runtime becomes unreliable very quickly.
 
 ### 1. Catalog Coverage
 
-Only two scores are normalized.
+Three scores are normalized.
 
 Still missing:
 
-- `03_parametric_focused`
 - `04_parametric_implicit_polar`
 - `05_amazing_2025`
 - `06_insane_polar`
@@ -253,136 +309,161 @@ Still missing:
 
 Current preview rendering is functional but still basic.
 
-Missing or weak areas:
+Still weak or missing:
 
 - better implicit contour rendering
 - scene-specific styling
-- layered reveal strategies
 - density control
 - stroke compositing
 - camera logic
 - shot presets
+- mixed-family scene handling rules
+- stronger motion grammar for scores that do not naturally animate
 
 ### 3. Audio Quality
 
-Current audio is only a minimal verification layer.
+Current audio is useful but still only a preview layer.
 
-Missing or weak areas:
+Still weak or missing:
 
 - expression-specific timbre design
-- per-expression gain balancing
-- panning
+- more deliberate per-expression gain balancing
+- stereo panning
 - envelopes
 - rhythmic accent design
 - scene transition scoring
-- BGM support
+- background layers or sustained beds
 
 ### 4. Narrative Layer
 
-The script panel exists, but most scores still do not carry strong runtime narration.
+The narration panel exists, but score copy is still uneven.
 
-Missing:
+Still needed:
 
-- manual captions for scores without script lines
-- scene-specific interpretation notes
-- highlight language for why a graph matters visually
+- captions for all non-script scores
+- better focus notes
+- clearer explanation of why a graph matters visually
 
 ### 5. Performance Layer
 
-There is still no full performance system for:
+There is still no true performance system for:
 
 - shot presets
 - transition presets
 - feature-based camera moves
 - render choreography
+- scene-specific reveal strategies
 
-This remains a major next step.
+This remains the bridge from score explorer to actual performance engine.
+
+---
+
+## Reliability Notes
+
+Two runtime issues were already found and fixed during this pass:
+
+### 1. Browser Parse Failure
+
+There was a malformed expression in `app/main.js` that caused:
+
+- `Uncaught SyntaxError: Unexpected token ';'`
+
+That has been fixed.
+
+### 2. Hero Score Count Drift
+
+The hero card still showed `2` after the third score was added.
+
+That has been fixed by driving the hero count from `scoreCatalog.length`.
+
+This suggests a simple rule for future work:
+
+- avoid hardcoded runtime counters
+- keep running `node --check` on edited JS modules
+- recheck transport and UI facts after each score addition
 
 ---
 
 ## Recommended Next Steps
 
-### Immediate Next Step 1: Improve Audio Focus
+### Immediate Next Step 1: Normalize `04_parametric_implicit_polar`
 
-The focused expression should not only look stronger.
-It should also sound stronger.
-
-Recommended changes:
-
-- raise focused expression gain slightly
-- reduce non-focused expression gain
-- optionally pan focused expression toward center and supporting ones outward
-
-This is the fastest improvement with strong perceptual payoff.
-
-### Immediate Next Step 2: Add Manual Captions for Non-script Scores
-
-Scores like `01_amazing_part3` do not currently benefit much from the new script panel.
-
-Recommended changes:
-
-- allow scenes to define `caption`
-- allow scenes to define `focusNote`
-- display those when `scripts` are absent
-
-This improves readability immediately.
-
-### Immediate Next Step 3: Normalize More Scores
-
-The architecture is now stable enough to expand coverage.
-
-Best next targets:
-
-1. `03_parametric_focused`
-2. `04_parametric_implicit_polar`
-3. `06_insane_polar`
+This is the most important next score.
 
 Reason:
 
-- they exercise different expression families
-- they will pressure-test the current catalog format
-- they will expose whether the current runtime model is general enough
+- it mixes `parametric`, `implicit`, and `polar`
+- it will pressure-test the current catalog format
+- it will reveal whether mixed-family scenes need extra render controls
 
-### Immediate Next Step 4: Introduce Shot Presets
+While normalizing it:
 
-Once more scores are normalized, add a shot layer.
+- add `caption`
+- add `focusNote`
+- note any scene that needs custom density or viewport handling
 
-Recommended model:
+### Immediate Next Step 2: Expand Mixed-Family Render Rules
+
+After `04` is in, check whether mixed-family scenes need:
+
+- per-expression density
+- custom implicit thresholds
+- per-expression stroke priority
+- per-scene viewport overrides
+
+If those needs appear, add them in data rather than hardcoding score-specific logic in the app.
+
+### Immediate Next Step 3: Improve Audio Spatial Readability
+
+Audio focus is partially done, but not enough.
+
+Next audio improvements should be:
+
+- keep focused expression centered
+- spread supporting expressions with light stereo panning
+- tune dense scenes so they do not flatten into one mass
+
+### Immediate Next Step 4: Introduce the First Shot Preset
+
+Once `04` is normalized, add the first real shot system field to the catalog.
+
+Recommended initial model:
 
 - one scene can contain many expressions
 - one shot preset decides which expression is foregrounded
-- one shot preset decides reveal, density, and style
+- one shot preset decides reveal amount, density, and style
 
-This is the bridge from score explorer to actual performance engine.
+This should begin in catalog data, not only in renderer code.
+
+### Immediate Next Step 5: Continue Score Expansion
+
+After `04`, the best next order is:
+
+1. `06_insane_polar`
+2. `08_incredible_animations`
+3. `07_gcd_fantastic`
+
+Reason:
+
+- `06` will stress-test polar-heavy behavior
+- `08` will stress-test animation-led score logic
+- `07` will stress-test implicit and boolean-style pattern rendering
 
 ---
 
-## Current Assessment
+## Next Session Start Point
 
-The rebuild has passed the “idea only” stage.
+If work resumes later, start here:
 
-`math-symphony` now has:
+1. Read `catalog/03_parametric_focused.js` to preserve the new `phase` and `drift` pattern
+2. Normalize `04_parametric_implicit_polar`
+3. Check whether the current renderer handles mixed-family scenes cleanly
+4. If not, add the first data-driven render controls before normalizing more scores
 
-- a runtime catalog format
-- a controller engine
-- expression sampling
-- canvas preview
-- audio preview
-- transport controls
-- expression toggles
-- scene narration scaffolding
+Do not begin with CSS polish.
+Do not begin with a full audio rewrite.
 
-That is enough to justify continuing in this direction.
-
-The main risk now is not lack of architecture.
-The main risk is stopping too early and leaving the project in a half-explorer, half-performance state.
-
-So the correct strategy is:
-
-- keep the runtime model
-- expand score coverage
-- improve focus and transition behavior
-- then add shot and performance systems
+The most important unresolved question is whether the current catalog and engine survive a mixed-family score without becoming ad hoc again.
 
 ---
 
