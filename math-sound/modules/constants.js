@@ -1168,7 +1168,8 @@ export const CATEGORIES = {
     bytebeat: { name: '💻 Byte', functions: [] },
     amazing: { name: '✨ Amazing', functions: [] },
     beautiful: { name: '💖 Beautiful', functions: [] },
-    harmonic: { name: '🎼 Harmonic', functions: [] }
+    harmonic: { name: '🎼 Harmonic', functions: [] },
+    fusion: { name: '🌀 Fusion', functions: [] }
 };
 
 // Initialize categories

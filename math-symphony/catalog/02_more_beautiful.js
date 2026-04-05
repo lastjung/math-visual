@@ -119,7 +119,10 @@ export const moreBeautifulScore = defineScore({
                     type: 'cartesian',
                     formula: 'y = sign(x)',
                     latex: 'y = \\text{sgn}(x)',
-                    bounds: { xMin: -10, xMax: 10, yMin: -2, yMax: 2 }
+                    bounds: { xMin: -10, xMax: 10, yMin: -2, yMax: 2 },
+                    sample: {
+                        y: ({ x }) => Math.sign(x)
+                    }
                 }),
                 defineExpression({
                     id: 'sign-sin-x',
@@ -127,7 +130,10 @@ export const moreBeautifulScore = defineScore({
                     type: 'cartesian',
                     formula: 'y = sign(sin(x))',
                     latex: 'y = \\text{sgn}(\\sin(x))',
-                    bounds: { xMin: -10, xMax: 10, yMin: -2, yMax: 2 }
+                    bounds: { xMin: -10, xMax: 10, yMin: -2, yMax: 2 },
+                    sample: {
+                        y: ({ x }) => Math.sign(Math.sin(x))
+                    }
                 }),
                 defineExpression({
                     id: 'parametric-sign',
@@ -136,7 +142,12 @@ export const moreBeautifulScore = defineScore({
                     formula: '(t, sign(t))',
                     latex: '(t, \\text{sgn}(t))',
                     paramKeys: ['v1'],
-                    bounds: { xMin: -15, xMax: 10, yMin: -2, yMax: 2 }
+                    bounds: { xMin: -15, xMax: 10, yMin: -2, yMax: 2 },
+                    sample: {
+                        domain: { min: -10, max: ({ params }) => params.v1 },
+                        x: ({ t }) => t,
+                        y: ({ t }) => Math.sign(t)
+                    }
                 }),
                 defineExpression({
                     id: 'diagonal-reference',
@@ -144,7 +155,12 @@ export const moreBeautifulScore = defineScore({
                     type: 'parametric',
                     formula: '(t, t)',
                     latex: '(t, t)',
-                    bounds: { xMin: -10, xMax: 10, yMin: -10, yMax: 10 }
+                    bounds: { xMin: -10, xMax: 10, yMin: -10, yMax: 10 },
+                    sample: {
+                        domain: { min: -10, max: 10 },
+                        x: ({ t }) => t,
+                        y: ({ t }) => t
+                    }
                 })
             ]
         }),
@@ -163,7 +179,15 @@ export const moreBeautifulScore = defineScore({
                     latex: 'r = \\text{sgn}(\\cos(n\\theta + 3v_{13})) + \\sin(v_{13}\\theta / 20)',
                     paramKeys: ['v13'],
                     notes: ['n rotates through 2, 3, 4, 7, 6'],
-                    bounds: { xMin: -3, xMax: 3, yMin: -3, yMax: 3 }
+                    bounds: { xMin: -3, xMax: 3, yMin: -3, yMax: 3 },
+                    sample: {
+                        domain: { min: 0, max: 20 * Math.PI },
+                        r: ({ theta, params }) => {
+                            const cycle = [2, 3, 4, 7, 6];
+                            const n = cycle[Math.floor((params.v13 / (Math.PI * 2)) * cycle.length) % cycle.length];
+                            return Math.sign(Math.cos(n * theta + 3 * params.v13)) + Math.sin((params.v13 * theta) / 20);
+                        }
+                    }
                 }),
                 defineExpression({
                     id: 'punk-hair-laser',
@@ -172,7 +196,14 @@ export const moreBeautifulScore = defineScore({
                     formula: 'y = x * sign(csc(tan(x + v9) + v9)) + cos(x)',
                     latex: 'y = x \\cdot \\text{sgn}(\\csc(\\tan(x + v_9) + v_9)) + \\cos(x)',
                     paramKeys: ['v9'],
-                    bounds: { xMin: -10, xMax: 10, yMin: -12, yMax: 12 }
+                    bounds: { xMin: -10, xMax: 10, yMin: -12, yMax: 12 },
+                    sample: {
+                        y: ({ x, params }) => {
+                            const tanValue = Math.tan(x + params.v9) + params.v9;
+                            const cscValue = 1 / Math.sin(tanValue);
+                            return x * Math.sign(cscValue) + Math.cos(x);
+                        }
+                    }
                 })
             ]
         }),
@@ -190,7 +221,11 @@ export const moreBeautifulScore = defineScore({
                     formula: 'y = v6 * sign(v6*x - y) + cos(v6 + x)',
                     latex: 'y = v_6 \\cdot \\text{sgn}(v_6x - y) + \\cos(v_6 + x)',
                     paramKeys: ['v6'],
-                    bounds: { xMin: -10, xMax: 10, yMin: -10, yMax: 10 }
+                    bounds: { xMin: -10, xMax: 10, yMin: -10, yMax: 10 },
+                    sample: {
+                        value: ({ x, y, params }) => y - (params.v6 * Math.sign(params.v6 * x - y) + Math.cos(params.v6 + x)),
+                        threshold: 0.12
+                    }
                 }),
                 defineExpression({
                     id: 'jagged-sine-gcd',
@@ -199,7 +234,10 @@ export const moreBeautifulScore = defineScore({
                     formula: 'y = gcd(v11*x) * sign(sin(x)) - sin(x)',
                     latex: 'y = \\gcd(v_{11}x) \\cdot \\text{sgn}(\\sin(x)) - \\sin(x)',
                     paramKeys: ['v11'],
-                    bounds: { xMin: -10, xMax: 10, yMin: -12, yMax: 12 }
+                    bounds: { xMin: -10, xMax: 10, yMin: -12, yMax: 12 },
+                    sample: {
+                        y: ({ x, params }) => gcd(Math.round(params.v11 * x)) * Math.sign(Math.sin(x)) - Math.sin(x)
+                    }
                 }),
                 defineExpression({
                     id: 'modulo-wave',
@@ -208,7 +246,13 @@ export const moreBeautifulScore = defineScore({
                     formula: 'y = 2 * sign(sin(x - v12)) + mod(8x, v12) - sin(x + v12)',
                     latex: 'y = 2 \\cdot \\text{sgn}(\\sin(x - v_{12})) + \\bmod(8x, v_{12}) - \\sin(x + v_{12})',
                     paramKeys: ['v12'],
-                    bounds: { xMin: -10, xMax: 10, yMin: -4, yMax: 4 }
+                    bounds: { xMin: -10, xMax: 10, yMin: -4, yMax: 4 },
+                    sample: {
+                        y: ({ x, params }) => {
+                            const mod = ((8 * x) % params.v12 + params.v12) % params.v12;
+                            return 2 * Math.sign(Math.sin(x - params.v12)) + mod - Math.sin(x + params.v12);
+                        }
+                    }
                 })
             ]
         }),
@@ -227,7 +271,15 @@ export const moreBeautifulScore = defineScore({
                     latex: 'r = \\text{sgn}(\\cos(k\\theta - v_{14})) + \\sin(v_{14} + k.05\\theta)\\cos(v_{14})',
                     paramKeys: ['v14'],
                     notes: ['k cycles through 2, 3, 5'],
-                    bounds: { xMin: -3, xMax: 3, yMin: -3, yMax: 3 }
+                    bounds: { xMin: -3, xMax: 3, yMin: -3, yMax: 3 },
+                    sample: {
+                        domain: { min: 0, max: 2 * Math.PI },
+                        r: ({ theta, params }) => {
+                            const cycle = [2, 3, 5];
+                            const k = cycle[Math.floor((params.v14 / (Math.PI * 2)) * cycle.length) % cycle.length];
+                            return Math.sign(Math.cos(k * theta - params.v14)) + Math.sin(params.v14 + (k + 0.05) * theta) * Math.cos(params.v14);
+                        }
+                    }
                 }),
                 defineExpression({
                     id: 'layered-list-shapes',
@@ -237,9 +289,30 @@ export const moreBeautifulScore = defineScore({
                     latex: 'r = l_1 \\cdot \\text{sgn}(\\cos(3\\theta - l_1v_{15})) + \\sin(v_{15} + 3\\theta + l_1) - \\cos(v_{15})',
                     paramKeys: ['v15'],
                     notes: ['l1 = [2, ..., 10]'],
-                    bounds: { xMin: -15, xMax: 15, yMin: -15, yMax: 15 }
+                    bounds: { xMin: -15, xMax: 15, yMin: -15, yMax: 15 },
+                    sample: {
+                        domain: { min: 0, max: 2 * Math.PI },
+                        r: ({ theta, params }) => {
+                            const layers = [2, 4, 6, 8, 10];
+                            const layer = layers[Math.floor((params.v15 / (Math.PI * 2)) * layers.length) % layers.length];
+                            return layer * Math.sign(Math.cos(3 * theta - layer * params.v15)) + Math.sin(params.v15 + 3 * theta + layer) - Math.cos(params.v15);
+                        }
+                    }
                 })
             ]
         })
     ]
 });
+
+function gcd(value) {
+    let a = Math.abs(Math.trunc(value));
+    let b = 360;
+
+    while (b !== 0) {
+        const temp = b;
+        b = a % b;
+        a = temp;
+    }
+
+    return a;
+}

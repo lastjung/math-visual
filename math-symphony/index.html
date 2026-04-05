@@ -56,9 +56,31 @@
                 <div class="palette-row" id="scorePalette"></div>
 
                 <div class="timeline-block">
-                    <span class="section-label">Timeline probe</span>
+                    <div class="transport-top">
+                        <span class="section-label">Timeline probe</span>
+                        <div class="transport-controls">
+                            <button id="playToggle" class="transport-btn" type="button">Play</button>
+                            <button id="resetTimeline" class="transport-btn ghost" type="button">Reset</button>
+                        </div>
+                    </div>
                     <input id="scoreTimeline" type="range" min="0" max="1000" value="0">
                     <div class="timeline-label" id="timelineLabel"></div>
+                </div>
+
+                <div class="preview-panel">
+                    <div class="preview-top">
+                        <span class="section-label">Preview</span>
+                        <span class="preview-copy">Scene expressions sampled in math space</span>
+                    </div>
+                    <canvas id="previewCanvas" width="900" height="520"></canvas>
+
+                    <div class="preview-expressions">
+                        <div class="preview-expressions-head">
+                            <span class="section-label">Expressions</span>
+                            <span class="preview-copy">Formula list for the active scene</span>
+                        </div>
+                        <div class="expressions-panel" id="expressionsPanel"></div>
+                    </div>
                 </div>
 
                 <div class="scene-rail" id="sceneRail"></div>
@@ -75,16 +97,6 @@
                 <h3 class="panel-title">Parameter state</h3>
                 <div class="controllers-panel" id="controllersPanel"></div>
             </aside>
-        </section>
-
-        <section class="score-layout">
-            <div></div>
-            <section class="score-main">
-                <span class="section-label">Expressions</span>
-                <h3 class="panel-title">Scene payload</h3>
-                <div class="expressions-panel" id="expressionsPanel"></div>
-            </section>
-            <div></div>
         </section>
     </main>
     <script type="module" src="./app/main.js"></script>

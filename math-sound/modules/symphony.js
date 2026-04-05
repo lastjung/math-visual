@@ -1,6 +1,6 @@
 /**
  * Math Sound - Symphony Scores
- * Amazing Animations Part 3 & More Beautiful Graphs 전용 독립 수식 모듈
+ * Amazing Animations Part 3, More Beautiful Graphs & Harmonic Series
  */
 
 export const SYMPHONY_FUNCTIONS = {
@@ -54,13 +54,12 @@ export const SYMPHONY_FUNCTIONS = {
         x: (t, loopIndex = 0) => {
             const a = (loopIndex % 15) + 1;
             const segments = 20;
-            // t=1 일 때 인덱스 초과 방지 (Math.min 적용)
             const segmentIdx = Math.min(segments - 1, Math.floor(t * segments));
             const subT = (t * segments) % 1;
             const line = Math.floor(segmentIdx / 2);
             const isHorizontal = segmentIdx % 2 === 0;
             const pos = (line - (segments / 4)) * (Math.PI / a);
-            return isHorizontal ? (subT - 0.5) * 40 : pos; // 길이를 충분히 늘림
+            return isHorizontal ? (subT - 0.5) * 40 : pos;
         },
         y: (t, loopIndex = 0) => {
             const a = (loopIndex % 15) + 1;
@@ -75,7 +74,7 @@ export const SYMPHONY_FUNCTIONS = {
         formula: 'cos(ax) = sin(ay)',
         latex: '\\cos(ax) = \\sin(ay)',
         tRange: { min: 0, max: 1 },
-        viewBox: { xMin: -18, xMax: 18, yMin: -18, yMax: 18 }, // 영역 확장으로 잘림 현상 해결
+        viewBox: { xMin: -18, xMax: 18, yMin: -18, yMax: 18 },
         audioScale: 100,
         baseFreq: 440
     },
@@ -83,8 +82,10 @@ export const SYMPHONY_FUNCTIONS = {
         category: 'amazing',
         name: 'Radial Whirlpool',
         type: 'implicit',
-        // 악보에 명시된 원조 음함수 수식 복원
-        f: (x, y, a) => y - 4.8 * Math.cos( ((a % 30) + 1) * x * y / (x * x + y * y + 0.1) ),
+        f: (x, y, loopIndex = 0) => {
+            const a = (loopIndex % 20) + 5;
+            return y - 4.8 * Math.cos( a * x * y / (x * x + y * y + 0.1) );
+        },
         formula: 'y = 4.8 · cos(axy / (x²+y²))',
         latex: 'y = 4.8 \\cos\\left(\\frac{axy}{x^2+y^2}\\right)',
         range: { xMin: -10, xMax: 10, yMin: -10, yMax: 10 },
@@ -93,36 +94,34 @@ export const SYMPHONY_FUNCTIONS = {
     },
 
     // ========== 💖 BEAUTIFUL (More Beautiful Graphs) ==========
-    signStep: {
-        category: 'beautiful',
-        name: 'Sign Step',
-        type: 'cartesian',
-        fn: (x) => Math.sign(x),
-        formula: 'y = sign(x)',
-        latex: 'y = \\text{sgn}(x)',
-        range: { xMin: -10, xMax: 10, yMin: -2, yMax: 2 },
-        audioScale: 180,
-        baseFreq: 100
-    },
     signIntro: {
         category: 'beautiful',
         name: 'The Signum Glitch',
         type: 'cartesian',
-        fn: (x) => Math.sign(Math.sin(x)),
-        formula: 'y = sign(sin(x))',
-        latex: 'y = \\text{sgn}(\\sin(x))',
+        fn: (x, loopIndex = 0) => {
+            const a = (loopIndex % 10) + 1;
+            return Math.sign(Math.sin(a * x / 4));
+        },
+        formula: 'y = sign(sin(ax/4))',
+        latex: 'y = \\text{sgn}(\\sin(\\frac{ax}{4}))',
         range: { xMin: -10, xMax: 10, yMin: -2, yMax: 2 },
         audioScale: 200,
         baseFreq: 110
     },
     signTrace: {
         category: 'beautiful',
-        name: 'Sign Trace',
+        name: 'Dancing Sign Trace',
         type: 'parametric',
-        x: (t) => t,
-        y: (t) => Math.sign(t),
-        formula: '(t, sign(t))',
-        latex: '(t, \\text{sgn}(t))',
+        x: (t, loopIndex = 0) => {
+            const a = (loopIndex % 12) * 0.5 + 1;
+            return t * Math.cos(a * 0.1);
+        },
+        y: (t, loopIndex = 0) => {
+            const a = (loopIndex % 10) + 1;
+            return Math.sign(Math.sin(a * t));
+        },
+        formula: '(t·cos(0.1a), sign(sin at))',
+        latex: '(t \\cos(0.1a), \\text{sgn}(\\sin at))',
         tRange: { min: -10, max: 10 },
         viewBox: { xMin: -10, xMax: 10, yMin: -2, yMax: 2 },
         audioScale: 180,
@@ -130,12 +129,15 @@ export const SYMPHONY_FUNCTIONS = {
     },
     diagonalReference: {
         category: 'beautiful',
-        name: 'Diagonal Reference',
+        name: 'Oscillating Diagonal',
         type: 'parametric',
         x: (t) => t,
-        y: (t) => t,
-        formula: '(t, t)',
-        latex: '(t, t)',
+        y: (t, loopIndex = 0) => {
+            const a = (loopIndex % 15) * 0.2;
+            return t + Math.sin(a * t);
+        },
+        formula: '(t, t + sin(at))',
+        latex: '(t, t + \\sin(at))',
         tRange: { min: -10, max: 10 },
         viewBox: { xMin: -10, xMax: 10, yMin: -10, yMax: 10 },
         audioScale: 110,
@@ -146,9 +148,9 @@ export const SYMPHONY_FUNCTIONS = {
         name: 'Mind Blowing Spinny',
         type: 'polar',
         r: (theta, loopIndex = 0) => {
-            const v13 = (loopIndex % 10) * 0.5;
+            const v = (loopIndex % 10) * 0.5;
             const n = 6;
-            return Math.sign(Math.cos(n * theta + 3 * v13)) + Math.sin(v13 * theta / 20);
+            return Math.sign(Math.cos(n * theta + 3 * v)) + Math.sin(v * theta / 20);
         },
         formula: 'r = sign(cos(nθ + 3v)) + sin(vθ/20)',
         latex: 'r = \\text{sgn}(\\cos(n\\theta + 3v)) + \\sin(v\\theta/20)',
@@ -162,8 +164,8 @@ export const SYMPHONY_FUNCTIONS = {
         name: 'Punk Hair Laser',
         type: 'cartesian',
         fn: (x, loopIndex = 0) => {
-            const v9 = (loopIndex % 8) * (Math.PI / 4);
-            const tanVal = Math.tan(x + v9) + v9;
+            const v = (loopIndex % 8) * (Math.PI / 4);
+            const tanVal = Math.tan(x + v) + v;
             const cscVal = 1 / Math.sin(tanVal);
             return x * Math.sign(cscVal) + Math.cos(x);
         },
@@ -239,7 +241,6 @@ export const SYMPHONY_FUNCTIONS = {
         r: (theta, loopIndex = 0) => {
             const v15 = (loopIndex % 10) * 0.6;
             const l1 = [2, 4, 6, 8, 10];
-            // Multiple layers can't be rendered directly as one 'r', so we pick one based on loop
             const layer = l1[loopIndex % l1.length];
             return layer * Math.sign(Math.cos(3 * theta - layer * v15)) + Math.sin(v15 + 3 * theta + layer) - Math.cos(v15);
         },
@@ -250,15 +251,13 @@ export const SYMPHONY_FUNCTIONS = {
         audioScale: 120,
         baseFreq: 200
     },
+
     // ========== 🎼 HARMONIC (Parametric Focused) ==========
     lissajousIntro: {
         category: 'harmonic',
         name: 'Harmonic Intro',
         type: 'parametric',
-        x: (t, loopIndex = 0) => {
-            const a = (loopIndex % 15) + 1;
-            return Math.cos(t);
-        },
+        x: (t, loopIndex = 0) => Math.cos(t),
         y: (t, loopIndex = 0) => {
             const a = (loopIndex % 15) + 1;
             return Math.sin(a * t / 2);
@@ -355,20 +354,128 @@ export const SYMPHONY_FUNCTIONS = {
         latex: 'x=\\tan(at)+\\cos t, y=\\tan t \\cdot \\sin(bt)',
         tRange: { min: 0, max: 4 * Math.PI },
         viewBox: { xMin: -15, xMax: 15, yMin: -15, yMax: 15 },
-        audioScale: 60,
-        baseFreq: 520
+    },
+    // ========== 🌀 FUSION (Parametric, Implicit, Polar Mixed) ==========
+    cinematicGalaxy: {
+        category: 'fusion',
+        name: 'Cinematic Galaxy',
+        type: 'polar',
+        r: (theta, loopIndex = 0) => {
+            const vs = (loopIndex % 20) * 0.314; // vs = 0 to 2pi
+            return Math.abs(1 / Math.cos(1.2 * theta + vs)) + Math.sin(3 * vs + Math.cos(1.2 * theta + Math.sin(1.2 * theta)));
+        },
+        formula: 'r = sec(1.2θ+v) + sin(3v + cos(1.2θ+sin 1.2θ))',
+        latex: 'r = \\sec(1.2\\theta + v) + \\sin(3v + \\cos(1.2\\theta + \\sin(1.2\\theta)))',
+        thetaRange: { min: 0, max: 20 * Math.PI },
+        viewBox: { xMin: -5, xMax: 5, yMin: -5, yMax: 5 },
+        audioScale: 140,
+        baseFreq: 180
+    },
+    tanTwistMesh: {
+        category: 'fusion',
+        name: 'Tan Twist Mesh',
+        type: 'parametric',
+        x: (t, loopIndex = 0) => {
+            const v = (loopIndex % 12) * 0.52;
+            return Math.tan(2 * t + v) + Math.cos(4 * t);
+        },
+        y: (t, loopIndex = 0) => {
+            const v = (loopIndex % 12) * 0.52;
+            return Math.sin(3 * t) + Math.cos(5 * t);
+        },
+        formula: '(tan(2t+v)+cos 4t, sin 3t+cos 5t)',
+        latex: '(\\tan(2t+v)+\\cos 4t, \\sin 3t + \\cos 5t)',
+        tRange: { min: 0, max: 2 * Math.PI },
+        viewBox: { xMin: -10, xMax: 10, yMin: -5, yMax: 5 },
+        audioScale: 90,
+        baseFreq: 240
+    },
+    secantOscillator: {
+        category: 'fusion',
+        name: 'Secant Oscillator',
+        type: 'parametric',
+        x: (t) => 1 / Math.cos(t), // sec(t)
+        y: (t, loopIndex = 0) => {
+            const v = (loopIndex % 10) * 0.628;
+            return Math.sin(4 * t + Math.cos(2 * t) + Math.sin(3 * t) + v);
+        },
+        formula: '(sec t, sin(4t+cos 2t+sin 3t+v))',
+        latex: '(\\sec t, \\sin(4t+\\cos 2t+\\sin 3t+v))',
+        tRange: { min: 0, max: 2 * Math.PI },
+        viewBox: { xMin: -5, xMax: 5, yMin: -2, yMax: 2 },
+        audioScale: 110,
+        baseFreq: 300
+    },
+    tanRiseRidge: {
+        category: 'fusion',
+        name: 'Tan Rise Ridge',
+        type: 'implicit',
+        f: (x, y, loopIndex = 0) => {
+            const v = (loopIndex % 15) * 0.418;
+            return y - (Math.tan(x + v) - Math.sin(10 * x + Math.cos(x)));
+        },
+        formula: 'y = tan(x+v) - sin(10x+cos x)',
+        latex: 'y = \\tan(x+v) - \\sin(10x+\\cos x)',
+        range: { xMin: -10, xMax: 10, yMin: -10, yMax: 10 },
+        audioScale: 130,
+        baseFreq: 150
+    },
+    geometricShift: {
+        category: 'fusion',
+        name: 'Geometric Shift',
+        type: 'implicit',
+        f: (x, y, loopIndex = 0) => {
+            const v = -2.5 + (loopIndex % 20) * 0.25; // v = -2.5 to 2.5
+            return Math.sin(x) - (v * Math.cos(y) + Math.sin(2 * x + v));
+        },
+        formula: 'sin x = v·cos y + sin(2x+v)',
+        latex: '\\sin x = v \\cos y + \\sin(2x+v)',
+        range: { xMin: -10, xMax: 10, yMin: -10, yMax: 10 },
+        audioScale: 120,
+        baseFreq: 196
+    },
+    pulsatingPetal: {
+        category: 'fusion',
+        name: 'Pulsating Petal',
+        type: 'polar',
+        r: (theta, loopIndex = 0) => {
+            const v = -1.5 + (loopIndex % 15) * 0.2; // v = -1.5 to 1.5
+            return Math.sin(v + 4 * theta) + v;
+        },
+        formula: 'r = sin(v + 4θ) + v',
+        latex: 'r = \\sin(v + 4\\theta) + v',
+        thetaRange: { min: 0, max: 2 * Math.PI },
+        viewBox: { xMin: -3, xMax: 3, yMin: -3, yMax: 3 },
+        audioScale: 170,
+        baseFreq: 220
+    },
+    starCore: {
+        category: 'fusion',
+        name: 'Star Core',
+        type: 'polar',
+        r: (theta, loopIndex = 0) => {
+            const v = (loopIndex % 20) * 0.314;
+            return (6 * Math.sin(1.2 * theta) - Math.cos(6 * theta + v)) / 2;
+        },
+        formula: '2r = 6sin(1.2θ) - cos(6θ+v)',
+        latex: '2r = 6\\sin(1.2\\theta) - \\cos(6\\theta + v)',
+        thetaRange: { min: 0, max: 10 * Math.PI },
+        viewBox: { xMin: -5, xMax: 5, yMin: -5, yMax: 5 },
+        audioScale: 150,
+        baseFreq: 330
     }
 };
 
+/**
+ * GCD 유틸리티 함수
+ */
 function gcd(value) {
     let a = Math.abs(Math.trunc(value));
     let b = 360;
-
     while (b !== 0) {
         const temp = b;
         b = a % b;
         a = temp;
     }
-
     return a;
 }
