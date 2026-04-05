@@ -706,6 +706,13 @@ body.is-fullscreen .controls {
 .category-tab[data-category="bytebeat"] { color: var(--bytebeat-color); }
 .category-tab[data-category="amazing"] { color: var(--amazing-color); }
 .category-tab[data-category="beautiful"] { color: var(--beautiful-color); }
+.category-tab[data-category="harmonic"] { color: #3b82f6; }
+.category-tab[data-category="fusion"] { color: #06b6d4; }
+.category-tab[data-category="hyper"] { color: #8b5cf6; }
+.category-tab[data-category="insane"] { color: #f43f5e; }
+.category-tab[data-category="fantastic"] { color: #10b981; }
+.category-tab[data-category="incredible"] { color: #f97316; }
+.category-tab[data-category="incomprehensible"] { color: #6366f1; }
 
 /* Dim inactive tabs slightly */
 .category-tab:not(.active) {
@@ -733,6 +740,13 @@ body.is-fullscreen .controls {
 .category-tab.active[data-category="math"] { border-color: var(--math-color); color: var(--math-color); box-shadow: 0 8px 16px rgba(220, 38, 38, 0.15); }
 .category-tab.active[data-category="amazing"] { border-color: var(--amazing-color); color: var(--amazing-color); box-shadow: 0 8px 16px rgba(245, 158, 11, 0.15); }
 .category-tab.active[data-category="beautiful"] { border-color: var(--beautiful-color); color: var(--beautiful-color); box-shadow: 0 8px 16px rgba(217, 70, 239, 0.2); }
+.category-tab.active[data-category="harmonic"] { border-color: #3b82f6; color: #3b82f6; box-shadow: 0 8px 16px rgba(59, 130, 246, 0.15); }
+.category-tab.active[data-category="fusion"] { border-color: #06b6d4; color: #06b6d4; box-shadow: 0 8px 16px rgba(6, 182, 212, 0.15); }
+.category-tab.active[data-category="hyper"] { border-color: #8b5cf6; color: #8b5cf6; box-shadow: 0 8px 16px rgba(139, 92, 246, 0.15); }
+.category-tab.active[data-category="insane"] { border-color: #f43f5e; color: #f43f5e; box-shadow: 0 8px 16px rgba(244, 63, 94, 0.15); }
+.category-tab.active[data-category="fantastic"] { border-color: #10b981; color: #10b981; box-shadow: 0 8px 16px rgba(16, 185, 129, 0.15); }
+.category-tab.active[data-category="incredible"] { border-color: #f97316; color: #f97316; box-shadow: 0 8px 16px rgba(249, 115, 22, 0.15); }
+.category-tab.active[data-category="incomprehensible"] { border-color: #6366f1; color: #6366f1; box-shadow: 0 8px 16px rgba(99, 102, 241, 0.15); }
 
 /* Browser Bar */
 .browser-bar {
@@ -843,6 +857,13 @@ body.is-fullscreen .controls {
 .func-card[data-category="amazing"] { border-left-color: var(--amazing-color); }
 .func-card[data-category="beautiful"] { border-left-color: var(--beautiful-color); }
 .func-card[data-category="ani"] { border-left-color: #f43f5e; }
+.func-card[data-category="harmonic"] { border-left-color: #3b82f6; }
+.func-card[data-category="fusion"] { border-left-color: #06b6d4; }
+.func-card[data-category="hyper"] { border-left-color: #8b5cf6; }
+.func-card[data-category="insane"] { border-left-color: #f43f5e; }
+.func-card[data-category="fantastic"] { border-left-color: #10b981; }
+.func-card[data-category="incredible"] { border-left-color: #f97316; }
+.func-card[data-category="incomprehensible"] { border-left-color: #6366f1; }
 
 .func-card.favorite .card-title {
     color: #f59e0b;

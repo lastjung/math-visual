@@ -605,14 +605,12 @@ export const MATH_FUNCTIONS = {
     lemniscate: {
         category: 'curves',
         name: 'Lemniscate (Infinity)',
-        type: 'polar',
-        r: (theta) => {
-            const cos2t = Math.cos(2 * theta);
-            return cos2t < 0 ? 0 : Math.sqrt(cos2t);
-        },
-        formula: 'r² = cos(2θ)',
-        latex: 'r^2 = \\cos(2\\theta)',
-        thetaRange: { min: 0, max: 2 * Math.PI },
+        type: 'parametric',
+        x: (t) => Math.cos(t) / (1 + Math.pow(Math.sin(t), 2)),
+        y: (t) => (Math.sin(t) * Math.cos(t)) / (1 + Math.pow(Math.sin(t), 2)),
+        formula: '(cos t / (1+sin²t), sin t cos t / (1+sin²t))',
+        latex: '\\left(\\frac{\\cos t}{1+\\sin^2 t}, \\frac{\\sin t \\cos t}{1+\\sin^2 t}\\right)',
+        tRange: { min: 0, max: 2 * Math.PI },
         viewBox: { xMin: -1.5, xMax: 1.5, yMin: -1, yMax: 1 },
         audioScale: 300,
         baseFreq: 320

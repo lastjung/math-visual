@@ -159,7 +159,7 @@ function drawPolarCurveInternal(funcData, width, height, progress) {
     const { min: thetaMin, max: thetaMax } = funcData.thetaRange;
     const graphCtx = ctx.graph;
 
-    const isSymphony = ['amazing', 'beautiful', 'harmonic', 'fusion', 'hyper'].includes(funcData.category);
+    const isSymphony = ['amazing', 'beautiful', 'harmonic', 'fusion', 'hyper', 'insane', 'fantastic', 'incredible', 'incomprehensible'].includes(funcData.category);
     const maxSteps = isSymphony ? 4000 : 1000;
     const steps = Math.floor(maxSteps * progress);
     const thetaRange = thetaMax - thetaMin;
@@ -245,7 +245,7 @@ function drawParametricCurveInternal(funcData, width, height, progress) {
     const { min: tMin, max: tMax } = funcData.tRange;
     const graphCtx = ctx.graph;
 
-    const isSymphony = ['amazing', 'beautiful', 'harmonic', 'fusion', 'hyper'].includes(funcData.category);
+    const isSymphony = ['amazing', 'beautiful', 'harmonic', 'fusion', 'hyper', 'insane', 'fantastic', 'incredible', 'incomprehensible'].includes(funcData.category);
     const maxSteps = isSymphony ? 4000 : 1000;
     const steps = Math.floor(maxSteps * progress);
     const tRange = tMax - tMin;

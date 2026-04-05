@@ -60,7 +60,7 @@ export function createSoundFromFunction(functionId = state.currentFunction) {
     
     // Ani 카테고리는 인트로(1.5초) + 나머지(4.5초) 가변 루프 적용
     const isAni = funcData.category === 'ani';
-    const isSymphony = funcData.category === 'amazing' || funcData.category === 'beautiful';
+    const isSymphony = ['amazing', 'beautiful', 'harmonic', 'fusion', 'hyper', 'insane', 'fantastic', 'incredible', 'incomprehensible'].includes(funcData.category);
     const introDuration = 1.5;
     const regularDuration = 4.5;
     const introDraw = 1.0;
