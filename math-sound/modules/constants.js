@@ -1171,7 +1171,8 @@ export const CATEGORIES = {
     harmonic: { name: '🎼 Harmonic', functions: [] },
     fusion: { name: '🌀 Fusion', functions: [] },
     hyper: { name: '✨ Hyper', functions: [] },
-    insane: { name: '👹 Insane', functions: [] }
+    insane: { name: '👹 Insane', functions: [] },
+    fantastic: { name: '✨ Fantastic', functions: [] }
 };
 
 // Initialize categories

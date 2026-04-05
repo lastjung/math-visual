@@ -25,10 +25,10 @@
                     <span class="section-label">Current pass</span>
                     <h3>Catalog before renderer</h3>
                     <div class="fact-list">
-                        <div><span>Scores normalized</span><strong>2</strong></div>
-                        <div><span>Scene model</span><strong>active</strong></div>
-                        <div><span>Controller engine</span><strong>active</strong></div>
-                        <div><span>Graph renderer</span><strong>next</strong></div>
+                        <div><span>Scores normalized</span><strong id="factScoreCount">3</strong></div>
+                        <div><span>Scene model</span><strong id="factSceneStatus">active</strong></div>
+                        <div><span>Controller engine</span><strong id="factControllerStatus">active</strong></div>
+                        <div><span>Graph renderer</span><strong id="factRendererStatus">active</strong></div>
                     </div>
                 </div>
             </aside>
@@ -79,6 +79,10 @@
                     <div class="preview-top">
                         <span class="section-label">Preview</span>
                         <span class="preview-copy">Scene expressions sampled in math space</span>
+                    </div>
+                    <div class="scene-script-panel">
+                        <div class="scene-script-copy" id="sceneScript">No script for this scene.</div>
+                        <div class="scene-focus" id="sceneFocus"></div>
                     </div>
                     <canvas id="previewCanvas" width="900" height="520"></canvas>
 

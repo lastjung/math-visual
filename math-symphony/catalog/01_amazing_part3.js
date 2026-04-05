@@ -28,6 +28,8 @@ export const amazingPart3Score = defineScore({
             id: 'linear-resonance',
             title: 'Linear Resonance',
             summary: 'Traditional wave functions with high-speed frequency modulation.',
+            caption: 'Three resonance studies scan the same frequency controller from calm to dense.',
+            focusNote: 'The focused curve changes over time while a keeps sweeping forward.',
             durationMs: 11428,
             activeControllers: ['a'],
             expressions: [
@@ -73,6 +75,8 @@ export const amazingPart3Score = defineScore({
             id: 'grid-distortion',
             title: 'Grid Distortion',
             summary: 'A bending coordinate mesh driven by the same frequency scan.',
+            caption: 'The coordinate mesh tightens and buckles as the shared controller increases.',
+            focusNote: 'This scene is about density, not melody. Watch the cells compress.',
             durationMs: 11428,
             activeControllers: ['a'],
             expressions: [
@@ -95,6 +99,8 @@ export const amazingPart3Score = defineScore({
             id: 'radial-whirlpool',
             title: 'Radial Whirlpool',
             summary: 'Square-like interference ripples centered at the origin.',
+            caption: 'The final field turns the same controller into a whirlpool around the origin.',
+            focusNote: 'Listen for a more singular tone while the interference surface sharpens.',
             durationMs: 11428,
             activeControllers: ['a'],
             expressions: [

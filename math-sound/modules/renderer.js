@@ -48,10 +48,7 @@ export function drawStaticGraph() {
 }
 
 function getBounds(funcData) {
-    if (funcData.type === 'polar' || funcData.type === 'parametric') {
-        return funcData.viewBox;
-    }
-    return funcData.range;
+    return funcData.range || funcData.viewBox || { xMin: -10, xMax: 10, yMin: -10, yMax: 10 };
 }
 
 function drawLayer(funcKey, width, height, progress, isBackground = false) {
@@ -298,27 +295,28 @@ function drawImplicitCurveInternal(funcData, width, height, progress, isBackgrou
     const graphCtx = ctx.graph;
     const xRange = xMax - xMin;
     const yRange = yMax - yMin;
-    const resX = 140;
-    const resY = 100;
+    const resX = 240; // Increased resolution for GCD patterns
+    const resY = 180;
     const loopIndex = state.autoLoopCount;
     const maxColumn = Math.max(1, Math.floor(resX * progress));
 
-    graphCtx.beginPath();
     graphCtx.fillStyle = isBackground ? '#d1d5db' : getCategoryColor(funcData.category);
     for (let i = 0; i <= maxColumn; i++) {
         for (let j = 0; j <= resY; j++) {
             const x = xMin + (xRange * i) / resX;
             const y = yMin + (yRange * j) / resY;
             try {
-                if (Math.abs(funcData.f(x, y, loopIndex)) < 0.18) {
+                const val = funcData.f(x, y, loopIndex);
+                const shouldDraw = typeof val === 'boolean' ? val : Math.abs(val) < 0.18;
+                if (shouldDraw) {
                     const canvasX = (i / resX) * width;
                     const canvasY = (1 - j / resY) * height;
-                    graphCtx.rect(canvasX, canvasY, 1.8, 1.8);
+                    // Slightly larger points (2x2) for visibility in high-res grids
+                    graphCtx.fillRect(canvasX - 1, canvasY - 1, 2, 2);
                 }
             } catch (e) {}
         }
     }
-    graphCtx.fill();
 }
 
 function findImplicitPoint(funcData, progress) {
@@ -334,16 +332,15 @@ function findImplicitPoint(funcData, progress) {
 
     for (let i = 0; i <= steps; i++) {
         const y = yMin + ((yMax - yMin) * i) / steps;
-        let error;
         try {
-            error = Math.abs(funcData.f(x, y, loopIndex));
+            const err = funcData.f(x, y, loopIndex);
+            const currentErr = typeof err === 'boolean' ? (err ? 0 : 1) : Math.abs(err);
+            if (currentErr < bestError) {
+                bestError = currentErr;
+                bestY = y;
+            }
         } catch (e) {
             continue;
-        }
-
-        if (error < bestError) {
-            bestError = error;
-            bestY = y;
         }
     }
 
@@ -471,8 +468,7 @@ export function animate() {
     
     if (isAni) {
         state.autoTargetCount = totalPhases;
-    } else if (funcData.category === 'amazing' || funcData.category === 'beautiful' || funcData.category === 'harmonic') {
-        // 심포니 시리즈는 특별 등급이므로 60회 루프를 보장하여 풍성하게 감상하게 함
+    } else if (['amazing', 'beautiful', 'harmonic', 'fusion', 'hyper', 'insane', 'fantastic'].includes(funcData.category)) {
         state.autoTargetCount = 60;
     }
 
@@ -560,81 +556,88 @@ export function animate() {
         let varText = "";
         
         // Symphony 변수 로직 자동 매칭 (사용자께서 정의하신 symphony.js 로직 보조)
-        if (cat === 'amazing' || cat === 'beautiful' || cat === 'harmonic' || cat === 'fusion' || cat === 'hyper' || cat === 'insane') {
+        // Symphony 변수 로직 자동 매칭 (사용자께서 정의하신 symphony.js 로직 보조)
+        if (['amazing', 'beautiful', 'harmonic', 'fusion', 'hyper', 'insane', 'fantastic'].includes(cat)) {
             const name = funcData.name || "";
-            if (name.includes('Spinny')) {
+            const nextIdx = loopIdx + 1;
+
+            if (name.includes('Resonance')) {
+                const aCurrent = (loopIdx % 30) + 1;
+                const aNext = (nextIdx % 30) + 1;
+                varText = `(a = ${aCurrent}) → ${aNext}`;
+            } else if (name.includes('Grid Distortion')) {
+                const aCurrent = (loopIdx % 15) + 1;
+                const aNext = (nextIdx % 15) + 1;
+                varText = `(a = ${aCurrent}) → ${aNext}`;
+            } else if (name.includes('Diagonal')) {
+                const aCurrent = (loopIdx % 15 * 0.2).toFixed(1);
+                const aNext = (nextIdx % 15 * 0.2).toFixed(1);
+                varText = `(a = ${aCurrent}) → ${aNext}`;
+            } else if (name.includes('Shuriken')) {
+                const vCurrent = (loopIdx % 6 * 1.5).toFixed(1);
+                const vNext = (nextIdx % 6 * 1.5).toFixed(1);
+                varText = `(v = ${vCurrent}) → ${vNext}`;
+            } else if (name.includes('Layered')) {
+                const vCurrent = (loopIdx % 10 * 0.6).toFixed(1);
+                const vNext = (nextIdx % 10 * 0.6).toFixed(1);
+                const lCurrent = [2, 4, 6, 8, 10][loopIdx % 5];
+                varText = `(v = ${vCurrent}, L = ${lCurrent}) → ${vNext}`;
+            } else if (name.includes('Web')) {
+                const aCurrent = 50 + (loopIdx % 10) * 10;
+                const aNext = 50 + (nextIdx % 10) * 10;
+                varText = `(a = ${aCurrent}) → ${aNext}`;
+            } else if (name.includes('Ovals')) {
+                const vCurrent = (0.95 + loopIdx % 10 * 0.01).toFixed(2);
+                const vNext = (0.95 + nextIdx % 10 * 0.01).toFixed(2);
+                varText = `(v = ${vCurrent}) → ${vNext}`;
+            } else if (name.includes('Mesh') && cat === 'harmonic') {
+                const aCurrent = 15 + loopIdx % 10;
+                const bCurrent = 30 + loopIdx % 15;
+                varText = `(a = ${aCurrent}, b = ${bCurrent})`;
+            } else if (name.includes('The Crown')) {
+                const vCurrent = (0.9 + loopIdx % 20 * 0.01).toFixed(2);
+                const vNext = (0.9 + nextIdx % 20 * 0.01).toFixed(2);
+                varText = `(v = ${vCurrent}) → ${vNext}`;
+            } else if (name.includes('Extreme harmonic')) {
+                const aCurrent = 20 + loopIdx % 10 * 5;
+                const bCurrent = 40 + loopIdx % 10 * 5;
+                varText = `(a = ${aCurrent}, b = ${bCurrent})`;
+            } else if (name.includes('Whirlpool')) {
+                const aCurrent = (loopIdx % 20) + 5;
+                const aNext = (nextIdx % 20) + 5;
+                varText = `(a = ${aCurrent}) → ${aNext}`;
+            } else if (name.includes('Tomfoolery')) {
+                varText = `(v = ${((loopIdx % 19 + 1) * 0.314).toFixed(2)}) → ${((nextIdx % 19 + 1) * 0.314).toFixed(2)}`;
+            } else if (name.includes('Arachnid') || name.includes('Sun') || name.includes('Plot Twist') || name.includes('Deadpool') || name.includes('Clover') || name.includes('Lissajous') || name.includes('Ultimate GCD')) {
+                varText = `(v = ${(loopIdx % 20 * 0.314).toFixed(2)}) → ${(nextIdx % 20 * 0.314).toFixed(2)}`;
+            } else if (name.includes('Masterpiece')) {
+                varText = `(v = ${(loopIdx % 30 * 0.209).toFixed(2)}) → ${(nextIdx % 30 * 0.209).toFixed(2)}`;
+            } else if (name === 'Relative Primality') {
+                varText = `(v = ${loopIdx % 10 + 2}) → ${nextIdx % 10 + 2}`;
+            } else if (name === 'Cellular Trigonometry' || name === 'Reality Bender') {
+                varText = `(v = ${(loopIdx % 15 * 0.1).toFixed(1)}) → ${(nextIdx % 15 * 0.1).toFixed(1)}`;
+            } else if (name === 'Interference Mesh' || name === 'Tan Twist Mesh') {
+                varText = `(v = ${(loopIdx % 20 * 0.1).toFixed(1)}) → ${(nextIdx % 20 * 0.1).toFixed(1)}`;
+            } else if (name === 'Fantastic Grid') {
+                varText = `(v = ${(loopIdx % 15 * 0.5).toFixed(1)}) → ${(nextIdx % 15 * 0.5).toFixed(1)}`;
+            } else if (name.includes('Inverse Fractal') || name.includes('Ridge')) {
+                varText = `(v = ${(loopIdx % 15 * 0.418).toFixed(2)}) → ${(nextIdx % 15 * 0.418).toFixed(2)}`;
+            } else if (name.includes('Unlimited Star') || name.includes('Oscillator')) {
+                varText = `(v = ${(loopIdx % 10 * 0.628).toFixed(2)}) → ${(nextIdx % 10 * 0.628).toFixed(2)}`;
+            } else if (name.includes('Millennial')) {
+                varText = `(v = ${(loopIdx % 30 * 0.1).toFixed(1)}) → ${(nextIdx % 30 * 0.1).toFixed(1)}`;
+            } else if (name.includes('Spinny')) {
                 const v = (loopIdx % 10) * 0.5;
-                varText = `(n = 6, v = ${v.toFixed(1)})`;
+                const vNext = (nextIdx % 10) * 0.5;
+                varText = `(v = ${v.toFixed(1)}) → ${vNext.toFixed(1)}`;
             } else if (name.includes('Up and Down')) {
                 const v6 = (-8 + ((loopIdx % 16) / 15) * 16).toFixed(1);
-                varText = `(v6 = ${v6})`;
-            } else if (name.includes('Arachnid') || name.includes('Sun') || name.includes('Tomfoolery') || name.includes('Plot Twist')) {
-                const v = ((loopIdx % 20) * 0.314).toFixed(2);
-                varText = `(v = ${v})`;
-            } else if (name.includes('Masterpiece')) {
-                const v = ((loopIdx % 30) * 0.209).toFixed(2);
-                varText = `(v = ${v})`;
-            } else if (name.includes('Inverse Fractal')) {
-                const v = ((loopIdx % 15) * 0.418).toFixed(1);
-                varText = `(v = ${v})`;
-            } else if (name.includes('Unlimited Star')) {
-                const v = ((loopIdx % 10) * 0.628).toFixed(2);
-                varText = `(v = ${v})`;
-            } else if (name.includes('Millennial')) {
-                const v = ((loopIdx % 30) * 0.1).toFixed(1);
-                varText = `(v = ${v})`;
-            } else if (name.includes('Hyper Lissajous') || name.includes('Deadpool') || name.includes('Clover')) {
-                const v = ((loopIdx % 20) * 0.314).toFixed(2);
-                varText = `(v = ${v})`;
-            } else if (name.includes('Reality')) {
-                const v = ((loopIdx % 15) * 0.1).toFixed(1);
-                varText = `(v = ${v})`;
-            } else if (name.includes('Tan Twist')) {
-                const v = ((loopIdx % 12) * 0.52).toFixed(2);
-                varText = `(v = ${v})`;
-            } else if (name.includes('Galaxy') || name.includes('Star Core')) {
-                const vs = ((loopIdx % 20) * 0.314).toFixed(2);
-                varText = `(v = ${vs})`;
-            } else if (name.includes('Geometric')) {
-                const v = (-2.5 + (loopIdx % 20) * 0.25).toFixed(2);
-                varText = `(v = ${v})`;
-            } else if (name.includes('Pulsating')) {
-                const v = (-1.5 + (loopIdx % 15) * 0.2).toFixed(2);
-                varText = `(v = ${v})`;
-            } else if (name.includes('Ridge') || name.includes('Oscillator')) {
-                const v = name.includes('Ridge') ? (loopIdx % 15 * 0.418) : (loopIdx % 10 * 0.628);
-                varText = `(v = ${v.toFixed(2)})`;
-            } else if (name.includes('GCD')) {
-                const v11 = (loopIdx % 10) + 1;
-                varText = `(v11 = ${v11})`;
-            } else if (name.includes('Layered')) {
-                const v15 = ((loopIdx % 10) * 0.6).toFixed(1);
-                const l = [2, 4, 6, 8, 10][loopIdx % 5];
-                varText = `(v = ${v15}, layer = ${l})`;
-            } else if (name.includes('Shuriken')) {
-                const v14 = ((loopIdx % 6) * 1.5).toFixed(1);
-                varText = `(k = 5, v14 = ${v14})`;
-            } else if (name.includes('Intro')) {
-                varText = `(a = ${(loopIdx % 15) + 1})`;
-            } else if (name.includes('Web')) {
-                varText = `(a = ${50 + (loopIdx % 10) * 10})`;
-            } else if (name.includes('Ovals')) {
-                const v = (0.95 + (loopIdx % 10) * 0.01).toFixed(2);
-                varText = `(v = ${v})`;
-            } else if (name.includes('Mesh')) {
-                const a = 15 + (loopIdx % 10);
-                const b = 30 + (loopIdx % 15);
-                varText = `(a = ${a}, b = ${b})`;
-            } else if (name.includes('Crown')) {
-                const v = (0.9 + (loopIdx % 20) * 0.01).toFixed(2);
-                varText = `(v = ${v})`;
-            } else if (name.includes('Extreme')) {
-                const a = 20 + (loopIdx % 10) * 5;
-                const b = 40 + (loopIdx % 10) * 5;
-                varText = `(a = ${a}, b = ${b})`;
-            } else if (cat === 'harmonic' || name.includes('Resonance') || name.includes('Distortion') || name.includes('Whirlpool') || name.includes('Hair') || name.includes('Modulation')) {
-                // 심포니의 핵심 변수 'a'를 사용하는 나머지 곡들
-                varText = `(a = ${loopIdx + 1})`;
+                const v6Next = (-8 + ((nextIdx % 16) / 15) * 16).toFixed(1);
+                varText = `(v6 = ${v6}) → ${v6Next}`;
+            } else if (name.includes('Sign') || name.includes('Intro') || name.includes('Hair') || name.includes('Modulation') || name.includes('GCD') || name.includes('Modulo')) {
+                varText = `(a = ${loopIdx % 10 + 1}) → ${nextIdx % 10 + 1}`;
+            } else if (name.includes('Twist') || name.includes('Galaxy') || name.includes('Star Core') || name.includes('Geometric') || name.includes('Pulsating')) {
+                varText = `(v = ${(loopIdx % 20 * 0.2).toFixed(2)}) → ${(nextIdx % 20 * 0.2).toFixed(2)}`;
             }
         }
         
@@ -712,7 +715,12 @@ export function getCategoryColor(category) {
         math: '#dc2626',     // Pure Red
         bytebeat: '#4b5563',  // Dark Gray
         amazing: '#f59e0b',   // Amber/Gold
-        beautiful: '#d946ef'  // Fuchsia
+        beautiful: '#d946ef',  // Fuchsia
+        harmonic: '#3b82f6',  // Blue
+        fusion: '#06b6d4',    // Cyan
+        hyper: '#8b5cf6',     // Purple
+        insane: '#f43f5e',    // Rose Pink
+        fantastic: '#10b981'   // Green
     };
     return colors[category] || '#3b82f6';
 }

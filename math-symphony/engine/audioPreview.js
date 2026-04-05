@@ -7,6 +7,7 @@ export class AudioPreviewEngine {
         this.entries = [];
         this.sceneKey = null;
         this.volume = 0.68;
+        this.retiredEntries = [];
     }
 
     async ensureContext() {
@@ -27,7 +28,7 @@ export class AudioPreviewEngine {
         const nextKey = scene.expressions.map((expression) => expression.id).join('|');
 
         if (this.sceneKey !== nextKey) {
-            this.stopScene();
+            this.fadeOutScene();
             this.sceneKey = nextKey;
             this.entries = scene.expressions.map((expression, index) => createEntry(this.context, this.masterGain, expression, index));
         }
@@ -43,6 +44,7 @@ export class AudioPreviewEngine {
         scene.expressions.forEach((expression, index) => {
             const entry = this.entries[index];
             if (!entry) return;
+            const isFocused = scene.focusedExpressionId === expression.id;
 
             const sample = sampleExpressionAtProgress(expression, controllerSnapshot, progress);
             if (!sample || !Number.isFinite(sample.value)) {
@@ -52,10 +54,14 @@ export class AudioPreviewEngine {
 
             const normalized = normalizeValue(sample.value, expression.bounds);
             const frequency = 160 + normalized * 520 + index * 35;
-            const gain = 0.028 + Math.min(0.08, Math.abs(normalized) * 0.06);
+            const baseGain = 0.02 + Math.min(0.05, Math.abs(normalized) * 0.045);
+            const gain = isFocused ? baseGain * 1.9 : baseGain * 0.55;
+            const filterFrequency = isFocused
+                ? Math.min(3200, 850 + normalized * 1400)
+                : Math.min(1800, 480 + normalized * 800);
 
             entry.osc.frequency.setTargetAtTime(frequency, now, 0.03);
-            entry.filter.frequency.setTargetAtTime(Math.min(2800, 600 + normalized * 1200), now, 0.05);
+            entry.filter.frequency.setTargetAtTime(filterFrequency, now, 0.05);
             entry.gain.gain.setTargetAtTime(gain, now, 0.05);
         });
     }
@@ -63,11 +69,29 @@ export class AudioPreviewEngine {
     stopScene() {
         this.entries.forEach((entry) => {
             try {
-                entry.osc.stop();
+                entry.gain.gain.cancelScheduledValues(this.context?.currentTime ?? 0);
+                entry.gain.gain.setTargetAtTime(0.0001, this.context?.currentTime ?? 0, 0.03);
             } catch (e) {}
-            entry.osc.disconnect();
-            entry.filter.disconnect();
-            entry.gain.disconnect();
+            safelyDisposeEntry(entry, 180);
+        });
+        this.entries = [];
+        this.sceneKey = null;
+    }
+
+    fadeOutScene() {
+        if (!this.context) {
+            this.entries = [];
+            this.sceneKey = null;
+            return;
+        }
+
+        const now = this.context.currentTime;
+        this.entries.forEach((entry) => {
+            try {
+                entry.gain.gain.cancelScheduledValues(now);
+                entry.gain.gain.setTargetAtTime(0.0001, now, 0.08);
+            } catch (e) {}
+            safelyDisposeEntry(entry, 420);
         });
         this.entries = [];
         this.sceneKey = null;
@@ -85,6 +109,19 @@ export class AudioPreviewEngine {
         if (!this.context || !this.masterGain) return;
         this.masterGain.gain.setTargetAtTime(this.volume * 0.32, this.context.currentTime, 0.05);
     }
+}
+
+function safelyDisposeEntry(entry, delayMs) {
+    window.setTimeout(() => {
+        try {
+            entry.osc.stop();
+        } catch (e) {}
+        try {
+            entry.osc.disconnect();
+            entry.filter.disconnect();
+            entry.gain.disconnect();
+        } catch (e) {}
+    }, delayMs);
 }
 
 function createEntry(context, masterGain, expression, index) {

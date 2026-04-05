@@ -3,6 +3,26 @@
  * Amazing Animations Part 3, More Beautiful Graphs & Harmonic Series
  */
 
+/**
+ * GCD 유틸리티 함수 (Fantastic 시리즈 핵심 엔진)
+ * Infinity나 NaN에 대비한 안전 로직 포함
+ */
+export function gcd(a_in, b_in) {
+    let a = Math.abs(Math.trunc(a_in));
+    let b = b_in !== undefined ? Math.abs(Math.trunc(b_in)) : 0;
+    
+    // Safety check for Infinity/NaN
+    if (!isFinite(a)) a = 0;
+    if (!isFinite(b)) b = 0;
+    
+    while (b !== 0) {
+        let temp = b;
+        b = a % b;
+        a = temp;
+    }
+    return a;
+}
+
 export const SYMPHONY_FUNCTIONS = {
     // ========== ✨ AMAZING (Amazing Animations Part 3) ==========
     resonance1: {
@@ -552,7 +572,7 @@ export const SYMPHONY_FUNCTIONS = {
         name: 'Trig Tomfoolery',
         type: 'polar',
         r: (theta, loopIndex = 0) => {
-            const v = (loopIndex % 20) * 0.314;
+            const v = ((loopIndex % 19) + 1) * 0.314;
             return Math.sin(2 * theta + Math.sin(4 * theta * v));
         },
         formula: 'r = sin(2θ + sin(4θv))',
@@ -652,19 +672,80 @@ export const SYMPHONY_FUNCTIONS = {
         viewBox: { xMin: -10, xMax: 10, yMin: -10, yMax: 10 },
         audioScale: 140,
         baseFreq: 220
+    },
+    // ========== ✨ FANTASTIC (GCD Edition) ==========
+    relativePrimality: {
+        category: 'fantastic',
+        name: 'Relative Primality',
+        type: 'implicit',
+        f: (x, y, loopIndex = 0) => {
+            const v = (loopIndex % 10) + 2;
+            return gcd(Math.round(x * v), Math.round(y * v)) === 1;
+        },
+        formula: 'gcd(vx, vy) = 1',
+        latex: '\\gcd(vx, vy) = 1',
+        viewBox: { xMin: -10, xMax: 10, yMin: -10, yMax: 10 },
+        audioScale: 80,
+        baseFreq: 220
+    },
+    cellularTrig: {
+        category: 'fantastic',
+        name: 'Cellular Trigonometry',
+        type: 'implicit',
+        f: (x, y, loopIndex = 0) => {
+            const v = (loopIndex % 15) * 0.1;
+            return gcd(Math.round(Math.tan(y) * 10), Math.round(Math.sin(x) * 10 * v)) === 1;
+        },
+        formula: 'gcd(10tan y, 10v·sin x) = 1',
+        latex: '\\gcd(10\\tan y, 10v\\sin x) = 1',
+        viewBox: { xMin: -5, xMax: 5, yMin: -5, yMax: 5 },
+        audioScale: 100,
+        baseFreq: 330
+    },
+    interferenceMesh: {
+        category: 'fantastic',
+        name: 'Interference Mesh',
+        type: 'implicit',
+        f: (x, y, loopIndex = 0) => {
+            const v = (loopIndex % 20) * 0.1;
+            const denom = Math.sin(y) + Math.sin(x) + 0.1;
+            return gcd(Math.round(x / denom * 5), Math.round(y * v * 5)) === 1;
+        },
+        formula: 'gcd(5x/(sin y+sin x), 5yv) = 1',
+        latex: '\\gcd\\left(\\frac{5x}{\\sin y + \\sin x}, 5yv\\right) = 1',
+        viewBox: { xMin: -8, xMax: 8, yMin: -8, yMax: 8 },
+        audioScale: 120,
+        baseFreq: 440
+    },
+    fantasticGrid: {
+        category: 'fantastic',
+        name: 'Fantastic Grid',
+        type: 'implicit',
+        f: (x, y, loopIndex = 0) => {
+            const v = (loopIndex % 15) * 0.5;
+            const left = 1 / Math.cos(x) + Math.tan(y);
+            return gcd(Math.round(left * 5), Math.round(Math.sin(9 * x + v) * 5)) === 1;
+        },
+        formula: 'gcd(5(sec x+tan y), 5sin(9x+v)) = 1',
+        latex: '\\gcd(5(\\sec x + \\tan y), 5\\sin(9x + v)) = 1',
+        viewBox: { xMin: -6, xMax: 6, yMin: -6, yMax: 6 },
+        audioScale: 90,
+        baseFreq: 520
+    },
+    ultimateGcd: {
+        category: 'fantastic',
+        name: 'Ultimate GCD',
+        type: 'implicit',
+        f: (x, y, loopIndex = 0) => {
+            const v = (loopIndex % 20) * 0.314;
+            const left = 1 / Math.sin(x) + Math.tan(y) / Math.sin(2 * x + v);
+            const right = Math.sin(x) * y + Math.cos(y) * Math.tan(x);
+            return gcd(Math.round(left * 3), Math.round(right * 3)) === 1;
+        },
+        formula: 'gcd(3(csc x + tan y/sin(2x+v)), 3(sin x·y + cos y·tan x)) = 1',
+        latex: '\\gcd(3(\\csc x + \\frac{\\tan y}{\\sin(2x+v)}), 3(\\sin x \\cdot y + \\cos y \\cdot \\tan x)) = 1',
+        viewBox: { xMin: -4, xMax: 4, yMin: -4, yMax: 4 },
+        audioScale: 110,
+        baseFreq: 660
     }
 };
-
-/**
- * GCD 유틸리티 함수
- */
-function gcd(value) {
-    let a = Math.abs(Math.trunc(value));
-    let b = 360;
-    while (b !== 0) {
-        const temp = b;
-        b = a % b;
-        a = temp;
-    }
-    return a;
-}

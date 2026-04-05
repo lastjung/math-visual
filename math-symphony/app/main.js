@@ -11,6 +11,10 @@ import { AudioPreviewEngine } from '../engine/audioPreview.js';
 
 const elements = {
     scoreRail: document.getElementById('scoreRail'),
+    factScoreCount: document.getElementById('factScoreCount'),
+    factSceneStatus: document.getElementById('factSceneStatus'),
+    factControllerStatus: document.getElementById('factControllerStatus'),
+    factRendererStatus: document.getElementById('factRendererStatus'),
     scoreTitle: document.getElementById('scoreTitle'),
     scoreTheme: document.getElementById('scoreTheme'),
     scoreSource: document.getElementById('scoreSource'),
@@ -24,6 +28,8 @@ const elements = {
     scoreTimeline: document.getElementById('scoreTimeline'),
     timelineLabel: document.getElementById('timelineLabel'),
     previewCanvas: document.getElementById('previewCanvas'),
+    sceneScript: document.getElementById('sceneScript'),
+    sceneFocus: document.getElementById('sceneFocus'),
     sceneRail: document.getElementById('sceneRail'),
     activeSceneTitle: document.getElementById('activeSceneTitle'),
     activeSceneSummary: document.getElementById('activeSceneSummary'),
@@ -45,9 +51,17 @@ const state = {
 const audioEngine = new AudioPreviewEngine();
 
 function init() {
+    renderFacts();
     renderScoreRail();
     bindEvents();
     render();
+}
+
+function renderFacts() {
+    elements.factScoreCount.textContent = String(scoreCatalog.length);
+    elements.factSceneStatus.textContent = 'active';
+    elements.factControllerStatus.textContent = 'active';
+    elements.factRendererStatus.textContent = 'active';
 }
 
 function bindEvents() {
@@ -118,12 +132,12 @@ function render() {
 
     const activeSceneEntry = getActiveScene(score, state.elapsedMs);
     const activeScene = score.scenes.find((scene) => scene.id === activeSceneEntry?.sceneId) || score.scenes[0];
-    const visibleScene = withEnabledExpressions(score, activeScene);
     const controllerMap = buildControllerMap(score);
     const controllerSnapshot = buildControllerSnapshot(score.controllers, state.elapsedMs);
     const sceneDuration = Math.max(1, activeScene.durationMs || 1);
     const sceneElapsed = activeSceneEntry ? Math.max(0, state.elapsedMs - activeSceneEntry.startMs) : 0;
     const sceneProgress = sceneElapsed / sceneDuration;
+    const visibleScene = withEnabledExpressions(score, activeScene, sceneProgress);
 
     for (const button of elements.scoreRail.querySelectorAll('.score-pill')) {
         button.classList.toggle('active', button.dataset.scoreId === score.id);
@@ -151,6 +165,7 @@ function render() {
 
     renderSceneRail(score, activeScene.id);
     renderActiveScene(activeScene);
+    renderSceneNarration(visibleScene, sceneProgress);
     renderControllers(score, activeScene.activeControllers, controllerSnapshot, controllerMap);
     renderExpressions(score, activeScene, visibleScene, controllerSnapshot, controllerMap);
     renderScenePreview(elements.previewCanvas, visibleScene, controllerSnapshot);
@@ -188,6 +203,19 @@ function renderActiveScene(scene) {
     elements.activeSceneSummary.textContent = scene.summary;
 }
 
+function renderSceneNarration(scene, sceneProgress) {
+    const script = pickSceneScript(scene, sceneProgress);
+    const focusedExpression = scene.expressions.find((expression) => expression.id === scene.focusedExpressionId) || scene.expressions[0];
+    const focus = scene.focusNote || (
+        focusedExpression?.name
+            ? `Focus: ${focusedExpression.name}${scene.expressions.length > 1 ? ` + ${scene.expressions.length - 1} more` : ''}`
+            : 'No active expression'
+    );
+
+    elements.sceneScript.textContent = script || scene.caption || 'No script for this scene.';
+    elements.sceneFocus.textContent = focus;
+}
+
 function renderControllers(score, activeKeys, snapshot, controllerMap) {
     elements.controllersPanel.innerHTML = '';
     const activeSet = new Set(activeKeys);
@@ -215,9 +243,11 @@ function renderExpressions(score, scene, visibleScene, snapshot, controllerMap) 
     for (const expression of scene.expressions) {
         const view = describeExpression(expression, snapshot, controllerMap);
         const enabled = visibleIds.has(expression.id);
+        const focused = visibleScene.focusedExpressionId === expression.id;
         const card = document.createElement('article');
         card.className = 'expression-card';
         card.classList.toggle('muted', !enabled);
+        card.classList.toggle('focused', focused);
         card.innerHTML = `
             <div class="expression-meta">
                 <span class="expression-type">${expression.type}</span>
@@ -240,12 +270,15 @@ function renderExpressions(score, scene, visibleScene, snapshot, controllerMap) 
     }
 }
 
-function withEnabledExpressions(score, scene) {
+function withEnabledExpressions(score, scene, sceneProgress) {
     const disabled = state.expressionEnabled[sceneStateKey(score.id, scene.id)] || {};
     const expressions = scene.expressions.filter((expression) => disabled[expression.id] !== false);
+    const enabledExpressions = expressions.length ? expressions : [scene.expressions[0]];
     return {
         ...scene,
-        expressions: expressions.length ? expressions : [scene.expressions[0]]
+        sceneProgress,
+        expressions: enabledExpressions,
+        focusedExpressionId: pickFocusedExpressionId(enabledExpressions, sceneProgress)
     };
 }
 
@@ -264,6 +297,26 @@ function setExpressionEnabled(scoreId, sceneId, expressionId, enabled) {
 
 function sceneStateKey(scoreId, sceneId) {
     return `${scoreId}::${sceneId}`;
+}
+
+function pickSceneScript(scene, sceneProgress) {
+    if (!scene.scripts?.length) return '';
+    const index = Math.min(
+        scene.scripts.length - 1,
+        Math.floor(sceneProgress * scene.scripts.length)
+    );
+    return scene.scripts[index];
+}
+
+function pickFocusedExpressionId(expressions, sceneProgress) {
+    if (!expressions.length) return null;
+    if (expressions.length === 1) return expressions[0].id;
+
+    const index = Math.min(
+        expressions.length - 1,
+        Math.floor(sceneProgress * expressions.length)
+    );
+    return expressions[index].id;
 }
 
 function msToText(ms) {

@@ -19,24 +19,31 @@ export function renderScenePreview(canvas, scene, controllerSnapshot) {
         drawAxes(ctx, bounds, width, height);
     }
 
+    const fadeAlpha = getSceneFadeAlpha(scene.sceneProgress ?? 1);
+    const revealProgress = getRevealProgress(scene.sceneProgress ?? 1);
+
     scene.expressions.forEach((expression, index) => {
         const color = PREVIEW_COLORS[index % PREVIEW_COLORS.length];
+        const isFocused = scene.focusedExpressionId === expression.id;
+        ctx.save();
+        ctx.globalAlpha = isFocused ? fadeAlpha : fadeAlpha * 0.45;
         switch (expression.type) {
             case 'cartesian':
-                drawCartesian(ctx, expression, controllerSnapshot, color, width, height);
+                drawCartesian(ctx, expression, controllerSnapshot, color, width, height, revealProgress, isFocused);
                 break;
             case 'parametric':
-                drawParametric(ctx, expression, controllerSnapshot, color, width, height);
+                drawParametric(ctx, expression, controllerSnapshot, color, width, height, revealProgress, isFocused);
                 break;
             case 'polar':
-                drawPolar(ctx, expression, controllerSnapshot, color, width, height);
+                drawPolar(ctx, expression, controllerSnapshot, color, width, height, revealProgress, isFocused);
                 break;
             case 'implicit':
-                drawImplicit(ctx, expression, controllerSnapshot, color, width, height);
+                drawImplicit(ctx, expression, controllerSnapshot, color, width, height, revealProgress, isFocused);
                 break;
             default:
                 break;
         }
+        ctx.restore();
     });
 }
 
@@ -65,15 +72,15 @@ function drawAxes(ctx, bounds, width, height) {
     ctx.restore();
 }
 
-function drawCartesian(ctx, expression, params, color, width, height) {
+function drawCartesian(ctx, expression, params, color, width, height, revealProgress = 1, isFocused = false) {
     if (!expression.sample?.y || !expression.bounds) return;
 
     ctx.save();
     ctx.beginPath();
     ctx.strokeStyle = color;
-    ctx.lineWidth = 2.2;
+    ctx.lineWidth = isFocused ? 3.2 : 1.8;
 
-    const steps = 800;
+    const steps = Math.max(24, Math.floor(800 * revealProgress));
     let first = true;
     for (let i = 0; i <= steps; i++) {
         const x = expression.bounds.xMin + ((expression.bounds.xMax - expression.bounds.xMin) * i) / steps;
@@ -103,16 +110,16 @@ function drawCartesian(ctx, expression, params, color, width, height) {
     ctx.restore();
 }
 
-function drawParametric(ctx, expression, params, color, width, height) {
+function drawParametric(ctx, expression, params, color, width, height, revealProgress = 1, isFocused = false) {
     if (!expression.sample?.x || !expression.sample?.y || !expression.bounds) return;
     const domain = resolveExpressionDomain(expression, params);
 
     ctx.save();
     ctx.beginPath();
     ctx.strokeStyle = color;
-    ctx.lineWidth = 2;
+    ctx.lineWidth = isFocused ? 3 : 1.7;
 
-    const steps = 900;
+    const steps = Math.max(24, Math.floor(900 * revealProgress));
     let first = true;
     for (let i = 0; i <= steps; i++) {
         const t = domain.min + ((domain.max - domain.min) * i) / steps;
@@ -144,16 +151,16 @@ function drawParametric(ctx, expression, params, color, width, height) {
     ctx.restore();
 }
 
-function drawPolar(ctx, expression, params, color, width, height) {
+function drawPolar(ctx, expression, params, color, width, height, revealProgress = 1, isFocused = false) {
     if (!expression.sample?.r || !expression.bounds) return;
     const domain = resolveExpressionDomain(expression, params);
 
     ctx.save();
     ctx.beginPath();
     ctx.strokeStyle = color;
-    ctx.lineWidth = 2;
+    ctx.lineWidth = isFocused ? 3 : 1.7;
 
-    const steps = 1200;
+    const steps = Math.max(32, Math.floor(1200 * revealProgress));
     let first = true;
     for (let i = 0; i <= steps; i++) {
         const theta = domain.min + ((domain.max - domain.min) * i) / steps;
@@ -185,7 +192,7 @@ function drawPolar(ctx, expression, params, color, width, height) {
     ctx.restore();
 }
 
-function drawImplicit(ctx, expression, params, color, width, height) {
+function drawImplicit(ctx, expression, params, color, width, height, revealProgress = 1, isFocused = false) {
     if (!expression.sample?.value || !expression.bounds) return;
 
     const { xMin, xMax, yMin, yMax } = expression.bounds;
@@ -196,9 +203,11 @@ function drawImplicit(ctx, expression, params, color, width, height) {
 
     ctx.save();
     ctx.fillStyle = color;
-    ctx.globalAlpha = 0.75;
+    ctx.globalAlpha = isFocused ? 0.92 : 0.4;
 
-    for (let ix = 0; ix <= resX; ix++) {
+    const maxX = Math.max(8, Math.floor(resX * revealProgress));
+
+    for (let ix = 0; ix <= maxX; ix++) {
         for (let iy = 0; iy <= resY; iy++) {
             const x = xMin + ((xMax - xMin) * ix) / resX;
             const y = yMin + ((yMax - yMin) * iy) / resY;
@@ -228,4 +237,16 @@ function mergeBounds(boundsList) {
         yMin: Math.min(merged.yMin, bounds.yMin),
         yMax: Math.max(merged.yMax, bounds.yMax)
     }));
+}
+
+function getSceneFadeAlpha(sceneProgress) {
+    const fadeWindow = 0.12;
+    if (sceneProgress <= fadeWindow) {
+        return Math.max(0.18, sceneProgress / fadeWindow);
+    }
+    return 1;
+}
+
+function getRevealProgress(sceneProgress) {
+    return Math.max(0.03, Math.min(1, sceneProgress));
 }

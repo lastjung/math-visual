@@ -207,31 +207,45 @@ export function playSound(functionId = state.currentFunction, forceLayer = false
 }
 
 function sampleImplicitAmplitude(funcData, progressInLoop, loopIndex) {
-    if (!funcData.f || !funcData.range) return 0;
-
-    const { xMin, xMax, yMin, yMax } = funcData.range;
+    if (!funcData.f) return 0;
+    
+    const range = funcData.range || funcData.viewBox || { xMin: -10, xMax: 10, yMin: -10, yMax: 10 };
+    const { xMin, xMax, yMin, yMax } = range;
     const x = xMin + (xMax - xMin) * progressInLoop;
     const steps = 160;
 
     let bestY = 0;
     let bestError = Infinity;
+    let foundMatch = false;
 
     for (let i = 0; i <= steps; i++) {
         const y = yMin + ((yMax - yMin) * i) / steps;
-        let error;
         try {
-            error = Math.abs(funcData.f(x, y, loopIndex));
+            const val = funcData.f(x, y, loopIndex);
+            let error;
+            
+            if (typeof val === 'boolean') {
+                // For boolean implicit (like GCD series), true is the target (perfect match)
+                error = val ? 0 : 1;
+                if (val) foundMatch = true;
+            } else {
+                error = Math.abs(val);
+            }
+
+            if (error < bestError) {
+                bestError = error;
+                bestY = y;
+            }
+            if (foundMatch && typeof val === 'boolean') break; // Early exit for boolean matches
         } catch (e) {
             continue;
         }
-
-        if (error < bestError) {
-            bestError = error;
-            bestY = y;
-        }
     }
 
-    return bestError < 0.5 ? bestY : 0;
+    // For boolean functions, we must have found a true value. 
+    // For numeric functions, we use the standard error threshold.
+    if (foundMatch) return bestY;
+    return bestError < 0.25 ? bestY : 0;
 }
 
 function createSoftClipCurve(samples = 400) {
