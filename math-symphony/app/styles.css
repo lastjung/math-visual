@@ -304,6 +304,29 @@ body::before {
     border-color: rgba(35, 48, 69, 0.12);
 }
 
+.audio-row {
+    margin-bottom: 12px;
+}
+
+.audio-control {
+    display: grid;
+    grid-template-columns: 64px 1fr 52px;
+    align-items: center;
+    gap: 12px;
+}
+
+.audio-label,
+.audio-value {
+    color: var(--muted);
+    font-size: 0.84rem;
+    font-weight: 600;
+}
+
+.audio-control input {
+    width: 100%;
+    accent-color: var(--accent);
+}
+
 .preview-panel {
     margin-top: 18px;
     padding: 16px;
@@ -433,6 +456,25 @@ body::before {
 
 .expression-params {
     margin-top: 10px;
+}
+
+.expression-card.muted {
+    opacity: 0.62;
+}
+
+.expression-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: auto;
+    color: var(--muted);
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+.expression-toggle input {
+    accent-color: var(--accent);
 }
 
 @media (max-width: 1080px) {

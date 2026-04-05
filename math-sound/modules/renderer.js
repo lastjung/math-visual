@@ -162,7 +162,9 @@ function drawPolarCurveInternal(funcData, width, height, progress) {
     const { min: thetaMin, max: thetaMax } = funcData.thetaRange;
     const graphCtx = ctx.graph;
 
-    const steps = Math.floor(1000 * progress);
+    const isSymphony = ['amazing', 'beautiful', 'harmonic', 'fusion', 'hyper'].includes(funcData.category);
+    const maxSteps = isSymphony ? 4000 : 1000;
+    const steps = Math.floor(maxSteps * progress);
     const thetaRange = thetaMax - thetaMin;
     const xRange = xMax - xMin;
     const yRange = yMax - yMin;
@@ -171,20 +173,20 @@ function drawPolarCurveInternal(funcData, width, height, progress) {
     
     // Draw in segments if it's Spinny (for Dual Color Effect)
     if (isSpinny) {
-        const segSteps = 50; // Use reasonable segments to avoid overhead
+        const segSteps = 200; // 정밀도 상향에 따른 세그먼트 크기 조정
         for (let s = 0; s < steps; s += segSteps) {
             const currentSteps = Math.min(steps, s + segSteps);
-            const startTheta = thetaMin + (thetaRange * s) / 1000;
+            const startTheta = thetaMin + (thetaRange * s) / maxSteps;
             
-            // PI 단위(180도)로 색상 교차: Fuchsia(#d946ef) vs Indigo(#6366f1)
+            // PI 단위(180도)로 색상 교차
             const colorIdx = Math.floor((startTheta - thetaMin) / Math.PI) % 2;
             graphCtx.strokeStyle = colorIdx === 0 ? '#d946ef' : '#6366f1';
-            graphCtx.lineWidth = 4; // 더 선명하게
+            graphCtx.lineWidth = 4;
 
             graphCtx.beginPath();
             let isFirst = true;
             for (let i = s; i <= currentSteps; i++) {
-                const theta = thetaMin + (thetaRange * i) / 1000;
+                const theta = thetaMin + (thetaRange * i) / maxSteps;
                 let r;
                 try { r = funcData.r(theta, state.autoLoopCount); } catch (e) { continue; }
                 if (!isFinite(r) || isNaN(r)) continue;
@@ -212,8 +214,10 @@ function drawPolarCurveInternal(funcData, width, height, progress) {
         // Normal Single Color Flow
         graphCtx.beginPath();
         let isFirst = true;
+        const maxSteps = isSymphony ? 4000 : 1000;
+        const steps = Math.floor(maxSteps * progress);
         for (let i = 0; i <= steps; i++) {
-            const theta = thetaMin + (thetaRange * i) / 1000;
+            const theta = thetaMin + (thetaRange * i) / maxSteps;
             let r;
             try { r = funcData.r(theta, state.autoLoopCount); } catch (e) { continue; }
             if (!isFinite(r) || isNaN(r)) continue;
@@ -244,7 +248,9 @@ function drawParametricCurveInternal(funcData, width, height, progress) {
     const { min: tMin, max: tMax } = funcData.tRange;
     const graphCtx = ctx.graph;
 
-    const steps = Math.floor(1000 * progress);
+    const isSymphony = ['amazing', 'beautiful', 'harmonic', 'fusion', 'hyper'].includes(funcData.category);
+    const maxSteps = isSymphony ? 4000 : 1000;
+    const steps = Math.floor(maxSteps * progress);
     const tRange = tMax - tMin;
     const xRange = xMax - xMin;
     const yRange = yMax - yMin;
@@ -253,7 +259,7 @@ function drawParametricCurveInternal(funcData, width, height, progress) {
     
     let isFirst = true;
     for (let i = 0; i <= steps; i++) {
-        const t = tMin + (tRange * i) / 1000;
+        const t = tMin + (tRange * i) / maxSteps;
         let x, y;
         try {
             x = funcData.x(t, state.autoLoopCount);
@@ -554,7 +560,7 @@ export function animate() {
         let varText = "";
         
         // Symphony 변수 로직 자동 매칭 (사용자께서 정의하신 symphony.js 로직 보조)
-        if (cat === 'amazing' || cat === 'beautiful' || cat === 'harmonic' || cat === 'fusion') {
+        if (cat === 'amazing' || cat === 'beautiful' || cat === 'harmonic' || cat === 'fusion' || cat === 'hyper') {
             const name = funcData.name || "";
             if (name.includes('Spinny')) {
                 const v = (loopIdx % 10) * 0.5;
@@ -562,6 +568,15 @@ export function animate() {
             } else if (name.includes('Up and Down')) {
                 const v6 = (-8 + ((loopIdx % 16) / 15) * 16).toFixed(1);
                 varText = `(v6 = ${v6})`;
+            } else if (name.includes('Millennial')) {
+                const v = ((loopIdx % 30) * 0.1).toFixed(1);
+                varText = `(v = ${v})`;
+            } else if (name.includes('Hyper Lissajous') || name.includes('Deadpool') || name.includes('Clover')) {
+                const v = ((loopIdx % 20) * 0.314).toFixed(2);
+                varText = `(v = ${v})`;
+            } else if (name.includes('Reality')) {
+                const v = ((loopIdx % 15) * 0.1).toFixed(1);
+                varText = `(v = ${v})`;
             } else if (name.includes('Tan Twist')) {
                 const v = ((loopIdx % 12) * 0.52).toFixed(2);
                 varText = `(v = ${v})`;

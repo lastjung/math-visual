@@ -6,13 +6,14 @@ export class AudioPreviewEngine {
         this.masterGain = null;
         this.entries = [];
         this.sceneKey = null;
+        this.volume = 0.68;
     }
 
     async ensureContext() {
         if (!this.context) {
             this.context = new (window.AudioContext || window.webkitAudioContext)();
             this.masterGain = this.context.createGain();
-            this.masterGain.gain.value = 0.12;
+            this.masterGain.gain.value = this.volume * 0.32;
             this.masterGain.connect(this.context.destination);
         }
 
@@ -38,6 +39,7 @@ export class AudioPreviewEngine {
         if (!this.context || !this.entries.length) return;
 
         const now = this.context.currentTime;
+        this.masterGain.gain.setTargetAtTime(this.volume * 0.32, now, 0.05);
         scene.expressions.forEach((expression, index) => {
             const entry = this.entries[index];
             if (!entry) return;
@@ -50,7 +52,7 @@ export class AudioPreviewEngine {
 
             const normalized = normalizeValue(sample.value, expression.bounds);
             const frequency = 160 + normalized * 520 + index * 35;
-            const gain = 0.018 + Math.min(0.05, Math.abs(normalized) * 0.045);
+            const gain = 0.028 + Math.min(0.08, Math.abs(normalized) * 0.06);
 
             entry.osc.frequency.setTargetAtTime(frequency, now, 0.03);
             entry.filter.frequency.setTargetAtTime(Math.min(2800, 600 + normalized * 1200), now, 0.05);
@@ -76,6 +78,12 @@ export class AudioPreviewEngine {
         this.entries.forEach((entry) => {
             entry.gain.gain.setTargetAtTime(0.0001, this.context.currentTime, 0.04);
         });
+    }
+
+    setVolume(nextVolume) {
+        this.volume = nextVolume;
+        if (!this.context || !this.masterGain) return;
+        this.masterGain.gain.setTargetAtTime(this.volume * 0.32, this.context.currentTime, 0.05);
     }
 }
 

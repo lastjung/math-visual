@@ -463,6 +463,88 @@ export const SYMPHONY_FUNCTIONS = {
         viewBox: { xMin: -5, xMax: 5, yMin: -5, yMax: 5 },
         audioScale: 150,
         baseFreq: 330
+    },
+    // ========== 🌀 HYPER (Amazing 2025 Edition) ==========
+    millennialRose: {
+        category: 'hyper',
+        name: 'Millennial Rose',
+        type: 'polar',
+        r: (theta, loopIndex = 0) => {
+            const v = (loopIndex % 30) * 0.1;
+            return Math.sin(2025 * theta / (100 - v));
+        },
+        formula: 'r = sin(2025θ / (100-v))',
+        latex: 'r = \\sin\\left(\\frac{2025\\theta}{100-v}\\right)',
+        thetaRange: { min: 0, max: 2 * Math.PI },
+        viewBox: { xMin: -1.2, xMax: 1.2, yMin: -1.2, yMax: 1.2 },
+        audioScale: 180,
+        baseFreq: 440
+    },
+    hyperLissajous: {
+        category: 'hyper',
+        name: 'Hyper Lissajous',
+        type: 'parametric',
+        x: (t, loopIndex = 0) => {
+            const v = (loopIndex % 20) * 0.314;
+            return 4 * Math.cos(Math.sin(20 * t + v) + v);
+        },
+        y: (t, loopIndex = 0) => {
+            const v = (loopIndex % 20) * 0.314;
+            return Math.sin(25 * t + v);
+        },
+        formula: '(4cos(sin(20t+v)+v), sin(25t+v))',
+        latex: '(4\\cos(\\sin(20t+v)+v), \\sin(25t+v))',
+        tRange: { min: 0, max: 2 * Math.PI },
+        viewBox: { xMin: -5, xMax: 5, yMin: -2, yMax: 2 },
+        audioScale: 100,
+        baseFreq: 260
+    },
+    amazingClover: {
+        category: 'hyper',
+        name: 'Amazing Clover',
+        type: 'polar',
+        r: (theta, loopIndex = 0) => {
+            const v = (loopIndex % 20) * 0.314;
+            return Math.sin(2.025 * theta + v) + Math.cos(1.05 * theta);
+        },
+        formula: 'r = sin(2.025θ+v) + cos(1.05θ)',
+        latex: 'r = \\sin(2.025\\theta + v) + \\cos(1.05\\theta)',
+        thetaRange: { min: 0, max: 40 * Math.PI },
+        viewBox: { xMin: -2.5, xMax: 2.5, yMin: -2.5, yMax: 2.5 },
+        audioScale: 140,
+        baseFreq: 220
+    },
+    realityBender: {
+        category: 'hyper',
+        name: 'Reality Bender',
+        type: 'cartesian',
+        fn: (x, loopIndex = 0) => {
+            const v = (loopIndex % 15) * 0.1;
+            return (gcd(Math.round(2025 * x)) % 5) + v * Math.sin(x) + Math.ceil(v * x) / 5;
+        },
+        formula: 'y = mod(gcd(2025x), 5) + v·sin x + ceil(vx)/5',
+        latex: 'y = \\gcd(2025x) \\pmod 5 + v \\sin(x) + \\frac{\\lceil vx \\rceil}{5}',
+        range: { xMin: -10, xMax: 10, yMin: -10, yMax: 10 },
+        audioScale: 80,
+        baseFreq: 110
+    },
+    deadpoolGeometry: {
+        category: 'hyper',
+        name: 'Deadpool Geometry',
+        type: 'polar',
+        r: (theta, loopIndex = 0) => {
+            const v = (loopIndex % 20) * 0.314;
+            const l = 2.025;
+            // 음수 반지름을 절대값으로 처리하여 대칭 구조를 완성 (끊김 방지)
+            const rVal = Math.sin(theta + l - v) - Math.ceil(2 * Math.sin(2 * theta + v + 1.55));
+            return Math.abs(rVal);
+        },
+        formula: 'r = |sin(θ+l-v) - ceil(2sin(2θ+v+1.55))|',
+        latex: 'r = |\\sin(\\theta + l - v) - \\lceil 2\\sin(2\\theta + v + 1.55) \\rceil|',
+        thetaRange: { min: 0, max: 2 * Math.PI }, // 2pi면 충분하지만 표현력 위해 유지
+        viewBox: { xMin: -4, xMax: 4, yMin: -4, yMax: 4 },
+        audioScale: 120,
+        baseFreq: 165
     }
 };
 

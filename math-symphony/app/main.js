@@ -18,6 +18,8 @@ const elements = {
     scorePalette: document.getElementById('scorePalette'),
     playToggle: document.getElementById('playToggle'),
     resetTimeline: document.getElementById('resetTimeline'),
+    volumeControl: document.getElementById('volumeControl'),
+    volumeValue: document.getElementById('volumeValue'),
     scoreTimeline: document.getElementById('scoreTimeline'),
     timelineLabel: document.getElementById('timelineLabel'),
     previewCanvas: document.getElementById('previewCanvas'),
@@ -33,7 +35,9 @@ const state = {
     elapsedMs: 0,
     isPlaying: false,
     rafId: null,
-    lastFrameAt: 0
+    lastFrameAt: 0,
+    volume: 0.68,
+    expressionEnabled: {}
 };
 
 const audioEngine = new AudioPreviewEngine();
@@ -63,6 +67,12 @@ function bindEvents() {
         stopPlayback();
         state.elapsedMs = 0;
         render();
+    });
+
+    elements.volumeControl.addEventListener('input', (event) => {
+        state.volume = Number(event.target.value) / 100;
+        elements.volumeValue.textContent = `${event.target.value}%`;
+        audioEngine.setVolume(state.volume);
     });
 }
 
@@ -98,6 +108,7 @@ function render() {
 
     const activeSceneEntry = getActiveScene(score, state.elapsedMs);
     const activeScene = score.scenes.find((scene) => scene.id === activeSceneEntry?.sceneId) || score.scenes[0];
+    const visibleScene = withEnabledExpressions(score, activeScene);
     const controllerMap = buildControllerMap(score);
     const controllerSnapshot = buildControllerSnapshot(score.controllers, state.elapsedMs);
     const sceneDuration = Math.max(1, activeScene.durationMs || 1);
@@ -124,16 +135,18 @@ function render() {
     elements.scoreTimeline.value = String(state.elapsedMs);
     elements.timelineLabel.textContent = `${msToText(state.elapsedMs)} / ${msToText(durationMs)}`;
     elements.playToggle.textContent = state.isPlaying ? 'Pause' : 'Play';
+    elements.volumeControl.value = String(Math.round(state.volume * 100));
+    elements.volumeValue.textContent = `${Math.round(state.volume * 100)}%`;
 
     renderSceneRail(score, activeScene.id);
     renderActiveScene(activeScene);
     renderControllers(score, activeScene.activeControllers, controllerSnapshot, controllerMap);
-    renderExpressions(activeScene, controllerSnapshot, controllerMap);
-    renderScenePreview(elements.previewCanvas, activeScene, controllerSnapshot);
+    renderExpressions(score, activeScene, visibleScene, controllerSnapshot, controllerMap);
+    renderScenePreview(elements.previewCanvas, visibleScene, controllerSnapshot);
 
     if (state.isPlaying) {
-        audioEngine.startScene(activeScene, controllerSnapshot).then(() => {
-            audioEngine.updateScene(activeScene, controllerSnapshot, sceneProgress);
+        audioEngine.startScene(visibleScene, controllerSnapshot).then(() => {
+            audioEngine.updateScene(visibleScene, controllerSnapshot, sceneProgress);
         }).catch(() => {});
     }
 }
@@ -184,23 +197,62 @@ function renderControllers(score, activeKeys, snapshot, controllerMap) {
     }
 }
 
-function renderExpressions(scene, snapshot, controllerMap) {
+function renderExpressions(score, scene, visibleScene, snapshot, controllerMap) {
     elements.expressionsPanel.innerHTML = '';
+    const visibleIds = new Set(visibleScene.expressions.map((expression) => expression.id));
+
     for (const expression of scene.expressions) {
         const view = describeExpression(expression, snapshot, controllerMap);
+        const enabled = visibleIds.has(expression.id);
         const card = document.createElement('article');
         card.className = 'expression-card';
+        card.classList.toggle('muted', !enabled);
         card.innerHTML = `
             <div class="expression-meta">
                 <span class="expression-type">${expression.type}</span>
                 <span class="expression-name">${expression.name}</span>
+                <label class="expression-toggle">
+                    <input type="checkbox" ${enabled ? 'checked' : ''} data-expression-id="${expression.id}">
+                    <span>${enabled ? 'on' : 'off'}</span>
+                </label>
             </div>
             <div class="expression-formula">${expression.formula}</div>
             <div class="expression-params">${view.parameterSummary || 'static expression'}</div>
             ${expression.notes?.length ? `<div class="expression-notes">${expression.notes.join(' | ')}</div>` : ''}
         `;
+        const checkbox = card.querySelector('input[type="checkbox"]');
+        checkbox?.addEventListener('change', (event) => {
+            setExpressionEnabled(score.id, scene.id, expression.id, event.target.checked);
+            render();
+        });
         elements.expressionsPanel.appendChild(card);
     }
+}
+
+function withEnabledExpressions(score, scene) {
+    const disabled = state.expressionEnabled[sceneStateKey(score.id, scene.id)] || {};
+    const expressions = scene.expressions.filter((expression) => disabled[expression.id] !== false);
+    return {
+        ...scene,
+        expressions: expressions.length ? expressions : [scene.expressions[0]]
+    };
+}
+
+function setExpressionEnabled(scoreId, sceneId, expressionId, enabled) {
+    const key = sceneStateKey(scoreId, sceneId);
+    const nextSceneState = {
+        ...(state.expressionEnabled[key] || {}),
+        [expressionId]: enabled
+    };
+
+    state.expressionEnabled = {
+        ...state.expressionEnabled,
+        [key]: nextSceneState
+    };
+}
+
+function sceneStateKey(scoreId, sceneId) {
+    return `${scoreId}::${sceneId}`;
 }
 
 function msToText(ms) {
@@ -214,6 +266,7 @@ function startPlayback() {
     if (state.isPlaying) return;
     state.isPlaying = true;
     state.lastFrameAt = performance.now();
+    audioEngine.setVolume(state.volume);
     state.rafId = requestAnimationFrame(tickPlayback);
     render();
 }

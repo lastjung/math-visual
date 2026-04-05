@@ -1169,7 +1169,8 @@ export const CATEGORIES = {
     amazing: { name: '✨ Amazing', functions: [] },
     beautiful: { name: '💖 Beautiful', functions: [] },
     harmonic: { name: '🎼 Harmonic', functions: [] },
-    fusion: { name: '🌀 Fusion', functions: [] }
+    fusion: { name: '🌀 Fusion', functions: [] },
+    hyper: { name: '✨ Hyper', functions: [] }
 };
 
 // Initialize categories
