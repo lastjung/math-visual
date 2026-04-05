@@ -39,6 +39,8 @@ body {
     --sound-color: #6366f1;    /* Adjusting synth to indigo */
     --math-color: #dc2626;     /* Pure Red for Math */
     --bytebeat-color: #4b5563; /* Dark Gray for Byte */
+    --amazing-color: #f59e0b;  /* Amber/Gold for Amazing */
+    --beautiful-color: #d946ef; /* Fuchsia for Beautiful */
 }
 
 body {
@@ -90,6 +92,7 @@ body {
 
 .menu-panel {
     align-items: stretch;
+    min-width: 0; /* Important for horizontal scrolling in flex items */
 }
 
 /* Header */
@@ -617,17 +620,54 @@ body.is-fullscreen .controls {
 }
 
 /* Category Tabs - Glass Pill */
+.category-tabs-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 4px;
+}
+
 .category-tabs {
     display: flex;
     gap: 8px;
     background: rgba(255, 255, 255, 0.6);
     backdrop-filter: blur(10px);
-    padding: 8px;
+    padding: 8px 12px;
     border-radius: 30px;
     overflow-x: auto;
     max-width: 100%;
     box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
     border: 1px solid rgba(255,255,255,0.5);
+    scrollbar-width: thin; /* Show the scrollbar for clearer UX */
+    -ms-overflow-style: auto;  
+    -webkit-overflow-scrolling: touch;
+    cursor: grab;
+    user-select: none; /* Prevent text selection during drag */
+}
+
+.category-tabs.symphony-row {
+    background: rgba(255, 255, 255, 0.4);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    padding: 6px 12px;
+}
+
+.category-tabs.grabbing {
+    cursor: grabbing;
+    background: rgba(255, 255, 255, 0.7);
+}
+
+.category-tabs::-webkit-scrollbar {
+    height: 4px; /* Very thin horizontal scrollbar */
+}
+
+.category-tabs::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.category-tabs::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
 }
 
 .category-tab {
@@ -641,6 +681,7 @@ body.is-fullscreen .controls {
     transition: all 0.2s ease;
     white-space: nowrap;
     color: var(--text-muted);
+    flex-shrink: 0;
 }
 
 /* Category-specific colors for all states */
@@ -650,6 +691,8 @@ body.is-fullscreen .controls {
 .category-tab[data-category="sound"] { color: var(--sound-color); }
 .category-tab[data-category="math"] { color: var(--math-color); }
 .category-tab[data-category="bytebeat"] { color: var(--bytebeat-color); }
+.category-tab[data-category="amazing"] { color: var(--amazing-color); }
+.category-tab[data-category="beautiful"] { color: var(--beautiful-color); }
 
 /* Dim inactive tabs slightly */
 .category-tab:not(.active) {
@@ -664,9 +707,19 @@ body.is-fullscreen .controls {
 .category-tab.active {
     opacity: 1;
     background: #ffffff;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-    transform: scale(1.05);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+    transform: scale(1.08);
+    border: 2.5px solid var(--accent-color); /* Added border for clarity */
 }
+
+/* Category-specific Active Tab Text & Border */
+.category-tab.active[data-category="waves"] { border-color: var(--waves-color); color: var(--waves-color); }
+.category-tab.active[data-category="curves"] { border-color: var(--curves-color); color: var(--curves-color); }
+.category-tab.active[data-category="art"] { border-color: var(--art-color); color: var(--art-color); }
+.category-tab.active[data-category="sound"] { border-color: var(--sound-color); color: var(--sound-color); }
+.category-tab.active[data-category="math"] { border-color: var(--math-color); color: var(--math-color); }
+.category-tab.active[data-category="amazing"] { border-color: var(--amazing-color); color: var(--amazing-color); }
+.category-tab.active[data-category="beautiful"] { border-color: var(--beautiful-color); color: var(--beautiful-color); }
 
 /* Browser Bar */
 .browser-bar {
@@ -750,9 +803,23 @@ body.is-fullscreen .controls {
 }
 
 .func-card.active {
-    border-color: var(--accent-color);
-    box-shadow: 0 6px 16px rgba(59, 130, 246, 0.2);
+    border: 2px solid var(--accent-color);
+    background: rgba(59, 130, 246, 0.04);
+    box-shadow: 0 8px 24px rgba(59, 130, 246, 0.25);
+    transform: translateY(-4px) scale(1.03);
+    z-index: 2;
 }
+
+/* Category-specific Active States */
+.func-card.active[data-category="waves"] { border-color: var(--waves-color); box-shadow: 0 8px 24px rgba(16, 185, 129, 0.25); background: rgba(16, 185, 129, 0.04); }
+.func-card.active[data-category="curves"] { border-color: var(--curves-color); box-shadow: 0 8px 24px rgba(236, 72, 153, 0.25); background: rgba(236, 72, 153, 0.04); }
+.func-card.active[data-category="art"] { border-color: var(--art-color); box-shadow: 0 8px 24px rgba(139, 92, 246, 0.25); background: rgba(139, 92, 246, 0.04); }
+.func-card.active[data-category="sound"] { border-color: var(--sound-color); box-shadow: 0 8px 24px rgba(99, 102, 241, 0.25); background: rgba(99, 102, 241, 0.04); }
+.func-card.active[data-category="math"] { border-color: var(--math-color); box-shadow: 0 8px 24px rgba(220, 38, 38, 0.25); background: rgba(220, 38, 38, 0.04); }
+.func-card.active[data-category="bytebeat"] { border-color: var(--bytebeat-color); box-shadow: 0 8px 24px rgba(75, 85, 99, 0.25); background: rgba(75, 85, 99, 0.04); }
+.func-card.active[data-category="amazing"] { border-color: var(--amazing-color); box-shadow: 0 8px 24px rgba(245, 158, 11, 0.25); background: rgba(245, 158, 11, 0.04); }
+.func-card.active[data-category="beautiful"] { border-color: var(--beautiful-color); box-shadow: 0 8px 24px rgba(217, 70, 239, 0.25); background: rgba(217, 70, 239, 0.04); }
+.func-card.active[data-category="ani"] { border-color: #f43f5e; box-shadow: 0 8px 24px rgba(244, 63, 94, 0.25); background: rgba(244, 63, 94, 0.04); }
 
 .func-card[data-category="waves"] { border-left-color: var(--waves-color); }
 .func-card[data-category="curves"] { border-left-color: var(--curves-color); }
@@ -760,6 +827,8 @@ body.is-fullscreen .controls {
 .func-card[data-category="sound"] { border-left-color: var(--sound-color); }
 .func-card[data-category="math"] { border-left-color: var(--math-color); }
 .func-card[data-category="bytebeat"] { border-left-color: var(--bytebeat-color); }
+.func-card[data-category="amazing"] { border-left-color: var(--amazing-color); }
+.func-card[data-category="beautiful"] { border-left-color: var(--beautiful-color); }
 .func-card[data-category="ani"] { border-left-color: #f43f5e; }
 
 .func-card.favorite .card-title {

@@ -3,6 +3,8 @@
  * 수학 함수 정의 및 카테고리 설정
  */
 
+import { SYMPHONY_FUNCTIONS } from './symphony.js';
+
 export const MATH_FUNCTIONS = {
     // ========== 🎨 ANI (진화하는 애니메이션 수식) ==========
     stepsOfLove: {
@@ -1151,7 +1153,9 @@ export const MATH_FUNCTIONS = {
         range: { xMin: -4, xMax: 4, yMin: -1.5, yMax: 1.5 },
         audioScale: 90,
         baseFreq: 190
-    }
+    },
+
+    ...SYMPHONY_FUNCTIONS
 };
 
 export const CATEGORIES = {
@@ -1161,7 +1165,9 @@ export const CATEGORIES = {
     ani: { name: '🎨 Ani', functions: [] },
     math: { name: '📐 Math', functions: [] },
     sound: { name: '🎵 Sound', functions: [] },
-    bytebeat: { name: '💻 Byte', functions: [] }
+    bytebeat: { name: '💻 Byte', functions: [] },
+    amazing: { name: '✨ Amazing', functions: [] },
+    beautiful: { name: '💖 Beautiful', functions: [] }
 };
 
 // Initialize categories

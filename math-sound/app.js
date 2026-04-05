@@ -277,28 +277,91 @@ function setupEventListeners() {
 // 카테고리 & 함수 제어
 // ==========================================
 function renderCategoryTabs() {
-    const container = document.getElementById('categoryTabs');
-    if (!container) return;
+    const existingContainer = document.getElementById('categoryTabsExisting');
+    const symphonyContainer = document.getElementById('categoryTabsSymphony');
     
-    container.innerHTML = '';
-    const ordered = [{ key: 'all', name: '✨ All' }, ...Object.keys(CATEGORIES).map(key => ({ key, name: CATEGORIES[key].name }))];
-    ordered.forEach(({ key, name }) => {
-        const cat = CATEGORIES[key];
+    if (!existingContainer || !symphonyContainer) return;
+    
+    existingContainer.innerHTML = '';
+    symphonyContainer.innerHTML = '';
+
+    // 1. Add 'All' button to existing row
+    const allBtn = document.createElement('button');
+    allBtn.className = 'category-tab' + ('all' === state.currentCategory ? ' active' : '');
+    allBtn.dataset.category = 'all';
+    allBtn.textContent = '✨ All';
+    allBtn.addEventListener('click', () => selectCategory('all'));
+    existingContainer.appendChild(allBtn);
+
+    const categories = Object.keys(CATEGORIES);
+    
+    // 2. Sort other categories
+    categories.forEach(catId => {
+        const cat = CATEGORIES[catId];
         const btn = document.createElement('button');
-        btn.className = 'category-tab' + (key === state.currentCategory ? ' active' : '');
-        btn.dataset.category = key;
-        btn.textContent = name || cat?.name || key;
-        btn.addEventListener('click', () => selectCategory(key));
-        container.appendChild(btn);
+        btn.className = 'category-tab' + (catId === state.currentCategory ? ' active' : '');
+        btn.dataset.category = catId;
+        btn.textContent = cat.name;
+        btn.addEventListener('click', () => selectCategory(catId));
+        
+        if (catId === 'amazing' || catId === 'beautiful') {
+            symphonyContainer.appendChild(btn);
+        } else {
+            existingContainer.appendChild(btn);
+        }
+    });
+
+    // Horizontal scroll & Drag support for both containers
+    [existingContainer, symphonyContainer].forEach(container => {
+        let isDown = false;
+        let startX;
+        let scrollLeft;
+
+        container.addEventListener('mousedown', (e) => {
+            isDown = true;
+            container.classList.add('grabbing');
+            startX = e.pageX - container.offsetLeft;
+            scrollLeft = container.scrollLeft;
+        });
+
+        container.addEventListener('mouseleave', () => {
+            isDown = false;
+            container.classList.remove('grabbing');
+        });
+
+        container.addEventListener('mouseup', () => {
+            isDown = false;
+            container.classList.remove('grabbing');
+        });
+
+        container.addEventListener('mousemove', (e) => {
+            if (!isDown) return;
+            e.preventDefault();
+            const x = e.pageX - container.offsetLeft;
+            const walk = (x - startX) * 2;
+            container.scrollLeft = scrollLeft - walk;
+        });
+
+        container.addEventListener('wheel', (e) => {
+            if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+                e.preventDefault();
+                container.scrollLeft += e.deltaY;
+            }
+        }, { passive: false });
     });
     
-    // Update elements reference
     elements.categoryTabs = document.querySelectorAll('.category-tab');
 }
 
 function selectCategory(category, autoSelectFirst = false) {
     state.currentCategory = category;
-    elements.categoryTabs.forEach(tab => tab.classList.toggle('active', tab.dataset.category === category));
+    elements.categoryTabs.forEach(tab => {
+        const isActive = tab.dataset.category === category;
+        tab.classList.toggle('active', isActive);
+        if (isActive) {
+            tab.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+        }
+    });
     renderFunctionButtons(category);
     if (autoSelectFirst) {
         const funcs = getCategoryFunctions(category);
