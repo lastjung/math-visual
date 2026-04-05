@@ -304,7 +304,7 @@ function renderCategoryTabs() {
         btn.textContent = cat.name;
         btn.addEventListener('click', () => selectCategory(catId));
         
-        if (catId === 'amazing' || catId === 'beautiful' || catId === 'harmonic') {
+        if (catId === 'amazing' || catId === 'beautiful' || catId === 'harmonic' || catId === 'fusion') {
             symphonyContainer.appendChild(btn);
         } else {
             existingContainer.appendChild(btn);
