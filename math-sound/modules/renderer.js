@@ -615,8 +615,10 @@ export function animate() {
                 varText = `(v = ${loopIdx % 10 + 2}) → ${nextIdx % 10 + 2}`;
             } else if (name === 'Cellular Trigonometry' || name === 'Reality Bender') {
                 varText = `(v = ${(loopIdx % 15 * 0.1).toFixed(1)}) → ${(nextIdx % 15 * 0.1).toFixed(1)}`;
-            } else if (name === 'Interference Mesh' || name === 'Tan Twist Mesh') {
+            } else if (name === 'Interference Mesh') {
                 varText = `(v = ${(loopIdx % 20 * 0.1).toFixed(1)}) → ${(nextIdx % 20 * 0.1).toFixed(1)}`;
+            } else if (name === 'Tan Twist Mesh') {
+                varText = `(v = ${(loopIdx % 12 * 0.52).toFixed(2)}) → ${(nextIdx % 12 * 0.52).toFixed(2)}`;
             } else if (name === 'Fantastic Grid') {
                 varText = `(v = ${(loopIdx % 15 * 0.5).toFixed(1)}) → ${(nextIdx % 15 * 0.5).toFixed(1)}`;
             } else if (name.includes('Inverse Fractal') || name.includes('Ridge')) {
@@ -633,9 +635,15 @@ export function animate() {
                 const v6 = (-8 + ((loopIdx % 16) / 15) * 16).toFixed(1);
                 const v6Next = (-8 + ((nextIdx % 16) / 15) * 16).toFixed(1);
                 varText = `(v6 = ${v6}) → ${v6Next}`;
-            } else if (name.includes('Sign') || name.includes('Intro') || name.includes('Hair') || name.includes('Modulation') || name.includes('GCD') || name.includes('Modulo')) {
+            } else if (name === 'Punk Hair Laser') {
+                varText = `(v = ${((loopIdx % 8) * (Math.PI / 4)).toFixed(2)}) → ${((nextIdx % 8) * (Math.PI / 4)).toFixed(2)}`;
+            } else if (name === 'Modulo Jagged Wave') {
+                varText = `(v12 = ${(0.19 + (loopIdx % 12) * 0.18).toFixed(2)}) → ${(0.19 + (nextIdx % 12) * 0.18).toFixed(2)}`;
+            } else if (name.includes('Sign') || name.includes('Intro') || name.includes('Modulation') || name.includes('GCD')) {
                 varText = `(a = ${loopIdx % 10 + 1}) → ${nextIdx % 10 + 1}`;
-            } else if (name.includes('Twist') || name.includes('Galaxy') || name.includes('Star Core') || name.includes('Geometric') || name.includes('Pulsating')) {
+            } else if (name === 'Geometric Shift') {
+                varText = `(v = ${(-2.5 + (loopIdx % 20) * 0.25).toFixed(2)}) → ${(-2.5 + (nextIdx % 20) * 0.25).toFixed(2)}`;
+            } else if (name.includes('Twist') || name.includes('Galaxy') || name.includes('Star Core') || name.includes('Pulsating')) {
                 varText = `(v = ${(loopIdx % 20 * 0.2).toFixed(2)}) → ${(nextIdx % 20 * 0.2).toFixed(2)}`;
             } else if (name === 'Dynamic Interference') {
                 varText = `(k = ${(loopIdx % 80 * 0.1).toFixed(1)}) → ${(nextIdx % 80 * 0.1).toFixed(1)}`;

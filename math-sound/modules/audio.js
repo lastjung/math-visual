@@ -66,8 +66,8 @@ export function createSoundFromFunction(functionId = state.currentFunction) {
     const introDraw = 1.0;
     const regularDraw = 4.0;
     
-    // Symphony 계열만 긴 버퍼를 사용해 loopIndex 진화를 끝까지 담는다.
-    let duration = isAni ? 4.5 : (isSymphony ? 20.0 : 4.5);
+    // Symphony 계열만 긴 버퍼를 사용해 loopIndex 진화를 끝까지 담는다. (60 loops * 4.0s = 240.0s)
+    let duration = isAni ? 4.5 : (isSymphony ? 240.0 : 4.5);
     if (isAni && funcData.phases) {
         duration = introDuration + (regularDuration * (funcData.phases.length - 1));
     }

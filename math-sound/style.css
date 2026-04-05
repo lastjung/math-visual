@@ -459,11 +459,9 @@ body.is-fullscreen .equation-intro-card {
     width: min(72%, 520px);
 }
 
-body.is-fullscreen .formula-display,
-body.is-fullscreen .waveform-wrapper,
-body.is-fullscreen .controls {
-    width: 100%;
-    max-width: 800px;
+body.is-fullscreen .controls,
+body.is-fullscreen .mixer-panel {
+    display: none !important;
 }
 
 /* Mixer Panel */
@@ -1148,6 +1146,25 @@ input[type="range"]::-webkit-slider-thumb:hover {
         gap: 8px;
         flex-wrap: wrap;
         justify-content: center;
+    }
+
+    body.is-fullscreen .container {
+        justify-content: flex-start;
+        align-items: center;
+        padding: 34px 12px 12px;
+    }
+
+    body.is-fullscreen .main-panel {
+        justify-content: flex-start;
+        align-items: center;
+        gap: 12px;
+        max-width: 100%;
+    }
+
+    body.is-fullscreen .canvas-wrapper {
+        flex: 0 0 auto;
+        height: min(68vh, 520px);
+        margin-top: 20px;
     }
 }
 
