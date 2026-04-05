@@ -508,6 +508,7 @@ function selectFunction(funcName) {
     elements.currentIndex.textContent = state.functionIndex;
     elements.canvasClock.textContent = '00:00.00';
     state.drawProgress = 0;
+    state.autoLoopCount = 0;
     
     elements.canvasWrapper.classList.remove('zoom-in-effect');
     void elements.canvasWrapper.offsetWidth;

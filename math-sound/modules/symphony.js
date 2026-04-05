@@ -769,8 +769,8 @@ export const SYMPHONY_FUNCTIONS = {
         name: 'Surface Ripple Field',
         type: 'implicit',
         f: (x, y, loopIndex = 0) => {
-            const k7 = (loopIndex % 80) * 0.1;
-            return y - 5 * Math.sin(x - Math.PI) * Math.cos(k7 * y);
+            const k7 = (loopIndex % 40) * 0.5;
+            return Math.abs(y - 5 * Math.sin(x - Math.PI) * Math.cos(k7 * y)) < 0.6;
         },
         formula: 'y = 5sin(x-π)cos(ky)',
         latex: 'y = 5\\sin(x-\\pi)\\cos(ky)',
@@ -783,8 +783,8 @@ export const SYMPHONY_FUNCTIONS = {
         name: 'Global Implicit Gate',
         type: 'implicit',
         f: (x, y, loopIndex = 0) => {
-            const k9 = (loopIndex % 20) * 0.5 + 1; // 1 to 10
-            return (k9 * Math.sin(Math.cos(y) + Math.sin(x))) - (Math.cos(x) + Math.sin(y));
+            const k9 = (loopIndex % 20) * 3.0 + 1; // 1 to 61
+            return Math.abs((k9 * Math.sin(Math.cos(y) + Math.sin(x))) - (Math.cos(x) + Math.sin(y))) < 0.8;
         },
         formula: 'ksin(cos y + sin x) = cos x + sin y',
         latex: 'k\\sin(\\cos y + \\sin x) = \\cos x + \\sin y',
@@ -797,8 +797,8 @@ export const SYMPHONY_FUNCTIONS = {
         name: 'Concentric Modulation',
         type: 'implicit',
         f: (x, y, loopIndex = 0) => {
-            const k17 = (loopIndex % 80) * 0.2;
-            return Math.sin(k17 * x) - Math.sin(x * x + y * y);
+            const k17 = (loopIndex % 40) * 1.0;
+            return Math.abs(Math.sin(k17 * x) - Math.sin(x * x + y * y)) < 0.5;
         },
         formula: 'sin(kx) = sin(x² + y²)',
         latex: '\\sin(kx) = \\sin(x^2 + y^2)',
@@ -811,8 +811,8 @@ export const SYMPHONY_FUNCTIONS = {
         name: 'Chaos Star Grid',
         type: 'implicit',
         f: (x, y, loopIndex = 0) => {
-            const k18 = (loopIndex % 80) * 0.1;
-            return Math.sin(x * x + y * y) - (k18 * Math.cos(x * y));
+            const k18 = (loopIndex % 40) * 0.5;
+            return Math.abs(Math.sin(x * x + y * y) - (k18 * Math.cos(x * y))) < 0.5;
         },
         formula: 'sin(x² + y²) = k·cos(xy)',
         latex: '\\sin(x^2 + y^2) = k\\cos(xy)',
@@ -844,8 +844,8 @@ export const SYMPHONY_FUNCTIONS = {
         type: 'parametric',
         x: (t) => Math.sin(t) + Math.cos(t),
         y: (t, loopIndex = 0) => {
-            const v3 = (loopIndex % 20) * 0.172;
-            const v6 = (loopIndex % 20) * 0.314;
+            const v3 = ((loopIndex % 19) + 1) * 0.172;
+            const v6 = ((loopIndex % 19) + 1) * 0.314;
             return Math.tan(v3 * t / 2) * Math.cos(3 * v3 * t) + Math.sin(v3 * t + v6);
         },
         formula: '(sin t+cos t, tan(vt/2)cos(3vt)+sin(vt+v6))',
@@ -861,7 +861,7 @@ export const SYMPHONY_FUNCTIONS = {
         type: 'parametric',
         x: (t) => Math.sin(0.98 * t) + Math.cos(t),
         y: (t, loopIndex = 0) => {
-            const v5 = (loopIndex % 20) * 0.25;
+            const v5 = (loopIndex % 20) * 0.75;
             return Math.cos(10 * v5 + t);
         },
         formula: '(sin(0.98t)+cos t, cos(10v+t))',

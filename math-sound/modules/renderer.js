@@ -468,7 +468,7 @@ export function animate() {
     
     if (isAni) {
         state.autoTargetCount = totalPhases;
-    } else if (['amazing', 'beautiful', 'harmonic', 'fusion', 'hyper', 'insane', 'fantastic'].includes(funcData.category)) {
+    } else if (['amazing', 'beautiful', 'harmonic', 'fusion', 'hyper', 'insane', 'fantastic', 'incredible', 'incomprehensible'].includes(funcData.category)) {
         state.autoTargetCount = 60;
     }
 
@@ -637,18 +637,20 @@ export function animate() {
                 varText = `(a = ${loopIdx % 10 + 1}) → ${nextIdx % 10 + 1}`;
             } else if (name.includes('Twist') || name.includes('Galaxy') || name.includes('Star Core') || name.includes('Geometric') || name.includes('Pulsating')) {
                 varText = `(v = ${(loopIdx % 20 * 0.2).toFixed(2)}) → ${(nextIdx % 20 * 0.2).toFixed(2)}`;
-            } else if (name === 'Dynamic Interference' || name === 'Surface Ripple Field' || name === 'Chaos Star Grid') {
+            } else if (name === 'Dynamic Interference') {
                 varText = `(k = ${(loopIdx % 80 * 0.1).toFixed(1)}) → ${(nextIdx % 80 * 0.1).toFixed(1)}`;
+            } else if (name === 'Surface Ripple Field' || name === 'Chaos Star Grid') {
+                varText = `(k = ${(loopIdx % 40 * 0.5).toFixed(1)}) → ${(nextIdx % 40 * 0.5).toFixed(1)}`;
             } else if (name === 'Concentric Modulation') {
-                varText = `(k = ${(loopIdx % 80 * 0.2).toFixed(1)}) → ${(nextIdx % 80 * 0.2).toFixed(1)}`;
+                varText = `(k = ${(loopIdx % 40 * 1.0).toFixed(1)}) → ${(nextIdx % 40 * 1.0).toFixed(1)}`;
             } else if (name === 'Global Implicit Gate') {
-                varText = `(k = ${(loopIdx % 20 * 0.5 + 1).toFixed(1)}) → ${(nextIdx % 20 * 0.5 + 1).toFixed(1)}`;
+                varText = `(k = ${(loopIdx % 20 * 3.0 + 1).toFixed(1)}) → ${(nextIdx % 20 * 3.0 + 1).toFixed(1)}`;
             } else if (name === 'Saturn Orbit') {
                 varText = `(v = ${(loopIdx % 20 * 0.314).toFixed(3)}) → ${(nextIdx % 20 * 0.314).toFixed(3)}`;
             } else if (name === 'Wave Tangent Twist') {
-                varText = `(v3 = ${(loopIdx % 20 * 0.172).toFixed(3)}, v6 = ${(loopIdx % 20 * 0.314).toFixed(3)})`;
+                varText = `(v3 = ${((loopIdx % 19 + 1) * 0.172).toFixed(3)}, v6 = ${((loopIdx % 19 + 1) * 0.314).toFixed(3)})`;
             } else if (name === 'Rotating Ovals') {
-                varText = `(v = ${(loopIdx % 20 * 0.25).toFixed(2)}) → ${(nextIdx % 20 * 0.25).toFixed(2)}`;
+                varText = `(v = ${(loopIdx % 20 * 0.75).toFixed(2)}) → ${(nextIdx % 20 * 0.75).toFixed(2)}`;
             } else if (name === 'Higher Dimension 8') {
                 varText = `(v = ${(loopIdx % 10 * 0.2).toFixed(1)}) → ${(nextIdx % 10 * 0.2).toFixed(1)}`;
             } else if (name === 'Final Chapter Dense') {
