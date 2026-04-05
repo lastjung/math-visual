@@ -34,6 +34,13 @@ const Core = {
             eyebrow: 'Geometry',
             caseRef: () => LissajousCase
         },
+        envelope_radial: {
+            id: 'envelope_radial',
+            label: 'Envelope Radial',
+            panelTitle: 'Envelope Build',
+            eyebrow: 'Build',
+            caseRef: () => EnvelopeRadialCase
+        },
         goldberg_sphere: {
             id: 'goldberg_sphere',
             label: 'Goldberg Sphere',
@@ -146,6 +153,11 @@ const Core = {
             applePlay.onclick = () => {
                 this.playGameSound('play');
                 const scenarioSelect = document.getElementById('apple-scenario-select');
+                if (scenarioSelect && scenarioSelect.value === 'z_geometry') {
+                    this.toggleGeometryBuildPlayback();
+                    this.updateSortBar();
+                    return;
+                }
                 if (scenarioSelect && scenarioSelect.value === '1_rays') {
                     this.runRaysSimulation();
                     this.updateSortBar();
@@ -349,6 +361,11 @@ const Core = {
             if (e.code === 'Space') {
                 e.preventDefault();
                 const scenarioSelect = document.getElementById('apple-scenario-select');
+                if (scenarioSelect && scenarioSelect.value === 'z_geometry') {
+                    this.toggleGeometryBuildPlayback();
+                    this.updateSortBar();
+                    return;
+                }
                 if (scenarioSelect && scenarioSelect.value === '1_rays') {
                     this.runRaysSimulation();
                     this.updateSortBar();
@@ -395,6 +412,17 @@ const Core = {
 
     aHeld: false,
 
+    toggleGeometryBuildPlayback() {
+        if (!this.currentCase) return;
+        if (typeof this.currentCase.toggleBuildPlayback === 'function') {
+            this.currentCase.toggleBuildPlayback();
+            return;
+        }
+        if (typeof this.currentCase.setPaused === 'function') {
+            this.currentCase.setPaused(!this.currentCase.isPaused);
+        }
+    },
+
     updateSortBar() {
         // Time
         const timeEl = document.getElementById('apple-time');
@@ -407,6 +435,26 @@ const Core = {
         const applePlay = document.getElementById('apple-play');
         const playIconSvg = document.getElementById('play-icon-svg');
         if (applePlay && playIconSvg) {
+            const scenarioSelect = document.getElementById('apple-scenario-select');
+            const geometryMode = scenarioSelect && scenarioSelect.value === 'z_geometry';
+            if (geometryMode) {
+                const buildComplete = !!this.currentCase?.envelopeConstructionComplete;
+                const isPaused = !!this.currentCase?.isPaused;
+                if (buildComplete) {
+                    applePlay.classList.remove('is-playing');
+                    playIconSvg.innerHTML = `<svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>`;
+                    applePlay.title = 'Play';
+                } else if (!isPaused) {
+                    applePlay.classList.add('is-playing');
+                    playIconSvg.innerHTML = `<svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>`;
+                    applePlay.title = 'Hold';
+                } else {
+                    applePlay.classList.remove('is-playing');
+                    playIconSvg.innerHTML = `<svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>`;
+                    applePlay.title = 'Play';
+                }
+                return;
+            }
             const isSorting = this.currentCase
                 && this.currentCase.sortMode !== 'off'
                 && this.currentCase.sortingStatus === 'running';
@@ -711,7 +759,10 @@ const Core = {
     resetCase() {
         if (!this.currentCase || typeof this.currentCase.reset !== 'function') return;
         this.currentCase.reset();
-        if (typeof this.currentCase.setPaused === 'function') {
+        const shouldResume = typeof this.currentCase.shouldResumeAfterReset === 'function'
+            ? this.currentCase.shouldResumeAfterReset()
+            : true;
+        if (shouldResume && typeof this.currentCase.setPaused === 'function') {
             this.currentCase.setPaused(false);
         }
         if (!this.currentCase.animationId && typeof this.currentCase.start === 'function') {

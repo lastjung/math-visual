@@ -532,6 +532,205 @@ const SortColorControlFactory = {
         return controls;
     },
 
+    createEnvelopeRadialControls(caseRef) {
+        const buildButtonLabel = caseRef.isPaused ? 'PLAY' : 'HOLD';
+
+        return [
+            {
+                type: 'button',
+                id: 'envelope_play_toggle',
+                label: '',
+                value: buildButtonLabel,
+                onClick: () => {
+                    if (typeof caseRef.toggleBuildPlayback === 'function') {
+                        caseRef.toggleBuildPlayback();
+                    } else {
+                        if (!caseRef.animationId) caseRef.start();
+                        caseRef.setPaused(!caseRef.isPaused);
+                    }
+                    if (typeof Core !== 'undefined' && Core.currentCase === caseRef) Core.updateControls();
+                }
+            },
+            {
+                type: 'select',
+                id: 'envelope_preset',
+                label: 'Preset',
+                value: 'star',
+                options: [
+                    { value: 'star', label: 'Star' }
+                ],
+                onChange: () => {}
+            },
+            {
+                type: 'slider',
+                id: 'envelope_axes',
+                label: 'Axes',
+                min: 3,
+                max: 12,
+                step: 1,
+                value: caseRef.envelopeAxesCount,
+                onChange: (v) => {
+                    caseRef.envelopeAxesCount = Math.max(3, Math.floor(v));
+                    caseRef.replayConstruction();
+                    caseRef.draw();
+                }
+            },
+            {
+                type: 'slider',
+                id: 'envelope_lines',
+                label: 'Lines / Sector',
+                min: 6,
+                max: 96,
+                step: 1,
+                value: caseRef.envelopeLinesPerSector,
+                onChange: (v) => {
+                    caseRef.envelopeLinesPerSector = Math.max(6, Math.floor(v));
+                    caseRef.replayConstruction();
+                    caseRef.draw();
+                }
+            },
+            {
+                type: 'slider',
+                id: 'envelope_build_speed',
+                label: 'Build Speed',
+                min: 8,
+                max: 240,
+                step: 1,
+                value: caseRef.envelopeConstructionSpeed,
+                onChange: (v) => {
+                    caseRef.envelopeConstructionSpeed = Math.max(1, Math.floor(v));
+                }
+            },
+            {
+                type: 'slider',
+                id: 'mc_alpha',
+                label: 'Line Alpha',
+                min: 0.05,
+                max: 1,
+                step: 0.01,
+                value: caseRef.lineAlpha,
+                onChange: (v) => {
+                    caseRef.lineAlpha = v;
+                    caseRef.draw();
+                }
+            },
+            {
+                type: 'slider',
+                id: 'mc_line_width',
+                label: 'Line Width',
+                min: 0.2,
+                max: 6,
+                step: 0.05,
+                decimals: 2,
+                value: caseRef.lineWidth,
+                onChange: (v) => {
+                    caseRef.lineWidth = Math.max(0.2, Number(v));
+                    caseRef.draw();
+                }
+            },
+            {
+                type: 'select',
+                id: 'mc_render',
+                label: 'Render',
+                value: caseRef.renderMode,
+                options: [
+                    { value: 'glow', label: 'LGT' },
+                    { value: 'light', label: 'Source Over' }
+                ],
+                onChange: (v) => {
+                    caseRef.renderMode = v;
+                    caseRef.draw();
+                }
+            },
+            {
+                type: 'select',
+                id: 'mc_color',
+                label: 'Color',
+                value: caseRef.colorMode,
+                options: [
+                    { value: 'angle', label: 'Angle' },
+                    { value: 'scheme', label: 'Scheme' },
+                    { value: 'order', label: 'Order' },
+                    { value: 'lsh', label: 'LSH' },
+                    { value: 'length', label: 'Length' },
+                    { value: 'origin', label: 'Origin' },
+                    { value: 'monochrome', label: 'Monochrome' }
+                ],
+                onChange: (v) => {
+                    caseRef.colorMode = v;
+                    caseRef.resetSortState('idle');
+                    caseRef.draw();
+                }
+            },
+            {
+                type: 'divider',
+                id: 'mc_sort_divider',
+                label: 'Sorting',
+                actionLabel: 'Shuffle',
+                onAction: () => {
+                    if (typeof Core !== 'undefined' && typeof Core.playGameSound === 'function') {
+                        Core.playGameSound('shuffle');
+                    }
+                    caseRef.shuffleScene();
+                    caseRef.draw();
+                }
+            },
+            {
+                type: 'select',
+                id: 'mc_sort',
+                label: 'Method',
+                value: caseRef.sortMode,
+                options: [
+                    { value: 'off', label: 'Off' },
+                    { value: 'hue', label: 'Hue Radix' },
+                    { value: 'lsh', label: 'L-S-H Radix' },
+                    { value: 'bubble', label: 'Bubble Sort' },
+                    { value: 'quick', label: 'Quick Sort' },
+                    { value: 'insertion', label: 'Insertion Sort' },
+                    { value: 'selection', label: 'Selection Sort' }
+                ],
+                onChange: (v) => {
+                    caseRef.sortMode = v;
+                    caseRef.resetSortState('idle');
+                    caseRef.draw();
+                }
+            },
+            {
+                type: 'slider',
+                id: 'mc_sort_speed',
+                label: 'Sort Speed',
+                min: 4,
+                max: 1000,
+                step: 1,
+                value: caseRef.sortSpeed,
+                onChange: (v) => {
+                    caseRef.sortSpeed = Math.max(1, v);
+                }
+            },
+            {
+                type: 'select',
+                id: 'mc_hud',
+                label: 'HUD',
+                value: caseRef.showHud ? 'on' : 'off',
+                options: [
+                    { value: 'off', label: 'Off' },
+                    { value: 'on', label: 'On' }
+                ],
+                onChange: (v) => {
+                    caseRef.showHud = v === 'on';
+                    caseRef.draw();
+                }
+            },
+            {
+                type: 'button',
+                id: 'envelope_help',
+                label: 'Guide',
+                value: '설명서 보기',
+                onClick: () => caseRef.showGuide()
+            }
+        ];
+    },
+
     createGoldbergControls(caseRef) {
         return [
             {
