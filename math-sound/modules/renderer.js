@@ -75,6 +75,12 @@ function drawLayer(funcKey, width, height, progress, isBackground = false) {
         case 'polar':
             drawPolarCurveInternal(funcData, width, height, progress);
             break;
+        case 'implicit':
+            // Whirlpool은 원래 점이므로 바탕 선(격자)을 그리지 않음
+            if (!funcData.name.includes('Whirlpool')) {
+                drawImplicitCurveInternal(funcData, width, height, progress, isBackground);
+            }
+            break;
         case 'cartesian':
         default:
             drawCartesianCurveInternal(funcData, width, height, progress);
@@ -107,6 +113,9 @@ function drawLayerPoint(funcData, width, height, progress, isBackground = false)
             break;
         case 'polar':
             drawPolarPoint(funcData, width, height, progress, isBackground);
+            break;
+        case 'implicit':
+            drawImplicitPoint(funcData, width, height, progress, isBackground);
             break;
         case 'cartesian':
         default:
@@ -158,33 +167,76 @@ function drawPolarCurveInternal(funcData, width, height, progress) {
     const xRange = xMax - xMin;
     const yRange = yMax - yMin;
 
-    graphCtx.beginPath();
+    const isSpinny = funcData.name.includes('Spinny');
     
-    let isFirst = true;
-    for (let i = 0; i <= steps; i++) {
-        const theta = thetaMin + (thetaRange * i) / 1000;
-        let r;
-        try { r = funcData.r(theta, state.autoLoopCount); } catch (e) { continue; }
-        if (!isFinite(r) || isNaN(r)) continue;
+    // Draw in segments if it's Spinny (for Dual Color Effect)
+    if (isSpinny) {
+        const segSteps = 50; // Use reasonable segments to avoid overhead
+        for (let s = 0; s < steps; s += segSteps) {
+            const currentSteps = Math.min(steps, s + segSteps);
+            const startTheta = thetaMin + (thetaRange * s) / 1000;
+            
+            // PI 단위(180도)로 색상 교차: Fuchsia(#d946ef) vs Indigo(#6366f1)
+            const colorIdx = Math.floor((startTheta - thetaMin) / Math.PI) % 2;
+            graphCtx.strokeStyle = colorIdx === 0 ? '#d946ef' : '#6366f1';
+            graphCtx.lineWidth = 4; // 더 선명하게
 
-        const x = r * Math.cos(theta);
-        const y = r * Math.sin(theta);
-        const canvasX = ((x - xMin) / xRange) * width;
-        const canvasY = ((yMax - y) / yRange) * height;
+            graphCtx.beginPath();
+            let isFirst = true;
+            for (let i = s; i <= currentSteps; i++) {
+                const theta = thetaMin + (thetaRange * i) / 1000;
+                let r;
+                try { r = funcData.r(theta, state.autoLoopCount); } catch (e) { continue; }
+                if (!isFinite(r) || isNaN(r)) continue;
 
-        if (canvasX < -50 || canvasX > width + 50 || canvasY < -50 || canvasY > height + 50) {
-            isFirst = true;
-            continue;
+                const x = r * Math.cos(theta);
+                const y = r * Math.sin(theta);
+                const canvasX = ((x - xMin) / xRange) * width;
+                const canvasY = ((yMax - y) / yRange) * height;
+
+                if (canvasX < -50 || canvasX > width + 50 || canvasY < -50 || canvasY > height + 50) {
+                    isFirst = true;
+                    continue;
+                }
+
+                if (isFirst) {
+                    graphCtx.moveTo(canvasX, canvasY);
+                    isFirst = false;
+                } else {
+                    graphCtx.lineTo(canvasX, canvasY);
+                }
+            }
+            graphCtx.stroke();
         }
+    } else {
+        // Normal Single Color Flow
+        graphCtx.beginPath();
+        let isFirst = true;
+        for (let i = 0; i <= steps; i++) {
+            const theta = thetaMin + (thetaRange * i) / 1000;
+            let r;
+            try { r = funcData.r(theta, state.autoLoopCount); } catch (e) { continue; }
+            if (!isFinite(r) || isNaN(r)) continue;
 
-        if (isFirst) {
-            graphCtx.moveTo(canvasX, canvasY);
-            isFirst = false;
-        } else {
-            graphCtx.lineTo(canvasX, canvasY);
+            const x = r * Math.cos(theta);
+            const y = r * Math.sin(theta);
+            const canvasX = ((x - xMin) / xRange) * width;
+            const canvasY = ((yMax - y) / yRange) * height;
+
+            if (canvasX < -50 || canvasX > width + 50 || canvasY < -50 || canvasY > height + 50) {
+                isFirst = true;
+                continue;
+            }
+
+            if (isFirst) {
+                graphCtx.moveTo(canvasX, canvasY);
+                isFirst = false;
+            } else {
+                graphCtx.lineTo(canvasX, canvasY);
+            }
         }
+        graphCtx.stroke();
     }
-    graphCtx.stroke();
 }
 
 function drawParametricCurveInternal(funcData, width, height, progress) {
@@ -229,6 +281,77 @@ function drawParametricCurveInternal(funcData, width, height, progress) {
         }
     }
     graphCtx.stroke();
+}
+
+/**
+ * 음함수(Implicit Curve) 시각화 엔진 - 그리드 샘플링
+ */
+function drawImplicitCurveInternal(funcData, width, height, progress, isBackground = false) {
+    if (!funcData.f) return;
+    const { xMin, xMax, yMin, yMax } = funcData.range || (funcData.viewBox || { xMin: -10, xMax: 10, yMin: -10, yMax: 10 });
+    const graphCtx = ctx.graph;
+    const xRange = xMax - xMin;
+    const yRange = yMax - yMin;
+    const resX = 140;
+    const resY = 100;
+    const loopIndex = state.autoLoopCount;
+    const maxColumn = Math.max(1, Math.floor(resX * progress));
+
+    graphCtx.beginPath();
+    graphCtx.fillStyle = isBackground ? '#d1d5db' : getCategoryColor(funcData.category);
+    for (let i = 0; i <= maxColumn; i++) {
+        for (let j = 0; j <= resY; j++) {
+            const x = xMin + (xRange * i) / resX;
+            const y = yMin + (yRange * j) / resY;
+            try {
+                if (Math.abs(funcData.f(x, y, loopIndex)) < 0.18) {
+                    const canvasX = (i / resX) * width;
+                    const canvasY = (1 - j / resY) * height;
+                    graphCtx.rect(canvasX, canvasY, 1.8, 1.8);
+                }
+            } catch (e) {}
+        }
+    }
+    graphCtx.fill();
+}
+
+function findImplicitPoint(funcData, progress) {
+    if (!funcData.f) return null;
+
+    const { xMin, xMax, yMin, yMax } = funcData.range || (funcData.viewBox || { xMin: -10, xMax: 10, yMin: -10, yMax: 10 });
+    const x = xMin + (xMax - xMin) * progress;
+    const steps = 160;
+    const loopIndex = state.autoLoopCount;
+
+    let bestY = null;
+    let bestError = Infinity;
+
+    for (let i = 0; i <= steps; i++) {
+        const y = yMin + ((yMax - yMin) * i) / steps;
+        let error;
+        try {
+            error = Math.abs(funcData.f(x, y, loopIndex));
+        } catch (e) {
+            continue;
+        }
+
+        if (error < bestError) {
+            bestError = error;
+            bestY = y;
+        }
+    }
+
+    if (bestY === null || bestError > 0.35) return null;
+    return { x, y: bestY, xMin, xMax, yMin, yMax };
+}
+
+function drawImplicitPoint(funcData, width, height, progress, isBackground = false) {
+    const point = findImplicitPoint(funcData, progress);
+    if (!point) return;
+
+    const canvasX = ((point.x - point.xMin) / (point.xMax - point.xMin)) * width;
+    const canvasY = ((point.yMax - point.y) / (point.yMax - point.yMin)) * height;
+    drawPoint(canvasX, canvasY, funcData.category, height, isBackground);
 }
 
 // Keep original exported wrappers for compatibility if needed, though we primarily use drawLayer now
@@ -342,6 +465,9 @@ export function animate() {
     
     if (isAni) {
         state.autoTargetCount = totalPhases;
+    } else if (funcData.category === 'amazing' || funcData.category === 'beautiful' || funcData.category === 'harmonic') {
+        // 심포니 시리즈는 특별 등급이므로 60회 루프를 보장하여 풍성하게 감상하게 함
+        state.autoTargetCount = 60;
     }
 
     // 루프가 넘어갔을 때
@@ -419,6 +545,59 @@ export function animate() {
         graphCtx.strokeText(text, centerX, centerY);
         graphCtx.fillText(text, centerX, centerY);
         graphCtx.restore();
+    }
+
+    // Update Function Subtitle with Variables (a, b, etc. - Real-time Sync)
+    if (elements.functionSubtitle && funcData) {
+        const loopIdx = state.autoLoopCount || 0;
+        const cat = funcData.category;
+        let varText = "";
+        
+        // Symphony 변수 로직 자동 매칭 (사용자께서 정의하신 symphony.js 로직 보조)
+        if (cat === 'amazing' || cat === 'beautiful' || cat === 'harmonic') {
+            const name = funcData.name || "";
+            if (name.includes('Spinny')) {
+                const v = (loopIdx % 10) * 0.5;
+                varText = `(n = 6, v = ${v.toFixed(1)})`;
+            } else if (name.includes('Up and Down')) {
+                const v6 = (-8 + ((loopIdx % 16) / 15) * 16).toFixed(1);
+                varText = `(v6 = ${v6})`;
+            } else if (name.includes('GCD')) {
+                const v11 = (loopIdx % 10) + 1;
+                varText = `(v11 = ${v11})`;
+            } else if (name.includes('Layered')) {
+                const v15 = ((loopIdx % 10) * 0.6).toFixed(1);
+                const l = [2, 4, 6, 8, 10][loopIdx % 5];
+                varText = `(v = ${v15}, layer = ${l})`;
+            } else if (name.includes('Shuriken')) {
+                const v14 = ((loopIdx % 6) * 1.5).toFixed(1);
+                varText = `(k = 5, v14 = ${v14})`;
+            } else if (name.includes('Intro')) {
+                varText = `(a = ${(loopIdx % 15) + 1})`;
+            } else if (name.includes('Web')) {
+                varText = `(a = ${50 + (loopIdx % 10) * 10})`;
+            } else if (name.includes('Ovals')) {
+                const v = (0.95 + (loopIdx % 10) * 0.01).toFixed(2);
+                varText = `(v = ${v})`;
+            } else if (name.includes('Mesh')) {
+                const a = 15 + (loopIdx % 10);
+                const b = 30 + (loopIdx % 15);
+                varText = `(a = ${a}, b = ${b})`;
+            } else if (name.includes('Crown')) {
+                const v = (0.9 + (loopIdx % 20) * 0.01).toFixed(2);
+                varText = `(v = ${v})`;
+            } else if (name.includes('Extreme')) {
+                const a = 20 + (loopIdx % 10) * 5;
+                const b = 40 + (loopIdx % 10) * 5;
+                varText = `(a = ${a}, b = ${b})`;
+            } else if (cat === 'harmonic' || name.includes('Resonance') || name.includes('Distortion') || name.includes('Whirlpool') || name.includes('Hair') || name.includes('Modulation')) {
+                // 심포니의 핵심 변수 'a'를 사용하는 나머지 곡들
+                varText = `(a = ${loopIdx + 1})`;
+            }
+        }
+        
+        // 변수가 있을 때만 출력, 없을 때는 지움 (없는 거는 이름만)
+        elements.functionSubtitle.innerText = varText;
     }
 
     drawWaveform();

@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Math Symphony</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Sans+KR:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./app/styles.css">
+</head>
+<body>
+    <main class="shell">
+        <section class="hero">
+            <div class="hero-copy">
+                <span class="eyebrow">Score-first system</span>
+                <h1>Math Symphony</h1>
+                <p>
+                    Rebuilding the project around score, scene, controller, and expression.
+                    This first pass is a browser explorer for the new catalog format.
+                </p>
+            </div>
+            <aside class="hero-card">
+                <div class="hero-card-inner">
+                    <span class="section-label">Current pass</span>
+                    <h3>Catalog before renderer</h3>
+                    <div class="fact-list">
+                        <div><span>Scores normalized</span><strong>2</strong></div>
+                        <div><span>Scene model</span><strong>active</strong></div>
+                        <div><span>Controller engine</span><strong>active</strong></div>
+                        <div><span>Graph renderer</span><strong>next</strong></div>
+                    </div>
+                </div>
+            </aside>
+        </section>
+
+        <section class="score-layout">
+            <aside class="side-panel">
+                <span class="section-label">Scores</span>
+                <div class="score-rail" id="scoreRail"></div>
+            </aside>
+
+            <section class="score-main">
+                <header class="score-header">
+                    <div class="score-intro">
+                        <span class="section-label">Selected score</span>
+                        <h2 id="scoreTitle"></h2>
+                        <p id="scoreTheme"></p>
+                        <a id="scoreSource" class="source-link" href="#" target="_blank" rel="noreferrer">Open Desmos source</a>
+                    </div>
+                    <div class="score-meta">
+                        <span class="meta-chip">Duration <strong id="scoreDuration"></strong></span>
+                    </div>
+                </header>
+
+                <div class="palette-row" id="scorePalette"></div>
+
+                <div class="timeline-block">
+                    <span class="section-label">Timeline probe</span>
+                    <input id="scoreTimeline" type="range" min="0" max="1000" value="0">
+                    <div class="timeline-label" id="timelineLabel"></div>
+                </div>
+
+                <div class="scene-rail" id="sceneRail"></div>
+
+                <article class="active-scene">
+                    <span class="section-label">Active scene</span>
+                    <h3 id="activeSceneTitle"></h3>
+                    <p id="activeSceneSummary"></p>
+                </article>
+            </section>
+
+            <aside class="side-panel">
+                <span class="section-label">Controllers</span>
+                <h3 class="panel-title">Parameter state</h3>
+                <div class="controllers-panel" id="controllersPanel"></div>
+            </aside>
+        </section>
+
+        <section class="score-layout">
+            <div></div>
+            <section class="score-main">
+                <span class="section-label">Expressions</span>
+                <h3 class="panel-title">Scene payload</h3>
+                <div class="expressions-panel" id="expressionsPanel"></div>
+            </section>
+            <div></div>
+        </section>
+    </main>
+    <script type="module" src="./app/main.js"></script>
+</body>
+</html>

@@ -60,12 +60,14 @@ export function createSoundFromFunction(functionId = state.currentFunction) {
     
     // Ani 카테고리는 인트로(1.5초) + 나머지(4.5초) 가변 루프 적용
     const isAni = funcData.category === 'ani';
+    const isSymphony = funcData.category === 'amazing' || funcData.category === 'beautiful';
     const introDuration = 1.5;
     const regularDuration = 4.5;
     const introDraw = 1.0;
     const regularDraw = 4.0;
     
-    let duration = 4.5;
+    // Symphony 계열만 긴 버퍼를 사용해 loopIndex 진화를 끝까지 담는다.
+    let duration = isAni ? 4.5 : (isSymphony ? 20.0 : 4.5);
     if (isAni && funcData.phases) {
         duration = introDuration + (regularDuration * (funcData.phases.length - 1));
     }
@@ -86,6 +88,7 @@ export function createSoundFromFunction(functionId = state.currentFunction) {
             loopIndex = 1 + Math.floor(adjustedT / regularDuration);
             progressInLoop = Math.min(1.0, (adjustedT % regularDuration) / regularDraw);
         } else {
+            // 일반 수식도 4초마다 loopIndex를 올려서 렌더러와 동기화 (Symphony 특화)
             loopIndex = Math.floor(t / 4);
             progressInLoop = (t % 4) / 4;
         }
@@ -110,6 +113,10 @@ export function createSoundFromFunction(functionId = state.currentFunction) {
                     const thetaRange = funcData.thetaRange;
                     const theta = thetaRange.min + (thetaRange.max - thetaRange.min) * progressInLoop;
                     y = funcData.r(theta, loopIndex);
+                    break;
+                }
+                case 'implicit': {
+                    y = sampleImplicitAmplitude(funcData, progressInLoop, loopIndex);
                     break;
                 }
                 case 'cartesian':
@@ -197,6 +204,34 @@ export function playSound(functionId = state.currentFunction, forceLayer = false
         state.activeNodes.set('__preview__', { source, gain: previewGain });
         state.currentFunction = functionId;
     }
+}
+
+function sampleImplicitAmplitude(funcData, progressInLoop, loopIndex) {
+    if (!funcData.f || !funcData.range) return 0;
+
+    const { xMin, xMax, yMin, yMax } = funcData.range;
+    const x = xMin + (xMax - xMin) * progressInLoop;
+    const steps = 160;
+
+    let bestY = 0;
+    let bestError = Infinity;
+
+    for (let i = 0; i <= steps; i++) {
+        const y = yMin + ((yMax - yMin) * i) / steps;
+        let error;
+        try {
+            error = Math.abs(funcData.f(x, y, loopIndex));
+        } catch (e) {
+            continue;
+        }
+
+        if (error < bestError) {
+            bestError = error;
+            bestY = y;
+        }
+    }
+
+    return bestError < 0.5 ? bestY : 0;
 }
 
 function createSoftClipCurve(samples = 400) {

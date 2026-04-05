@@ -292,12 +292,25 @@ body {
     position: absolute;
     top: 12px;
     left: 16px;
-    font-size: 1.5rem;
+    font-size: 1.7rem;
     font-weight: 600;
     color: var(--text-main);
     z-index: 10;
     letter-spacing: -0.02em;
     text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
+}
+
+.function-subtitle {
+    position: absolute;
+    top: 48px;
+    left: 16px;
+    font-size: 1.2rem;
+    font-weight: 500;
+    color: var(--accent-color);
+    z-index: 10;
+    font-family: 'Inter', sans-serif;
+    letter-spacing: 0.5px;
+    text-shadow: 0 1px 2px rgba(255, 255, 255, 0.6);
 }
 
 /* Clock on Canvas */

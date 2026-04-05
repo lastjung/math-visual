@@ -32,7 +32,7 @@ export const state = {
     autoQueue: [],
     autoQueueIndex: -1,
     autoLoopCount: 0,
-    autoTargetCount: 3, // Default
+    autoTargetCount: 60, // 시원하게 늘려서 긴 연주 보장
     // Sequential Queue State
     playQueue: [],
     currentQueueIndex: -1,
@@ -46,6 +46,7 @@ export const elements = {
     waveformCanvas: document.getElementById('waveformCanvas'),
     formulaText: document.getElementById('formulaText'),
     functionTitle: document.getElementById('functionTitle'),
+    functionSubtitle: document.getElementById('functionSubtitle'),
     playBtn: document.getElementById('playBtn'),
     stopBtn: document.getElementById('stopBtn'),
     resetBtn: document.getElementById('resetBtn'),
