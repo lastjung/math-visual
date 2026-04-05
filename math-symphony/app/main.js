@@ -16,7 +16,8 @@ const elements = {
     scoreSource: document.getElementById('scoreSource'),
     scoreDuration: document.getElementById('scoreDuration'),
     scorePalette: document.getElementById('scorePalette'),
-    playToggle: document.getElementById('playToggle'),
+    playScene: document.getElementById('playScene'),
+    playScore: document.getElementById('playScore'),
     resetTimeline: document.getElementById('resetTimeline'),
     volumeControl: document.getElementById('volumeControl'),
     volumeValue: document.getElementById('volumeValue'),
@@ -34,6 +35,7 @@ const state = {
     scoreId: scoreCatalog[0]?.id ?? null,
     elapsedMs: 0,
     isPlaying: false,
+    playbackMode: 'scene',
     rafId: null,
     lastFrameAt: 0,
     volume: 0.68,
@@ -55,11 +57,19 @@ function bindEvents() {
         render();
     });
 
-    elements.playToggle.addEventListener('click', () => {
-        if (state.isPlaying) {
+    elements.playScene.addEventListener('click', () => {
+        if (state.isPlaying && state.playbackMode === 'scene') {
             stopPlayback();
         } else {
-            startPlayback();
+            startPlayback('scene');
+        }
+    });
+
+    elements.playScore.addEventListener('click', () => {
+        if (state.isPlaying && state.playbackMode === 'score') {
+            stopPlayback();
+        } else {
+            startPlayback('score');
         }
     });
 
@@ -134,7 +144,8 @@ function render() {
     elements.scoreTimeline.max = String(durationMs);
     elements.scoreTimeline.value = String(state.elapsedMs);
     elements.timelineLabel.textContent = `${msToText(state.elapsedMs)} / ${msToText(durationMs)}`;
-    elements.playToggle.textContent = state.isPlaying ? 'Pause' : 'Play';
+    elements.playScene.textContent = state.isPlaying && state.playbackMode === 'scene' ? 'Pause Scene' : 'Play Scene';
+    elements.playScore.textContent = state.isPlaying && state.playbackMode === 'score' ? 'Pause Score' : 'Play Score';
     elements.volumeControl.value = String(Math.round(state.volume * 100));
     elements.volumeValue.textContent = `${Math.round(state.volume * 100)}%`;
 
@@ -262,8 +273,12 @@ function msToText(ms) {
     return `${minutes}:${seconds}`;
 }
 
-function startPlayback() {
-    if (state.isPlaying) return;
+function startPlayback(mode) {
+    if (state.isPlaying) {
+        stopPlayback({ skipRender: true });
+    }
+
+    state.playbackMode = mode;
     state.isPlaying = true;
     state.lastFrameAt = performance.now();
     audioEngine.setVolume(state.volume);
@@ -293,12 +308,18 @@ function tickPlayback(now) {
     }
 
     const durationMs = getScoreDuration(score);
+    const activeSceneEntry = getActiveScene(score, state.elapsedMs);
     const delta = now - state.lastFrameAt;
     state.lastFrameAt = now;
-    state.elapsedMs = Math.min(durationMs, state.elapsedMs + delta);
 
-    if (state.elapsedMs >= durationMs) {
-        state.elapsedMs = durationMs;
+    const endMs = state.playbackMode === 'scene' && activeSceneEntry
+        ? activeSceneEntry.endMs
+        : durationMs;
+
+    state.elapsedMs = Math.min(endMs, state.elapsedMs + delta);
+
+    if (state.elapsedMs >= endMs) {
+        state.elapsedMs = endMs;
         stopPlayback();
         return;
     }

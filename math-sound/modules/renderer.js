@@ -560,7 +560,7 @@ export function animate() {
         let varText = "";
         
         // Symphony 변수 로직 자동 매칭 (사용자께서 정의하신 symphony.js 로직 보조)
-        if (cat === 'amazing' || cat === 'beautiful' || cat === 'harmonic' || cat === 'fusion' || cat === 'hyper') {
+        if (cat === 'amazing' || cat === 'beautiful' || cat === 'harmonic' || cat === 'fusion' || cat === 'hyper' || cat === 'insane') {
             const name = funcData.name || "";
             if (name.includes('Spinny')) {
                 const v = (loopIdx % 10) * 0.5;
@@ -568,6 +568,18 @@ export function animate() {
             } else if (name.includes('Up and Down')) {
                 const v6 = (-8 + ((loopIdx % 16) / 15) * 16).toFixed(1);
                 varText = `(v6 = ${v6})`;
+            } else if (name.includes('Arachnid') || name.includes('Sun') || name.includes('Tomfoolery') || name.includes('Plot Twist')) {
+                const v = ((loopIdx % 20) * 0.314).toFixed(2);
+                varText = `(v = ${v})`;
+            } else if (name.includes('Masterpiece')) {
+                const v = ((loopIdx % 30) * 0.209).toFixed(2);
+                varText = `(v = ${v})`;
+            } else if (name.includes('Inverse Fractal')) {
+                const v = ((loopIdx % 15) * 0.418).toFixed(1);
+                varText = `(v = ${v})`;
+            } else if (name.includes('Unlimited Star')) {
+                const v = ((loopIdx % 10) * 0.628).toFixed(2);
+                varText = `(v = ${v})`;
             } else if (name.includes('Millennial')) {
                 const v = ((loopIdx % 30) * 0.1).toFixed(1);
                 varText = `(v = ${v})`;

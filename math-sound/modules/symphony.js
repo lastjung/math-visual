@@ -545,6 +545,113 @@ export const SYMPHONY_FUNCTIONS = {
         viewBox: { xMin: -4, xMax: 4, yMin: -4, yMax: 4 },
         audioScale: 120,
         baseFreq: 165
+    },
+    // ========== 👹 INSANE (Polar Graph - Insane) ==========
+    trigTomfoolery: {
+        category: 'insane',
+        name: 'Trig Tomfoolery',
+        type: 'polar',
+        r: (theta, loopIndex = 0) => {
+            const v = (loopIndex % 20) * 0.314;
+            return Math.sin(2 * theta + Math.sin(4 * theta * v));
+        },
+        formula: 'r = sin(2θ + sin(4θv))',
+        latex: 'r = \\sin(2\\theta + \\sin(4\\theta v))',
+        thetaRange: { min: 0, max: 2 * Math.PI },
+        viewBox: { xMin: -1.2, xMax: 1.2, yMin: -1.2, yMax: 1.2 },
+        audioScale: 180,
+        baseFreq: 330
+    },
+    secantPlotTwist: {
+        category: 'insane',
+        name: 'Secant Plot Twist',
+        type: 'polar',
+        r: (theta, loopIndex = 0) => {
+            const v = (loopIndex % 20) * 0.314;
+            return 1 / Math.cos(3 * theta + 2 * Math.PI * v * Math.sin(theta));
+        },
+        formula: 'r = sec(3θ + 2πv·sin θ)',
+        latex: 'r = \\sec(3\\theta + 2\\pi v \\sin\\theta)',
+        thetaRange: { min: 0, max: 2 * Math.PI },
+        viewBox: { xMin: -10, xMax: 10, yMin: -10, yMax: 10 },
+        audioScale: 100,
+        baseFreq: 220
+    },
+    inverseFractal: {
+        category: 'insane',
+        name: 'Inverse Fractal',
+        type: 'polar',
+        r: (theta, loopIndex = 0) => {
+            const v = (loopIndex % 15) * 0.418;
+            return v * Math.asin(Math.sin(0.8 * theta * v));
+        },
+        formula: 'r = v·arcsin(sin(0.8θv))',
+        latex: 'r = v \\arcsin(\\sin(0.8\\theta v))',
+        thetaRange: { min: 0, max: 40 * Math.PI },
+        viewBox: { xMin: -5, xMax: 5, yMin: -5, yMax: 5 },
+        audioScale: 150,
+        baseFreq: 110
+    },
+    unlimitedStar: {
+        category: 'insane',
+        name: 'Unlimited Star',
+        type: 'polar',
+        r: (theta, loopIndex = 0) => {
+            const v = (loopIndex % 10) * 0.628;
+            return Math.exp(Math.sin(2 * theta * v + 2) + 1.5);
+        },
+        formula: 'r = exp(sin(2θv + 2) + 1.5)',
+        latex: 'r = e^{\\sin(2\\theta v + 2) + 1.5}',
+        thetaRange: { min: 0, max: 2 * Math.PI },
+        viewBox: { xMin: -15, xMax: 15, yMin: -15, yMax: 15 },
+        audioScale: 80,
+        baseFreq: 150
+    },
+    arachnidWeb: {
+        category: 'insane',
+        name: 'Arachnid Web',
+        type: 'polar',
+        r: (theta, loopIndex = 0) => {
+            const v = (loopIndex % 20) * 0.314;
+            return 9 * Math.tanh(theta / 10 + Math.sin(99 * theta * v));
+        },
+        formula: 'r = 9·tanh(θ/10 + sin(99θv))',
+        latex: 'r = 9\\tanh(\\theta/10 + \\sin(99\\theta v))',
+        thetaRange: { min: 0, max: 20 * Math.PI },
+        viewBox: { xMin: -12, xMax: 12, yMin: -12, yMax: 12 },
+        audioScale: 120,
+        baseFreq: 440
+    },
+    powerOfTheSun: {
+        category: 'insane',
+        name: 'Power of the Sun',
+        type: 'polar',
+        r: (theta, loopIndex = 0) => {
+            const v = (loopIndex % 20) * 0.314;
+            const core = Math.atan(0.5 * Math.tan(6 * theta + 2 * Math.PI * v)) + 2;
+            return 5 * Math.exp(-Math.abs(v * core)) + 2;
+        },
+        formula: 'r = 5·exp(-|v·arctan(0.5tan(6θ+2πv))|) + 2',
+        latex: 'r = 5e^{-|v \\arctan(0.5\\tan(6\\theta + 2\\pi v))|} + 2',
+        thetaRange: { min: 0, max: 2 * Math.PI },
+        viewBox: { xMin: -8, xMax: 8, yMin: -8, yMax: 8 },
+        audioScale: 110,
+        baseFreq: 520
+    },
+    theMasterpiece: {
+        category: 'insane',
+        name: 'The Masterpiece',
+        type: 'polar',
+        r: (theta, loopIndex = 0) => {
+            const v = (loopIndex % 30) * 0.209;
+            return 6 * Math.sin(1.2 * theta + 2 * Math.PI * v) - Math.cos(6 * theta);
+        },
+        formula: 'r = 6sin(1.2θ+2πv) - cos 6θ',
+        latex: 'r = 6\\sin(1.2\\theta + 2\\pi v) - \\cos 6\\theta',
+        thetaRange: { min: 0, max: 10 * Math.PI },
+        viewBox: { xMin: -10, xMax: 10, yMin: -10, yMax: 10 },
+        audioScale: 140,
+        baseFreq: 220
     }
 };
 
