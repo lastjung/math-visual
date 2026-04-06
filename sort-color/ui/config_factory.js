@@ -557,7 +557,7 @@ const SortColorControlFactory = {
                 label: 'Preset',
                 value: caseRef.currentPreset || 'standard',
                 options: [
-                    { value: 'standard', label: 'Standard Star' },
+                    { value: 'standard', label: 'Star' },
                     { value: 'dual_star', label: 'Dual Star' },
                     { value: 'triple_web', label: 'Triple Web' },
                     { value: 'chain', label: 'Chain Stitch' }
@@ -570,10 +570,10 @@ const SortColorControlFactory = {
                 type: 'select',
                 id: 'envelope_build_order',
                 label: 'Build Order',
-                value: caseRef.envelopeBuildOrder || 'random',
+                value: caseRef.envelopeBuildOrder || 'sequential',
                 options: [
-                    { value: 'random', label: '차오름 (Chaos)' },
-                    { value: 'sequential', label: '박음질 (Symmetry)' }
+                    { value: 'sequential', label: 'Sequence' },
+                    { value: 'chained', label: 'Symmetry' }
                 ],
                 onChange: (v) => {
                     caseRef.envelopeBuildOrder = v;

@@ -27,14 +27,14 @@ const EnvelopeRadialCase = {
     rotation: 0,
     learningMode: 'off',
     isPaused: true,
-    currentPreset: 'dual_star',
-    envelopeAxesCount: 18,
+    currentPreset: 'standard',
+    envelopeAxesCount: 5,
     envelopeLinesPerSector: 24,
-    envelopeLayerCount: 2,
+    envelopeLayerCount: 1,
     envelopeConstructionSpeed: 72,
     envelopeConstructionProgress: 0,
     envelopeConstructionComplete: false,
-    envelopeBuildOrder: 'random', // 'random' (original) or 'sequential' (my method)
+    envelopeBuildOrder: 'sequential', // 'sequential' (Sector-wise) or 'chained' (Symmetry/Interleaved)
     guideText: [
         '[Envelope Radial controls]',
         '- Axes: number of radial spokes. 4 gives the classic astroid-like envelope.',
@@ -98,26 +98,21 @@ const EnvelopeRadialCase = {
     applyPreset(presetId) {
         this.currentPreset = presetId;
         if (presetId === 'dual_star') {
-            this.envelopeAxesCount = 18;
+            this.envelopeAxesCount = 5;
             this.envelopeLinesPerSector = 24;
             this.envelopeLayerCount = 2;
         } else if (presetId === 'triple_web') {
-            this.envelopeAxesCount = 12;
+            this.envelopeAxesCount = 5;
             this.envelopeLinesPerSector = 20;
             this.envelopeLayerCount = 3;
         } else if (presetId === 'chain') {
-            this.envelopeAxesCount = 18;
-            this.envelopeLinesPerSector = 12; // 12 sets of 4 lines each = 48 lines total? No.
-            // Wait, getEnvelopeItemCount uses axesCount * linesPerSector.
-            // If axesCount=18 and linesPerSector=12, total=216.
-            // Total sets = 216 / 4 = 54. 
-            // 54 sets / (18/6) sets per loop = 18 loops.
-            // 72 was definitely too much, 18 loops is better.
-            this.envelopeLayerCount = 1;
+            this.envelopeAxesCount = 5;
+            this.envelopeLinesPerSector = 16; 
+            this.envelopeLayerCount = 2;
         } else {
-            // standard
-            this.envelopeAxesCount = 4;
-            this.envelopeLinesPerSector = 32;
+            // star (standard / Star)
+            this.envelopeAxesCount = 5;
+            this.envelopeLinesPerSector = 24;
             this.envelopeLayerCount = 1;
         }
         this.syncEnvelopeItemCount();
@@ -190,58 +185,67 @@ const EnvelopeRadialCase = {
 
     drawGeometryOverlay(ctx, viewState) {
         const axesCount = this.getEnvelopeAxesCount();
+        const linesCount = this.pointCount;
         const radius = viewState.radius;
         const cx = viewState.cx;
         const cy = viewState.cy;
+        const progress = this.envelopeConstructionProgress;
 
         ctx.save();
-        ctx.strokeStyle = 'rgba(255,255,255,0.08)';
-        ctx.lineWidth = 1;
+        
+        // Axis build phase starts after progress exceeds linesCount
         for (let axisIndex = 0; axisIndex < axesCount; axisIndex++) {
+            let isVisible = false;
+            let spokeGrowth = 1.0; 
+
+            if (this.envelopeConstructionComplete) {
+                isVisible = true;
+            } else if (progress > linesCount) {
+                // Each axis gets a distinct time slot in the build sequence
+                const axisStartTime = linesCount + (axisIndex * 4); // staggered appearance
+                if (progress >= axisStartTime) {
+                    isVisible = true;
+                    // Draw-out animation: expands from center to edge
+                    spokeGrowth = Math.min(1.0, (progress - axisStartTime) / 3.0); 
+                }
+            }
+
+            if (!isVisible) continue;
+
             const anchor = this.getEnvelopeRadialAnchor(axisIndex, 1, radius, cx, cy);
             
-            // Draw axis line
+            // Draw axis spoke (line only)
             ctx.beginPath();
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.28)';
+            ctx.lineWidth = 1.25;
             ctx.moveTo(cx, cy);
-            ctx.lineTo(anchor.x, anchor.y);
+            ctx.lineTo(cx + (anchor.x - cx) * spokeGrowth, cy + (anchor.y - cy) * spokeGrowth);
             ctx.stroke();
-
-            // Draw vertex info
-            const labelX = cx + (anchor.x - cx) * 0.85;
-            const labelY = cy + (anchor.y - cy) * 0.85;
-            const coordStr = `${axisIndex}: (${Math.round(anchor.x - cx)}, ${Math.round(anchor.y - cy)})`;
-            
-            ctx.save();
-            ctx.font = 'bold 16px monospace';
-            const metrics = ctx.measureText(coordStr);
-            ctx.fillStyle = 'rgba(0, 0, 0, 1)';
-            ctx.fillRect(labelX - metrics.width/2 - 4, labelY - 14, metrics.width + 8, 20);
-            ctx.fillStyle = '#ffffff';
-            ctx.textAlign = 'center';
-            ctx.fillText(coordStr, labelX, labelY + 2);
-            ctx.restore();
-            
-            // Draw a small circle at the vertex
-            ctx.beginPath();
-            ctx.arc(anchor.x, anchor.y, 3, 0, Math.PI * 2);
-            ctx.fill();
         }
         ctx.restore();
     },
 
     drawHud(ctx, viewState) {
-        SortRenderer.drawHud.call(this, ctx, viewState);
         if (!this.showHud) return;
+
+        const { n } = viewState;
 
         ctx.save();
         ctx.fillStyle = 'rgba(255,255,255,0.92)';
         ctx.font = '600 14px Inter, system-ui, sans-serif';
         ctx.textAlign = 'right';
-        ctx.fillText(`Axes: ${this.getEnvelopeAxesCount()}`, viewState.w - 24, 74);
-        ctx.fillText(`Lines/Sector: ${this.getEnvelopeLinesPerSector()}`, viewState.w - 24, 96);
-        ctx.fillText(`Layers: ${this.getEnvelopeLayerCount()}`, viewState.w - 24, 118);
+
+        // Right-aligned Info Panel (Clean version)
+        let nextY = 30;
+        ctx.fillText(`Node: ${n}`, viewState.w - 24, nextY);
+        nextY += 22;
+        ctx.fillText(`Axes: ${this.getEnvelopeAxesCount()}`, viewState.w - 24, nextY);
+        nextY += 22;
+        ctx.fillText(`Layers: ${this.getEnvelopeLayerCount()}`, viewState.w - 24, nextY);
+        
         ctx.restore();
 
+        // Left-aligned Progress Panel (Bottom)
         if (!this.envelopeConstructionComplete) {
             ctx.save();
             ctx.fillStyle = 'rgba(255, 209, 102, 0.95)';

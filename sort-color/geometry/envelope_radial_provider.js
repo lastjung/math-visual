@@ -106,14 +106,12 @@ const EnvelopeRadialGeometryProvider = {
         const subIndex = itemIndex % itemsPerLayer;
         
         let sectorIndex, lineIndex;
-        if (this.envelopeBuildOrder !== 'random') {
+        if (this.envelopeBuildOrder === 'chained') {
             // Symmetry (Interleaved) build mapping:
-            // This builds Line 0 of all sectors, then Line 1 of all sectors...
             sectorIndex = subIndex % axesCount;
             lineIndex = Math.floor(subIndex / axesCount);
         } else {
-            // Chaos (Sector-wise) build mapping:
-            // This builds Sector 0 fully, then Sector 1 fully...
+            // Sequence (Sequential Sector-wise) build mapping:
             sectorIndex = Math.floor(subIndex / linesPerSector);
             lineIndex = subIndex % linesPerSector;
         }
@@ -269,9 +267,8 @@ const EnvelopeRadialGeometryProvider = {
         const visibleCount = this.getEnvelopeVisibleCount();
         const baseShuffle = this.ensureShuffleOrder(safeItemCount, m);
         
-        // If sequential, we don't apply shuffle. 
-        // ('random' = original simultaneous-like behavior, 'sequential' = my method)
-        const shuffleOrder = (this.envelopeBuildOrder === 'random') ? baseShuffle : null;
+        // All build modes (chained/sequential) use randomized colors (baseShuffle).
+        const shuffleOrder = baseShuffle;
 
         const points = [];
         for (let axisIndex = 0; axisIndex < this.getEnvelopeAxesCount(); axisIndex++) {
