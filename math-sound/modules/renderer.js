@@ -611,7 +611,9 @@ export function animate() {
                 varText = `(a = ${aCurrent}) → ${aNext}`;
             } else if (name.includes('Tomfoolery')) {
                 varText = `(v = ${((loopIdx % 19 + 1) * 0.314).toFixed(2)}) → ${((nextIdx % 19 + 1) * 0.314).toFixed(2)}`;
-            } else if (name.includes('Arachnid') || name.includes('Sun') || name.includes('Plot Twist') || name.includes('Deadpool') || name.includes('Clover') || name.includes('Lissajous') || name.includes('Ultimate GCD')) {
+            } else if (name.includes('Clover')) {
+                varText = `(v = ${(loopIdx % 20 * 3.0).toFixed(0)}) → ${(nextIdx % 20 * 3.0).toFixed(0)}`;
+            } else if (name.includes('Arachnid') || name.includes('Sun') || name.includes('Plot Twist') || name.includes('Deadpool') || name.includes('Lissajous') || name.includes('Ultimate GCD')) {
                 varText = `(v = ${(loopIdx % 20 * 0.314).toFixed(2)}) → ${(nextIdx % 20 * 0.314).toFixed(2)}`;
             } else if (name.includes('Masterpiece')) {
                 varText = `(v = ${(loopIdx % 30 * 0.209).toFixed(2)}) → ${(nextIdx % 30 * 0.209).toFixed(2)}`;

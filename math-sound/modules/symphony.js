@@ -526,7 +526,7 @@ export const SYMPHONY_FUNCTIONS = {
         name: 'Amazing Clover',
         type: 'polar',
         r: (theta, loopIndex = 0) => {
-            const v = (loopIndex % 20) * 0.314;
+            const v = (loopIndex % 20) * 3.0;
             return Math.sin(2.025 * theta + v) + Math.cos(1.05 * theta);
         },
         formula: 'r = sin(2.025θ+v) + cos(1.05θ)',
