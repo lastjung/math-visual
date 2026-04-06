@@ -567,6 +567,21 @@ const SortColorControlFactory = {
                 }
             },
             {
+                type: 'select',
+                id: 'envelope_build_order',
+                label: 'Build Order',
+                value: caseRef.envelopeBuildOrder || 'random',
+                options: [
+                    { value: 'random', label: '차오름 (Chaos)' },
+                    { value: 'sequential', label: '박음질 (Symmetry)' }
+                ],
+                onChange: (v) => {
+                    caseRef.envelopeBuildOrder = v;
+                    caseRef.replayConstruction();
+                    caseRef.draw();
+                }
+            },
+            {
                 type: 'slider',
                 id: 'envelope_axes',
                 label: 'Axes',

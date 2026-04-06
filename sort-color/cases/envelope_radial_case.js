@@ -34,6 +34,7 @@ const EnvelopeRadialCase = {
     envelopeConstructionSpeed: 72,
     envelopeConstructionProgress: 0,
     envelopeConstructionComplete: false,
+    envelopeBuildOrder: 'random', // 'random' (original) or 'sequential' (my method)
     guideText: [
         '[Envelope Radial controls]',
         '- Axes: number of radial spokes. 4 gives the classic astroid-like envelope.',

@@ -105,8 +105,19 @@ const EnvelopeRadialGeometryProvider = {
         const layerIndex = Math.floor(itemIndex / itemsPerLayer);
         const subIndex = itemIndex % itemsPerLayer;
         
-        const sectorIndex = Math.floor(subIndex / linesPerSector);
-        const lineIndex = subIndex % linesPerSector;
+        let sectorIndex, lineIndex;
+        if (this.envelopeBuildOrder !== 'random') {
+            // Symmetry (Interleaved) build mapping:
+            // This builds Line 0 of all sectors, then Line 1 of all sectors...
+            sectorIndex = subIndex % axesCount;
+            lineIndex = Math.floor(subIndex / axesCount);
+        } else {
+            // Chaos (Sector-wise) build mapping:
+            // This builds Sector 0 fully, then Sector 1 fully...
+            sectorIndex = Math.floor(subIndex / linesPerSector);
+            lineIndex = subIndex % linesPerSector;
+        }
+        
         const ratio = (lineIndex + 1) / (linesPerSector + 1);
         
         // Layer 0 skips 1 (adjacent), Layer 1 skips 2, etc.
@@ -256,7 +267,11 @@ const EnvelopeRadialGeometryProvider = {
         const itemCount = this.getEnvelopeItemCount();
         const safeItemCount = Math.max(0, itemCount);
         const visibleCount = this.getEnvelopeVisibleCount();
-        const shuffleOrder = this.ensureShuffleOrder(safeItemCount, m);
+        const baseShuffle = this.ensureShuffleOrder(safeItemCount, m);
+        
+        // If sequential, we don't apply shuffle. 
+        // ('random' = original simultaneous-like behavior, 'sequential' = my method)
+        const shuffleOrder = (this.envelopeBuildOrder === 'random') ? baseShuffle : null;
 
         const points = [];
         for (let axisIndex = 0; axisIndex < this.getEnvelopeAxesCount(); axisIndex++) {
