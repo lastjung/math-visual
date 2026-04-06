@@ -163,6 +163,48 @@ const LissajousGeometryProvider = {
         return this.getLissajousLineVisual(i, n, from, to, radius).color;
     },
 
+    getLissajousLengthRange(items, radius) {
+        if (!Array.isArray(items) || items.length === 0) {
+            return { min: 0, max: Math.max(1, radius * 2) };
+        }
+        let min = Infinity;
+        let max = -Infinity;
+        for (let index = 0; index < items.length; index++) {
+            const geometry = items[index]?.sourceGeometry;
+            if (!geometry?.from || !geometry?.to) continue;
+            const len = Math.hypot(geometry.to.x - geometry.from.x, geometry.to.y - geometry.from.y);
+            if (len < min) min = len;
+            if (len > max) max = len;
+        }
+        if (!Number.isFinite(min) || !Number.isFinite(max)) {
+            return { min: 0, max: Math.max(1, radius * 2) };
+        }
+        if (Math.abs(max - min) < 1e-6) {
+            return { min, max: min + 1 };
+        }
+        return { min, max };
+    },
+
+    applyLissajousLengthColors(items, radius) {
+        const range = this.getLissajousLengthRange(items, radius);
+        const denom = Math.max(1e-6, range.max - range.min);
+        return items.map((item) => {
+            const geometry = item?.sourceGeometry;
+            const len = geometry?.from && geometry?.to
+                ? Math.hypot(geometry.to.x - geometry.from.x, geometry.to.y - geometry.from.y)
+                : range.min;
+            const ratio = Math.max(0, Math.min(1, (len - range.min) / denom));
+            const hue = 220 - ratio * 220;
+            return {
+                ...item,
+                hue,
+                saturation: 68,
+                lightness: 74,
+                color: `hsla(${hue}, 68%, 74%, ${item.alpha})`
+            };
+        });
+    },
+
     buildLissajousProvider(n, m, radius, cx, cy) {
         const safeN = Math.max(0, Math.floor(n));
         const safeDenominator = Math.max(1, safeN);
@@ -173,7 +215,7 @@ const LissajousGeometryProvider = {
             geometry: this.getLissajousLineGeometry(slotIndex, safeN, m, radius, cx, cy)
         }));
 
-        const baseItems = Array.from({ length: safeN }, (_, originalIndex) => {
+        let baseItems = Array.from({ length: safeN }, (_, originalIndex) => {
             const sourceGeometry = this.getLissajousLineGeometry(originalIndex, safeN, m, radius, cx, cy);
             const visual = this.getLissajousLineVisual(originalIndex, safeN, sourceGeometry.from, sourceGeometry.to, radius);
             return {
@@ -189,6 +231,10 @@ const LissajousGeometryProvider = {
                 color: visual.color
             };
         });
+
+        if (this.colorMode === 'length') {
+            baseItems = this.applyLissajousLengthColors(baseItems, radius);
+        }
 
         // Transplant logic for maintaining sorting state during Phase changes
         const lastNonce = this._lastRevision ? this._lastRevision.split('|')[2] : null;

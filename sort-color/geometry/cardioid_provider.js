@@ -137,6 +137,48 @@ const CardioidGeometryProvider = {
         return this.getCardioidLineVisual(i, n, from, to, radius).color;
     },
 
+    getCardioidLengthRange(items, radius) {
+        if (!Array.isArray(items) || items.length === 0) {
+            return { min: 0, max: Math.max(1, radius * 2) };
+        }
+        let min = Infinity;
+        let max = -Infinity;
+        for (let index = 0; index < items.length; index++) {
+            const geometry = items[index]?.sourceGeometry;
+            if (!geometry?.from || !geometry?.to) continue;
+            const len = Math.hypot(geometry.to.x - geometry.from.x, geometry.to.y - geometry.from.y);
+            if (len < min) min = len;
+            if (len > max) max = len;
+        }
+        if (!Number.isFinite(min) || !Number.isFinite(max)) {
+            return { min: 0, max: Math.max(1, radius * 2) };
+        }
+        if (Math.abs(max - min) < 1e-6) {
+            return { min, max: min + 1 };
+        }
+        return { min, max };
+    },
+
+    applyCardioidLengthColors(items, radius) {
+        const range = this.getCardioidLengthRange(items, radius);
+        const denom = Math.max(1e-6, range.max - range.min);
+        return items.map((item) => {
+            const geometry = item?.sourceGeometry;
+            const len = geometry?.from && geometry?.to
+                ? Math.hypot(geometry.to.x - geometry.from.x, geometry.to.y - geometry.from.y)
+                : range.min;
+            const ratio = Math.max(0, Math.min(1, (len - range.min) / denom));
+            const hue = 220 - ratio * 220;
+            return {
+                ...item,
+                hue,
+                saturation: 68,
+                lightness: 74,
+                color: `hsla(${hue}, 68%, 74%, ${item.alpha})`
+            };
+        });
+    },
+
     buildCardioidProvider(n, m, radius, cx, cy) {
         const safeN = Math.max(0, Math.floor(n));
         const safeDenominator = Math.max(1, safeN);
@@ -147,7 +189,7 @@ const CardioidGeometryProvider = {
             geometry: this.getCardioidLineGeometry(slotIndex, safeN, m, radius, cx, cy)
         }));
 
-        const baseItems = Array.from({ length: safeN }, (_, originalIndex) => {
+        let baseItems = Array.from({ length: safeN }, (_, originalIndex) => {
             const sourceGeometry = this.getCardioidLineGeometry(originalIndex, safeN, m, radius, cx, cy);
             const visual = this.getCardioidLineVisual(originalIndex, safeN, sourceGeometry.from, sourceGeometry.to, radius);
             return {
@@ -163,6 +205,10 @@ const CardioidGeometryProvider = {
                 color: visual.color
             };
         });
+
+        if (this.colorMode === 'length') {
+            baseItems = this.applyCardioidLengthColors(baseItems, radius);
+        }
 
         const activeShuffle = this.getActiveShuffleAnimation(safeN, m);
         const orderedItems = (shuffleOrder || Array.from({ length: safeN }, (_, i) => i)).map((itemIndex, slotIndex) => {

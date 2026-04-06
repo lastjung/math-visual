@@ -181,29 +181,21 @@ const SpiralDiskGeometryProvider = {
     },
 
     applySpiralLengthColors(items, radius) {
-        const measured = items.map((item, index) => {
+        const range = this.getSpiralLengthRange(items, radius);
+        const denom = Math.max(1e-6, range.max - range.min);
+        return items.map((item) => {
             const geometry = item?.sourceGeometry;
             const len = geometry?.from && geometry?.to
                 ? Math.hypot(geometry.to.x - geometry.from.x, geometry.to.y - geometry.from.y)
-                : 0;
-            return { item, index, len };
-        });
-        const sorted = [...measured].sort((a, b) => a.len - b.len || a.index - b.index);
-        const ratios = Array.from({ length: measured.length }, () => 0);
-        const denom = Math.max(1, sorted.length - 1);
-        for (let rank = 0; rank < sorted.length; rank++) {
-            ratios[sorted[rank].index] = rank / denom;
-        }
-
-        return measured.map(({ item, index }) => {
-            const ratio = ratios[index];
-            const hue = 360 - ratio * 360;
+                : range.min;
+            const ratio = Math.max(0, Math.min(1, (len - range.min) / denom));
+            const hue = 220 - ratio * 220;
             return {
                 ...item,
                 hue,
-                saturation: 92,
-                lightness: 60,
-                color: `hsla(${hue}, 92%, 60%, ${item.alpha})`
+                saturation: 68,
+                lightness: 74,
+                color: `hsla(${hue}, 68%, 74%, ${item.alpha})`
             };
         });
     },

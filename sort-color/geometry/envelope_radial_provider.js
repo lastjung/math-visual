@@ -155,6 +155,48 @@ const EnvelopeRadialGeometryProvider = {
         };
     },
 
+    getEnvelopeRadialLengthRange(items, radius) {
+        if (!Array.isArray(items) || items.length === 0) {
+            return { min: 0, max: Math.max(1, radius * 2) };
+        }
+        let min = Infinity;
+        let max = -Infinity;
+        for (let index = 0; index < items.length; index++) {
+            const geometry = items[index]?.sourceGeometry;
+            if (!geometry?.from || !geometry?.to) continue;
+            const len = Math.hypot(geometry.to.x - geometry.from.x, geometry.to.y - geometry.from.y);
+            if (len < min) min = len;
+            if (len > max) max = len;
+        }
+        if (!Number.isFinite(min) || !Number.isFinite(max)) {
+            return { min: 0, max: Math.max(1, radius * 2) };
+        }
+        if (Math.abs(max - min) < 1e-6) {
+            return { min, max: min + 1 };
+        }
+        return { min, max };
+    },
+
+    applyEnvelopeRadialLengthColors(items, radius) {
+        const range = this.getEnvelopeRadialLengthRange(items, radius);
+        const denom = Math.max(1e-6, range.max - range.min);
+        return items.map((item) => {
+            const geometry = item?.sourceGeometry;
+            const len = geometry?.from && geometry?.to
+                ? Math.hypot(geometry.to.x - geometry.from.x, geometry.to.y - geometry.from.y)
+                : range.min;
+            const ratio = Math.max(0, Math.min(1, (len - range.min) / denom));
+            const hue = 220 - ratio * 220;
+            return {
+                ...item,
+                hue,
+                saturation: 68,
+                lightness: 74,
+                color: `hsla(${hue}, 68%, 74%, ${item.alpha})`
+            };
+        });
+    },
+
     buildEnvelopeRadialProvider(_n, m, radius, cx, cy) {
         this.syncEnvelopeItemCount();
         const itemCount = this.getEnvelopeItemCount();
@@ -188,7 +230,7 @@ const EnvelopeRadialGeometryProvider = {
             };
         });
 
-        const baseItems = Array.from({ length: safeItemCount }, (_, originalIndex) => {
+        let baseItems = Array.from({ length: safeItemCount }, (_, originalIndex) => {
             const sourceGeometry = this.getEnvelopeRadialLineGeometry(originalIndex, radius, cx, cy);
             const visual = this.getEnvelopeRadialLineVisual(originalIndex, safeItemCount, sourceGeometry.from, sourceGeometry.to, radius);
             return {
@@ -204,6 +246,10 @@ const EnvelopeRadialGeometryProvider = {
                 color: visual.color
             };
         });
+
+        if (this.colorMode === 'length') {
+            baseItems = this.applyEnvelopeRadialLengthColors(baseItems, radius);
+        }
 
         const activeShuffle = this.getActiveShuffleAnimation(safeItemCount, m);
         const orderedItems = (shuffleOrder || Array.from({ length: safeItemCount }, (_, i) => i)).map((itemIndex, slotIndex) => {
