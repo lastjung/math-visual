@@ -559,7 +559,8 @@ const SortColorControlFactory = {
                 options: [
                     { value: 'standard', label: 'Standard Star' },
                     { value: 'dual_star', label: 'Dual Star' },
-                    { value: 'triple_web', label: 'Triple Web' }
+                    { value: 'triple_web', label: 'Triple Web' },
+                    { value: 'chain', label: 'Chain Stitch' }
                 ],
                 onChange: (v) => {
                     caseRef.applyPreset(v);

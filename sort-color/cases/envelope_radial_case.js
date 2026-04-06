@@ -104,6 +104,15 @@ const EnvelopeRadialCase = {
             this.envelopeAxesCount = 12;
             this.envelopeLinesPerSector = 20;
             this.envelopeLayerCount = 3;
+        } else if (presetId === 'chain') {
+            this.envelopeAxesCount = 18;
+            this.envelopeLinesPerSector = 12; // 12 sets of 4 lines each = 48 lines total? No.
+            // Wait, getEnvelopeItemCount uses axesCount * linesPerSector.
+            // If axesCount=18 and linesPerSector=12, total=216.
+            // Total sets = 216 / 4 = 54. 
+            // 54 sets / (18/6) sets per loop = 18 loops.
+            // 72 was definitely too much, 18 loops is better.
+            this.envelopeLayerCount = 1;
         } else {
             // standard
             this.envelopeAxesCount = 4;

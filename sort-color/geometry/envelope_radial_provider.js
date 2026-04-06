@@ -63,6 +63,45 @@ const EnvelopeRadialGeometryProvider = {
         const linesPerSector = this.getEnvelopeLinesPerSector();
         const itemsPerLayer = axesCount * linesPerSector;
         
+        // Chain Preset Logic
+        if (this.currentPreset === 'chain') {
+            const skips = [1, 2, 1, 2];
+            const setIndex = Math.floor(itemIndex / 4);
+            const stepIndex = itemIndex % 4;
+            
+            // Total skip before this step in the global sequence
+            const baseSkip = setIndex * 6; // sum [1,2,1,2] = 6
+            let currentOffset = 0;
+            for (let i = 0; i < stepIndex; i++) currentOffset += skips[i];
+            
+            const fromAxis = (baseSkip + currentOffset) % axesCount;
+            const toAxis = (baseSkip + currentOffset + skips[stepIndex]) % axesCount;
+            
+            // For ratio, use a global one that depends on setIndex
+            // itemCount / 4 is the number of sets
+            const totalSets = Math.floor(this.getEnvelopeItemCount() / 4);
+            const ratio = (setIndex + 0.5) / (totalSets + 1);
+            
+            // Alternate ratio to "cross" the circle
+            // Step 0 & 2: Outside to Inside
+            // Step 1 & 3: Inside to Outside
+            const rStart = (stepIndex % 2 === 0) ? (1 - ratio) : ratio;
+            const rEnd = (stepIndex % 2 === 0) ? ratio : (1 - ratio);
+            
+            const from = this.getEnvelopeRadialAnchor(fromAxis, rStart, radius, cx, cy);
+            const to = this.getEnvelopeRadialAnchor(toAxis, rEnd, radius, cx, cy);
+            
+            return {
+                kind: 'line',
+                from,
+                to,
+                sectorIndex: fromAxis,
+                lineIndex: setIndex,
+                layerIndex: 0,
+                ratio
+            };
+        }
+
         const layerIndex = Math.floor(itemIndex / itemsPerLayer);
         const subIndex = itemIndex % itemsPerLayer;
         
