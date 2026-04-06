@@ -38,7 +38,8 @@ export const state = {
     currentQueueIndex: -1,
     isQueueMode: false,
     isPrimingPlayback: false,
-    introOverlayTimer: null
+    introOverlayTimer: null,
+    showGhost: true
 };
 
 export const elements = {

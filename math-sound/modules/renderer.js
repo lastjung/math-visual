@@ -57,9 +57,8 @@ function drawLayer(funcKey, width, height, progress, isBackground = false) {
     
     graphCtx.save();
     if (isBackground) {
-        graphCtx.strokeStyle = '#d1d5db'; // Subtle Light Gray
-        graphCtx.lineWidth = 1.5;
-        graphCtx.setLineDash([5, 5]); // Optional: dashed line for background
+        graphCtx.strokeStyle = 'rgba(0, 0, 0, 0.08)'; // Very Light Gray Guide
+        graphCtx.lineWidth = 1.25;
     } else {
         graphCtx.strokeStyle = getCategoryColor(funcData.category);
         graphCtx.lineWidth = 3;
@@ -512,6 +511,11 @@ export function animate() {
 
     // 2. Draw Background MIDI Layers (Animates with main progress)
     drawBackgroundLayers(width, height, state.drawProgress);
+
+    // 2.5 Draw Ghost Graph for current function if enabled
+    if (state.showGhost) {
+        drawLayer(state.currentFunction, width, height, 1.0, true);
+    }
 
     // 3. Draw Main Active Curve
     drawLayer(state.currentFunction, width, height, state.drawProgress);

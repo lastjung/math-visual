@@ -363,8 +363,8 @@ body {
 
 
 .control-btn {
-    width: 44px; /* Reduced from 60px */
-    height: 44px; /* Reduced from 60px */
+    width: 44px;
+    height: 44px;
     border: none;
     border-radius: 50%;
     background: #ffffff;
@@ -375,7 +375,34 @@ body {
     align-items: center;
     justify-content: center;
     box-shadow: 0 4px 10px rgba(0,0,0,0.08);
-    font-size: 0.95rem; /* Slightly smaller */
+    font-size: 0.95rem;
+    position: relative; /* Tooltip Anchor */
+}
+
+/* Instant Custom Tooltip */
+.control-btn::after {
+    content: attr(title);
+    position: absolute;
+    bottom: 120%;
+    left: 50%;
+    transform: translateX(-50%) translateY(5px);
+    background: rgba(17, 24, 39, 0.9);
+    color: #ffffff;
+    padding: 6px 10px;
+    border-radius: 8px;
+    font-size: 11px;
+    font-weight: 500;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.2s ease;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2);
+    z-index: 1000;
+}
+
+.control-btn:hover::after {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
 }
 
 .control-btn:hover {
@@ -409,6 +436,16 @@ body {
 
 .fullscreen-btn.active {
     color: var(--accent-color);
+}
+
+.ghost-btn.active {
+    background: var(--accent-gradient);
+    color: #ffffff;
+    box-shadow: 0 10px 25px -5px rgba(139, 92, 246, 0.4);
+}
+
+.ghost-btn.active:hover {
+    color: #ffffff;
 }
 
 /* Pseudo-Fullscreen (Fit to window) Mode */

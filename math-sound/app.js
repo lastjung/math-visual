@@ -117,6 +117,15 @@ function setupEventListeners() {
         elements.fullscreenBtn.addEventListener('click', toggleFullscreen);
     }
 
+    const ghostBtn = document.getElementById('ghostBtn');
+    if (ghostBtn) {
+        ghostBtn.addEventListener('click', () => {
+            state.showGhost = !state.showGhost;
+            ghostBtn.classList.toggle('active', state.showGhost);
+            drawStaticGraph();
+        });
+    }
+
     // Drag & Drop for Mixer and Controls Box (HUD)
     const controlsBox = document.getElementById('controlsBox');
     
@@ -217,16 +226,15 @@ function setupEventListeners() {
         // Prevent shortcuts when typing in inputs
         if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
 
-        const key = e.key.toLowerCase();
-        if (key === 's') sPressed = true;
+        if (e.code === 'KeyS') sPressed = true;
 
         if (sPressed) {
-            if (key === '1') {
+            if (e.code === 'Digit1') {
                 e.preventDefault();
                 toggleAutoPlay();
                 return;
             }
-            if (key === '2') {
+            if (e.code === 'Digit2') {
                 e.preventDefault();
                 if (state.playQueue.length > 0) {
                     state.autoTargetCount = 1;
@@ -235,9 +243,17 @@ function setupEventListeners() {
                 }
                 return;
             }
-            if (key === '3') {
+            if (e.code === 'Digit3') {
                 e.preventDefault();
                 if (mixerPanel) mixerPanel.classList.toggle('hidden');
+                return;
+            }
+            if (e.code === 'Digit4') {
+                e.preventDefault();
+                const ghostBtn = document.getElementById('ghostBtn');
+                state.showGhost = !state.showGhost;
+                if (ghostBtn) ghostBtn.classList.toggle('active', state.showGhost);
+                drawStaticGraph();
                 return;
             }
         }
@@ -245,11 +261,11 @@ function setupEventListeners() {
         if (e.code === 'Space') { e.preventDefault(); togglePlay(); }
         else if (e.code === 'ArrowRight') navigateFunction(1);
         else if (e.code === 'ArrowLeft') navigateFunction(-1);
-        else if (e.key === 'Enter') {
+        else if (e.code === 'Enter') {
             e.preventDefault();
             addToQueue();
         }
-        else if (e.key === 'Escape') {
+        else if (e.code === 'Escape') {
             if (document.body.classList.contains('is-fullscreen')) {
                 toggleFullscreen();
             }
@@ -269,7 +285,7 @@ function setupEventListeners() {
     });
 
     document.addEventListener('keyup', (e) => {
-        if (e.key.toLowerCase() === 's') sPressed = false;
+        if (e.code === 'KeyS') sPressed = false;
     });
 }
 
