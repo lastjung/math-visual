@@ -27,8 +27,10 @@ const EnvelopeRadialCase = {
     rotation: 0,
     learningMode: 'off',
     isPaused: true,
-    envelopeAxesCount: 4,
-    envelopeLinesPerSector: 32,
+    currentPreset: 'dual_star',
+    envelopeAxesCount: 18,
+    envelopeLinesPerSector: 24,
+    envelopeLayerCount: 2,
     envelopeConstructionSpeed: 72,
     envelopeConstructionProgress: 0,
     envelopeConstructionComplete: false,
@@ -76,6 +78,7 @@ const EnvelopeRadialCase = {
         this.isPaused = true;
         this.envelopeAxesCount = 4;
         this.envelopeLinesPerSector = 32;
+        this.envelopeLayerCount = 1;
         this.envelopeConstructionSpeed = 72;
         this.replayConstruction();
         this.syncEnvelopeItemCount();
@@ -89,6 +92,28 @@ const EnvelopeRadialCase = {
         this.envelopeConstructionComplete = false;
         this.isPaused = true;
         this.syncEnvelopeItemCount();
+    },
+
+    applyPreset(presetId) {
+        this.currentPreset = presetId;
+        if (presetId === 'dual_star') {
+            this.envelopeAxesCount = 18;
+            this.envelopeLinesPerSector = 24;
+            this.envelopeLayerCount = 2;
+        } else if (presetId === 'triple_web') {
+            this.envelopeAxesCount = 12;
+            this.envelopeLinesPerSector = 20;
+            this.envelopeLayerCount = 3;
+        } else {
+            // standard
+            this.envelopeAxesCount = 4;
+            this.envelopeLinesPerSector = 32;
+            this.envelopeLayerCount = 1;
+        }
+        this.syncEnvelopeItemCount();
+        this.replayConstruction();
+        this.draw();
+        if (typeof Core !== 'undefined' && Core.currentCase === this) Core.updateControls();
     },
 
     toggleBuildPlayback() {
@@ -204,6 +229,7 @@ const EnvelopeRadialCase = {
         ctx.textAlign = 'right';
         ctx.fillText(`Axes: ${this.getEnvelopeAxesCount()}`, viewState.w - 24, 74);
         ctx.fillText(`Lines/Sector: ${this.getEnvelopeLinesPerSector()}`, viewState.w - 24, 96);
+        ctx.fillText(`Layers: ${this.getEnvelopeLayerCount()}`, viewState.w - 24, 118);
         ctx.restore();
 
         if (!this.envelopeConstructionComplete) {

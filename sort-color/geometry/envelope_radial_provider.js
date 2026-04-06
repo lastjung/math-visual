@@ -23,8 +23,12 @@ const EnvelopeRadialGeometryProvider = {
         return Math.max(4, Math.floor(Number(this.envelopeLinesPerSector) || 32));
     },
 
+    getEnvelopeLayerCount() {
+        return Math.max(1, Math.floor(Number(this.envelopeLayerCount) || 1));
+    },
+
     getEnvelopeItemCount() {
-        return this.getEnvelopeAxesCount() * this.getEnvelopeLinesPerSector();
+        return this.getEnvelopeAxesCount() * this.getEnvelopeLinesPerSector() * this.getEnvelopeLayerCount();
     },
 
     syncEnvelopeItemCount() {
@@ -57,17 +61,28 @@ const EnvelopeRadialGeometryProvider = {
     getEnvelopeRadialLineGeometry(itemIndex, radius, cx, cy) {
         const axesCount = this.getEnvelopeAxesCount();
         const linesPerSector = this.getEnvelopeLinesPerSector();
-        const sectorIndex = Math.floor(itemIndex / linesPerSector);
-        const lineIndex = itemIndex % linesPerSector;
+        const itemsPerLayer = axesCount * linesPerSector;
+        
+        const layerIndex = Math.floor(itemIndex / itemsPerLayer);
+        const subIndex = itemIndex % itemsPerLayer;
+        
+        const sectorIndex = Math.floor(subIndex / linesPerSector);
+        const lineIndex = subIndex % linesPerSector;
         const ratio = (lineIndex + 1) / (linesPerSector + 1);
+        
+        // Layer 0 skips 1 (adjacent), Layer 1 skips 2, etc.
+        const skip = layerIndex + 1;
+        
         const from = this.getEnvelopeRadialAnchor(sectorIndex, 1 - ratio, radius, cx, cy);
-        const to = this.getEnvelopeRadialAnchor((sectorIndex + 1) % axesCount, ratio, radius, cx, cy);
+        const to = this.getEnvelopeRadialAnchor((sectorIndex + skip) % axesCount, ratio, radius, cx, cy);
+        
         return {
             kind: 'line',
             from,
             to,
             sectorIndex,
             lineIndex,
+            layerIndex,
             ratio
         };
     },

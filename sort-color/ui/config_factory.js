@@ -555,22 +555,40 @@ const SortColorControlFactory = {
                 type: 'select',
                 id: 'envelope_preset',
                 label: 'Preset',
-                value: 'star',
+                value: caseRef.currentPreset || 'standard',
                 options: [
-                    { value: 'star', label: 'Star' }
+                    { value: 'standard', label: 'Standard Star' },
+                    { value: 'dual_star', label: 'Dual Star' },
+                    { value: 'triple_web', label: 'Triple Web' }
                 ],
-                onChange: () => {}
+                onChange: (v) => {
+                    caseRef.applyPreset(v);
+                }
             },
             {
                 type: 'slider',
                 id: 'envelope_axes',
                 label: 'Axes',
                 min: 3,
-                max: 12,
+                max: 32,
                 step: 1,
                 value: caseRef.envelopeAxesCount,
                 onChange: (v) => {
                     caseRef.envelopeAxesCount = Math.max(3, Math.floor(v));
+                    caseRef.replayConstruction();
+                    caseRef.draw();
+                }
+            },
+            {
+                type: 'slider',
+                id: 'envelope_layers',
+                label: 'Layers',
+                min: 1,
+                max: 4,
+                step: 1,
+                value: caseRef.envelopeLayerCount,
+                onChange: (v) => {
+                    caseRef.envelopeLayerCount = Math.max(1, Math.floor(v));
                     caseRef.replayConstruction();
                     caseRef.draw();
                 }
