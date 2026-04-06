@@ -74,11 +74,13 @@ const SortRenderer = {
         ctx.fillStyle = '#020205';
         ctx.fillRect(0, 0, w, h);
 
-        ctx.beginPath();
-        ctx.strokeStyle = 'rgba(235, 240, 255, 0.22)';
-        ctx.lineWidth = 1.2;
-        ctx.arc(cx, cy, radius, 0, Math.PI * 2);
-        ctx.stroke();
+        if (this.showGuideCircle !== false) {
+            ctx.beginPath();
+            ctx.strokeStyle = 'rgba(235, 240, 255, 0.22)';
+            ctx.lineWidth = 1.2;
+            ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+            ctx.stroke();
+        }
 
         this.drawChords(ctx, viewState);
 

@@ -27,8 +27,30 @@ const EnvelopeRadialGeometryProvider = {
         return Math.max(1, Math.floor(Number(this.envelopeLayerCount) || 1));
     },
 
-    getEnvelopeItemCount() {
+    getEnvelopeBaseItemCount() {
         return this.getEnvelopeAxesCount() * this.getEnvelopeLinesPerSector() * this.getEnvelopeLayerCount();
+    },
+
+    getEnvelopeActiveAxes() {
+        const axesCount = this.getEnvelopeAxesCount();
+        const baseCount = this.getEnvelopeBaseItemCount();
+        if (baseCount <= 0) return [];
+
+        const activeSet = new Set();
+        // Sample the first layer/set to identify used axes
+        // For standard, all axes are used. For chain, only a subset.
+        for (let i = 0; i < Math.min(baseCount, axesCount * 4); i++) {
+            const geom = this.getEnvelopeRadialLineGeometry(i, 100, 0, 0, true);
+            if (geom) {
+                activeSet.add(geom.fromAxis);
+                activeSet.add(geom.toAxis);
+            }
+        }
+        return Array.from(activeSet).sort((a, b) => a - b);
+    },
+
+    getEnvelopeItemCount() {
+        return this.getEnvelopeBaseItemCount() + this.getEnvelopeActiveAxes().length;
     },
 
     syncEnvelopeItemCount() {
@@ -58,10 +80,28 @@ const EnvelopeRadialGeometryProvider = {
         };
     },
 
-    getEnvelopeRadialLineGeometry(itemIndex, radius, cx, cy) {
+    getEnvelopeRadialLineGeometry(itemIndex, radius, cx, cy, isAnalysis = false) {
         const axesCount = this.getEnvelopeAxesCount();
         const linesPerSector = this.getEnvelopeLinesPerSector();
         const itemsPerLayer = axesCount * linesPerSector;
+        const baseCount = this.getEnvelopeBaseItemCount();
+
+        // Check if this is an axis line (last activeAxes length items) - check first
+        if (!isAnalysis && itemIndex >= baseCount) {
+            const activeAxes = this.getEnvelopeActiveAxes();
+            const axisIndex = activeAxes[itemIndex - baseCount];
+            if (axisIndex === undefined) return null;
+            
+            return {
+                kind: 'line',
+                from: { x: cx, y: cy },
+                to: this.getEnvelopeRadialAnchor(axisIndex, 1.0, radius, cx, cy),
+                sectorIndex: axisIndex,
+                lineIndex: -1,
+                layerIndex: -1,
+                ratio: 1.0
+            };
+        }
         
         // Chain Preset Logic
         if (this.currentPreset === 'chain') {
@@ -78,8 +118,8 @@ const EnvelopeRadialGeometryProvider = {
             const toAxis = (baseSkip + currentOffset + skips[stepIndex]) % axesCount;
             
             // For ratio, use a global one that depends on setIndex
-            // itemCount / 4 is the number of sets
-            const totalSets = Math.floor(this.getEnvelopeItemCount() / 4);
+            // baseCount / 4 is the number of sets
+            const totalSets = Math.floor(baseCount / 4);
             const ratio = (setIndex + 0.5) / (totalSets + 1);
             
             // Alternate ratio to "cross" the circle
@@ -95,6 +135,8 @@ const EnvelopeRadialGeometryProvider = {
                 kind: 'line',
                 from,
                 to,
+                fromAxis, // For analysis
+                toAxis,   // For analysis
                 sectorIndex: fromAxis,
                 lineIndex: setIndex,
                 layerIndex: 0,
@@ -128,6 +170,8 @@ const EnvelopeRadialGeometryProvider = {
             kind: 'line',
             from,
             to,
+            fromAxis: sectorIndex,                  // For analysis
+            toAxis: (sectorIndex + skip) % axesCount, // For analysis
             sectorIndex,
             lineIndex,
             layerIndex,

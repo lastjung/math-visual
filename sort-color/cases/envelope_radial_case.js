@@ -10,6 +10,7 @@ const EnvelopeRadialCase = {
     integersOnly: false,
     colorMode: 'angle',
     renderMode: 'light',
+    showGuideCircle: false,
     sortMode: 'off',
     sortingStatus: 'idle',
     sortSpeed: 150,
@@ -77,7 +78,7 @@ const EnvelopeRadialCase = {
         this.rotation = 0;
         this.learningMode = 'off';
         this.isPaused = true;
-        this.envelopeAxesCount = 4;
+        this.envelopeAxesCount = 5;
         this.envelopeLinesPerSector = 32;
         this.envelopeLayerCount = 1;
         this.envelopeConstructionSpeed = 72;
@@ -97,20 +98,12 @@ const EnvelopeRadialCase = {
 
     applyPreset(presetId) {
         this.currentPreset = presetId;
-        if (presetId === 'dual_star') {
-            this.envelopeAxesCount = 5;
-            this.envelopeLinesPerSector = 24;
-            this.envelopeLayerCount = 2;
-        } else if (presetId === 'triple_web') {
-            this.envelopeAxesCount = 5;
-            this.envelopeLinesPerSector = 20;
-            this.envelopeLayerCount = 3;
-        } else if (presetId === 'chain') {
-            this.envelopeAxesCount = 5;
+        if (presetId === 'chain') {
+            this.envelopeAxesCount = 6;
             this.envelopeLinesPerSector = 16; 
-            this.envelopeLayerCount = 2;
+            this.envelopeLayerCount = 1;
         } else {
-            // star (standard / Star)
+            // standard (Star)
             this.envelopeAxesCount = 5;
             this.envelopeLinesPerSector = 24;
             this.envelopeLayerCount = 1;
@@ -184,45 +177,7 @@ const EnvelopeRadialCase = {
     },
 
     drawGeometryOverlay(ctx, viewState) {
-        const axesCount = this.getEnvelopeAxesCount();
-        const linesCount = this.pointCount;
-        const radius = viewState.radius;
-        const cx = viewState.cx;
-        const cy = viewState.cy;
-        const progress = this.envelopeConstructionProgress;
-
-        ctx.save();
-        
-        // Axis build phase starts after progress exceeds linesCount
-        for (let axisIndex = 0; axisIndex < axesCount; axisIndex++) {
-            let isVisible = false;
-            let spokeGrowth = 1.0; 
-
-            if (this.envelopeConstructionComplete) {
-                isVisible = true;
-            } else if (progress > linesCount) {
-                // Each axis gets a distinct time slot in the build sequence
-                const axisStartTime = linesCount + (axisIndex * 4); // staggered appearance
-                if (progress >= axisStartTime) {
-                    isVisible = true;
-                    // Draw-out animation: expands from center to edge
-                    spokeGrowth = Math.min(1.0, (progress - axisStartTime) / 3.0); 
-                }
-            }
-
-            if (!isVisible) continue;
-
-            const anchor = this.getEnvelopeRadialAnchor(axisIndex, 1, radius, cx, cy);
-            
-            // Draw axis spoke (line only)
-            ctx.beginPath();
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.28)';
-            ctx.lineWidth = 1.25;
-            ctx.moveTo(cx, cy);
-            ctx.lineTo(cx + (anchor.x - cx) * spokeGrowth, cy + (anchor.y - cy) * spokeGrowth);
-            ctx.stroke();
-        }
-        ctx.restore();
+        // Cleaning up all auxiliary lines as requested
     },
 
     drawHud(ctx, viewState) {
