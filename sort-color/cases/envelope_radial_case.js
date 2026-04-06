@@ -98,15 +98,26 @@ const EnvelopeRadialCase = {
 
     applyPreset(presetId) {
         this.currentPreset = presetId;
-        if (presetId === 'chain') {
+        if (presetId === 'polygon') {
+            this.envelopeAxesCount = 5;
+            this.envelopeLinesPerSector = 32; // Align with Star
+            this.envelopeLayerCount = 2; // As requested
+            this.colorMode = 'monochrome';
+            this.lineAlpha = 0.6;
+            this.lineWidth = 1.0;
+            this.envelopeBuildOrder = 'sequential'; 
+        } else if (presetId === 'chain') {
             this.envelopeAxesCount = 6;
             this.envelopeLinesPerSector = 16; 
             this.envelopeLayerCount = 1;
         } else {
             // standard (Star)
             this.envelopeAxesCount = 5;
-            this.envelopeLinesPerSector = 24;
-            this.envelopeLayerCount = 1;
+            this.envelopeLinesPerSector = 32;
+            this.envelopeLayerCount = 1; // Back to 1 layer for Star as requested
+            this.colorMode = 'angle';
+            this.lineAlpha = 0.38;
+            this.lineWidth = 1.5;
         }
         this.syncEnvelopeItemCount();
         this.replayConstruction();
@@ -183,24 +194,71 @@ const EnvelopeRadialCase = {
     drawHud(ctx, viewState) {
         if (!this.showHud) return;
 
-        const { n } = viewState;
+        const { n, sortingActive, sortView, sortPlan } = viewState;
+        const formatSortSeconds = (seconds) => `${Math.max(0, seconds).toFixed(1)}s`;
 
+        // --- Left-aligned Sort HUD (Restored, Show ONLY during active Sort) ---
+        if (this.envelopeConstructionComplete && sortingActive) {
+            ctx.save();
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.92)';
+            ctx.font = '600 14px "Inter", "IBM Plex Sans", system-ui, sans-serif';
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'top';
+
+            let sortTimeLabel = '0.0s / 0.0s';
+            const effectiveSpeed = typeof this.getEffectiveSortSpeed === 'function' ? this.getEffectiveSortSpeed() : (this.sortSpeed || 150);
+            if (this.isSortModeAvailable() && effectiveSpeed > 0) {
+                const totalSteps = sortPlan?.totalSteps || this.getSortTotalSteps(viewState.provider);
+                const elapsedSeconds = this.sortProgress / effectiveSpeed;
+                const totalSeconds = totalSteps / effectiveSpeed;
+                sortTimeLabel = `${formatSortSeconds(elapsedSeconds)} / ${formatSortSeconds(totalSeconds)}`;
+            }
+
+            let currentSortLabel = 'Radix';
+            if (this.sortMode === 'lsh') currentSortLabel = 'L-S-H Radix';
+            if (this.sortMode === 'hue') currentSortLabel = 'Hue Radix';
+            if (this.sortMode === 'bubble') currentSortLabel = 'Bubble Sort';
+            if (this.sortMode === 'quick') currentSortLabel = 'Quick Sort';
+            if (this.sortMode === 'insertion') currentSortLabel = 'Insertion Sort';
+            if (this.sortMode === 'selection') currentSortLabel = 'Selection Sort';
+
+            let nextLY = 24;
+            ctx.fillText(`Sort: ${currentSortLabel}`, 24, nextLY);
+            nextLY += 22;
+            ctx.fillText(`Sort Time: ${sortTimeLabel}`, 24, nextLY);
+            nextLY += 22;
+
+            if (sortView) {
+                const digitLabel = sortView.passLabel || sortPlan?.passes?.[sortView.passIndex]?.label || `Pass ${sortView.passNumber}`;
+                let detailLabel = `Pass: ${digitLabel}`;
+                if (sortView.activeDigit != null) {
+                    detailLabel = `Bucket: ${sortView.activeDigit}`;
+                } else if (sortView.activeIndices) {
+                    detailLabel = `Pair: ${sortView.activeIndices[0]} ↔ ${sortView.activeIndices[1]}`;
+                }
+                ctx.fillText(detailLabel, 24, nextLY);
+            }
+            ctx.restore();
+        }
+
+
+        // --- Right-aligned Info Panel (Restored) ---
         ctx.save();
-        ctx.fillStyle = 'rgba(255,255,255,0.92)';
-        ctx.font = '600 14px Inter, system-ui, sans-serif';
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.92)';
+        ctx.font = '600 14px "Inter", "IBM Plex Sans", system-ui, sans-serif';
         ctx.textAlign = 'right';
+        ctx.textBaseline = 'top';
 
-        // Right-aligned Info Panel (Clean version)
-        let nextY = 30;
-        ctx.fillText(`Node: ${n}`, viewState.w - 24, nextY);
-        nextY += 22;
-        ctx.fillText(`Axes: ${this.getEnvelopeAxesCount()}`, viewState.w - 24, nextY);
-        nextY += 22;
-        ctx.fillText(`Layers: ${this.getEnvelopeLayerCount()}`, viewState.w - 24, nextY);
-        
+        let nextRY = 24;
+        ctx.fillText(`Node: ${n}`, viewState.w - 24, nextRY);
+        nextRY += 22;
+        ctx.fillText(`Axes: ${this.getEnvelopeAxesCount()}`, viewState.w - 24, nextRY);
+        nextRY += 22;
+        ctx.fillText(`Layers: ${this.getEnvelopeLayerCount()}`, viewState.w - 24, nextRY);
         ctx.restore();
 
-        // Left-aligned Progress Panel (Bottom)
+
+        // --- Left-aligned Progress Panel (Bottom) ---
         if (!this.envelopeConstructionComplete) {
             ctx.save();
             ctx.fillStyle = 'rgba(255, 209, 102, 0.95)';

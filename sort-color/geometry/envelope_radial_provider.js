@@ -33,17 +33,17 @@ const EnvelopeRadialGeometryProvider = {
 
     getEnvelopeActiveAxes() {
         const axesCount = this.getEnvelopeAxesCount();
+        const linesPerSector = this.getEnvelopeLinesPerSector();
         const baseCount = this.getEnvelopeBaseItemCount();
         if (baseCount <= 0) return [];
 
         const activeSet = new Set();
-        // Sample the first layer/set to identify used axes
-        // For standard, all axes are used. For chain, only a subset.
-        for (let i = 0; i < Math.min(baseCount, axesCount * 4); i++) {
-            const geom = this.getEnvelopeRadialLineGeometry(i, 100, 0, 0, true);
+        // Sample one item per sector group to ensure all used axes are identified
+        for (let s = 0; s < axesCount; s++) {
+            const geom = this.getEnvelopeRadialLineGeometry(s * linesPerSector, 100, 0, 0, true);
             if (geom) {
-                activeSet.add(geom.fromAxis);
-                activeSet.add(geom.toAxis);
+                if (geom.fromAxis !== undefined) activeSet.add(geom.fromAxis);
+                if (geom.toAxis !== undefined) activeSet.add(geom.toAxis);
             }
         }
         return Array.from(activeSet).sort((a, b) => a - b);
@@ -69,14 +69,22 @@ const EnvelopeRadialGeometryProvider = {
     },
 
     getEnvelopeRadialAnchor(axisIndex, ratio, radius, cx, cy) {
-        const safeAxes = this.getEnvelopeAxesCount();
-        const angle = this.rotation - ((Math.PI * 2 * axisIndex) / safeAxes);
-        const distance = Math.max(0, Math.min(1, ratio)) * radius;
-        return {
-            x: cx + Math.cos(angle) * distance,
-            y: cy + Math.sin(angle) * distance,
-            angle,
-            distance
+        const axesCount = this.getEnvelopeAxesCount();
+        
+        // Conditional start angle:
+        // Odd axes (5, 7, 9...) -> Start at 12 o'clock (-Math.PI / 2) to be upright.
+        // Even axes (4, 6, 8...) -> Start at 9 o'clock (Math.PI) for a balanced left-to-right start.
+        const startAngle = (axesCount % 2 !== 0) ? -Math.PI / 2 : Math.PI;
+        const angle = (axisIndex / axesCount) * Math.PI * 2 + startAngle;
+        
+        const dx = radius * ratio * Math.cos(angle);
+        const dy = radius * ratio * Math.sin(angle);
+        
+        return { 
+            x: cx + dx, 
+            y: cy + dy, 
+            angle: angle,
+            distance: radius * ratio
         };
     },
 
@@ -157,8 +165,48 @@ const EnvelopeRadialGeometryProvider = {
             sectorIndex = Math.floor(subIndex / linesPerSector);
             lineIndex = subIndex % linesPerSector;
         }
-        
+
         const ratio = (lineIndex + 1) / (linesPerSector + 1);
+
+        // Polygon Preset Logic (Layer-based Alternating Sides)
+        if (this.currentPreset === 'polygon') {
+            // Use lineIndex directly since each layer focuses on one side
+            const subRatio = lineIndex / (linesPerSector - 1);
+            
+            const nextSectorIndex = (sectorIndex + 1) % axesCount;
+            const vBase = this.getEnvelopeRadialAnchor(sectorIndex, 1.0, radius, cx, cy);
+            const vNext = this.getEnvelopeRadialAnchor(nextSectorIndex, 1.0, radius, cx, cy);
+            
+            let from, to;
+            // Alternates direction based on layer: Layer 1, 3... (Odd layers index 0, 2, 4...) vs Layer 2, 4... (Even layers index 1, 3, 5...)
+            if (layerIndex % 2 === 0) {
+                // Direction A: Center -> V_i connects to V_i -> V_i+1
+                from = this.getEnvelopeRadialAnchor(sectorIndex, subRatio, radius, cx, cy);
+                to = {
+                    x: vBase.x + subRatio * (vNext.x - vBase.x),
+                    y: vBase.y + subRatio * (vNext.y - vBase.y)
+                };
+            } else {
+                // Direction B: Center -> V_i+1 connects to V_i+1 -> V_i
+                from = this.getEnvelopeRadialAnchor(nextSectorIndex, subRatio, radius, cx, cy);
+                to = {
+                    x: vNext.x + subRatio * (vBase.x - vNext.x),
+                    y: vNext.y + subRatio * (vBase.y - vNext.y)
+                };
+            }
+            
+            return {
+                kind: 'line',
+                from,
+                to,
+                fromAxis: (layerIndex % 2 === 0) ? sectorIndex : nextSectorIndex,
+                toAxis: (layerIndex % 2 === 0) ? nextSectorIndex : sectorIndex,
+                sectorIndex,
+                lineIndex,
+                layerIndex,
+                ratio: subRatio
+            };
+        }
         
         // Layer 0 skips 1 (adjacent), Layer 1 skips 2, etc.
         const skip = layerIndex + 1;
@@ -182,83 +230,47 @@ const EnvelopeRadialGeometryProvider = {
     getEnvelopeRadialLineVisual(itemIndex, totalCount, from, to, radius, alphaOverride = null) {
         const safeTotal = Math.max(1, totalCount);
         const alpha = alphaOverride == null ? this.lineAlpha : alphaOverride;
-        const length = Math.hypot(to.x - from.x, to.y - from.y);
-        const lengthRatio = Math.max(0, Math.min(1, length / Math.max(1, radius * 2)));
-        const sectorHue = (((from.angle || 0) % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
-        const hueFromAngle = (sectorHue / (Math.PI * 2)) * 360;
+        
+        let hueRatio;
+        const baseCount = this.getEnvelopeBaseItemCount();
+        const axesCount = this.getEnvelopeAxesCount();
 
-        if (this.colorMode === 'scheme' && typeof ColorSchemeManager !== 'undefined') {
-            const hue = ColorSchemeManager.getHue(itemIndex / safeTotal);
-            return {
-                hue,
-                saturation: 100,
-                lightness: 50,
-                alpha,
-                color: `hsla(${hue}, 100%, 50%, ${alpha})`
-            };
+        // Even distribution logic:
+        if (itemIndex >= baseCount || from.angle === undefined) {
+            // Axes: spread based on axis index
+            const axisIndex = Math.max(0, itemIndex - baseCount);
+            hueRatio = axisIndex / Math.max(1, axesCount);
+        } else {
+            // Normal items: spread based on total index
+            hueRatio = itemIndex / safeTotal;
         }
 
+        // 1. Monochrome (Saturation 0)
         if (this.colorMode === 'monochrome') {
             return {
-                hue: 180,
-                saturation: 24,
-                lightness: 80,
+                hue: 0,
+                saturation: 0,
+                lightness: 90,
                 alpha,
-                color: `hsla(180, 24%, 80%, ${alpha})`
+                color: `hsla(0, 0%, 90%, ${alpha})`
             };
         }
 
-        if (this.colorMode === 'order') {
-            const hue = (itemIndex / safeTotal) * 360;
-            return {
-                hue,
-                saturation: 95,
-                lightness: 62,
-                alpha,
-                color: `hsla(${hue}, 95%, 62%, ${alpha})`
-            };
+        // 2. Determine Hue (Scheme or Default Rainbow)
+        let hue;
+        if (this.colorMode === 'scheme' && typeof ColorSchemeManager !== 'undefined') {
+            hue = ColorSchemeManager.getHue(hueRatio);
+        } else {
+            hue = hueRatio * 360; // Simple even spread as requested
         }
 
-        if (this.colorMode === 'origin') {
-            return {
-                hue: hueFromAngle,
-                saturation: 90,
-                lightness: 60,
-                alpha,
-                color: `hsla(${hueFromAngle}, 90%, 60%, ${alpha})`
-            };
-        }
-
-        if (this.colorMode === 'lsh') {
-            const hue = hueFromAngle;
-            const saturation = 52 + lengthRatio * 34;
-            const lightness = 42 + (1 - Math.abs(lengthRatio - 0.5) * 2) * 22;
-            return {
-                hue,
-                saturation,
-                lightness,
-                alpha,
-                color: `hsla(${hue}, ${saturation}%, ${lightness}%, ${alpha})`
-            };
-        }
-
-        if (this.colorMode === 'length') {
-            const hue = 220 - lengthRatio * 220;
-            return {
-                hue,
-                saturation: 92,
-                lightness: 60,
-                alpha,
-                color: `hsla(${hue}, 92%, 60%, ${alpha})`
-            };
-        }
-
+        // 3. Return consistent visual property
         return {
-            hue: hueFromAngle,
+            hue,
             saturation: 94,
             lightness: 62,
             alpha,
-            color: `hsla(${hueFromAngle}, 94%, 62%, ${alpha})`
+            color: `hsla(${hue}, 94%, 62%, ${alpha})`
         };
     },
 

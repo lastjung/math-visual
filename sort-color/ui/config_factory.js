@@ -18,6 +18,7 @@ const SortColorControlFactory = {
                 label: 'Pattern Mode',
                 value: caseRef.learningMode,
                 options: [
+                    { value: '0_default', label: '0_Default (Heart)' },
                     { value: 'off', label: 'Standard' },
                     { value: 'n-ramp', label: 'N Ramp' },
                     { value: 'm-ramp', label: 'M Ramp' },
@@ -31,7 +32,11 @@ const SortColorControlFactory = {
                     { value: 'factor_2', label: 'Factor - 1' }
                 ],
                 onChange: (v) => {
-                    caseRef.setLearningMode(v);
+                    if (v === '0_default') {
+                        caseRef.applyPreset(v);
+                    } else {
+                        caseRef.setLearningMode(v);
+                    }
                 }
             },
             {
@@ -558,6 +563,7 @@ const SortColorControlFactory = {
                 value: caseRef.currentPreset || 'standard',
                 options: [
                     { value: 'standard', label: 'Star' },
+                    { value: 'polygon', label: 'Polygon' },
                     { value: 'chain', label: 'Chain Stitch' }
                 ],
                 onChange: (v) => {

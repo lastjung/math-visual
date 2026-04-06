@@ -273,27 +273,27 @@ const SortRenderer = {
         if (this.sortMode === 'selection') currentSortLabel = 'Selection Sort';
 
         let nextY = 30;
-        ctx.fillText(`Sort: ${currentSortLabel}`, 24, nextY);
-        nextY += 22;
-        ctx.fillText(`Sim Time: ${simElapsedLabel}`, 24, nextY);
-        nextY += 22;
-        ctx.fillText(`Sort Time: ${sortTimeLabel}`, 24, nextY);
-        nextY += 22;
-        if (sortingActive && sortView) {
-            const digitLabel = sortView.passLabel || sortPlan?.passes?.[sortView.passIndex]?.label || `Pass ${sortView.passNumber}`;
-            let detailLabel = `Pass: ${digitLabel}`;
-            if (sortView.activeDigit != null) {
-                detailLabel = `Bucket: ${sortView.activeDigit}`;
-            } else if (sortView.activeIndices) {
-                detailLabel = `Pair: ${sortView.activeIndices[0]} ↔ ${sortView.activeIndices[1]}`;
-            } else if (sortView.pivotIndex != null) {
-                detailLabel = `Pivot: ${sortView.pivotIndex}`;
+        if (sortingActive) {
+            ctx.fillText(`Sort: ${currentSortLabel}`, 24, nextY);
+            nextY += 22;
+            ctx.fillText(`Sim Time: ${simElapsedLabel}`, 24, nextY);
+            nextY += 22;
+            ctx.fillText(`Sort Time: ${sortTimeLabel}`, 24, nextY);
+            nextY += 22;
+
+            if (sortView) {
+                const digitLabel = sortView.passLabel || sortPlan?.passes?.[sortView.passIndex]?.label || `Pass ${sortView.passNumber}`;
+                let detailLabel = `Pass: ${digitLabel}`;
+                if (sortView.activeDigit != null) {
+                    detailLabel = `Bucket: ${sortView.activeDigit}`;
+                } else if (sortView.activeIndices) {
+                    detailLabel = `Pair: ${sortView.activeIndices[0]} ↔ ${sortView.activeIndices[1]}`;
+                } else if (sortView.pivotIndex != null) {
+                    detailLabel = `Pivot: ${sortView.pivotIndex}`;
+                }
+                ctx.fillText(detailLabel, 24, nextY);
+                nextY += 22;
             }
-            ctx.fillText(detailLabel, 24, nextY);
-            nextY += 22;
-        } else if (this.isSortModeAvailable()) {
-            ctx.fillText(`State: ${this.sortingStatus}`, 24, nextY);
-            nextY += 22;
         }
 
         ctx.save();

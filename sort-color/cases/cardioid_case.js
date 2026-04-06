@@ -37,6 +37,24 @@ const CardioidCircleCase = {
     rotation: CardioidCaseDefaults.rotation,
     circleBulge: CardioidCaseDefaults.circleBulge,
     learningMode: CardioidCaseDefaults.learningMode, // off | n-ramp | m-ramp | gcd | integer-snap | mapping | classic | ultimate | mirror-chaos
+    currentPreset: '0_default',
+
+    applyPreset(presetId) {
+        this.currentPreset = presetId;
+        if (presetId === '0_default') {
+            this.pointCount = 360;
+            this.multiplier = 2.0;
+            this.multiplierSpeed = 0;
+            this.integersOnly = true;
+            this.learningMode = '0_default'; // Ensure UI stay on 0_default
+            this.colorMode = 'angle';
+            this.lineAlpha = 0.45;
+            this.lineWidth = 1.65;
+            this.renderMode = 'light';
+        }
+        if (typeof Core !== 'undefined' && Core.currentCase === this) Core.updateControls();
+    },
+
     classicTargets: CardioidCaseDefaults.classicTargets.slice(),
     classicIndex: CardioidCaseDefaults.classicIndex,
     classicDuration: CardioidCaseDefaults.classicDuration,
