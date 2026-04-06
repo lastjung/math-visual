@@ -1,4 +1,4 @@
-const SortColorScenarioManager = {
+const SortSimulationManager = {
     clearSimTimers() {
         this.simTimers.forEach((id) => {
             clearTimeout(id);
@@ -57,10 +57,30 @@ const SortColorScenarioManager = {
         this.clearSimTimers();
         this.isSimRunning = false;
         this.simStartMs = null;
+        const wasGeoSimulation = typeof this.currentScenario === 'string' && this.currentScenario.startsWith('geo:');
         const overlay = document.getElementById('sim-overlay');
         if (overlay) overlay.classList.remove('visible');
         const extraEl = document.getElementById('sim-extra');
         if (extraEl) extraEl.innerHTML = '';
+
+        if (wasGeoSimulation && this.currentCase) {
+            if (typeof this.currentCase.setPaused === 'function') {
+                this.currentCase.setPaused(true);
+            } else {
+                this.currentCase.isPaused = true;
+            }
+            if (typeof this.currentCase.syncEnvelopeItemCount === 'function') {
+                this.currentCase.syncEnvelopeItemCount();
+            }
+            if (typeof this.currentCase.draw === 'function') {
+                this.currentCase.draw();
+            }
+            this.updateControls();
+            this.updateSortBar();
+            this.simStateSnapshot = null;
+            this.currentScenario = null;
+            return;
+        }
 
         if (this.currentCase && this.simStateSnapshot) {
             if (typeof this.simStateSnapshot.pointCount === 'number') {
@@ -75,9 +95,39 @@ const SortColorScenarioManager = {
             if (typeof this.simStateSnapshot.learningMode === 'string') {
                 this.currentCase.learningMode = this.simStateSnapshot.learningMode;
             }
+            if (typeof this.simStateSnapshot.envelopeAxesCount === 'number') {
+                this.currentCase.envelopeAxesCount = this.simStateSnapshot.envelopeAxesCount;
+            }
+            if (typeof this.simStateSnapshot.envelopeLinesPerSector === 'number') {
+                this.currentCase.envelopeLinesPerSector = this.simStateSnapshot.envelopeLinesPerSector;
+            }
+            if (typeof this.simStateSnapshot.envelopeConstructionSpeed === 'number') {
+                this.currentCase.envelopeConstructionSpeed = this.simStateSnapshot.envelopeConstructionSpeed;
+            }
+            if (typeof this.simStateSnapshot.envelopeConstructionProgress === 'number') {
+                this.currentCase.envelopeConstructionProgress = this.simStateSnapshot.envelopeConstructionProgress;
+            }
+            if (typeof this.simStateSnapshot.envelopeConstructionComplete === 'boolean') {
+                this.currentCase.envelopeConstructionComplete = this.simStateSnapshot.envelopeConstructionComplete;
+            }
+            if (typeof this.simStateSnapshot.colorMode === 'string') {
+                this.currentCase.colorMode = this.simStateSnapshot.colorMode;
+            }
+            if (typeof this.simStateSnapshot.lineAlpha === 'number') {
+                this.currentCase.lineAlpha = this.simStateSnapshot.lineAlpha;
+            }
+            if (typeof this.simStateSnapshot.lineWidth === 'number') {
+                this.currentCase.lineWidth = this.simStateSnapshot.lineWidth;
+            }
+            if (typeof this.simStateSnapshot.isPaused === 'boolean') {
+                this.currentCase.isPaused = this.simStateSnapshot.isPaused;
+            }
             this.restoreSimulationSortSpeed();
             if (this.simStateSnapshot.sortSpeedMode) {
                 this.currentCase.sortSpeedMode = this.simStateSnapshot.sortSpeedMode;
+            }
+            if (typeof this.currentCase.syncEnvelopeItemCount === 'function') {
+                this.currentCase.syncEnvelopeItemCount();
             }
             if (typeof this.currentCase.resetSortState === 'function') {
                 this.currentCase.resetSortState('idle');
@@ -86,6 +136,7 @@ const SortColorScenarioManager = {
                 this.currentCase.draw();
             }
             this.updateControls();
+            this.updateSortBar();
         }
         this.simStateSnapshot = null;
         this.currentScenario = null;

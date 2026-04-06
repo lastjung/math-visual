@@ -59,7 +59,8 @@ select {
   margin: 0;
   font-family: "Fraunces", serif;
   font-weight: 700;
-  letter-spacing: -0.03em;
+  font-size: 1.15rem;
+  letter-spacing: -0.02em;
 }
 
 .hero h1 {
@@ -443,7 +444,7 @@ button:hover {
 }
 
 .control-item-select {
-  grid-template-columns: 110px minmax(0, 1fr);
+  grid-template-columns: 120px minmax(0, 1fr);
   align-items: center;
 }
 
@@ -465,7 +466,7 @@ button:hover {
 
 .control-item label {
   color: var(--muted);
-  font-size: 0.82rem;
+  font-size: 0.75rem;
   font-weight: 600;
   margin: 0;
   min-width: 0;
@@ -475,7 +476,7 @@ button:hover {
 }
 
 .control-item-select > label {
-  width: 110px;
+  width: 120px;
 }
 
 .control-item-slider .control-item-header label {

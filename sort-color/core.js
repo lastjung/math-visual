@@ -414,6 +414,9 @@ const Core = {
 
     toggleGeometryBuildPlayback() {
         if (!this.currentCase) return;
+        if (typeof this.currentCase.runGeoMode === 'function' && this.currentCase.runGeoMode()) {
+            return;
+        }
         if (typeof this.currentCase.toggleBuildPlayback === 'function') {
             this.currentCase.toggleBuildPlayback();
             return;
@@ -436,7 +439,8 @@ const Core = {
         const playIconSvg = document.getElementById('play-icon-svg');
         if (applePlay && playIconSvg) {
             const scenarioSelect = document.getElementById('apple-scenario-select');
-            const geometryMode = scenarioSelect && scenarioSelect.value === 'z_geometry';
+            const geometryMode = (scenarioSelect && scenarioSelect.value === 'z_geometry')
+                || (typeof this.currentScenario === 'string' && this.currentScenario.startsWith('geo:'));
             if (geometryMode) {
                 const buildComplete = !!this.currentCase?.envelopeConstructionComplete;
                 const isPaused = !!this.currentCase?.isPaused;
@@ -1076,6 +1080,10 @@ window.addEventListener('load', () => {
     Core.init();
 });
 
-if (typeof SortColorScenarioManager !== 'undefined') {
-    Object.assign(Core, SortColorScenarioManager);
+if (typeof SortSimulationManager !== 'undefined') {
+    Object.assign(Core, SortSimulationManager);
+}
+
+if (typeof GeoSimulationManager !== 'undefined') {
+    Object.assign(Core, GeoSimulationManager);
 }

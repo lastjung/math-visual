@@ -7,6 +7,14 @@ const SortColorControlFactory = {
                 label: '',
                 value: caseRef.isPaused ? 'PLAY (Resume)' : 'HOLD (Stop)',
                 onClick: () => {
+                    // Check for scenario/pattern simulation (0_ prefixed)
+                    if (caseRef.learningMode && caseRef.learningMode.startsWith('0_')) {
+                        if (typeof caseRef.togglePatternSimulation === 'function') {
+                            caseRef.togglePatternSimulation(caseRef.learningMode);
+                            if (typeof Core !== 'undefined' && Core.currentCase === caseRef) Core.updateControls();
+                            return;
+                        }
+                    }
                     if (!caseRef.animationId) caseRef.start();
                     caseRef.setPaused(!caseRef.isPaused);
                     if (typeof Core !== 'undefined' && Core.currentCase === caseRef) Core.updateControls();
@@ -15,7 +23,7 @@ const SortColorControlFactory = {
             {
                 type: 'select',
                 id: 'mc_mode',
-                label: 'Pattern Mode',
+                label: 'Geo Sim',
                 value: caseRef.learningMode,
                 options: [
                     { value: '0_default', label: '0_Default (Heart)' },
@@ -538,15 +546,41 @@ const SortColorControlFactory = {
     },
 
     createEnvelopeRadialControls(caseRef) {
-        const buildButtonLabel = caseRef.isPaused ? 'PLAY' : 'HOLD';
+        const geoSimActive = typeof Core !== 'undefined'
+            && Core.currentCase === caseRef
+            && Core.isSimRunning
+            && typeof Core.currentScenario === 'string'
+            && Core.currentScenario.startsWith('geo:');
+        const buildButtonLabel = geoSimActive || !caseRef.isPaused ? 'HOLD' : 'PLAY';
 
         return [
+            {
+                type: 'select',
+                id: 'mc_mode',
+                label: 'Geo Sim',
+                value: caseRef.learningMode,
+                options: [
+                    { value: '0_default', label: '0_Default (Heart)' },
+                    { value: '1_axes', label: '1_Axes Sweep' }
+                ],
+                onChange: (v) => {
+                    if (v === '0_default') {
+                        caseRef.applyPreset(v);
+                    } else {
+                        caseRef.setLearningMode(v);
+                    }
+                }
+            },
             {
                 type: 'button',
                 id: 'envelope_play_toggle',
                 label: '',
                 value: buildButtonLabel,
                 onClick: () => {
+                    if (typeof caseRef.runGeoMode === 'function' && caseRef.runGeoMode()) {
+                        if (typeof Core !== 'undefined' && Core.currentCase === caseRef) Core.updateControls();
+                        return;
+                    }
                     if (typeof caseRef.toggleBuildPlayback === 'function') {
                         caseRef.toggleBuildPlayback();
                     } else {
@@ -560,7 +594,7 @@ const SortColorControlFactory = {
                 type: 'select',
                 id: 'envelope_preset',
                 label: 'Preset',
-                value: caseRef.currentPreset || 'standard',
+                value: caseRef.currentPreset === '0_default' ? 'standard' : (caseRef.currentPreset || 'standard'),
                 options: [
                     { value: 'standard', label: 'Star' },
                     { value: 'polygon', label: 'Polygon' },

@@ -282,6 +282,14 @@ const CardioidCircleCase = {
         this.updateVisualState(dt);
     },
 
+    togglePatternSimulation(mode) {
+        if (mode && mode.startsWith('0_')) {
+            // Placeholder: currently 0_default acts as standard play/pause
+            if (!this.animationId) this.start();
+            this.setPaused(!this.isPaused);
+        }
+    },
+
     shuffleScene() {
         this.shuffleChords();
     },

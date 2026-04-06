@@ -26,13 +26,13 @@ const EnvelopeRadialCase = {
     shuffleFlash: 0,
     shuffleAnimation: null,
     rotation: 0,
-    learningMode: 'off',
+    learningMode: '0_default',
     isPaused: true,
-    currentPreset: 'standard',
+    currentPreset: '0_default',
     envelopeAxesCount: 5,
     envelopeLinesPerSector: 24,
     envelopeLayerCount: 1,
-    envelopeConstructionSpeed: 72,
+    envelopeConstructionSpeed: 36,
     envelopeConstructionProgress: 0,
     envelopeConstructionComplete: false,
     envelopeBuildOrder: 'sequential', // 'sequential' (Sector-wise) or 'chained' (Symmetry/Interleaved)
@@ -81,7 +81,7 @@ const EnvelopeRadialCase = {
         this.envelopeAxesCount = 5;
         this.envelopeLinesPerSector = 32;
         this.envelopeLayerCount = 1;
-        this.envelopeConstructionSpeed = 72;
+        this.envelopeConstructionSpeed = 36;
         this.replayConstruction();
         this.syncEnvelopeItemCount();
         this.draw();
@@ -98,7 +98,16 @@ const EnvelopeRadialCase = {
 
     applyPreset(presetId) {
         this.currentPreset = presetId;
-        if (presetId === 'polygon') {
+        if (presetId === '0_default') {
+            this.learningMode = '0_default';
+            // standard (Star) defaults
+            this.envelopeAxesCount = 5;
+            this.envelopeLinesPerSector = 32;
+            this.envelopeLayerCount = 1;
+            this.colorMode = 'angle';
+            this.lineAlpha = 0.38;
+            this.lineWidth = 1.5;
+        } else if (presetId === 'polygon') {
             this.envelopeAxesCount = 5;
             this.envelopeLinesPerSector = 32; // Align with Star
             this.envelopeLayerCount = 2; // As requested
@@ -136,6 +145,21 @@ const EnvelopeRadialCase = {
             Core.updateControls();
             Core.updateSortBar();
         }
+    },
+
+    isGeoSimMode(mode = this.learningMode) {
+        return typeof mode === 'string' && /^[1-9]_/.test(mode);
+    },
+
+    runGeoMode(mode = this.learningMode) {
+        if (typeof mode === 'string' && mode.startsWith('0_')) {
+            this.toggleBuildPlayback();
+            return true;
+        }
+        if (typeof Core !== 'undefined' && typeof Core.runGeoSimulation === 'function') {
+            return Core.runGeoSimulation(mode);
+        }
+        return false;
     },
 
     shouldResumeAfterReset() {

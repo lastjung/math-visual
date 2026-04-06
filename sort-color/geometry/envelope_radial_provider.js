@@ -172,16 +172,18 @@ const EnvelopeRadialGeometryProvider = {
         if (this.currentPreset === 'polygon') {
             // Use lineIndex directly since each layer focuses on one side
             const subRatio = lineIndex / (linesPerSector - 1);
-            
-            const nextSectorIndex = (sectorIndex + 1) % axesCount;
-            const vBase = this.getEnvelopeRadialAnchor(sectorIndex, 1.0, radius, cx, cy);
+            const polygonSectorIndex = (layerIndex % 2 === 0)
+                ? sectorIndex
+                : ((axesCount - sectorIndex) % axesCount);
+            const nextSectorIndex = (polygonSectorIndex + 1) % axesCount;
+            const vBase = this.getEnvelopeRadialAnchor(polygonSectorIndex, 1.0, radius, cx, cy);
             const vNext = this.getEnvelopeRadialAnchor(nextSectorIndex, 1.0, radius, cx, cy);
             
             let from, to;
             // Alternates direction based on layer: Layer 1, 3... (Odd layers index 0, 2, 4...) vs Layer 2, 4... (Even layers index 1, 3, 5...)
             if (layerIndex % 2 === 0) {
                 // Direction A: Center -> V_i connects to V_i -> V_i+1
-                from = this.getEnvelopeRadialAnchor(sectorIndex, subRatio, radius, cx, cy);
+                from = this.getEnvelopeRadialAnchor(polygonSectorIndex, subRatio, radius, cx, cy);
                 to = {
                     x: vBase.x + subRatio * (vNext.x - vBase.x),
                     y: vBase.y + subRatio * (vNext.y - vBase.y)
@@ -199,9 +201,9 @@ const EnvelopeRadialGeometryProvider = {
                 kind: 'line',
                 from,
                 to,
-                fromAxis: (layerIndex % 2 === 0) ? sectorIndex : nextSectorIndex,
-                toAxis: (layerIndex % 2 === 0) ? nextSectorIndex : sectorIndex,
-                sectorIndex,
+                fromAxis: (layerIndex % 2 === 0) ? polygonSectorIndex : nextSectorIndex,
+                toAxis: (layerIndex % 2 === 0) ? nextSectorIndex : polygonSectorIndex,
+                sectorIndex: polygonSectorIndex,
                 lineIndex,
                 layerIndex,
                 ratio: subRatio
