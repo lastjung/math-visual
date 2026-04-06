@@ -2,8 +2,8 @@ const EnvelopeRadialCase = {
     pointCount: 128,
     multiplier: 0,
     multiplierSpeed: 0,
-    lineWidth: 1.5,
-    lineAlpha: 0.38,
+    lineWidth: 2.0,
+    lineAlpha: 0.72,
     pointRadius: 1,
     showPoints: false,
     showHud: true,
@@ -53,8 +53,8 @@ const EnvelopeRadialCase = {
         this.pointCount = 128;
         this.multiplier = 0;
         this.multiplierSpeed = 0;
-        this.lineWidth = 1.5;
-        this.lineAlpha = 0.38;
+        this.lineWidth = 2.0;
+        this.lineAlpha = 0.72;
         this.pointRadius = 1;
         this.showPoints = false;
         this.showHud = true;
@@ -105,8 +105,8 @@ const EnvelopeRadialCase = {
             this.envelopeLinesPerSector = 32;
             this.envelopeLayerCount = 1;
             this.colorMode = 'angle';
-            this.lineAlpha = 0.38;
-            this.lineWidth = 1.5;
+            this.lineAlpha = 0.72;
+            this.lineWidth = 2.0;
         } else if (presetId === 'polygon') {
             this.envelopeAxesCount = 5;
             this.envelopeLinesPerSector = 32; // Align with Star
@@ -125,8 +125,8 @@ const EnvelopeRadialCase = {
             this.envelopeLinesPerSector = 32;
             this.envelopeLayerCount = 1; // Back to 1 layer for Star as requested
             this.colorMode = 'angle';
-            this.lineAlpha = 0.38;
-            this.lineWidth = 1.5;
+            this.lineAlpha = 0.72;
+            this.lineWidth = 2.0;
         }
         this.syncEnvelopeItemCount();
         this.replayConstruction();
@@ -220,6 +220,10 @@ const EnvelopeRadialCase = {
 
         const { n, sortingActive, sortView, sortPlan } = viewState;
         const formatSortSeconds = (seconds) => `${Math.max(0, seconds).toFixed(1)}s`;
+        const isGeoSimScene = typeof Core !== 'undefined'
+            && Core.currentCase === this
+            && typeof Core.currentScenario === 'string'
+            && Core.currentScenario.startsWith('geo:');
 
         // --- Left-aligned Sort HUD (Restored, Show ONLY during active Sort) ---
         if (this.envelopeConstructionComplete && sortingActive) {
@@ -282,15 +286,23 @@ const EnvelopeRadialCase = {
         ctx.restore();
 
 
-        // --- Left-aligned Progress Panel (Bottom) ---
-        if (!this.envelopeConstructionComplete) {
+        // --- Bottom HUD ---
+        if (isGeoSimScene && typeof Core !== 'undefined' && Core.isSimRunning) {
             ctx.save();
-            ctx.fillStyle = 'rgba(255, 209, 102, 0.95)';
-            ctx.font = '700 16px IBM Plex Sans, sans-serif';
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+            ctx.font = '500 12px "Inter", "IBM Plex Sans", system-ui, sans-serif';
+            ctx.textAlign = 'right';
+            ctx.textBaseline = 'bottom';
+            ctx.fillText(Core.formatRecordingTimeMMSS(Core.getSimulationElapsedMs()), viewState.w - 24, viewState.h - 20);
+            ctx.restore();
+        } else if (!this.envelopeConstructionComplete) {
+            ctx.save();
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+            ctx.font = '500 12px "Inter", "IBM Plex Sans", system-ui, sans-serif';
             ctx.fillText(
                 `Build ${Math.floor(this.envelopeConstructionProgress)} / ${this.pointCount}`,
                 24,
-                viewState.h - 24
+                viewState.h - 20
             );
             ctx.restore();
         }
