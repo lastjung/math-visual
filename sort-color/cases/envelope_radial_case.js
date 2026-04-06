@@ -24,7 +24,7 @@ const EnvelopeRadialCase = {
     shuffleSignature: '',
     shuffleFlash: 0,
     shuffleAnimation: null,
-    rotation: -Math.PI / 2,
+    rotation: 0,
     learningMode: 'off',
     isPaused: true,
     envelopeAxesCount: 4,
@@ -71,7 +71,7 @@ const EnvelopeRadialCase = {
         this.shuffleSignature = '';
         this.shuffleFlash = 0;
         this.shuffleAnimation = null;
-        this.rotation = -Math.PI / 2;
+        this.rotation = 0;
         this.learningMode = 'off';
         this.isPaused = true;
         this.envelopeAxesCount = 4;
@@ -164,10 +164,32 @@ const EnvelopeRadialCase = {
         ctx.lineWidth = 1;
         for (let axisIndex = 0; axisIndex < axesCount; axisIndex++) {
             const anchor = this.getEnvelopeRadialAnchor(axisIndex, 1, radius, cx, cy);
+            
+            // Draw axis line
             ctx.beginPath();
             ctx.moveTo(cx, cy);
             ctx.lineTo(anchor.x, anchor.y);
             ctx.stroke();
+
+            // Draw vertex info
+            const labelX = cx + (anchor.x - cx) * 0.85;
+            const labelY = cy + (anchor.y - cy) * 0.85;
+            const coordStr = `${axisIndex}: (${Math.round(anchor.x - cx)}, ${Math.round(anchor.y - cy)})`;
+            
+            ctx.save();
+            ctx.font = 'bold 16px monospace';
+            const metrics = ctx.measureText(coordStr);
+            ctx.fillStyle = 'rgba(0, 0, 0, 1)';
+            ctx.fillRect(labelX - metrics.width/2 - 4, labelY - 14, metrics.width + 8, 20);
+            ctx.fillStyle = '#ffffff';
+            ctx.textAlign = 'center';
+            ctx.fillText(coordStr, labelX, labelY + 2);
+            ctx.restore();
+            
+            // Draw a small circle at the vertex
+            ctx.beginPath();
+            ctx.arc(anchor.x, anchor.y, 3, 0, Math.PI * 2);
+            ctx.fill();
         }
         ctx.restore();
     },

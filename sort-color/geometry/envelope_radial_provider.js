@@ -44,7 +44,7 @@ const EnvelopeRadialGeometryProvider = {
 
     getEnvelopeRadialAnchor(axisIndex, ratio, radius, cx, cy) {
         const safeAxes = this.getEnvelopeAxesCount();
-        const angle = this.rotation + ((Math.PI * 2 * axisIndex) / safeAxes);
+        const angle = this.rotation - ((Math.PI * 2 * axisIndex) / safeAxes);
         const distance = Math.max(0, Math.min(1, ratio)) * radius;
         return {
             x: cx + Math.cos(angle) * distance,
@@ -60,8 +60,8 @@ const EnvelopeRadialGeometryProvider = {
         const sectorIndex = Math.floor(itemIndex / linesPerSector);
         const lineIndex = itemIndex % linesPerSector;
         const ratio = (lineIndex + 1) / (linesPerSector + 1);
-        const from = this.getEnvelopeRadialAnchor(sectorIndex, ratio, radius, cx, cy);
-        const to = this.getEnvelopeRadialAnchor((sectorIndex + 1) % axesCount, 1 - ratio, radius, cx, cy);
+        const from = this.getEnvelopeRadialAnchor(sectorIndex, 1 - ratio, radius, cx, cy);
+        const to = this.getEnvelopeRadialAnchor((sectorIndex + 1) % axesCount, ratio, radius, cx, cy);
         return {
             kind: 'line',
             from,
@@ -256,7 +256,7 @@ const EnvelopeRadialGeometryProvider = {
             n: this.getEnvelopeItemCount(),
             m: this.multiplier
         };
-        const radius = Math.min(this.canvas.width, this.canvas.height) * 0.42;
+        const radius = Math.min(this.canvas.width, this.canvas.height) * 0.35;
         const cx = this.canvas.width / 2;
         const cy = this.canvas.height / 2;
         return this.buildEnvelopeRadialProvider(locked.n, locked.m, radius, cx, cy);
