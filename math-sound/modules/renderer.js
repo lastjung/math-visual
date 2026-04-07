@@ -465,7 +465,9 @@ export function animate() {
     const totalPhases = (isAni && funcData.phases) ? funcData.phases.length : 1;
     const totalDuration = isAni ? (introDuration + regularDuration * (totalPhases - 1)) : 4.0;
     
-    if (isAni) {
+    if (funcData.targetCount) {
+        state.autoTargetCount = funcData.targetCount;
+    } else if (isAni) {
         state.autoTargetCount = totalPhases;
     } else if (['amazing', 'beautiful', 'harmonic', 'fusion', 'hyper', 'insane', 'fantastic', 'incredible', 'incomprehensible'].includes(funcData.category)) {
         state.autoTargetCount = 60;
@@ -613,13 +615,17 @@ export function animate() {
                 varText = `(v = ${((loopIdx % 19 + 1) * 0.314).toFixed(2)}) → ${((nextIdx % 19 + 1) * 0.314).toFixed(2)}`;
             } else if (name.includes('Clover')) {
                 varText = `(v = ${(loopIdx % 20 * 3.0).toFixed(0)}) → ${(nextIdx % 20 * 3.0).toFixed(0)}`;
-            } else if (name.includes('Arachnid') || name.includes('Sun') || name.includes('Plot Twist') || name.includes('Deadpool') || name.includes('Lissajous') || name.includes('Ultimate GCD')) {
+            } else if (name.includes('Deadpool')) {
+                varText = `(v = ${(loopIdx % 20 * 1.256).toFixed(2)}) → ${(nextIdx % 20 * 1.256).toFixed(2)}`;
+            } else if (name.includes('Arachnid') || name.includes('Sun') || name.includes('Plot Twist') || name.includes('Lissajous') || name.includes('Ultimate GCD')) {
                 varText = `(v = ${(loopIdx % 20 * 0.314).toFixed(2)}) → ${(nextIdx % 20 * 0.314).toFixed(2)}`;
             } else if (name.includes('Masterpiece')) {
                 varText = `(v = ${(loopIdx % 30 * 0.209).toFixed(2)}) → ${(nextIdx % 30 * 0.209).toFixed(2)}`;
             } else if (name === 'Relative Primality') {
                 varText = `(v = ${loopIdx % 10 + 2}) → ${nextIdx % 10 + 2}`;
-            } else if (name === 'Cellular Trigonometry' || name === 'Reality Bender') {
+            } else if (name === 'Reality Bender') {
+                varText = `(v = ${(loopIdx % 15 * 0.5).toFixed(1)}) → ${(nextIdx % 15 * 0.5).toFixed(1)}`;
+            } else if (name === 'Cellular Trigonometry') {
                 varText = `(v = ${(loopIdx % 15 * 0.1).toFixed(1)}) → ${(nextIdx % 15 * 0.1).toFixed(1)}`;
             } else if (name === 'Interference Mesh') {
                 varText = `(v = ${(loopIdx % 20 * 0.1).toFixed(1)}) → ${(nextIdx % 20 * 0.1).toFixed(1)}`;

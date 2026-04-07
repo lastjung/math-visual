@@ -242,9 +242,6 @@ const SortRenderer = {
         const { n, hudM, sortingActive, sortView, sortPlan } = viewState;
         const formatSortSeconds = (seconds) => `${Math.max(0, seconds).toFixed(1)}s`;
         const hudSpeed = this.learningMode === 'm-ramp' ? this.mRampEffectiveRate : this.multiplierSpeed;
-        const simElapsedLabel = (typeof Core !== 'undefined' && Core.isSimRunning && typeof Core.getSimulationElapsedMs === 'function')
-            ? Core.formatRecordingTimeMMSS(Core.getSimulationElapsedMs())
-            : '--:--';
         ctx.fillStyle = 'rgba(255,255,255,0.92)';
         ctx.font = '600 14px Inter, system-ui, sans-serif';
 
@@ -275,8 +272,6 @@ const SortRenderer = {
         let nextY = 30;
         if (sortingActive) {
             ctx.fillText(`Sort: ${currentSortLabel}`, 24, nextY);
-            nextY += 22;
-            ctx.fillText(`Sim Time: ${simElapsedLabel}`, 24, nextY);
             nextY += 22;
             ctx.fillText(`Sort Time: ${sortTimeLabel}`, 24, nextY);
             nextY += 22;

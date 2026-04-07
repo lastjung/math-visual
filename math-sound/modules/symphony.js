@@ -534,14 +534,15 @@ export const SYMPHONY_FUNCTIONS = {
         thetaRange: { min: 0, max: 40 * Math.PI },
         viewBox: { xMin: -2.5, xMax: 2.5, yMin: -2.5, yMax: 2.5 },
         audioScale: 140,
-        baseFreq: 220
+        baseFreq: 220,
+        targetCount: 3
     },
     realityBender: {
         category: 'hyper',
         name: 'Reality Bender',
         type: 'cartesian',
         fn: (x, loopIndex = 0) => {
-            const v = (loopIndex % 15) * 0.1;
+            const v = (loopIndex % 15) * 0.5;
             return (gcd(Math.round(2025 * x)) % 5) + v * Math.sin(x) + Math.ceil(v * x) / 5;
         },
         formula: 'y = mod(gcd(2025x), 5) + v·sin x + ceil(vx)/5',
@@ -555,7 +556,7 @@ export const SYMPHONY_FUNCTIONS = {
         name: 'Deadpool Geometry',
         type: 'polar',
         r: (theta, loopIndex = 0) => {
-            const v = (loopIndex % 20) * 0.314;
+            const v = (loopIndex % 20) * 1.256;
             const l = 2.025;
             // 음수 반지름을 절대값으로 처리하여 대칭 구조를 완성 (끊김 방지)
             const rVal = Math.sin(theta + l - v) - Math.ceil(2 * Math.sin(2 * theta + v + 1.55));

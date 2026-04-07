@@ -44,6 +44,10 @@ const SortSimulationManager = {
         extraEl.innerHTML = extraHtml || '';
         overlay.classList.add('visible');
 
+        if (this.isSimRunning && this.simStartMs) {
+            this._startTimerHUDLoop();
+        }
+
         if (duration <= 0) return;
 
         const tid = setTimeout(() => {
@@ -57,6 +61,8 @@ const SortSimulationManager = {
         this.clearSimTimers();
         this.isSimRunning = false;
         this.simStartMs = null;
+        this._stopTimerHUDLoop();
+
         const wasGeoSimulation = typeof this.currentScenario === 'string' && this.currentScenario.startsWith('geo:');
         const overlay = document.getElementById('sim-overlay');
         if (overlay) overlay.classList.remove('visible');
@@ -164,6 +170,9 @@ const SortSimulationManager = {
         this.currentScenario = '1_rays';
         const scenarioSelect = document.getElementById('apple-scenario-select');
         if (scenarioSelect) scenarioSelect.value = '1_rays';
+
+        // Force Timer HUD on
+        this._startTimerHUDLoop();
 
         const unit = this.currentGeometryId === 'goldberg_sphere' ? 'Faces' : 'Rays';
         const sortLabels = {
@@ -306,6 +315,9 @@ const SortSimulationManager = {
         const scenarioSelect = document.getElementById('apple-scenario-select');
         if (scenarioSelect) scenarioSelect.value = '2_by-sorting';
 
+        // Force Timer HUD on
+        this._startTimerHUDLoop();
+
         const simTitle = '5 Sorting Methods';
         const stages = [
             { mode: 'hue', label: 'Hue Radix', speedMultiplier: 1 },
@@ -375,7 +387,7 @@ const SortSimulationManager = {
                     try {
                         if (!this.isSimRunning) return;
                         if (currentIdx === 0) {
-                            this.showSimMessage(simTitle, subTitleText, 0);
+                            this.showSimMessage('', subTitleText, 0);
                         }
                         const startedAt = performance.now();
                         this.currentCase.restartSort();
@@ -449,6 +461,9 @@ const SortSimulationManager = {
         this.currentScenario = '3_m-simm';
         const scenarioSelect = document.getElementById('apple-scenario-select');
         if (scenarioSelect) scenarioSelect.value = '3_m-simm';
+
+        // Force Timer HUD on
+        this._startTimerHUDLoop();
 
         const defaultClassicTargets = [2, 3, 4, 5, 6, 7, 8, 9, 10];
         const getSortLabel = (sortMode) => {
@@ -599,6 +614,9 @@ const SortSimulationManager = {
         this.currentScenario = '4_n-steps';
         const scenarioSelect = document.getElementById('apple-scenario-select');
         if (scenarioSelect) scenarioSelect.value = '4_n-steps';
+
+        // Force Timer HUD on
+        this._startTimerHUDLoop();
 
         const getGeometryLabel = () => {
             const entry = this.geometryRegistry?.[this.currentGeometryId];
@@ -763,6 +781,9 @@ const SortSimulationManager = {
         const scenarioSelect = document.getElementById('apple-scenario-select');
         if (scenarioSelect) scenarioSelect.value = '5_disks';
 
+        // Force Timer HUD on
+        this._startTimerHUDLoop();
+
         const getGeometryLabel = () => {
             const entry = this.geometryRegistry?.[this.currentGeometryId];
             return entry?.label || 'Geometry';
@@ -910,6 +931,9 @@ const SortSimulationManager = {
         const scenarioSelect = document.getElementById('apple-scenario-select');
         if (scenarioSelect) scenarioSelect.value = '6_color';
 
+        // Force Timer HUD on
+        this._startTimerHUDLoop();
+
         const stages = [
             { id: 'cosmic', label: 'Cosmic Drift' },
             { id: 'twilight', label: 'Twilight Bloom' },
@@ -992,5 +1016,54 @@ const SortSimulationManager = {
 
 
         runStage();
+    },
+
+    _timerHUDLoopId: null,
+    _startTimerHUDLoop() {
+        if (this._timerHUDLoopId) return;
+
+        const timerEl = document.getElementById('sim-timer');
+        if (!timerEl) return;
+        timerEl.classList.remove('hidden');
+
+        const update = () => {
+            if (!this.isSimRunning || !this.simStartMs) {
+                this._stopTimerHUDLoop({ resetText: false });
+                return;
+            }
+
+            const elapsed = performance.now() - this.simStartMs;
+            timerEl.textContent = this._formatHUDTime(elapsed);
+
+            this._timerHUDLoopId = requestAnimationFrame(update);
+        };
+        this._timerHUDLoopId = requestAnimationFrame(update);
+    },
+
+    _stopTimerHUDLoop(options = {}) {
+        const { resetText = true } = options;
+        if (this._timerHUDLoopId) {
+            cancelAnimationFrame(this._timerHUDLoopId);
+            this._timerHUDLoopId = null;
+        }
+
+        const timerEl = document.getElementById('sim-timer');
+        if (!timerEl) return;
+
+        timerEl.classList.add('hidden');
+        if (resetText) {
+            timerEl.textContent = '00:00.0';
+        }
+    },
+
+    _formatHUDTime(ms) {
+        const totalSeconds = Math.max(0, ms / 1000);
+        const m = Math.floor(totalSeconds / 60);
+        const s = Math.floor(totalSeconds % 60);
+        const d = Math.floor((ms % 1000) / 100);
+
+        const pad2 = (v) => String(v).padStart(2, '0');
+
+        return `${pad2(m)}:${pad2(s)}.${d}`;
     }
 };

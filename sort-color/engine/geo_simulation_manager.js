@@ -22,6 +22,9 @@ const GeoSimulationManager = {
         this.clearSimTimers();
         this.isSimRunning = false;
         this.simStartMs = null;
+        if (typeof this._stopTimerHUDLoop === 'function') {
+            this._stopTimerHUDLoop();
+        }
         const overlay = document.getElementById('sim-overlay');
         if (overlay) overlay.classList.remove('visible');
         const extraEl = document.getElementById('sim-extra');
@@ -70,6 +73,9 @@ const GeoSimulationManager = {
 
         this.isSimRunning = true;
         this.simStartMs = performance.now();
+        if (typeof this._startTimerHUDLoop === 'function') {
+            this._startTimerHUDLoop();
+        }
         if (!isResume) {
             this.simStateSnapshot = {
                 envelopeAxesCount: this.currentCase.envelopeAxesCount,
