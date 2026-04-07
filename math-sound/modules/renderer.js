@@ -57,8 +57,8 @@ function drawLayer(funcKey, width, height, progress, isBackground = false) {
     
     graphCtx.save();
     if (isBackground) {
-        graphCtx.strokeStyle = 'rgba(0, 0, 0, 0.08)'; // Very Light Gray Guide
-        graphCtx.lineWidth = 1.25;
+        graphCtx.strokeStyle = 'rgba(55, 65, 81, 0.24)'; // Recording-friendly guide
+        graphCtx.lineWidth = 2;
     } else {
         graphCtx.strokeStyle = getCategoryColor(funcData.category);
         graphCtx.lineWidth = 3;
@@ -394,8 +394,8 @@ export function drawAxes(width, height, xMin, xMax, yMin, yMax) {
     const centerX = ((-xMin) / xRange) * width;
     const centerY = ((yMax) / yRange) * height;
 
-    graphCtx.strokeStyle = '#e5e7eb';
-    graphCtx.lineWidth = 1;
+    graphCtx.strokeStyle = '#cbd5e1';
+    graphCtx.lineWidth = 1.5;
 
     if (centerY >= 0 && centerY <= height) {
         graphCtx.beginPath();
@@ -587,11 +587,17 @@ export function animate() {
                 const vNext = (nextIdx % 10 * 0.6).toFixed(1);
                 const lCurrent = [2, 4, 6, 8, 10][loopIdx % 5];
                 varText = `(v = ${vCurrent}, L = ${lCurrent}) → ${vNext}`;
-            } else if (name.includes('Web')) {
+            } else if (name === 'Dancing Sign Trace') {
+                const axCurrent = ((loopIdx % 12) * 0.5 + 1).toFixed(1);
+                const axNext = ((nextIdx % 12) * 0.5 + 1).toFixed(1);
+                const ayCurrent = (loopIdx % 10) + 1;
+                const ayNext = (nextIdx % 10) + 1;
+                varText = `(ax = ${axCurrent}, ay = ${ayCurrent}) → (${axNext}, ${ayNext})`;
+            } else if (name === 'High-Freq Web') {
                 const aCurrent = 50 + (loopIdx % 10) * 10;
                 const aNext = 50 + (nextIdx % 10) * 10;
                 varText = `(a = ${aCurrent}) → ${aNext}`;
-            } else if (name.includes('Ovals')) {
+            } else if (name === 'Harmonic Ovals') {
                 const vCurrent = (0.95 + loopIdx % 10 * 0.01).toFixed(2);
                 const vNext = (0.95 + nextIdx % 10 * 0.01).toFixed(2);
                 varText = `(v = ${vCurrent}) → ${vNext}`;
@@ -651,6 +657,30 @@ export function animate() {
                 varText = `(v = ${((loopIdx % 8) * (Math.PI / 4)).toFixed(2)}) → ${((nextIdx % 8) * (Math.PI / 4)).toFixed(2)}`;
             } else if (name === 'Modulo Jagged Wave') {
                 varText = `(v12 = ${(0.19 + (loopIdx % 12) * 0.18).toFixed(2)}) → ${(0.19 + (nextIdx % 12) * 0.18).toFixed(2)}`;
+            } else if (name === 'Envelope Modulation') {
+                varText = `(a = ${(loopIdx % 30) + 1}) → ${(nextIdx % 30) + 1}`;
+            } else if (name === 'Harmonic Intro') {
+                varText = `(a = ${(loopIdx % 15) + 1}) → ${(nextIdx % 15) + 1}`;
+            } else if (name === 'Jagged Sine GCD') {
+                varText = `(v11 = ${(loopIdx % 10) + 1}) → ${(nextIdx % 10) + 1}`;
+            } else if (name === 'Ultimate GCD') {
+                varText = `(v = ${(loopIdx % 20 * 0.314).toFixed(3)}) → ${(nextIdx % 20 * 0.314).toFixed(3)}`;
+            } else if (name === 'Concentric Modulation') {
+                varText = `(k = ${(loopIdx % 40).toFixed(1)}) → ${(nextIdx % 40).toFixed(1)}`;
+            } else if (name === 'Cinematic Galaxy') {
+                varText = `(v = ${(loopIdx % 20 * 0.314).toFixed(3)}) → ${(nextIdx % 20 * 0.314).toFixed(3)}`;
+            } else if (name === 'Secant Plot Twist') {
+                varText = `(v = ${(loopIdx % 20 * 0.314).toFixed(3)}) → ${(nextIdx % 20 * 0.314).toFixed(3)}`;
+            } else if (name === 'Wave Tangent Twist') {
+                varText = `(v3 = ${((loopIdx % 19 + 1) * 0.172).toFixed(3)}, v6 = ${((loopIdx % 19 + 1) * 0.314).toFixed(3)})`;
+            } else if (name === 'Star Core') {
+                varText = `(v = ${(loopIdx % 20 * 0.314).toFixed(3)}) → ${(nextIdx % 20 * 0.314).toFixed(3)}`;
+            } else if (name === 'Pulsating Petal') {
+                varText = `(v = ${(-1.5 + (loopIdx % 15) * 0.2).toFixed(1)}) → ${(-1.5 + (nextIdx % 15) * 0.2).toFixed(1)}`;
+            } else if (name === 'Arachnid Web') {
+                varText = `(v = ${(loopIdx % 20 * 0.314).toFixed(3)}) → ${(nextIdx % 20 * 0.314).toFixed(3)}`;
+            } else if (name === 'Rotating Ovals') {
+                varText = `(v = ${(loopIdx % 20 * 0.75).toFixed(2)}) → ${(nextIdx % 20 * 0.75).toFixed(2)}`;
             } else if (name.includes('Sign') || name.includes('Intro') || name.includes('Modulation') || name.includes('GCD')) {
                 varText = `(a = ${loopIdx % 10 + 1}) → ${nextIdx % 10 + 1}`;
             } else if (name === 'Geometric Shift') {
@@ -661,16 +691,10 @@ export function animate() {
                 varText = `(k = ${(loopIdx % 80 * 0.1).toFixed(1)}) → ${(nextIdx % 80 * 0.1).toFixed(1)}`;
             } else if (name === 'Surface Ripple Field' || name === 'Chaos Star Grid') {
                 varText = `(k = ${(loopIdx % 40 * 0.5).toFixed(1)}) → ${(nextIdx % 40 * 0.5).toFixed(1)}`;
-            } else if (name === 'Concentric Modulation') {
-                varText = `(k = ${(loopIdx % 40 * 1.0).toFixed(1)}) → ${(nextIdx % 40 * 1.0).toFixed(1)}`;
             } else if (name === 'Global Implicit Gate') {
                 varText = `(k = ${(loopIdx % 20 * 3.0 + 1).toFixed(1)}) → ${(nextIdx % 20 * 3.0 + 1).toFixed(1)}`;
             } else if (name === 'Saturn Orbit') {
                 varText = `(v = ${(loopIdx % 20 * 0.314).toFixed(3)}) → ${(nextIdx % 20 * 0.314).toFixed(3)}`;
-            } else if (name === 'Wave Tangent Twist') {
-                varText = `(v3 = ${((loopIdx % 19 + 1) * 0.172).toFixed(3)}, v6 = ${((loopIdx % 19 + 1) * 0.314).toFixed(3)})`;
-            } else if (name === 'Rotating Ovals') {
-                varText = `(v = ${(loopIdx % 20 * 0.75).toFixed(2)}) → ${(nextIdx % 20 * 0.75).toFixed(2)}`;
             } else if (name === 'Higher Dimension 8') {
                 varText = `(v = ${(loopIdx % 10 * 0.2).toFixed(1)}) → ${(nextIdx % 10 * 0.2).toFixed(1)}`;
             } else if (name === 'Final Chapter Dense') {
