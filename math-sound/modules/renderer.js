@@ -470,7 +470,7 @@ export function animate() {
     } else if (isAni) {
         state.autoTargetCount = totalPhases;
     } else if (['amazing', 'beautiful', 'harmonic', 'fusion', 'hyper', 'insane', 'fantastic', 'incredible', 'incomprehensible'].includes(funcData.category)) {
-        state.autoTargetCount = 60;
+        state.autoTargetCount = 10;
     }
 
     // 루프가 넘어갔을 때
@@ -702,8 +702,19 @@ export function animate() {
             }
         }
         
-        // 변수가 있을 때만 출력, 없을 때는 지움 (없는 거는 이름만)
-        elements.functionSubtitle.innerText = varText;
+        const isSymphony = ['amazing', 'beautiful', 'harmonic', 'fusion', 'hyper', 'insane', 'fantastic', 'incredible', 'incomprehensible'].includes(cat);
+        const loopCurrent = Math.min(loopIdx + 1, state.autoTargetCount);
+        const loopInfo = isSymphony && state.autoTargetCount > 0
+            ? `Loop ${loopCurrent}/${state.autoTargetCount}`
+            : '';
+
+        if (varText && loopInfo) {
+            elements.functionSubtitle.innerText = `${loopInfo} ${varText}`;
+        } else if (loopInfo) {
+            elements.functionSubtitle.innerText = loopInfo;
+        } else {
+            elements.functionSubtitle.innerText = varText;
+        }
     }
 
     drawWaveform();

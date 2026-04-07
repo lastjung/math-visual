@@ -66,8 +66,12 @@ export function createSoundFromFunction(functionId = state.currentFunction) {
     const introDraw = 1.0;
     const regularDraw = 4.0;
     
-    // Symphony 계열만 긴 버퍼를 사용해 loopIndex 진화를 끝까지 담는다. (60 loops * 4.0s = 240.0s)
-    let duration = isAni ? 4.5 : (isSymphony ? 240.0 : 4.5);
+    const symphonyLoopDuration = 4.0;
+    const defaultSymphonyLoops = 10;
+    const symphonyTargetCount = funcData.targetCount || state.autoTargetCount || defaultSymphonyLoops;
+
+    // Symphony 계열은 목표 루프 수만큼만 버퍼를 생성한다.
+    let duration = isAni ? 4.5 : (isSymphony ? symphonyTargetCount * symphonyLoopDuration : 4.5);
     if (isAni && funcData.phases) {
         duration = introDuration + (regularDuration * (funcData.phases.length - 1));
     }
@@ -89,8 +93,8 @@ export function createSoundFromFunction(functionId = state.currentFunction) {
             progressInLoop = Math.min(1.0, (adjustedT % regularDuration) / regularDraw);
         } else {
             // 일반 수식도 4초마다 loopIndex를 올려서 렌더러와 동기화 (Symphony 특화)
-            loopIndex = Math.floor(t / 4);
-            progressInLoop = (t % 4) / 4;
+            loopIndex = Math.floor(t / symphonyLoopDuration);
+            progressInLoop = (t % symphonyLoopDuration) / symphonyLoopDuration;
         }
         
         let y = 0;

@@ -32,7 +32,7 @@ export const state = {
     autoQueue: [],
     autoQueueIndex: -1,
     autoLoopCount: 0,
-    autoTargetCount: 60, // 시원하게 늘려서 긴 연주 보장
+    autoTargetCount: 10, // Symphony 기본 루프 수
     // Sequential Queue State
     playQueue: [],
     currentQueueIndex: -1,
