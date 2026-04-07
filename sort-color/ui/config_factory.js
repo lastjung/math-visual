@@ -598,7 +598,8 @@ const SortColorControlFactory = {
                 options: [
                     { value: 'standard', label: 'Star' },
                     { value: 'polygon', label: 'Polygon' },
-                    { value: 'chain', label: 'Chain Stitch' }
+                    { value: 'chain', label: 'Chain Stitch' },
+                    { value: 'arc_weave', label: 'Arc Weave' }
                 ],
                 onChange: (v) => {
                     caseRef.applyPreset(v);

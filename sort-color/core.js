@@ -353,9 +353,50 @@ const Core = {
                 e.preventDefault();
                 this.runColorSimulation();
             }
+            if (e.code === 'Digit0' && this.aHeld) {
+                e.preventDefault();
+                const scenarioSelect = document.getElementById('apple-scenario-select');
+                if (scenarioSelect) scenarioSelect.value = '0_default';
+                this.stopSimulation();
+                if (this.currentCase && typeof this.currentCase.toggleSortPlayback === 'function') {
+                    this.currentCase.toggleSortPlayback();
+                    this.updateSortBar();
+                }
+            }
+            if (e.code === 'Digit0' && this.bHeld) {
+                e.preventDefault();
+                const scenarioSelect = document.getElementById('apple-scenario-select');
+                if (scenarioSelect) scenarioSelect.value = 'z_geometry';
+                this.stopSimulation();
+                if (this.currentCase && typeof this.currentCase.applyPreset === 'function') {
+                    this.currentCase.applyPreset('0_default');
+                }
+                if (typeof this.toggleGeometryBuildPlayback === 'function') {
+                    this.toggleGeometryBuildPlayback();
+                    this.updateSortBar();
+                }
+            }
+            if (e.code === 'Digit1' && this.bHeld) {
+                e.preventDefault();
+                const scenarioSelect = document.getElementById('apple-scenario-select');
+                if (scenarioSelect) scenarioSelect.value = 'z_geometry';
+                this.stopSimulation();
+                if (this.currentCase && typeof this.currentCase.setLearningMode === 'function') {
+                    this.currentCase.setLearningMode('1_axes');
+                } else if (this.currentCase) {
+                    this.currentCase.learningMode = '1_axes';
+                }
+                if (typeof this.toggleGeometryBuildPlayback === 'function') {
+                    this.toggleGeometryBuildPlayback();
+                    this.updateSortBar();
+                }
+            }
 
             if (e.code === 'KeyA') {
                 this.aHeld = true;
+            }
+            if (e.code === 'KeyB') {
+                this.bHeld = true;
             }
 
             if (e.code === 'Space') {
@@ -405,12 +446,14 @@ const Core = {
 
         window.addEventListener('keyup', (e) => {
             if (e.code === 'KeyA') this.aHeld = false;
+            if (e.code === 'KeyB') this.bHeld = false;
         });
 
         setInterval(() => this.updateSortBar(), 500);
     },
 
     aHeld: false,
+    bHeld: false,
 
     toggleGeometryBuildPlayback() {
         if (!this.currentCase) return;

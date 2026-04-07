@@ -1,6 +1,46 @@
 const EnvelopeRadialGeometryProvider = {
     interpolateEnvelopeRadialGeometry(fromGeometry, toGeometry, t) {
         if (!fromGeometry || !toGeometry) return toGeometry || fromGeometry || null;
+        if (fromGeometry.kind === 'cubic' && toGeometry.kind === 'cubic') {
+            return {
+                kind: 'cubic',
+                hidden: !!toGeometry.hidden,
+                from: {
+                    x: fromGeometry.from.x + (toGeometry.from.x - fromGeometry.from.x) * t,
+                    y: fromGeometry.from.y + (toGeometry.from.y - fromGeometry.from.y) * t
+                },
+                control1: {
+                    x: fromGeometry.control1.x + (toGeometry.control1.x - fromGeometry.control1.x) * t,
+                    y: fromGeometry.control1.y + (toGeometry.control1.y - fromGeometry.control1.y) * t
+                },
+                control2: {
+                    x: fromGeometry.control2.x + (toGeometry.control2.x - fromGeometry.control2.x) * t,
+                    y: fromGeometry.control2.y + (toGeometry.control2.y - fromGeometry.control2.y) * t
+                },
+                to: {
+                    x: fromGeometry.to.x + (toGeometry.to.x - fromGeometry.to.x) * t,
+                    y: fromGeometry.to.y + (toGeometry.to.y - fromGeometry.to.y) * t
+                }
+            };
+        }
+        if (fromGeometry.kind === 'quadratic' && toGeometry.kind === 'quadratic') {
+            return {
+                kind: 'quadratic',
+                hidden: !!toGeometry.hidden,
+                from: {
+                    x: fromGeometry.from.x + (toGeometry.from.x - fromGeometry.from.x) * t,
+                    y: fromGeometry.from.y + (toGeometry.from.y - fromGeometry.from.y) * t
+                },
+                control: {
+                    x: fromGeometry.control.x + (toGeometry.control.x - fromGeometry.control.x) * t,
+                    y: fromGeometry.control.y + (toGeometry.control.y - fromGeometry.control.y) * t
+                },
+                to: {
+                    x: fromGeometry.to.x + (toGeometry.to.x - fromGeometry.to.x) * t,
+                    y: fromGeometry.to.y + (toGeometry.to.y - fromGeometry.to.y) * t
+                }
+            };
+        }
         return {
             kind: 'line',
             hidden: !!toGeometry.hidden,
@@ -32,6 +72,7 @@ const EnvelopeRadialGeometryProvider = {
     },
 
     getEnvelopeActiveAxes() {
+        if (this.currentPreset === 'orbit_net') return [];
         const axesCount = this.getEnvelopeAxesCount();
         const linesPerSector = this.getEnvelopeLinesPerSector();
         const baseCount = this.getEnvelopeBaseItemCount();
@@ -85,6 +126,92 @@ const EnvelopeRadialGeometryProvider = {
             y: cy + dy, 
             angle: angle,
             distance: radius * ratio
+        };
+    },
+
+    getEnvelopeArcControlPoint(fromAxis, toAxis, ratio, layerIndex, radius, cx, cy) {
+        const axesCount = this.getEnvelopeAxesCount();
+        const fromAnchor = this.getEnvelopeRadialAnchor(fromAxis, 1, radius, cx, cy);
+        const toAnchor = this.getEnvelopeRadialAnchor(toAxis, 1, radius, cx, cy);
+        const fromAngle = fromAnchor.angle;
+        let toAngle = toAnchor.angle;
+        while (toAngle - fromAngle > Math.PI) toAngle -= Math.PI * 2;
+        while (toAngle - fromAngle < -Math.PI) toAngle += Math.PI * 2;
+
+        const midAngle = fromAngle + (toAngle - fromAngle) / 2;
+        const layerBias = Math.min(0.22, layerIndex * 0.08);
+        const ratioBias = 0.14 * (1 - Math.abs(0.5 - ratio) * 2);
+        const parityBias = ((fromAxis + layerIndex) % 2 === 0) ? 0.1 : -0.08;
+        const controlRatio = Math.max(0.18, Math.min(0.94, 0.52 + layerBias + ratioBias + parityBias));
+
+        return this.getEnvelopeRadialAnchor(
+            ((midAngle - ((axesCount % 2 !== 0) ? -Math.PI / 2 : Math.PI)) / (Math.PI * 2)) * axesCount,
+            controlRatio,
+            radius,
+            cx,
+            cy
+        );
+    },
+
+    getEnvelopeOrbitGeometry(sectorIndex, lineIndex, layerIndex, radius, cx, cy) {
+        const axesCount = this.getEnvelopeAxesCount();
+        const linesPerSector = this.getEnvelopeLinesPerSector();
+        const skip = Math.max(1, Math.min(axesCount - 1, layerIndex + 1));
+        const isEvenAxisCount = axesCount % 2 === 0;
+        const subgroupStride = isEvenAxisCount ? 2 : 1;
+        const visibleCount = this.getEnvelopeVisibleCount();
+        const halfBuildCount = Math.floor(this.getEnvelopeBaseItemCount() / 2);
+        const showOddOrbitSet = !isEvenAxisCount || this.envelopeConstructionComplete || visibleCount > halfBuildCount;
+        if (isEvenAxisCount && (sectorIndex % 2 !== 0) && !showOddOrbitSet) {
+            return {
+                kind: 'line',
+                hidden: true,
+                from: { x: cx, y: cy },
+                to: { x: cx, y: cy },
+                fromAxis: sectorIndex,
+                toAxis: sectorIndex,
+                sectorIndex,
+                lineIndex,
+                layerIndex,
+                ratio: 0
+            };
+        }
+        const toAxis = (sectorIndex + subgroupStride * skip) % axesCount;
+        const progress = (lineIndex + 1) / (linesPerSector + 1);
+        const orbitRatio = Math.max(0.16, Math.min(0.94, 0.2 + progress * 0.68));
+        const from = this.getEnvelopeRadialAnchor(sectorIndex, orbitRatio, radius, cx, cy);
+        const to = this.getEnvelopeRadialAnchor(toAxis, orbitRatio, radius, cx, cy);
+        const outerGuide = this.getEnvelopeArcControlPoint(sectorIndex, toAxis, Math.min(0.98, orbitRatio + 0.18), layerIndex, radius, cx, cy);
+        const innerGuide = this.getEnvelopeArcControlPoint(sectorIndex, toAxis, Math.max(0.1, orbitRatio - 0.12), layerIndex, radius, cx, cy);
+        const tangentScale = radius * (0.036 + layerIndex * 0.012);
+
+        const control1 = {
+            x: from.x + Math.cos(from.angle + Math.PI / 2) * tangentScale + (outerGuide.x - from.x) * 0.34,
+            y: from.y + Math.sin(from.angle + Math.PI / 2) * tangentScale + (outerGuide.y - from.y) * 0.34
+        };
+        const control2 = {
+            x: to.x + Math.cos(to.angle - Math.PI / 2) * tangentScale + (outerGuide.x - to.x) * 0.34,
+            y: to.y + Math.sin(to.angle - Math.PI / 2) * tangentScale + (outerGuide.y - to.y) * 0.34
+        };
+
+        return {
+            kind: 'cubic',
+            from,
+            control1,
+            control2,
+            to,
+            fromAxis: sectorIndex,
+            toAxis,
+            sectorIndex,
+            lineIndex,
+            layerIndex,
+            ratio: orbitRatio,
+            colorRatio: (
+                (isEvenAxisCount ? (sectorIndex % 2) * (axesCount / 2) : 0)
+                + Math.floor(sectorIndex / subgroupStride)
+                + layerIndex * 0.22
+                + progress * 0.5
+            ) / Math.max(1, axesCount)
         };
     },
 
@@ -209,6 +336,31 @@ const EnvelopeRadialGeometryProvider = {
                 ratio: subRatio
             };
         }
+
+        if (this.currentPreset === 'arc_weave') {
+            const skip = layerIndex + 1;
+            const toAxis = (sectorIndex + skip) % axesCount;
+            const from = this.getEnvelopeRadialAnchor(sectorIndex, 1 - ratio, radius, cx, cy);
+            const to = this.getEnvelopeRadialAnchor(toAxis, ratio, radius, cx, cy);
+            const control = this.getEnvelopeArcControlPoint(sectorIndex, toAxis, ratio, layerIndex, radius, cx, cy);
+
+            return {
+                kind: 'quadratic',
+                from,
+                control,
+                to,
+                fromAxis: sectorIndex,
+                toAxis,
+                sectorIndex,
+                lineIndex,
+                layerIndex,
+                ratio
+            };
+        }
+
+        if (this.currentPreset === 'orbit_net') {
+            return this.getEnvelopeOrbitGeometry(sectorIndex, lineIndex, layerIndex, radius, cx, cy);
+        }
         
         // Layer 0 skips 1 (adjacent), Layer 1 skips 2, etc.
         const skip = layerIndex + 1;
@@ -229,7 +381,7 @@ const EnvelopeRadialGeometryProvider = {
         };
     },
 
-    getEnvelopeRadialLineVisual(itemIndex, totalCount, from, to, radius, alphaOverride = null) {
+    getEnvelopeRadialLineVisual(itemIndex, totalCount, from, to, radius, alphaOverride = null, geometry = null) {
         const safeTotal = Math.max(1, totalCount);
         const alpha = alphaOverride == null ? this.lineAlpha : alphaOverride;
         
@@ -238,7 +390,9 @@ const EnvelopeRadialGeometryProvider = {
         const axesCount = this.getEnvelopeAxesCount();
 
         // Even distribution logic:
-        if (itemIndex >= baseCount || from.angle === undefined) {
+        if (geometry?.kind === 'cubic') {
+            hueRatio = geometry.colorRatio ?? (geometry.sectorIndex / Math.max(1, axesCount));
+        } else if (itemIndex >= baseCount || !from || from.angle === undefined) {
             // Axes: spread based on axis index
             const axisIndex = Math.max(0, itemIndex - baseCount);
             hueRatio = axisIndex / Math.max(1, axesCount);
@@ -269,10 +423,10 @@ const EnvelopeRadialGeometryProvider = {
         // 3. Return consistent visual property
         return {
             hue,
-            saturation: 94,
-            lightness: 62,
+            saturation: geometry?.kind === 'cubic' ? 76 : 94,
+            lightness: geometry?.kind === 'cubic' ? 68 : 62,
             alpha,
-            color: `hsla(${hue}, 94%, 62%, ${alpha})`
+            color: `hsla(${hue}, ${geometry?.kind === 'cubic' ? 76 : 94}%, ${geometry?.kind === 'cubic' ? 68 : 62}%, ${alpha})`
         };
     },
 

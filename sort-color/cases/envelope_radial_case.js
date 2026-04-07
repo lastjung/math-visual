@@ -119,6 +119,18 @@ const EnvelopeRadialCase = {
             this.envelopeAxesCount = 6;
             this.envelopeLinesPerSector = 16; 
             this.envelopeLayerCount = 1;
+            this.colorMode = 'angle';
+            this.lineAlpha = 0.72;
+            this.lineWidth = 2.0;
+            this.envelopeBuildOrder = 'sequential';
+        } else if (presetId === 'arc_weave') {
+            this.envelopeAxesCount = 8;
+            this.envelopeLinesPerSector = 24;
+            this.envelopeLayerCount = 2;
+            this.colorMode = 'angle';
+            this.lineAlpha = 0.62;
+            this.lineWidth = 1.6;
+            this.envelopeBuildOrder = 'chained';
         } else {
             // standard (Star)
             this.envelopeAxesCount = 5;
@@ -127,6 +139,7 @@ const EnvelopeRadialCase = {
             this.colorMode = 'angle';
             this.lineAlpha = 0.72;
             this.lineWidth = 2.0;
+            this.envelopeBuildOrder = 'sequential';
         }
         this.syncEnvelopeItemCount();
         this.replayConstruction();

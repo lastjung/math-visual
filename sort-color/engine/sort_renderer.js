@@ -30,6 +30,25 @@ const SortRenderer = {
             ctx.lineTo(geometry.to.x, geometry.to.y);
             return true;
         }
+        if (geometry.kind === 'quadratic' && geometry.from && geometry.control && geometry.to) {
+            ctx.beginPath();
+            ctx.moveTo(geometry.from.x, geometry.from.y);
+            ctx.quadraticCurveTo(geometry.control.x, geometry.control.y, geometry.to.x, geometry.to.y);
+            return true;
+        }
+        if (geometry.kind === 'cubic' && geometry.from && geometry.control1 && geometry.control2 && geometry.to) {
+            ctx.beginPath();
+            ctx.moveTo(geometry.from.x, geometry.from.y);
+            ctx.bezierCurveTo(
+                geometry.control1.x,
+                geometry.control1.y,
+                geometry.control2.x,
+                geometry.control2.y,
+                geometry.to.x,
+                geometry.to.y
+            );
+            return true;
+        }
         return false;
     },
 
@@ -41,7 +60,7 @@ const SortRenderer = {
         if (geometry?.kind === 'polygon') return chord.color;
         // Check for generic line visual method instead of hardcoded Cardioid name
         if (typeof this.getGeometryLineVisual === 'function') {
-            return this.getGeometryLineVisual(chord.originalIndex, n, geometry.from, geometry.to, radius).color;
+            return this.getGeometryLineVisual(chord.originalIndex, n, geometry.from, geometry.to, radius, null, geometry).color;
         }
         // Legacy fallback
         if (typeof this.getCardioidLineVisual === 'function') {
