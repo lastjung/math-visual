@@ -126,7 +126,7 @@ const EnvelopeRadialCase = {
         } else if (presetId === 'arc_weave') {
             this.envelopeAxesCount = 8;
             this.envelopeLinesPerSector = 24;
-            this.envelopeLayerCount = 2;
+            this.envelopeLayerCount = 1;
             this.colorMode = 'angle';
             this.lineAlpha = 0.62;
             this.lineWidth = 1.6;
