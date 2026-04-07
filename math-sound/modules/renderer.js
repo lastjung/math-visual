@@ -60,7 +60,7 @@ function drawLayer(funcKey, width, height, progress, isBackground = false) {
         graphCtx.strokeStyle = 'rgba(55, 65, 81, 0.24)'; // Recording-friendly guide
         graphCtx.lineWidth = 2;
     } else {
-        graphCtx.strokeStyle = getCategoryColor(funcData.category);
+        graphCtx.strokeStyle = getLoopAwareColor(funcData.category, state.autoLoopCount);
         graphCtx.lineWidth = 3;
     }
     
@@ -299,7 +299,7 @@ function drawImplicitCurveInternal(funcData, width, height, progress, isBackgrou
     const loopIndex = state.autoLoopCount;
     const maxColumn = Math.max(1, Math.floor(resX * progress));
 
-    graphCtx.fillStyle = isBackground ? '#d1d5db' : getCategoryColor(funcData.category);
+    graphCtx.fillStyle = isBackground ? '#d1d5db' : getLoopAwareColor(funcData.category, loopIndex);
     for (let i = 0; i <= maxColumn; i++) {
         for (let j = 0; j <= resY; j++) {
             const x = xMin + (xRange * i) / resX;
@@ -360,7 +360,7 @@ function drawImplicitPoint(funcData, width, height, progress, isBackground = fal
 export function drawCartesianCurve(funcData, width, height, progress) {
     const graphCtx = ctx.graph;
     graphCtx.save();
-    graphCtx.strokeStyle = getCategoryColor(funcData.category);
+    graphCtx.strokeStyle = getLoopAwareColor(funcData.category, state.autoLoopCount);
     graphCtx.lineWidth = 3;
     drawAxes(width, height, funcData.range.xMin, funcData.range.xMax, funcData.range.yMin, funcData.range.yMax);
     drawCartesianCurveInternal(funcData, width, height, progress);
@@ -370,7 +370,7 @@ export function drawCartesianCurve(funcData, width, height, progress) {
 export function drawPolarCurve(funcData, width, height, progress) {
     const graphCtx = ctx.graph;
     graphCtx.save();
-    graphCtx.strokeStyle = getCategoryColor(funcData.category);
+    graphCtx.strokeStyle = getLoopAwareColor(funcData.category, state.autoLoopCount);
     graphCtx.lineWidth = 3;
     drawAxes(width, height, funcData.viewBox.xMin, funcData.viewBox.xMax, funcData.viewBox.yMin, funcData.viewBox.yMax);
     drawPolarCurveInternal(funcData, width, height, progress);
@@ -380,7 +380,7 @@ export function drawPolarCurve(funcData, width, height, progress) {
 export function drawParametricCurve(funcData, width, height, progress) {
     const graphCtx = ctx.graph;
     graphCtx.save();
-    graphCtx.strokeStyle = getCategoryColor(funcData.category);
+    graphCtx.strokeStyle = getLoopAwareColor(funcData.category, state.autoLoopCount);
     graphCtx.lineWidth = 3;
     drawAxes(width, height, funcData.viewBox.xMin, funcData.viewBox.xMax, funcData.viewBox.yMin, funcData.viewBox.yMax);
     drawParametricCurveInternal(funcData, width, height, progress);
@@ -756,7 +756,7 @@ export function drawParametricPoint(funcData, width, height, progress, isBackgro
 
 export function drawPoint(canvasX, canvasY, category, height, isBackground = false) {
     const graphCtx = ctx.graph;
-    const color = isBackground ? '#d1d5db' : getCategoryColor(category);
+    const color = isBackground ? '#d1d5db' : getLoopAwareColor(category, state.autoLoopCount);
     graphCtx.fillStyle = color;
     graphCtx.beginPath();
     graphCtx.arc(canvasX, Math.max(5, Math.min(height - 5, canvasY)), isBackground ? 5 : 8, 0, Math.PI * 2);
@@ -786,6 +786,23 @@ export function getCategoryColor(category) {
         incomprehensible: '#6366f1' // Indigo
     };
     return colors[category] || '#3b82f6';
+}
+
+function getLoopAwareColor(category, loopIndex = 0) {
+    if (loopIndex <= 0) return getCategoryColor(category);
+
+    const loopPalette = [
+        '#2563eb',
+        '#7c3aed',
+        '#db2777',
+        '#ea580c',
+        '#059669',
+        '#dc2626',
+        '#0891b2',
+        '#4f46e5'
+    ];
+
+    return loopPalette[(loopIndex - 1) % loopPalette.length];
 }
 
 export function drawWaveform() {

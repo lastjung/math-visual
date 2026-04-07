@@ -77,27 +77,13 @@ function setupEventListeners() {
     const layerBtn = document.getElementById('layerBtn');
     const mixerPanel = document.getElementById('mixerPanel');
     const closeMixerBtn = document.getElementById('closeMixerBtn');
-    let layerClickTimer = null;
 
     if (layerBtn) {
         layerBtn.addEventListener('click', () => {
-            if (layerClickTimer === null) {
-                layerClickTimer = setTimeout(() => {
-                    // 한 번 클릭: 박스에 있는 노래들 한 번씩 재생
-                    if (state.playQueue.length > 0) {
-                        state.autoTargetCount = 1; // 각 곡을 1회씩만 재생
-                        state.isQueueMode = true;
-                        playQueueItem(0);
-                    }
-                    layerClickTimer = null;
-                }, 250);
-            } else {
-                // 더블 클릭: 박스 창 열기/닫기
-                clearTimeout(layerClickTimer);
-                layerClickTimer = null;
-                if (mixerPanel) {
-                    mixerPanel.classList.toggle('hidden');
-                }
+            if (state.playQueue.length > 0) {
+                state.autoTargetCount = 1; // 각 곡을 1회씩만 재생
+                state.isQueueMode = true;
+                playQueueItem(0);
             }
         });
     }
