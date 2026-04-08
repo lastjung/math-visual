@@ -111,7 +111,6 @@ const EnvelopeRadialCase = {
             this.envelopeAxesCount = 5;
             this.envelopeLinesPerSector = 32; // Align with Star
             this.envelopeLayerCount = 2; // As requested
-            this.colorMode = 'monochrome';
             this.lineAlpha = 0.6;
             this.lineWidth = 1.0;
             this.envelopeBuildOrder = 'sequential'; 
