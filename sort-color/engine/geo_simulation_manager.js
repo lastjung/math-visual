@@ -57,7 +57,7 @@ const GeoSimulationManager = {
     runAxesSimulation() {
         if (!this.currentCase || this.currentGeometryId !== 'envelope_radial') return;
 
-        const stages = [3, 4, 5, 6, 7, 8].map((axes) => ({ axes, subtitle: `${axes} Axes` }));
+        const stages = [4, 5, 6, 7, 8].map((axes) => ({ axes, subtitle: `${axes} Axes` }));
         const isResume = this.geoSimSession?.mode === '1_axes' && this.geoSimSession?.paused;
         if (!isResume) {
             this.geoSimSession = {
@@ -100,6 +100,49 @@ const GeoSimulationManager = {
         const formatSeconds = (value) => `${Math.max(0, value).toFixed(1)}s`;
 
         let currentIdx = this.geoSimSession.currentIdx || 0;
+        const startSortingWatch = (stage, currentStageTitle) => {
+            this.geoSimSession.phase = 'sorting';
+            this.geoSimSession.currentIdx = currentIdx;
+
+            // Force a sort mode if currently off to ensure user sees "sorting"
+            if (this.currentCase.sortMode === 'off') {
+                this.currentCase.sortMode = 'hue';
+            }
+            
+            if (typeof this.currentCase.restartSort === 'function') {
+                this.currentCase.restartSort();
+            }
+
+            this.updateSortBar();
+            this.showSimMessage('', `${stage.subtitle} (Sorting)`, 0);
+
+            const checkSortFinished = setInterval(() => {
+                try {
+                    if (!this.isSimRunning) {
+                        clearInterval(checkSortFinished);
+                        return;
+                    }
+
+                    if (this.currentCase.sortingStatus === 'completed') {
+                        clearInterval(checkSortFinished);
+
+                        this.geoSimSession.phase = 'transition';
+                        const tid2 = setTimeout(() => {
+                            currentIdx += 1;
+                            this.geoSimSession.currentIdx = currentIdx;
+                            this.geoSimSession.phase = 'intro';
+                            runStage();
+                        }, 2200);
+                        this.simTimers.push(tid2);
+                    }
+                } catch (err) {
+                    clearInterval(checkSortFinished);
+                    this.failSimulation(err);
+                }
+            }, 100);
+            this.simTimers.push(checkSortFinished);
+        };
+
         const startBuildingWatch = (stage, currentStageTitle) => {
             const startedAt = performance.now();
             this.geoSimSession.phase = 'building';
@@ -131,14 +174,8 @@ const GeoSimulationManager = {
                             });
                         }
 
-                        this.geoSimSession.phase = 'transition';
-                        const tid2 = setTimeout(() => {
-                            currentIdx += 1;
-                            this.geoSimSession.currentIdx = currentIdx;
-                            this.geoSimSession.phase = 'intro';
-                            runStage();
-                        }, 2200);
-                        this.simTimers.push(tid2);
+                        // Instead of immediate transition, start sorting watch
+                        startSortingWatch(stage, currentStageTitle);
                     }
                 } catch (err) {
                     clearInterval(checkFinished);
