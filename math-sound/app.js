@@ -309,10 +309,11 @@ function renderCategoryTabs() {
         btn.addEventListener('click', () => selectCategory(catId));
         
         const symphonyList = ['amazing', 'beautiful', 'harmonic', 'fusion', 'hyper', 'insane', 'fantastic', 'incredible', 'incomprehensible'];
+        const cosmicList = ['cosmos', 'chaos'];
 
         if (symphonyList.includes(catId)) {
             symphonyContainer.appendChild(btn);
-        } else if (catId === 'cosmos') {
+        } else if (cosmicList.includes(catId)) {
             cosmicContainer.appendChild(btn);
         } else {
             existingContainer.appendChild(btn);

@@ -1159,7 +1159,6 @@ export const MATH_FUNCTIONS = {
 };
 
 export const CATEGORIES = {
-    cosmos: { name: '🌌 Cosmos', functions: [] },
     waves: { name: '🌊 Waves', functions: [] },
     curves: { name: '🌸 Curves', functions: [] },
     art: { name: '💠 Art', functions: [] },
@@ -1175,7 +1174,9 @@ export const CATEGORIES = {
     insane: { name: '👹 Insane', functions: [] },
     fantastic: { name: '✨ Fantastic', functions: [] },
     incredible: { name: '🌟 Incredible', functions: [] },
-    incomprehensible: { name: '🤯 Incomprehensible', functions: [] }
+    incomprehensible: { name: '🤯 Incomprehensible', functions: [] },
+    cosmos: { name: '🌌 Cosmos', functions: [] },
+    chaos: { name: '💾 Chaos', functions: [] }
 };
 
 // Initialize categories

@@ -192,5 +192,159 @@ export const COSMOS_FUNCTIONS = {
         range: { xMin: -5, xMax: 5, yMin: -1.5, yMax: 1.5 },
         audioScale: 150,
         baseFreq: 220
+    },
+    chaosSaw: {
+        category: 'chaos',
+        name: 'Chaos Sawtooth',
+        type: 'cartesian',
+        fn: (x) => {
+            const tanX = Math.tan(x);
+            if (Math.abs(tanX) < 0.01) return 0;
+            return (x * Math.floor(1 / tanX)) % 10 / 5;
+        },
+        formula: 'y = x · floor(1/tan(x))',
+        latex: 'y = x \\lfloor \\frac{1}{\\tan x} \\rfloor',
+        range: { xMin: -10, xMax: 10, yMin: -10, yMax: 10 },
+        audioScale: 100,
+        baseFreq: 200
+    },
+    desmosInterference: {
+        category: 'chaos',
+        name: 'Interference Noise',
+        type: 'cartesian',
+        fn: (x) => {
+            return Math.sin(23 * x) * (23 % (x || 1)) * Math.tan(Math.PI * x);
+        },
+        formula: 'y = sin(23x) · (23%x) · tan(πx)',
+        latex: 'y = \\sin(23x) \\cdot (23 \\pmod x) \\cdot \\tan(\\pi x)',
+        range: { xMin: -5, xMax: 5, yMin: -20, yMax: 20 },
+        audioScale: 50,
+        baseFreq: 180
+    },
+    nestedSine: {
+        category: 'chaos',
+        name: 'Nested Sine Glitch',
+        type: 'cartesian',
+        fn: (x) => {
+            const inner = Math.tan(Math.sqrt(Math.abs(x)) + 2 * x);
+            let val = Math.sin(inner);
+            for(let i=0; i<3; i++) {
+                const s = Math.sin(val);
+                if (Math.abs(s) < 0.01) break;
+                val = 1 / s;
+            }
+            return (val % 4);
+        },
+        formula: 'y = 1/sin(1/sin(1/sin(...)))',
+        latex: 'y = \\frac{1}{\\sin(\\frac{1}{\\sin(\\frac{1}{\\sin(\\sin(\\tan(\\sqrt{x}+2x)))}))}',
+        range: { xMin: 0, xMax: 10, yMin: -5, yMax: 5 },
+        audioScale: 80,
+        baseFreq: 220
+    },
+    powerGlitch: {
+        category: 'chaos',
+        name: 'Power Glitch',
+        type: 'cartesian',
+        fn: (x) => {
+            const xAbs = Math.abs(x) + 1.1; // Offset to avoid 0-gap
+            // Balanced glitch power with high frequency sine
+            const exponent = Math.sin(x * 8 + Math.cos(x * 4)) * 2;
+            return (Math.pow(xAbs, exponent) * 2) % 10 - 2;
+        },
+        formula: 'y = x^sin(x · √(x · atan x))',
+        latex: 'y = x^{\\sin(x \\sqrt{x \\arctan x})}',
+        range: { xMin: -10, xMax: 10, yMin: -5, yMax: 10 },
+        audioScale: 100,
+        baseFreq: 150
+    },
+    circularChaos: {
+        category: 'chaos',
+        name: 'Circular Chaos',
+        type: 'polar',
+        r: (theta) => {
+            return Math.tan(Math.sin(theta * 10)) * Math.floor(Math.cos(theta * 50) + 1.2);
+        },
+        formula: 'r = tan(sin(10θ)) · floor(cos(50θ))',
+        latex: 'r = \\tan(\\sin(10\\theta)) \\cdot \\lfloor \\cos(50\\theta) + 1.2 \\rfloor',
+        thetaRange: { min: 0, max: 2 * Math.PI },
+        viewBox: { xMin: -5, xMax: 5, yMin: -5, yMax: 5 },
+        audioScale: 150,
+        baseFreq: 200
+    },
+    implicitLattice: {
+        category: 'chaos',
+        name: 'Implicit Lattice',
+        type: 'implicit',
+        f: (x, y) => {
+            const cosX = Math.cos(Math.PI * x);
+            if (Math.abs(cosX) < 0.01) return 100;
+            return (y * x * x + x * y * y) - (1 / cosX);
+        },
+        formula: 'yx² + xy² = 1/cos(πx)',
+        latex: 'yx^2 + xy^2 = \\sec(\\pi x)',
+        viewBox: { xMin: -4, xMax: 4, yMin: -4, yMax: 4 },
+        audioScale: 80,
+        baseFreq: 120
+    },
+    hyperbolicDistortion: {
+        category: 'chaos',
+        name: 'Hyperbolic Maze',
+        type: 'implicit',
+        f: (x, y) => {
+            const val = y * x * x + x * y * y;
+            const target = Math.sinh(Math.sin(x * y) * 2);
+            return val - target;
+        },
+        formula: 'yx² + xy² = sinh(2sin(xy))',
+        latex: 'yx^2 + xy^2 = \\sinh(2\\sin(xy))',
+        viewBox: { xMin: -5, xMax: 5, yMin: -5, yMax: 5 },
+        audioScale: 100,
+        baseFreq: 140
+    },
+    quantizedTan: {
+        category: 'chaos',
+        name: 'Quantized Tan',
+        type: 'cartesian',
+        fn: (x) => {
+            return Math.tan(Math.ceil(x)) % 5;
+        },
+        formula: 'y = tan(ceil(x))',
+        latex: 'y = \\tan(\\lceil x \\rceil)',
+        range: { xMin: -10, xMax: 10, yMin: -5, yMax: 5 },
+        audioScale: 120,
+        baseFreq: 250
+    },
+    complexSum: {
+        category: 'chaos',
+        name: 'Harmonic Summation',
+        type: 'cartesian',
+        fn: (x) => {
+            let sum = 0;
+            for(let k=1; k<=5; k++) {
+                sum += Math.sin(k * x) / (Math.cos(k * x * 0.5) || 0.1);
+            }
+            return sum % 10;
+        },
+        formula: 'y = Σ sin(kx) / cos(0.5kx)',
+        latex: 'y = \\sum_{k=1}^5 \\frac{\\sin(kx)}{\\cos(0.5kx)}',
+        range: { xMin: -10, xMax: 10, yMin: -10, yMax: 10 },
+        audioScale: 100,
+        baseFreq: 190
+    },
+    roundedPulse: {
+        category: 'chaos',
+        name: 'Rounded Pulse',
+        type: 'cartesian',
+        fn: (x) => {
+            const num = Math.sin(x * 1.5);
+            const den = Math.cos(x * 0.7);
+            const p = Math.pow(num / (den || 0.1), 2);
+            return p * Math.round(Math.abs(x) / 2) % 8;
+        },
+        formula: 'y = (sin(1.5x)/cos(0.7x))² · round(|x|/2)',
+        latex: 'y = \\left(\\frac{\\sin(1.5x)}{\\cos(0.7x)}\\right)^2 \\text{round}\\left(\\frac{|x|}{2}\\right)',
+        range: { xMin: -10, xMax: 10, yMin: -5, yMax: 10 },
+        audioScale: 90,
+        baseFreq: 210
     }
 };
