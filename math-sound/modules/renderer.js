@@ -82,6 +82,12 @@ function drawLayer(funcKey, width, height, progress, isBackground = false) {
             drawCartesianCurveInternal(funcData, width, height, progress);
             break;
     }
+    
+    // Support for custom overlays (like Saturn's core)
+    if (funcData.extraDraw && !isBackground) {
+        funcData.extraDraw(graphCtx, width, height, progress);
+    }
+
     graphCtx.restore();
 }
 

@@ -41,6 +41,7 @@ body {
     --bytebeat-color: #4b5563; /* Dark Gray for Byte */
     --amazing-color: #f59e0b;  /* Amber/Gold for Amazing */
     --beautiful-color: #d946ef; /* Fuchsia for Beautiful */
+    --cosmos-color: #06b6d2;    /* Cyan for Cosmos */
 }
 
 body {
@@ -749,6 +750,7 @@ body.is-fullscreen .mixer-panel {
 .category-tab[data-category="fantastic"] { color: #10b981; }
 .category-tab[data-category="incredible"] { color: #f97316; }
 .category-tab[data-category="incomprehensible"] { color: #6366f1; }
+.category-tab[data-category="cosmos"] { color: var(--cosmos-color); }
 
 /* Dim inactive tabs slightly */
 .category-tab:not(.active) {
@@ -783,6 +785,7 @@ body.is-fullscreen .mixer-panel {
 .category-tab.active[data-category="fantastic"] { border-color: #10b981; color: #10b981; box-shadow: 0 8px 16px rgba(16, 185, 129, 0.15); }
 .category-tab.active[data-category="incredible"] { border-color: #f97316; color: #f97316; box-shadow: 0 8px 16px rgba(249, 115, 22, 0.15); }
 .category-tab.active[data-category="incomprehensible"] { border-color: #6366f1; color: #6366f1; box-shadow: 0 8px 16px rgba(99, 102, 241, 0.15); }
+.category-tab.active[data-category="cosmos"] { border-color: var(--cosmos-color); color: var(--cosmos-color); box-shadow: 0 8px 16px rgba(6, 182, 210, 0.15); }
 
 /* Browser Bar */
 .browser-bar {

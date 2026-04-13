@@ -130,6 +130,18 @@ const EnvelopeRadialCase = {
             this.lineAlpha = 0.62;
             this.lineWidth = 1.6;
             this.envelopeBuildOrder = 'chained';
+        } else if (presetId === 'orbit_net') {
+            this.envelopeAxesCount = 11;
+            this.envelopeLinesPerSector = 28;
+            this.envelopeLayerCount = 2;
+            this.colorMode = 'scheme';
+            if (typeof ColorSchemeManager !== 'undefined') {
+                ColorSchemeManager.setCurrentScheme('rainbow');
+            }
+            this.lineAlpha = 0.45;
+            this.lineWidth = 0.85;
+            this.renderMode = 'glow';
+            this.envelopeBuildOrder = 'chained';
         } else {
             // standard (Star)
             this.envelopeAxesCount = 5;
