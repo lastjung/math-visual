@@ -1176,7 +1176,8 @@ export const CATEGORIES = {
     incredible: { name: '🌟 Incredible', functions: [] },
     incomprehensible: { name: '🤯 Incomprehensible', functions: [] },
     cosmos: { name: '🌌 Cosmos', functions: [] },
-    chaos: { name: '💾 Chaos', functions: [] }
+    chaos: { name: '💾 Chaos', functions: [] },
+    cosmic_wave: { name: '🌊 Cosmic Wave', functions: [] }
 };
 
 // Initialize categories

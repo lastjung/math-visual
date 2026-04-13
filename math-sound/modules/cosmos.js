@@ -346,5 +346,156 @@ export const COSMOS_FUNCTIONS = {
         range: { xMin: -10, xMax: 10, yMin: -5, yMax: 10 },
         audioScale: 90,
         baseFreq: 210
+    },
+    // ========== 🌊 COSMIC WAVE (Standalone Waves) ==========
+    symphonicTan: {
+        category: 'cosmic_wave',
+        name: 'Symphonic Tangent',
+        type: 'cartesian',
+        fn: (x) => {
+            let y = 0;
+            for(let i=0; i<3; i++) {
+                y = 2 * Math.sin(x) + Math.tan(y || 0.1) * Math.cos(8.2 * x);
+            }
+            return Math.max(-20, Math.min(20, y));
+        },
+        formula: 'y = 2sin(x) + tan(y)cos(8.2x)',
+        latex: 'y = 2\\sin x + \\tan y \\cos(8.2x)',
+        range: { xMin: -5, xMax: 5, yMin: -15, yMax: 15 },
+        audioScale: 70,
+        baseFreq: 240
+    },
+    // ========== 🌊 COSMIC WAVE (Desmos Master Collection: 23 Expressions) ==========
+    desmos_1_2: {
+        category: 'cosmic_wave',
+        name: 'Cosmic Sine (k=1.36)',
+        type: 'cartesian',
+        fn: (x) => Math.sin(1.36 * x),
+        formula: 'y = sin(1.36x)',
+        latex: 'y = \\sin(1.36x)',
+        range: { xMin: -10, xMax: 10, yMin: -2, yMax: 2 },
+        audioScale: 150,
+        baseFreq: 200
+    },
+    desmos_3_4: {
+        category: 'cosmic_wave',
+        name: 'Harmonic Super (k2=1)',
+        type: 'cartesian',
+        fn: (x) => Math.sin(x) + Math.cos(x),
+        formula: 'y = sin(x) + cos(x)',
+        latex: 'y = \\sin x + \\cos x',
+        range: { xMin: -10, xMax: 10, yMin: -2.5, yMax: 2.5 },
+        audioScale: 120,
+        baseFreq: 180
+    },
+    desmos_5_6: {
+        category: 'cosmic_wave',
+        name: 'Glitch Master (k3=9.75)',
+        type: 'cartesian',
+        fn: (x) => Math.tan(Math.sin(2 * x) * Math.cos(9.75 * x)) + Math.sin(9.75 * x),
+        formula: 'y = tan(sin(2x)cos(9.75x)) + sin(9.75x)',
+        latex: 'y = \\tan(\\sin(2x)\\cos(9.75x)) + \\sin(9.75x)',
+        range: { xMin: -5, xMax: 5, yMin: -10, yMax: 10 },
+        audioScale: 80,
+        baseFreq: 220
+    },
+    desmos_7_8: {
+        category: 'cosmic_wave',
+        name: 'Resonance Spikes (k4=0.4)',
+        type: 'cartesian',
+        fn: (x) => Math.sin(0.4 * x) * Math.tan(x),
+        formula: 'y = sin(0.4x)tan(x)',
+        latex: 'y = \\sin(0.4x) \\cdot \\tan x',
+        range: { xMin: -10, xMax: 10, yMin: -15, yMax: 15 },
+        audioScale: 100,
+        baseFreq: 150
+    },
+    desmos_9_10: {
+        category: 'cosmic_wave',
+        name: 'Implicit Phase (k5=0)',
+        type: 'implicit',
+        f: (x, y) => y - 1.5 * Math.sin(x + Math.cos(y)),
+        formula: 'y = 1.5sin(x + cos y)',
+        latex: 'y = 1.5\\sin(x + \\cos y)',
+        viewBox: { xMin: -10, xMax: 10, yMin: -10, yMax: 10 },
+        audioScale: 110,
+        baseFreq: 180
+    },
+    desmos_11_12: {
+        category: 'cosmic_wave',
+        name: 'Tangent Morph (k6=2.3)',
+        type: 'implicit',
+        f: (x, y) => y - (2 * Math.sin(x) + Math.tan(y) * Math.cos(2.3 * x)),
+        formula: 'y = 2sin x + tan y cos(2.3x)',
+        latex: 'y = 2\\sin x + \\tan y \\cos(2.3x)',
+        viewBox: { xMin: -10, xMax: 10, yMin: -10, yMax: 10 },
+        audioScale: 90,
+        baseFreq: 210
+    },
+    desmos_13_14: {
+        category: 'cosmic_wave',
+        name: 'Ripple Distort (k7=0.57)',
+        type: 'implicit',
+        f: (x, y) => y - 5 * Math.sin(x - Math.PI) * Math.cos(0.57 * y),
+        formula: 'y = 5sin(x-π)cos(0.57y)',
+        latex: 'y = 5\\sin(x-\\pi)\\cos(0.57y)',
+        viewBox: { xMin: -10, xMax: 10, yMin: -10, yMax: 10 },
+        audioScale: 130,
+        baseFreq: 140
+    },
+    desmos_15_16: {
+        category: 'cosmic_wave',
+        name: 'Inverse Sum (k8=-0.49)',
+        type: 'implicit',
+        f: (x, y) => y - (Math.cos(x) + Math.sin(y)) / -0.49,
+        formula: 'y = (cos x + sin y) / -0.49',
+        latex: 'y = \\frac{\\cos x + \\sin y}{-0.49}',
+        viewBox: { xMin: -10, xMax: 10, yMin: -10, yMax: 10 },
+        audioScale: 140,
+        baseFreq: 190
+    },
+    desmos_17_18: {
+        category: 'cosmic_wave',
+        name: 'Grid Mesh (k9=5)',
+        type: 'implicit',
+        f: (x, y) => 5 * Math.sin(Math.cos(y) + Math.sin(x)) - (Math.cos(x) + Math.sin(y)),
+        formula: '5sin(cos y + sin x) = cos x + sin y',
+        latex: '5\\sin(\\cos y + \\sin x) = \\cos x + \\sin y',
+        viewBox: { xMin: -10, xMax: 10, yMin: -10, yMax: 10 },
+        audioScale: 100,
+        baseFreq: 160
+    },
+    desmos_19_20: {
+        category: 'cosmic_wave',
+        name: 'Symmetry Interference (k10=-5)',
+        type: 'implicit',
+        f: (x, y) => Math.sin(-5 * Math.cos(y) + Math.sin(x)) - Math.sin(-5 * Math.cos(x) + Math.sin(y)),
+        formula: 'sin(-5cos y + sin x) = sin(-5cos x + sin y)',
+        latex: '\\sin(-5\\cos y + \\sin x) = \\sin(-5\\cos x + \\sin y)',
+        viewBox: { xMin: -10, xMax: 10, yMin: -10, yMax: 10 },
+        audioScale: 110,
+        baseFreq: 170
+    },
+    desmos_21_22: {
+        category: 'cosmic_wave',
+        name: 'Cyclic Distortion (k11=-0.24)',
+        type: 'implicit',
+        f: (x, y) => -0.24 * Math.sin(Math.cos(y) + Math.sin(-0.24 * x)) - Math.cos(Math.cos(x) + Math.sin(y)),
+        formula: 'k11 sin(cos y + sin k11x) = cos(cos x + sin y)',
+        latex: 'k_{11}\\sin(\\cos y + \\sin k_{11}x) = \\cos(\\cos x + \\sin y)',
+        viewBox: { xMin: -10, xMax: 10, yMin: -10, yMax: 10 },
+        audioScale: 120,
+        baseFreq: 180
+    },
+    desmos_23: {
+        category: 'cosmic_wave',
+        name: 'Final Matrix (k12=5)',
+        type: 'implicit',
+        f: (x, y) => Math.sin(5 * Math.sin(y) * Math.sin(x)) - Math.cos(5 * Math.cos(x) + Math.sin(y)),
+        formula: 'sin(k12 sin y sin x) = cos(k12 cos x + sin y)',
+        latex: '\\sin(k_{12}\\sin y\\sin x) = \\cos(k_{12}\\cos x + \\sin y)',
+        viewBox: { xMin: -10, xMax: 10, yMin: -10, yMax: 10 },
+        audioScale: 130,
+        baseFreq: 220
     }
 };
