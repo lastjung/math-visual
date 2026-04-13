@@ -279,13 +279,15 @@ function setupEventListeners() {
 // 카테고리 & 함수 제어
 // ==========================================
 function renderCategoryTabs() {
-    const existingContainer = document.getElementById('categoryTabsExisting');
-    const symphonyContainer = document.getElementById('categoryTabsSymphony');
+    const existingContainer = elements.categoryTabsExisting;
+    const symphonyContainer = elements.categoryTabsSymphony;
+    const cosmicContainer = elements.categoryTabsCosmic;
     
-    if (!existingContainer || !symphonyContainer) return;
-    
+    if (!existingContainer || !symphonyContainer || !cosmicContainer) return;
+
     existingContainer.innerHTML = '';
     symphonyContainer.innerHTML = '';
+    cosmicContainer.innerHTML = '';
 
     // 1. Add 'All' button to existing row
     const allBtn = document.createElement('button');
@@ -303,18 +305,23 @@ function renderCategoryTabs() {
         const btn = document.createElement('button');
         btn.className = 'category-tab' + (catId === state.currentCategory ? ' active' : '');
         btn.dataset.category = catId;
-        btn.textContent = cat.name;
+        btn.textContent = cat.name || cat.label;
         btn.addEventListener('click', () => selectCategory(catId));
         
-        if (catId === 'amazing' || catId === 'beautiful' || catId === 'harmonic' || catId === 'fusion' || catId === 'hyper' || catId === 'insane' || catId === 'fantastic' || catId === 'incredible' || catId === 'incomprehensible') {
+        const symphonyList = ['amazing', 'beautiful', 'harmonic', 'fusion', 'hyper', 'insane', 'fantastic', 'incredible', 'incomprehensible'];
+
+        if (symphonyList.includes(catId)) {
             symphonyContainer.appendChild(btn);
+        } else if (catId === 'cosmos') {
+            cosmicContainer.appendChild(btn);
         } else {
             existingContainer.appendChild(btn);
         }
     });
 
-    // Horizontal scroll & Drag support for both containers
-    [existingContainer, symphonyContainer].forEach(container => {
+    // Horizontal scroll & Drag support for all containers
+    [existingContainer, symphonyContainer, cosmicContainer].forEach(container => {
+        if (!container) return;
         let isDown = false;
         let startX;
         let scrollLeft;
