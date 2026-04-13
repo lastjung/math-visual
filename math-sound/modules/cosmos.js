@@ -497,5 +497,137 @@ export const COSMOS_FUNCTIONS = {
         viewBox: { xMin: -10, xMax: 10, yMin: -10, yMax: 10 },
         audioScale: 130,
         baseFreq: 220
+    },
+    // ========== 🌊 COSMIC WAVE (Completion Pack: #13-#23) ==========
+    desmos_25: {
+        category: 'cosmic_wave',
+        name: 'Deep Matrix (k13=-10)',
+        type: 'implicit',
+        f: (x, y) => -10 * Math.sin(-10 * Math.sin(y) * Math.sin(x)) - Math.cos(Math.cos(x) * Math.sin(y)),
+        formula: 'k13 sin(k13 sin y sin x) = cos(cos x sin y)',
+        latex: 'k_{13}\\sin(k_{13}\\sin y\\sin x) = \\cos(\\cos x\\sin y)',
+        viewBox: { xMin: -10, xMax: 10, yMin: -10, yMax: 10 },
+        audioScale: 100,
+        baseFreq: 150
+    },
+    desmos_27: {
+        category: 'cosmic_wave',
+        name: 'Harmonic Mesh (k14=3.55)',
+        type: 'implicit',
+        f: (x, y) => 3.55 * Math.sin(Math.sin(y) + Math.sin(x)) - Math.cos(Math.cos(3.55 * x) + Math.sin(y)),
+        formula: 'k14 sin(sin y + sin x) = cos(cos k14x + sin y)',
+        latex: 'k_{14}\\sin(\\sin y + \\sin x) = \\cos(\\cos k_{14}x + \\sin y)',
+        viewBox: { xMin: -10, xMax: 10, yMin: -10, yMax: 10 },
+        audioScale: 110,
+        baseFreq: 190
+    },
+    desmos_29: {
+        category: 'cosmic_wave',
+        name: 'Secant Gate (k15=1.53)',
+        type: 'implicit',
+        f: (x, y) => 1.53 * Math.sin(Math.sin(x) + Math.cos(y)) - (Math.sin(1.53 * y) - 1 / Math.cos(x)),
+        formula: 'k15 sin(sin x + cos y) = sin k15y - sec x',
+        latex: 'k_{15}\\sin(\\sin x + \\cos y) = \\sin k_{15}y - \\sec x',
+        viewBox: { xMin: -10, xMax: 10, yMin: -10, yMax: 10 },
+        audioScale: 120,
+        baseFreq: 240
+    },
+    desmos_31: {
+        category: 'cosmic_wave',
+        name: 'Circular Sine (k16=12.5)',
+        type: 'implicit',
+        f: (x, y) => y - x * Math.sin(x * x + y * y + 12.5),
+        formula: 'y = x sin(x² + y² + 12.5)',
+        latex: 'y = x \\sin(x^2 + y^2 + 12.5)',
+        viewBox: { xMin: -5, xMax: 5, yMin: -5, yMax: 5 },
+        audioScale: 140,
+        baseFreq: 180
+    },
+    desmos_33: {
+        category: 'cosmic_wave',
+        name: 'Ripple Interference (k17=-2.37)',
+        type: 'implicit',
+        f: (x, y) => Math.sin(x * -2.37) - Math.sin(x * x + y * y),
+        formula: 'sin(x · k17) = sin(x² + y²)',
+        latex: '\\sin(x k_{17}) = \\sin(x^2 + y^2)',
+        viewBox: { xMin: -10, xMax: 10, yMin: -10, yMax: 10 },
+        audioScale: 100,
+        baseFreq: 110
+    },
+    desmos_35: {
+        category: 'cosmic_wave',
+        name: 'Orbit Distortion (k18=-5)',
+        type: 'implicit',
+        f: (x, y) => Math.sin(x * x + y * y) + 5 * Math.cos(x * y),
+        formula: 'sin(x² + y²) = k18 cos(xy)',
+        latex: '\\sin(x^2 + y^2) = k_{18} \\cos(xy)',
+        viewBox: { xMin: -10, xMax: 10, yMin: -10, yMax: 10 },
+        audioScale: 110,
+        baseFreq: 130
+    },
+    desmos_37: {
+        category: 'cosmic_wave',
+        name: 'Tangent Fractal (k19=1.44)',
+        type: 'implicit',
+        f: (x, y) => Math.sin(2 * x) * Math.sin(y) * Math.tan(2 * y) - Math.cos(1.44 * x),
+        formula: 'sin 2x sin y tan 2y = cos(k19x)',
+        latex: '\\sin 2x \\sin y \\tan 2y = \\cos(k_{19}x)',
+        viewBox: { xMin: -10, xMax: 10, yMin: -10, yMax: 10 },
+        audioScale: 90,
+        baseFreq: 260
+    },
+    desmos_39: {
+        category: 'cosmic_wave',
+        name: 'Nested Pulse (k20=1.7)',
+        type: 'implicit',
+        f: (x, y) => Math.sin(x * x + y * y) - 1.7 * Math.cos(1.7 * Math.sin(x) + Math.cos(1.7 * y)),
+        formula: 'sin(x² + y²) = k20 cos(k20 sin x + cos k20y)',
+        latex: '\\sin(x^2 + y^2) = k_{20} \\cos(k_{20} \\sin x + \\cos k_{20} y)',
+        viewBox: { xMin: -5, xMax: 5, yMin: -5, yMax: 5 },
+        audioScale: 120,
+        baseFreq: 150
+    },
+    desmos_41: {
+        category: 'cosmic_wave',
+        name: 'Void Tangent (k21=0)',
+        type: 'implicit',
+        f: (x, y) => Math.tan(x * x + y * y),
+        formula: 'tan(x² + y²) = 0',
+        latex: '\\tan(x^2 + y^2) = 0',
+        viewBox: { xMin: -10, xMax: 10, yMin: -10, yMax: 10 },
+        audioScale: 130,
+        baseFreq: 440
+    },
+    desmos_43: {
+        category: 'cosmic_wave',
+        name: 'Chaos Matrix (k22=4.6)',
+        type: 'implicit',
+        f: (x, y) => Math.sin(x * x + y * y + x * y) - Math.sin(4.6 + Math.sin(4.6 * x) + Math.cos(4.6 * y)),
+        formula: 'sin(x²+y²+xy) = sin(k22+sin k22x+cos k22y)',
+        latex: '\\sin(x^2 + y^2 + xy) = \\sin(k_{22} + \\sin k_{22}x + \\cos k_{22}y)',
+        viewBox: { xMin: -10, xMax: 10, yMin: -10, yMax: 10 },
+        audioScale: 110,
+        baseFreq: 120
+    },
+    desmos_46: {
+        category: 'cosmic_wave',
+        name: 'GCD Cellular (k23=1.2)',
+        type: 'implicit',
+        f: (x, y) => {
+            // Internal GCD logic or just simulate the visual
+            const val1 = Math.round(Math.sin(y) * 10);
+            const val2 = Math.round((Math.tan(x) + Math.sin(1.2 + y)) * 10);
+            
+            // Euclidean GCD
+            let a = Math.abs(val1);
+            let b = Math.abs(val2);
+            while (b) { [a, b] = [b, a % b]; }
+            return a - 1; // f=0 when gcd=1
+        },
+        formula: 'gcd(sin y, tan x + sin(1.2+y)) = 1',
+        latex: '\\gcd(10\\sin y, 10(\\tan x + \\sin(1.2+y))) = 1',
+        viewBox: { xMin: -4, xMax: 4, yMin: -4, yMax: 4 },
+        audioScale: 100,
+        baseFreq: 330
     }
 };
