@@ -475,7 +475,7 @@ export function animate() {
         state.autoTargetCount = funcData.targetCount;
     } else if (isAni) {
         state.autoTargetCount = totalPhases;
-    } else if (['amazing', 'beautiful', 'harmonic', 'fusion', 'hyper', 'insane', 'fantastic', 'incredible', 'incomprehensible'].includes(funcData.category)) {
+    } else if (['amazing', 'beautiful', 'harmonic', 'fusion', 'hyper', 'insane', 'fantastic', 'incredible', 'incomprehensible', 'cosmos'].includes(funcData.category)) {
         state.autoTargetCount = 10;
     }
 
@@ -792,6 +792,7 @@ export function getCategoryColor(category) {
         sound: '#6366f1',    // Indigo (Synth)
         math: '#dc2626',     // Pure Red
         bytebeat: '#4b5563',  // Dark Gray
+        cosmos: '#0ea5e9',    // Vivid Blue
         amazing: '#f59e0b',   // Amber/Gold
         beautiful: '#d946ef',  // Fuchsia
         harmonic: '#3b82f6',  // Blue
@@ -806,20 +807,22 @@ export function getCategoryColor(category) {
 }
 
 function getLoopAwareColor(category, loopIndex = 0) {
-    if (loopIndex <= 0) return getCategoryColor(category);
-
     const loopPalette = [
-        '#2563eb',
-        '#7c3aed',
-        '#db2777',
-        '#ea580c',
-        '#059669',
-        '#dc2626',
-        '#0891b2',
-        '#4f46e5'
+        '#0ea5e9', // Core Blue (Cosmos base)
+        '#2563eb', // Royal Blue
+        '#7c3aed', // Purple
+        '#db2777', // Pink
+        '#ec4899', // Hot Pink
+        '#f59e0b', // Amber
+        '#10b981', // Emerald
+        '#06b6d4', // Cyan
+        '#6366f1', // Indigo
+        '#dc2626'  // Red
     ];
 
-    return loopPalette[(loopIndex - 1) % loopPalette.length];
+    // Combination of function order and loop progress for maximum variety
+    const colorIdx = ((state.functionIndex || 0) + loopIndex) % loopPalette.length;
+    return loopPalette[colorIdx];
 }
 
 export function drawWaveform() {

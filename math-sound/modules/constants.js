@@ -114,7 +114,7 @@ export const MATH_FUNCTIONS = {
             ctx.shadowBlur = 20;
             ctx.shadowColor = 'rgba(220, 38, 38, 0.4)';
             ctx.beginPath();
-            ctx.arc(cx, cy, 30, 0, Math.PI * 2);
+            ctx.arc(cx, cy, 45, 0, Math.PI * 2);
             ctx.fill();
             ctx.restore();
         }
