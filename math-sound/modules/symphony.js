@@ -103,7 +103,7 @@ export const SYMPHONY_FUNCTIONS = {
         name: 'Radial Whirlpool',
         type: 'implicit',
         f: (x, y, loopIndex = 0) => {
-            const a = (loopIndex % 20) + 5;
+            const a = (loopIndex % 20) * 2 + 5;
             return y - 4.8 * Math.cos( a * x * y / (x * x + y * y + 0.1) );
         },
         formula: 'y = 4.8 · cos(axy / (x²+y²+0.1))',

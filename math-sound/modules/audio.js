@@ -80,6 +80,21 @@ export function createSoundFromFunction(functionId = state.currentFunction) {
     const buffer = state.audioContext.createBuffer(1, numSamples, sampleRate);
     const channelData = buffer.getChannelData(0);
 
+    // Pre-calculate Y values for complex functions (Implicit) to avoid main-thread blockage
+    let yCache = null;
+    if (funcData.type === 'implicit') {
+        const totalSteps = 500; // Resolution per second of audio (Enough for FM)
+        const totalYPoints = Math.ceil(duration * totalSteps);
+        yCache = new Float32Array(totalYPoints);
+        
+        for (let s = 0; s < totalYPoints; s++) {
+            const time = s / totalSteps;
+            const lpIdx = Math.floor(time / symphonyLoopDuration);
+            const prog = (time % symphonyLoopDuration) / symphonyLoopDuration;
+            yCache[s] = sampleImplicitAmplitude(funcData, prog, lpIdx);
+        }
+    }
+
     for (let i = 0; i < numSamples; i++) {
         const t = i / sampleRate;
         
@@ -103,8 +118,6 @@ export function createSoundFromFunction(functionId = state.currentFunction) {
                 case 'parametric': {
                     const tRange = funcData.tRange;
                     const tParam = tRange.min + (tRange.max - tRange.min) * progressInLoop;
-                    
-                    // 특정 시리즈 박동 연출 (Passion 단계)
                     if (functionId === 'heartbeatChronicles' && loopIndex === 4) {
                         const pulseScale = 1.0 + 0.2 * Math.sin(15 * t);
                         y = funcData.y(tParam, loopIndex) * pulseScale;
@@ -120,7 +133,16 @@ export function createSoundFromFunction(functionId = state.currentFunction) {
                     break;
                 }
                 case 'implicit': {
-                    y = sampleImplicitAmplitude(funcData, progressInLoop, loopIndex);
+                    if (yCache) {
+                        const cacheIdx = (t * 500);
+                        const idx = Math.floor(cacheIdx);
+                        const frac = cacheIdx - idx;
+                        if (idx + 1 < yCache.length) {
+                            y = yCache[idx] * (1 - frac) + yCache[idx + 1] * frac;
+                        } else {
+                            y = yCache[yCache.length - 1] || 0;
+                        }
+                    }
                     break;
                 }
                 case 'cartesian':
@@ -216,7 +238,7 @@ function sampleImplicitAmplitude(funcData, progressInLoop, loopIndex) {
     const range = funcData.range || funcData.viewBox || { xMin: -10, xMax: 10, yMin: -10, yMax: 10 };
     const { xMin, xMax, yMin, yMax } = range;
     const x = xMin + (xMax - xMin) * progressInLoop;
-    const steps = 160;
+    const steps = 400; // Increased for better accuracy
 
     let bestY = 0;
     let bestError = Infinity;
@@ -229,7 +251,6 @@ function sampleImplicitAmplitude(funcData, progressInLoop, loopIndex) {
             let error;
             
             if (typeof val === 'boolean') {
-                // For boolean implicit (like GCD series), true is the target (perfect match)
                 error = val ? 0 : 1;
                 if (val) foundMatch = true;
             } else {
@@ -240,16 +261,14 @@ function sampleImplicitAmplitude(funcData, progressInLoop, loopIndex) {
                 bestError = error;
                 bestY = y;
             }
-            if (foundMatch && typeof val === 'boolean') break; // Early exit for boolean matches
+            if (foundMatch && typeof val === 'boolean') break;
         } catch (e) {
             continue;
         }
     }
 
-    // For boolean functions, we must have found a true value. 
-    // For numeric functions, we use the standard error threshold.
     if (foundMatch) return bestY;
-    return bestError < 0.25 ? bestY : 0;
+    return bestError < 0.6 ? bestY : 0; // Relaxed threshold matching renderer
 }
 
 function createSoftClipCurve(samples = 400) {

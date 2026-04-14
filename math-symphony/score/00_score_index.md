@@ -15,6 +15,7 @@ This directory contains mathematical scores extracted from **The Math Wizard**'s
 | 07 | **EXPERT** | **GCD Edition (Fantastic)** | Coprimality Grid | [07_gcd_fantastic.md](./07_gcd_fantastic.md) |
 | 08 | **EXPERT** | **Incredible Animations** | Long-duration Dynamics | [08_incredible_animations.md](./08_incredible_animations.md) |
 | 09 | **LEGEND** | **Incomprehensible Graphs** | Extreme Density | [09_incomprehensible.md](./09_incomprehensible.md) |
+| 10 | **COSMIC** | **Cosmic Waves & Symphony** | Non-linear Interference | [10_cosmic_wave.md](./10_cosmic_wave.md) |
 
 ---
 

@@ -17,6 +17,9 @@ export function setRendererCallbacks(timerCb, autoCb, stopAudioCb) {
     stopSoundCallback = stopAudioCb;
 }
 
+// Optimization: incremental drawing for implicit curves
+const implicitBuffers = new Map(); // Stores { canvas, ctx, lastCol, lastLoop } per function name
+
 export function drawStaticGraph() {
     const width = elements.graphCanvas.offsetWidth;
     const height = elements.graphCanvas.offsetHeight;
@@ -72,10 +75,7 @@ function drawLayer(funcKey, width, height, progress, isBackground = false) {
             drawPolarCurveInternal(funcData, width, height, progress);
             break;
         case 'implicit':
-            // Whirlpool은 원래 점이므로 바탕 선(격자)을 그리지 않음
-            if (!funcData.name.includes('Whirlpool')) {
-                drawImplicitCurveInternal(funcData, width, height, progress, isBackground);
-            }
+            drawImplicitCurveInternal(funcData, width, height, progress, isBackground);
             break;
         case 'cartesian':
         default:
@@ -296,32 +296,74 @@ function drawParametricCurveInternal(funcData, width, height, progress) {
  */
 function drawImplicitCurveInternal(funcData, width, height, progress, isBackground = false) {
     if (!funcData.f) return;
+    
+    const funcName = funcData.name;
+    const loopIndex = state.autoLoopCount;
+    const bufferKey = `${funcName}_${isBackground ? 'bg' : 'main'}`;
+    
+    // Get or create buffer for this specific function and layer type
+    if (!implicitBuffers.has(bufferKey)) {
+        const canv = document.createElement('canvas');
+        canv.width = width;
+        canv.height = height;
+        implicitBuffers.set(bufferKey, {
+            canvas: canv,
+            ctx: canv.getContext('2d'),
+            lastCol: -1,
+            lastLoop: -1
+        });
+    }
+    
+    const buffer = implicitBuffers.get(bufferKey);
+    
+    // Ensure buffer size matches main canvas
+    if (buffer.canvas.width !== width || buffer.canvas.height !== height) {
+        buffer.canvas.width = width;
+        buffer.canvas.height = height;
+        buffer.lastCol = -1;
+    }
+
+    // Reset buffer if loop changed
+    if (buffer.lastLoop !== loopIndex || (progress === 0 && buffer.lastCol > 0)) {
+        buffer.lastCol = -1;
+        buffer.lastLoop = loopIndex;
+        buffer.ctx.clearRect(0, 0, width, height);
+    }
+
     const { xMin, xMax, yMin, yMax } = funcData.range || (funcData.viewBox || { xMin: -10, xMax: 10, yMin: -10, yMax: 10 });
     const graphCtx = ctx.graph;
     const xRange = xMax - xMin;
     const yRange = yMax - yMin;
-    const resX = 240; // Increased resolution for GCD patterns
+    const resX = 240; 
     const resY = 180;
-    const loopIndex = state.autoLoopCount;
     const maxColumn = Math.max(1, Math.floor(resX * progress));
 
-    graphCtx.fillStyle = isBackground ? '#d1d5db' : getLoopAwareColor(funcData.category, loopIndex);
-    for (let i = 0; i <= maxColumn; i++) {
-        for (let j = 0; j <= resY; j++) {
+    // Incremental drawing
+    const startColumn = buffer.lastCol + 1;
+    
+    if (startColumn <= maxColumn) {
+        buffer.ctx.fillStyle = isBackground ? '#d1d5db' : getLoopAwareColor(funcData.category, loopIndex);
+        
+        for (let i = startColumn; i <= maxColumn; i++) {
             const x = xMin + (xRange * i) / resX;
-            const y = yMin + (yRange * j) / resY;
-            try {
-                const val = funcData.f(x, y, loopIndex);
-                const shouldDraw = typeof val === 'boolean' ? val : Math.abs(val) < 0.18;
-                if (shouldDraw) {
-                    const canvasX = (i / resX) * width;
-                    const canvasY = (1 - j / resY) * height;
-                    // Slightly larger points (2x2) for visibility in high-res grids
-                    graphCtx.fillRect(canvasX - 1, canvasY - 1, 2, 2);
-                }
-            } catch (e) {}
+            for (let j = 0; j <= resY; j++) {
+                const y = yMin + (yRange * j) / resY;
+                try {
+                    const val = funcData.f(x, y, loopIndex);
+                    // Threshold slightly relaxed for better visibility
+                    const shouldDraw = typeof val === 'boolean' ? val : Math.abs(val) < 0.22;
+                    if (shouldDraw) {
+                        const canvasX = (i / resX) * width;
+                        const canvasY = (1 - j / resY) * height;
+                        buffer.ctx.fillRect(canvasX - 1, canvasY - 1, 2, 2);
+                    }
+                } catch (e) {}
+            }
         }
+        buffer.lastCol = maxColumn;
     }
+    
+    graphCtx.drawImage(buffer.canvas, 0, 0);
 }
 
 function findImplicitPoint(funcData, progress) {
@@ -329,7 +371,7 @@ function findImplicitPoint(funcData, progress) {
 
     const { xMin, xMax, yMin, yMax } = funcData.range || (funcData.viewBox || { xMin: -10, xMax: 10, yMin: -10, yMax: 10 });
     const x = xMin + (xMax - xMin) * progress;
-    const steps = 160;
+    const steps = 400; // Increased for better accuracy in complex implicit equations
     const loopIndex = state.autoLoopCount;
 
     let bestY = null;
@@ -349,7 +391,7 @@ function findImplicitPoint(funcData, progress) {
         }
     }
 
-    if (bestY === null || bestError > 0.35) return null;
+    if (bestY === null || bestError > 0.6) return null; // Relaxed threshold for numeric implicit
     return { x, y: bestY, xMin, xMax, yMin, yMax };
 }
 
@@ -620,8 +662,8 @@ export function animate() {
                 const bCurrent = 40 + loopIdx % 10 * 5;
                 varText = `(a = ${aCurrent}, b = ${bCurrent})`;
             } else if (name.includes('Whirlpool')) {
-                const aCurrent = (loopIdx % 20) + 5;
-                const aNext = (nextIdx % 20) + 5;
+                const aCurrent = (loopIdx % 20) * 2 + 5;
+                const aNext = (nextIdx % 20) * 2 + 5;
                 varText = `(a = ${aCurrent}) → ${aNext}`;
             } else if (name.includes('Tomfoolery')) {
                 varText = `(v = ${((loopIdx % 19 + 1) * 0.314).toFixed(2)}) → ${((nextIdx % 19 + 1) * 0.314).toFixed(2)}`;
