@@ -196,7 +196,9 @@ const SortColorControlFactory = {
                     { value: 'bubble', label: 'Bubble Sort' },
                     { value: 'quick', label: 'Quick Sort' },
                     { value: 'insertion', label: 'Insertion Sort' },
-                    { value: 'selection', label: 'Selection Sort' }
+                    { value: 'selection', label: 'Selection Sort' },
+                    { value: 'circle', label: 'Circle Sort' },
+                    { value: 'bitonic', label: 'Bitonic Sort' }
                 ],
                 onChange: (v) => {
                     caseRef.sortMode = v;
@@ -761,7 +763,9 @@ const SortColorControlFactory = {
                     { value: 'bubble', label: 'Bubble Sort' },
                     { value: 'quick', label: 'Quick Sort' },
                     { value: 'insertion', label: 'Insertion Sort' },
-                    { value: 'selection', label: 'Selection Sort' }
+                    { value: 'selection', label: 'Selection Sort' },
+                    { value: 'circle', label: 'Circle Sort' },
+                    { value: 'bitonic', label: 'Bitonic Sort' }
                 ],
                 onChange: (v) => {
                     caseRef.sortMode = v;
@@ -951,7 +955,9 @@ const SortColorControlFactory = {
                     { value: 'bubble', label: 'Bubble Sort' },
                     { value: 'quick', label: 'Quick Sort' },
                     { value: 'insertion', label: 'Insertion Sort' },
-                    { value: 'selection', label: 'Selection Sort' }
+                    { value: 'selection', label: 'Selection Sort' },
+                    { value: 'circle', label: 'Circle Sort' },
+                    { value: 'bitonic', label: 'Bitonic Sort' }
                 ],
                 onChange: (v) => {
                     caseRef.sortMode = v;

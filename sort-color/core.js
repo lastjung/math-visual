@@ -912,7 +912,9 @@ const Core = {
         const isQuick = caseRef.sortMode === 'quick';
         const isInsertion = caseRef.sortMode === 'insertion';
         const isSelection = caseRef.sortMode === 'selection';
-        const stepStride = isRadix ? 3 : ((isQuick || isInsertion || isSelection) ? 2 : 3);
+        const isCircle = caseRef.sortMode === 'circle';
+        const isBitonic = caseRef.sortMode === 'bitonic';
+        const stepStride = isRadix ? 3 : ((isQuick || isInsertion || isSelection || isCircle || isBitonic) ? 2 : 3);
         if (Math.floor(nextStep / stepStride) === Math.floor(prevStep / stepStride)) return;
 
         if (isRadix && Array.isArray(plan?.passes) && plan.passes.length > 0) {

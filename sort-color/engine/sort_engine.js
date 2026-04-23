@@ -9,7 +9,7 @@ const SortEngine = {
     },
 
     getSortPanelLayout(w, h) {
-        if (this.sortMode === 'bubble' || this.sortMode === 'quick' || this.sortMode === 'insertion' || this.sortMode === 'selection') return null;
+        if (this.sortMode === 'bubble' || this.sortMode === 'quick' || this.sortMode === 'insertion' || this.sortMode === 'selection' || this.sortMode === 'circle' || this.sortMode === 'bitonic') return null;
         const panelW = 216;
         const panelH = 124;
         const panelX = this.sortPanelPosition?.x ?? (w - panelW - 24);
@@ -18,7 +18,7 @@ const SortEngine = {
     },
 
     isSortModeAvailable() {
-        return this.sortMode === 'hue' || this.sortMode === 'lsh' || this.sortMode === 'bubble' || this.sortMode === 'quick' || this.sortMode === 'insertion' || this.sortMode === 'selection';
+        return this.sortMode === 'hue' || this.sortMode === 'lsh' || this.sortMode === 'bubble' || this.sortMode === 'quick' || this.sortMode === 'insertion' || this.sortMode === 'selection' || this.sortMode === 'circle' || this.sortMode === 'bitonic';
     },
 
     canRunSort() {
@@ -86,6 +86,14 @@ const SortEngine = {
 
         if (sortMode === 'selection') {
             return this.commitSortPlanResult(SortAlgorithms.buildSelectionPlan(sortItems, signature));
+        }
+
+        if (sortMode === 'circle') {
+            return this.commitSortPlanResult(SortAlgorithms.buildCirclePlan(sortItems, signature));
+        }
+
+        if (sortMode === 'bitonic') {
+            return this.commitSortPlanResult(SortAlgorithms.buildBitonicPlan(sortItems, signature));
         }
 
         const passDescriptors = this.getSortPassDescriptors(sortMode);
@@ -563,6 +571,45 @@ const SortEngine = {
                 range: event.range,
                 swapIndices: event.swapIndices || null,
                 pivotSettled: !!event.pivotSettled
+            };
+        }
+
+        if (plan.type === 'circle' || plan.type === 'bitonic') {
+            const totalSteps = plan.totalSteps;
+            const progress = Math.max(0, Math.min(totalSteps, Math.floor(this.sortProgress)));
+
+            if (progress >= totalSteps) {
+                return {
+                    passIndex: totalSteps,
+                    passNumber: totalSteps,
+                    totalPasses: totalSteps,
+                    passLabel: 'Completed',
+                    stepInPass: 0,
+                    totalInPass: 0,
+                    activeDigit: null,
+                    activeIndices: null,
+                    completed: true,
+                    drawEntries: plan.finalState,
+                    coloredCount: plan.finalState.length
+                };
+            }
+
+            const event = plan.events[progress];
+            if (!event) return null;
+
+            return {
+                passIndex: progress,
+                passNumber: progress + 1,
+                totalPasses: totalSteps,
+                passLabel: event.label,
+                stepInPass: progress,
+                totalInPass: totalSteps,
+                activeDigit: null,
+                activeIndices: event.activeIndices,
+                completed: false,
+                drawEntries: event.order,
+                coloredCount: 0,
+                swapIndices: event.swapIndices || null
             };
         }
 

@@ -472,6 +472,8 @@ const GoldbergSphereCase = {
         if (this.sortMode === 'quick') currentSortLabel = 'Quick Sort';
         if (this.sortMode === 'insertion') currentSortLabel = 'Insertion Sort';
         if (this.sortMode === 'selection') currentSortLabel = 'Selection Sort';
+        if (this.sortMode === 'circle') currentSortLabel = 'Circle Sort';
+        if (this.sortMode === 'bitonic') currentSortLabel = 'Bitonic Sort';
 
         let nextY = 30;
         ctx.fillText(`Sort: ${currentSortLabel}`, 24, nextY);

@@ -273,6 +273,8 @@ const EnvelopeRadialCase = {
             if (this.sortMode === 'quick') currentSortLabel = 'Quick Sort';
             if (this.sortMode === 'insertion') currentSortLabel = 'Insertion Sort';
             if (this.sortMode === 'selection') currentSortLabel = 'Selection Sort';
+            if (this.sortMode === 'circle') currentSortLabel = 'Circle Sort';
+            if (this.sortMode === 'bitonic') currentSortLabel = 'Bitonic Sort';
 
             let nextLY = 24;
             ctx.fillText(`Sort: ${currentSortLabel}`, 24, nextLY);
