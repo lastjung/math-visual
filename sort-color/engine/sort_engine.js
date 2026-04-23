@@ -9,7 +9,7 @@ const SortEngine = {
     },
 
     getSortPanelLayout(w, h) {
-        if (this.sortMode === 'bubble' || this.sortMode === 'quick' || this.sortMode === 'insertion' || this.sortMode === 'selection' || this.sortMode === 'circle' || this.sortMode === 'bitonic') return null;
+        if (this.sortMode === 'bubble' || this.sortMode === 'quick' || this.sortMode === 'insertion' || this.sortMode === 'selection' || this.sortMode === 'circle' || this.sortMode === 'bitonic' || this.sortMode === 'cocktail' || this.sortMode === 'shell') return null;
         const panelW = 216;
         const panelH = 124;
         const panelX = this.sortPanelPosition?.x ?? (w - panelW - 24);
@@ -18,7 +18,7 @@ const SortEngine = {
     },
 
     isSortModeAvailable() {
-        return this.sortMode === 'hue' || this.sortMode === 'lsh' || this.sortMode === 'bubble' || this.sortMode === 'quick' || this.sortMode === 'insertion' || this.sortMode === 'selection' || this.sortMode === 'circle' || this.sortMode === 'bitonic';
+        return this.sortMode === 'hue' || this.sortMode === 'lsh' || this.sortMode === 'bubble' || this.sortMode === 'quick' || this.sortMode === 'insertion' || this.sortMode === 'selection' || this.sortMode === 'circle' || this.sortMode === 'bitonic' || this.sortMode === 'cocktail' || this.sortMode === 'shell' || this.sortMode === 'bucket';
     },
 
     canRunSort() {
@@ -96,6 +96,18 @@ const SortEngine = {
             return this.commitSortPlanResult(SortAlgorithms.buildBitonicPlan(sortItems, signature));
         }
 
+        if (sortMode === 'cocktail') {
+            return this.commitSortPlanResult(SortAlgorithms.buildCocktailPlan(sortItems, signature));
+        }
+
+        if (sortMode === 'shell') {
+            return this.commitSortPlanResult(SortAlgorithms.buildShellPlan(sortItems, signature));
+        }
+
+        if (sortMode === 'bucket') {
+            return this.commitSortPlanResult(SortAlgorithms.buildBucketPlan(sortItems, signature));
+        }
+
         const passDescriptors = this.getSortPassDescriptors(sortMode);
         return this.commitSortPlanResult(SortAlgorithms.buildRadixPlan(sortItems, passDescriptors, signature));
     },
@@ -112,7 +124,7 @@ const SortEngine = {
     },
 
     getQuickSortOrderAtEvent(plan, eventIndex) {
-        if (!plan || plan.type !== 'quick') return [];
+        if (!plan || (plan.type !== 'quick' && plan.type !== 'circle' && plan.type !== 'bitonic' && plan.type !== 'cocktail' && plan.type !== 'shell')) return [];
         if (eventIndex < 0) return [...(plan.initialState || [])];
 
         const checkpoints = Array.isArray(plan.checkpoints) ? plan.checkpoints : [];
@@ -574,7 +586,7 @@ const SortEngine = {
             };
         }
 
-        if (plan.type === 'circle' || plan.type === 'bitonic') {
+        if (plan.type === 'circle' || plan.type === 'bitonic' || plan.type === 'cocktail' || plan.type === 'shell') {
             const totalSteps = plan.totalSteps;
             const progress = Math.max(0, Math.min(totalSteps, Math.floor(this.sortProgress)));
 
@@ -607,11 +619,12 @@ const SortEngine = {
                 activeDigit: null,
                 activeIndices: event.activeIndices,
                 completed: false,
-                drawEntries: event.order,
+                drawEntries: this.getQuickSortOrderAtEvent(plan, progress),
                 coloredCount: 0,
                 swapIndices: event.swapIndices || null
             };
         }
+
 
         if (!plan.passes.length) return null;
 

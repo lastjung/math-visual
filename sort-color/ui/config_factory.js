@@ -198,7 +198,10 @@ const SortColorControlFactory = {
                     { value: 'insertion', label: 'Insertion Sort' },
                     { value: 'selection', label: 'Selection Sort' },
                     { value: 'circle', label: 'Circle Sort' },
-                    { value: 'bitonic', label: 'Bitonic Sort' }
+                    { value: 'bitonic', label: 'Bitonic Sort' },
+                    { value: 'cocktail', label: 'Cocktail Sort' },
+                    { value: 'shell', label: 'Shell Sort' },
+                    { value: 'bucket', label: 'Bucket Sort' }
                 ],
                 onChange: (v) => {
                     caseRef.sortMode = v;
@@ -765,7 +768,10 @@ const SortColorControlFactory = {
                     { value: 'insertion', label: 'Insertion Sort' },
                     { value: 'selection', label: 'Selection Sort' },
                     { value: 'circle', label: 'Circle Sort' },
-                    { value: 'bitonic', label: 'Bitonic Sort' }
+                    { value: 'bitonic', label: 'Bitonic Sort' },
+                    { value: 'cocktail', label: 'Cocktail Sort' },
+                    { value: 'shell', label: 'Shell Sort' },
+                    { value: 'bucket', label: 'Bucket Sort' }
                 ],
                 onChange: (v) => {
                     caseRef.sortMode = v;
@@ -957,7 +963,10 @@ const SortColorControlFactory = {
                     { value: 'insertion', label: 'Insertion Sort' },
                     { value: 'selection', label: 'Selection Sort' },
                     { value: 'circle', label: 'Circle Sort' },
-                    { value: 'bitonic', label: 'Bitonic Sort' }
+                    { value: 'bitonic', label: 'Bitonic Sort' },
+                    { value: 'cocktail', label: 'Cocktail Sort' },
+                    { value: 'shell', label: 'Shell Sort' },
+                    { value: 'bucket', label: 'Bucket Sort' }
                 ],
                 onChange: (v) => {
                     caseRef.sortMode = v;

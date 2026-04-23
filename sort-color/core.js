@@ -914,7 +914,10 @@ const Core = {
         const isSelection = caseRef.sortMode === 'selection';
         const isCircle = caseRef.sortMode === 'circle';
         const isBitonic = caseRef.sortMode === 'bitonic';
-        const stepStride = isRadix ? 3 : ((isQuick || isInsertion || isSelection || isCircle || isBitonic) ? 2 : 3);
+        const isCocktail = caseRef.sortMode === 'cocktail';
+        const isShell = caseRef.sortMode === 'shell';
+        const isBucket = caseRef.sortMode === 'bucket';
+        const stepStride = isRadix ? 3 : ((isQuick || isInsertion || isSelection || isCircle || isBitonic || isCocktail || isShell || isBucket) ? 2 : 3);
         if (Math.floor(nextStep / stepStride) === Math.floor(prevStep / stepStride)) return;
 
         if (isRadix && Array.isArray(plan?.passes) && plan.passes.length > 0) {

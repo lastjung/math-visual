@@ -1,16 +1,26 @@
 /**
- * Bitonic Sort Algorithm Extension
+ * Bitonic Sort Algorithm Extension (Optimized with Checkpoints)
  */
 SortAlgorithms.buildBitonicPlan = function(sortItems, signature = '') {
     const arr = [...sortItems];
     const events = [];
+    const checkpoints = [];
+    const checkpointEvery = 64;
     const n = arr.length;
 
     const pushEvent = (meta) => {
-        events.push({
-            ...meta,
-            order: [...arr]
-        });
+        events.push(meta);
+        const eventIndex = events.length - 1;
+        if (eventIndex === 0 || eventIndex % checkpointEvery === 0) {
+            checkpoints.push({
+                eventIndex,
+                order: [...arr]
+            });
+        }
+    };
+
+    const swap = (a, b) => {
+        [arr[a], arr[b]] = [arr[b], arr[a]];
     };
 
     const bitonicMerge = (low, cnt, dir) => {
@@ -21,7 +31,7 @@ SortAlgorithms.buildBitonicPlan = function(sortItems, signature = '') {
                 if (i2 < n) {
                     pushEvent({ activeIndices: [i, i2], label: 'Bitonic Merge Compare' });
                     if ((dir && arr[i].hueKey > arr[i2].hueKey) || (!dir && arr[i].hueKey < arr[i2].hueKey)) {
-                        [arr[i], arr[i2]] = [arr[i2], arr[i]];
+                        swap(i, i2);
                         pushEvent({ activeIndices: [i, i2], swapIndices: [i, i2], label: 'Bitonic Merge Swap' });
                     }
                 }
@@ -55,6 +65,8 @@ SortAlgorithms.buildBitonicPlan = function(sortItems, signature = '') {
         plan: {
             type: 'bitonic',
             events,
+            checkpoints,
+            checkpointEvery,
             initialState: sortItems,
             finalState: [...arr],
             totalSteps: events.length

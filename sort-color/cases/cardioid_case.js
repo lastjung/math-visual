@@ -204,7 +204,7 @@ const CardioidCircleCase = {
         this._canvasInteractionsBound = true;
 
         this._handleCanvasPointerDown = (e) => {
-            if (this.sortMode === 'bubble' || this.sortMode === 'quick' || this.sortMode === 'insertion' || this.sortMode === 'selection' || this.sortMode === 'circle' || this.sortMode === 'bitonic') return;
+            if (this.sortMode === 'bubble' || this.sortMode === 'quick' || this.sortMode === 'insertion' || this.sortMode === 'selection' || this.sortMode === 'circle' || this.sortMode === 'bitonic' || this.sortMode === 'cocktail' || this.sortMode === 'shell' || this.sortMode === 'bucket') return;
             if (!this.isSortModeAvailable()) return;
             const layout = this.getSortPanelLayout(this.canvas.width, this.canvas.height);
             if (!layout) return;

@@ -1,16 +1,26 @@
 /**
- * Circle Sort Algorithm Extension
+ * Circle Sort Algorithm Extension (Optimized with Checkpoints)
  */
 SortAlgorithms.buildCirclePlan = function(sortItems, signature = '') {
     const arr = [...sortItems];
     const events = [];
+    const checkpoints = [];
+    const checkpointEvery = 64;
     let n = arr.length;
 
     const pushEvent = (meta) => {
-        events.push({
-            ...meta,
-            order: [...arr]
-        });
+        events.push(meta);
+        const eventIndex = events.length - 1;
+        if (eventIndex === 0 || eventIndex % checkpointEvery === 0) {
+            checkpoints.push({
+                eventIndex,
+                order: [...arr]
+            });
+        }
+    };
+
+    const swap = (a, b) => {
+        [arr[a], arr[b]] = [arr[b], arr[a]];
     };
 
     const circleSortRecursive = (low, high) => {
@@ -23,7 +33,7 @@ SortAlgorithms.buildCirclePlan = function(sortItems, signature = '') {
         while (l < h) {
             pushEvent({ activeIndices: [l, h], label: 'Circle Compare' });
             if (arr[l].hueKey > arr[h].hueKey) {
-                [arr[l], arr[h]] = [arr[h], arr[l]];
+                swap(l, h);
                 pushEvent({ activeIndices: [l, h], swapIndices: [l, h], label: 'Circle Swap' });
                 swapped = true;
             }
@@ -34,7 +44,7 @@ SortAlgorithms.buildCirclePlan = function(sortItems, signature = '') {
         if (l === h && h + 1 < n) {
             pushEvent({ activeIndices: [l, h + 1], label: 'Circle Center Compare' });
             if (arr[l].hueKey > arr[h + 1].hueKey) {
-                [arr[l], arr[h + 1]] = [arr[h + 1], arr[l]];
+                swap(l, h + 1);
                 pushEvent({ activeIndices: [l, h + 1], swapIndices: [l, h + 1], label: 'Circle Center Swap' });
                 swapped = true;
             }
@@ -57,6 +67,8 @@ SortAlgorithms.buildCirclePlan = function(sortItems, signature = '') {
         plan: {
             type: 'circle',
             events,
+            checkpoints,
+            checkpointEvery,
             initialState: sortItems,
             finalState: [...arr],
             totalSteps: events.length

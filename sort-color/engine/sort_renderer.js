@@ -289,6 +289,9 @@ const SortRenderer = {
         if (this.sortMode === 'selection') currentSortLabel = 'Selection Sort';
         if (this.sortMode === 'circle') currentSortLabel = 'Circle Sort';
         if (this.sortMode === 'bitonic') currentSortLabel = 'Bitonic Sort';
+        if (this.sortMode === 'cocktail') currentSortLabel = 'Cocktail Sort';
+        if (this.sortMode === 'shell') currentSortLabel = 'Shell Sort';
+        if (this.sortMode === 'bucket') currentSortLabel = 'Bucket Sort';
 
         let nextY = 30;
         if (sortingActive) {
