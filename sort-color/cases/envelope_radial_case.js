@@ -142,6 +142,15 @@ const EnvelopeRadialCase = {
             this.lineWidth = 0.85;
             this.renderMode = 'glow';
             this.envelopeBuildOrder = 'chained';
+        } else if (presetId === 'snowflake') {
+            this.envelopeAxesCount = 6;
+            this.envelopeLinesPerSector = 32;
+            this.envelopeLayerCount = 2;
+            this.colorMode = 'angle'; // Rainbow by default, not fixed
+            this.lineAlpha = 0.65;
+            this.lineWidth = 1.4;
+            this.renderMode = 'light';
+            this.envelopeBuildOrder = 'chained';
         } else {
             // standard (Star)
             this.envelopeAxesCount = 5;

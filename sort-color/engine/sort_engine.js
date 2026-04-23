@@ -9,7 +9,7 @@ const SortEngine = {
     },
 
     getSortPanelLayout(w, h) {
-        if (this.sortMode === 'bubble' || this.sortMode === 'quick' || this.sortMode === 'insertion' || this.sortMode === 'selection' || this.sortMode === 'circle' || this.sortMode === 'bitonic' || this.sortMode === 'cocktail' || this.sortMode === 'shell') return null;
+        if (!['lsh', 'hue', 'bucket'].includes(this.sortMode)) return null;
         const panelW = 216;
         const panelH = 124;
         const panelX = this.sortPanelPosition?.x ?? (w - panelW - 24);
@@ -18,7 +18,7 @@ const SortEngine = {
     },
 
     isSortModeAvailable() {
-        return this.sortMode === 'hue' || this.sortMode === 'lsh' || this.sortMode === 'bubble' || this.sortMode === 'quick' || this.sortMode === 'insertion' || this.sortMode === 'selection' || this.sortMode === 'circle' || this.sortMode === 'bitonic' || this.sortMode === 'cocktail' || this.sortMode === 'shell' || this.sortMode === 'bucket';
+        return ['hue', 'lsh', 'bubble', 'quick', 'insertion', 'selection', 'circle', 'bitonic', 'cocktail', 'shell', 'bucket'].includes(this.sortMode);
     },
 
     canRunSort() {
@@ -298,6 +298,19 @@ const SortEngine = {
             this.integersOnly ? 1 : 0,
             this.learningMode
         ].join('|');
+    },
+
+    extractSortItems(items) {
+        if (!Array.isArray(items)) return [];
+        return items.map((item, index) => {
+            return {
+                originalIndex: index,
+                hueKey: item.hue || 0,
+                saturationKey: item.saturation || 0,
+                lightnessKey: item.lightness || 0,
+                color: item.color || '#fff'
+            };
+        });
     },
 
     getSortSignatureFromProvider(provider) {
@@ -651,7 +664,8 @@ const SortEngine = {
         const passIndex = Math.floor(completedSteps / passLength);
         const stepInPass = completedSteps % passLength;
         const pass = plan.passes[passIndex];
-        const processedBuckets = Array.from({ length: 10 }, () => []);
+        const numBuckets = (plan.type === 'bucket') ? pass.bucketCounts.length : 10;
+        const processedBuckets = Array.from({ length: numBuckets }, () => []);
 
         for (let i = 0; i < stepInPass; i++) {
             processedBuckets[pass.digits[i]].push(pass.sourceOrder[i]);
@@ -685,8 +699,13 @@ const SortEngine = {
         const chartTop = panelY + 34;
         const chartBottom = panelY + panelH - 24;
         const chartHeight = chartBottom - chartTop;
-        const barW = 14;
-        const gap = 6;
+        
+        // Dynamic bucket sizing: 
+        // Radix (10 buckets) uses original 14/6.
+        // Bucket (5 buckets) will use wider bars.
+        const numBuckets = sortView.bucketCounts.length;
+        const gap = numBuckets > 5 ? 6 : 12;
+        const barW = (panelW - 28 - (gap * (numBuckets - 1))) / numBuckets;
 
         ctx.save();
         ctx.fillStyle = 'rgba(10, 14, 24, 0.82)';
@@ -717,7 +736,7 @@ const SortEngine = {
         ctx.font = '500 10px IBM Plex Sans, sans-serif';
         ctx.fillText(`Pass ${sortView.passNumber}/${sortView.totalPasses}`, panelX + 14, panelY + 32);
 
-        for (let digit = 0; digit < 10; digit++) {
+        for (let digit = 0; digit < numBuckets; digit++) {
             const count = sortView.bucketCounts[digit];
             const x = panelX + 14 + digit * (barW + gap);
             const barH = (count / maxCount) * chartHeight;
@@ -760,6 +779,24 @@ const SortEngine = {
         }
 
         ctx.restore();
+    },
+
+    getSortPassDescriptors(mode) {
+        if (mode === 'lsh') {
+            return [
+                { key: 'lightnessKey', divisor: 1, label: 'Lightness' },
+                { key: 'saturationKey', divisor: 1, label: 'Saturation' },
+                { key: 'hueKey', divisor: 1, label: 'Hue (Units)' },
+                { key: 'hueKey', divisor: 10, label: 'Hue (Tens)' },
+                { key: 'hueKey', divisor: 100, label: 'Hue (Hundreds)' }
+            ];
+        }
+        // Default Hue Radix
+        return [
+            { key: 'hueKey', divisor: 1, label: 'Hue (Units)' },
+            { key: 'hueKey', divisor: 10, label: 'Hue (Tens)' },
+            { key: 'hueKey', divisor: 100, label: 'Hue (Hundreds)' }
+        ];
     },
 
     updateSortingState(dt) {

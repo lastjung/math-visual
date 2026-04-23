@@ -361,6 +361,28 @@ const EnvelopeRadialGeometryProvider = {
         if (this.currentPreset === 'orbit_net') {
             return this.getEnvelopeOrbitGeometry(sectorIndex, lineIndex, layerIndex, radius, cx, cy);
         }
+
+        if (this.currentPreset === 'snowflake') {
+            const axesCount = this.getEnvelopeAxesCount();
+            const linesPerSector = this.getEnvelopeLinesPerSector();
+            const ratio = (lineIndex + 1) / (linesPerSector + 1);
+            
+            if (layerIndex === 0) {
+                const from = this.getEnvelopeRadialAnchor(sectorIndex, 1 - ratio * 0.8, radius, cx, cy);
+                const to = this.getEnvelopeRadialAnchor(sectorIndex, 1.0, radius, cx, cy);
+                return { kind: 'line', from, to, sectorIndex, lineIndex, layerIndex, ratio };
+            } else {
+                const mainAnchor = this.getEnvelopeRadialAnchor(sectorIndex, ratio, radius, cx, cy);
+                const branchAngle = mainAnchor.angle + (lineIndex % 2 === 0 ? Math.PI / 3 : -Math.PI / 3);
+                const branchLen = radius * 0.25 * (1 - ratio * 0.5);
+                const from = { x: mainAnchor.x, y: mainAnchor.y };
+                const to = { 
+                    x: from.x + Math.cos(branchAngle) * branchLen, 
+                    y: from.y + Math.sin(branchAngle) * branchLen 
+                };
+                return { kind: 'line', from, to, sectorIndex, lineIndex, layerIndex, ratio };
+            }
+        }
         
         // Layer 0 skips 1 (adjacent), Layer 1 skips 2, etc.
         const skip = layerIndex + 1;
@@ -398,7 +420,13 @@ const EnvelopeRadialGeometryProvider = {
             hueRatio = axisIndex / Math.max(1, axesCount);
         } else {
             // Normal items: spread based on total index
-            hueRatio = itemIndex / safeTotal;
+            if (this.currentPreset === 'snowflake' && geometry) {
+                const lps = this.getEnvelopeLinesPerSector();
+                hueRatio = (geometry.sectorIndex / axesCount) + (geometry.lineIndex / (lps * axesCount)) + (geometry.layerIndex * 0.05);
+                hueRatio %= 1.0;
+            } else {
+                hueRatio = itemIndex / safeTotal;
+            }
         }
 
         // 1. Monochrome (Saturation 0)

@@ -605,7 +605,8 @@ const SortColorControlFactory = {
                     { value: 'polygon', label: 'Polygon' },
                     { value: 'chain', label: 'Chain Stitch' },
                     { value: 'arc_weave', label: 'Arc Weave' },
-                    { value: 'orbit_net', label: 'Quantum Silk' }
+                    { value: 'orbit_net', label: 'Quantum Silk' },
+                    { value: 'snowflake', label: 'Fractal Snowflake' }
                 ],
                 onChange: (v) => {
                     caseRef.applyPreset(v);
