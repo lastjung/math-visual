@@ -9,7 +9,7 @@ const SortEngine = {
     },
 
     getSortPanelLayout(w, h) {
-        if (!['lsh', 'hue', 'bucket'].includes(this.sortMode)) return null;
+        if (!['lsh', 'hue', 'bucket', 'gravity'].includes(this.sortMode)) return null;
         const panelW = 216;
         const panelH = 124;
         const panelX = this.sortPanelPosition?.x ?? (w - panelW - 24);
@@ -18,7 +18,7 @@ const SortEngine = {
     },
 
     isSortModeAvailable() {
-        return ['hue', 'lsh', 'bubble', 'quick', 'insertion', 'selection', 'circle', 'bitonic', 'cocktail', 'shell', 'bucket'].includes(this.sortMode);
+        return ['hue', 'lsh', 'bubble', 'quick', 'insertion', 'selection', 'circle', 'bitonic', 'cocktail', 'shell', 'bucket', 'gravity', 'center_out'].includes(this.sortMode);
     },
 
     canRunSort() {
@@ -108,6 +108,14 @@ const SortEngine = {
             return this.commitSortPlanResult(SortAlgorithms.buildBucketPlan(sortItems, signature));
         }
 
+        if (sortMode === 'gravity') {
+            return this.commitSortPlanResult(SortAlgorithms.buildGravityPlan(sortItems, signature));
+        }
+
+        if (sortMode === 'center_out') {
+            return this.commitSortPlanResult(SortAlgorithms.buildCenterOutPlan(sortItems, signature));
+        }
+
         const passDescriptors = this.getSortPassDescriptors(sortMode);
         return this.commitSortPlanResult(SortAlgorithms.buildRadixPlan(sortItems, passDescriptors, signature));
     },
@@ -124,7 +132,7 @@ const SortEngine = {
     },
 
     getQuickSortOrderAtEvent(plan, eventIndex) {
-        if (!plan || (plan.type !== 'quick' && plan.type !== 'circle' && plan.type !== 'bitonic' && plan.type !== 'cocktail' && plan.type !== 'shell')) return [];
+        if (!plan || (plan.type !== 'quick' && plan.type !== 'circle' && plan.type !== 'bitonic' && plan.type !== 'cocktail' && plan.type !== 'shell' && plan.type !== 'center_out')) return [];
         if (eventIndex < 0) return [...(plan.initialState || [])];
 
         const checkpoints = Array.isArray(plan.checkpoints) ? plan.checkpoints : [];
@@ -599,7 +607,7 @@ const SortEngine = {
             };
         }
 
-        if (plan.type === 'circle' || plan.type === 'bitonic' || plan.type === 'cocktail' || plan.type === 'shell') {
+        if (plan.type === 'circle' || plan.type === 'bitonic' || plan.type === 'cocktail' || plan.type === 'shell' || plan.type === 'center_out') {
             const totalSteps = plan.totalSteps;
             const progress = Math.max(0, Math.min(totalSteps, Math.floor(this.sortProgress)));
 
@@ -690,7 +698,7 @@ const SortEngine = {
     },
 
     drawSortBuckets(ctx, w, h, sortView) {
-        if (!sortView || this.sortMode === 'bubble' || this.sortMode === 'quick' || this.sortMode === 'insertion' || this.sortMode === 'selection') return;
+        if (!sortView || ['bubble', 'quick', 'insertion', 'selection', 'center_out'].includes(this.sortMode)) return;
 
         const layout = this.getSortPanelLayout(w, h);
         if (!layout) return;
@@ -746,30 +754,47 @@ const SortEngine = {
             const isLightnessPass = (sortView.passLabel || '').toLowerCase().includes('lightness');
             const isSaturationPass = (sortView.passLabel || '').toLowerCase().includes('saturation');
 
-            ctx.fillStyle = 'rgba(255,255,255,0.08)';
+            ctx.fillStyle = 'rgba(255,255,255,0.04)';
             ctx.fillRect(x, chartTop, barW, chartHeight);
 
             let activeColor;
             let baseColor;
+            let glowColor;
+
             if (isLightnessPass) {
                 const lightness = 16 + digit * 7.6;
                 activeColor = `hsla(0, 0%, ${Math.min(92, lightness + 10)}%, 0.96)`;
                 baseColor = `hsla(0, 0%, ${lightness}%, 0.62)`;
+                glowColor = `hsla(0, 0%, 100%, 0.4)`;
             } else if (isSaturationPass) {
                 const sat = 10 + digit * 8.5;
                 activeColor = `hsla(164, ${Math.min(100, sat + 10)}%, 68%, 0.96)`;
                 baseColor = `hsla(164, ${sat}%, 56%, 0.62)`;
+                glowColor = `hsla(164, 100%, 80%, 0.4)`;
             } else {
                 activeColor = `hsla(${hue}, 95%, 68%, 0.96)`;
                 baseColor = `hsla(${hue}, 88%, 60%, 0.56)`;
+                glowColor = `hsla(${hue}, 100%, 75%, 0.5)`;
             }
 
-            ctx.fillStyle = isActive ? activeColor : baseColor;
-            ctx.fillRect(x, y, barW, Math.max(barH, 2));
+            if (isActive) {
+                const grad = ctx.createLinearGradient(x, y, x, chartBottom);
+                grad.addColorStop(0, activeColor);
+                grad.addColorStop(1, baseColor);
+                ctx.fillStyle = grad;
+                ctx.fillRect(x - 1, y, barW + 2, barH);
+                
+                // Subtle white top highlight
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+                ctx.fillRect(x - 1, y, barW + 2, 2);
+            } else {
+                ctx.fillStyle = baseColor;
+                ctx.fillRect(x, y, barW, barH);
+            }
 
             if (isActive) {
-                ctx.strokeStyle = 'rgba(255, 209, 102, 0.95)';
-                ctx.lineWidth = 1.5;
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
+                ctx.lineWidth = 1;
                 ctx.strokeRect(x - 2, chartTop - 2, barW + 4, chartHeight + 4);
             }
 

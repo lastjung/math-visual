@@ -292,6 +292,8 @@ const SortRenderer = {
         if (this.sortMode === 'cocktail') currentSortLabel = 'Cocktail Sort';
         if (this.sortMode === 'shell') currentSortLabel = 'Shell Sort';
         if (this.sortMode === 'bucket') currentSortLabel = 'Bucket Sort';
+        if (this.sortMode === 'gravity') currentSortLabel = 'Gravity Sort';
+        if (this.sortMode === 'center_out') currentSortLabel = 'Center-Out Sort';
 
         let nextY = 30;
         if (sortingActive) {

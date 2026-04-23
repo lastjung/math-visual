@@ -917,7 +917,9 @@ const Core = {
         const isCocktail = caseRef.sortMode === 'cocktail';
         const isShell = caseRef.sortMode === 'shell';
         const isBucket = caseRef.sortMode === 'bucket';
-        const stepStride = isRadix ? 1 : ((isQuick || isInsertion || isSelection || isCircle || isBitonic || isCocktail || isShell || isBucket) ? 2 : 1);
+        const isGravity = caseRef.sortMode === 'gravity';
+        const isCenterOut = caseRef.sortMode === 'center_out';
+        const stepStride = isRadix ? 1 : ((isQuick || isInsertion || isSelection || isCircle || isBitonic || isCocktail || isShell || isBucket || isGravity || isCenterOut) ? 2 : 1);
         if (Math.floor(nextStep / stepStride) === Math.floor(prevStep / stepStride)) return;
 
         if (isRadix && Array.isArray(plan?.passes) && plan.passes.length > 0) {

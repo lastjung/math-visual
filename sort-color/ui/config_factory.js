@@ -201,7 +201,9 @@ const SortColorControlFactory = {
                     { value: 'bitonic', label: 'Bitonic Sort' },
                     { value: 'cocktail', label: 'Cocktail Sort' },
                     { value: 'shell', label: 'Shell Sort' },
-                    { value: 'bucket', label: 'Bucket Sort' }
+                    { value: 'bucket', label: 'Bucket Sort' },
+                    { value: 'gravity', label: 'Gravity Sort' },
+                    { value: 'center_out', label: 'Center-Out Sort' }
                 ],
                 onChange: (v) => {
                     caseRef.sortMode = v;
@@ -772,7 +774,9 @@ const SortColorControlFactory = {
                     { value: 'bitonic', label: 'Bitonic Sort' },
                     { value: 'cocktail', label: 'Cocktail Sort' },
                     { value: 'shell', label: 'Shell Sort' },
-                    { value: 'bucket', label: 'Bucket Sort' }
+                    { value: 'bucket', label: 'Bucket Sort' },
+                    { value: 'gravity', label: 'Gravity Sort' },
+                    { value: 'center_out', label: 'Center-Out Sort' }
                 ],
                 onChange: (v) => {
                     caseRef.sortMode = v;
@@ -967,7 +971,9 @@ const SortColorControlFactory = {
                     { value: 'bitonic', label: 'Bitonic Sort' },
                     { value: 'cocktail', label: 'Cocktail Sort' },
                     { value: 'shell', label: 'Shell Sort' },
-                    { value: 'bucket', label: 'Bucket Sort' }
+                    { value: 'bucket', label: 'Bucket Sort' },
+                    { value: 'gravity', label: 'Gravity Sort' },
+                    { value: 'center_out', label: 'Center-Out Sort' }
                 ],
                 onChange: (v) => {
                     caseRef.sortMode = v;
