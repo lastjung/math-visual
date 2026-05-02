@@ -1,4 +1,4 @@
-import { scoreCatalog } from '../catalog/index.js';
+import { scoreCatalog } from '../catalog/index.js?v=20260502-04';
 import {
     buildControllerSnapshot,
     formatControllerValue,

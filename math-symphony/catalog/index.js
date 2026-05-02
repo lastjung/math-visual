@@ -1,11 +1,13 @@
 import { amazingPart3Score } from './01_amazing_part3.js';
 import { moreBeautifulScore } from './02_more_beautiful.js';
 import { parametricFocusedScore } from './03_parametric_focused.js';
+import { parametricImplicitPolarScore } from './04_parametric_implicit_polar.js';
 
 export const scoreCatalog = [
     amazingPart3Score,
     moreBeautifulScore,
-    parametricFocusedScore
+    parametricFocusedScore,
+    parametricImplicitPolarScore
 ];
 
 export function getScoreById(scoreId) {

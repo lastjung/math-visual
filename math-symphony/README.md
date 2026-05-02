@@ -9,9 +9,11 @@ Current status:
 - `engine/` holds controller and expression helpers
 - `app/` holds the browser explorer UI
 
-This first pass normalizes:
+The current runtime catalog normalizes:
 
 - `01_amazing_part3`
 - `02_more_beautiful`
+- `03_parametric_focused`
+- `04_parametric_implicit_polar`
 
 Open `index.html` in a browser or serve the folder with a static server.

@@ -51,12 +51,14 @@ Implemented files:
 - `catalog/01_amazing_part3.js`
 - `catalog/02_more_beautiful.js`
 - `catalog/03_parametric_focused.js`
+- `catalog/04_parametric_implicit_polar.js`
 
 Current normalized scores:
 
 - `01_amazing_part3`
 - `02_more_beautiful`
 - `03_parametric_focused`
+- `04_parametric_implicit_polar`
 
 Each score can now carry:
 
@@ -231,6 +233,32 @@ This establishes a useful rule for future scores:
 - let preview and audio both consume those controllers
 - do not rely on transport alone to create motion
 
+### 9. `04_parametric_implicit_polar` Mixed-Family Pass
+
+`04_parametric_implicit_polar` is now normalized into the runtime catalog.
+
+It intentionally includes:
+
+- one scene that mixes `polar`, `parametric`, and `implicit` expressions together
+- one parametric-heavy discontinuity scene
+- one implicit-heavy pressure scene
+- one polar-heavy finale scene
+
+Current runtime totals for `04`:
+
+- 4 scenes
+- 14 expressions
+- 12 controllers
+- 56 seconds
+
+The first validation pass found no module parse errors and no shared sampler exceptions.
+
+This confirms that the existing catalog, controller, and sampling contracts can carry a mixed-family score without immediate ad hoc branching.
+
+The next question is not whether `04` can load. It can.
+
+The next question is whether the current screen composition, renderer priority, and audio focus are good enough for mixed-family readability.
+
 ---
 
 ## Important Decisions Already Made
@@ -294,11 +322,10 @@ That decision should remain.
 
 ### 1. Catalog Coverage
 
-Three scores are normalized.
+Four scores are normalized.
 
 Still missing:
 
-- `04_parametric_implicit_polar`
 - `05_amazing_2025`
 - `06_insane_polar`
 - `07_gcd_fantastic`
@@ -386,25 +413,21 @@ This suggests a simple rule for future work:
 
 ## Recommended Next Steps
 
-### Immediate Next Step 1: Normalize `04_parametric_implicit_polar`
+### Immediate Next Step 1: Discuss Screen Composition and Product Direction
 
-This is the most important next score.
+Now that `04` is normalized, the next work should decide what the runtime should become visually:
 
-Reason:
+- archive explorer
+- performance player
+- score editor
+- render staging tool
+- hybrid of the above
 
-- it mixes `parametric`, `implicit`, and `polar`
-- it will pressure-test the current catalog format
-- it will reveal whether mixed-family scenes need extra render controls
-
-While normalizing it:
-
-- add `caption`
-- add `focusNote`
-- note any scene that needs custom density or viewport handling
+Do this before adding more scores.
 
 ### Immediate Next Step 2: Expand Mixed-Family Render Rules
 
-After `04` is in, check whether mixed-family scenes need:
+`04` should now be reviewed in the browser to decide whether mixed-family scenes need:
 
 - per-expression density
 - custom implicit thresholds
@@ -425,7 +448,7 @@ Next audio improvements should be:
 
 ### Immediate Next Step 4: Introduce the First Shot Preset
 
-Once `04` is normalized, add the first real shot system field to the catalog.
+After the screen direction is decided, add the first real shot system field to the catalog.
 
 Recommended initial model:
 
@@ -455,15 +478,16 @@ Reason:
 
 If work resumes later, start here:
 
-1. Read `catalog/03_parametric_focused.js` to preserve the new `phase` and `drift` pattern
-2. Normalize `04_parametric_implicit_polar`
-3. Check whether the current renderer handles mixed-family scenes cleanly
-4. If not, add the first data-driven render controls before normalizing more scores
+1. Open `04_parametric_implicit_polar` in the browser runtime
+2. Review the mixed thumbnail scene first
+3. Discuss screen composition and product direction
+4. Decide whether mixed-family readability needs data-driven render controls
+5. Only then continue score expansion
 
-Do not begin with CSS polish.
+Do not begin with more catalog expansion.
 Do not begin with a full audio rewrite.
 
-The most important unresolved question is whether the current catalog and engine survive a mixed-family score without becoming ad hoc again.
+The most important unresolved question is what screen structure best explains and performs a mixed-family mathematical score.
 
 ---
 
