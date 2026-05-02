@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Math Desmos Lab</title>
+    <link rel="stylesheet" href="./style.css?v=4" />
+  </head>
+  <body>
+    <main class="shell">
+      <section class="hero" aria-labelledby="page-title">
+        <div>
+          <p class="eyebrow">Desmos API v1.12</p>
+          <h1 id="page-title">Math Desmos Lab</h1>
+          <p class="intro">
+            그래프를 직접 조작하고, 예제를 불러오고, 현재 상태를 브라우저에 저장하는
+            독립형 Desmos 임베드 실험실입니다.
+          </p>
+        </div>
+
+        <form class="key-form" id="api-key-form">
+          <label for="api-key">API key</label>
+          <div class="key-row">
+            <input
+              id="api-key"
+              name="api-key"
+              autocomplete="off"
+              spellcheck="false"
+              placeholder="desmos 또는 발급받은 key"
+            />
+            <button type="submit">적용</button>
+          </div>
+        </form>
+      </section>
+
+      <section class="workspace" aria-label="Desmos graph workspace">
+        <aside class="panel">
+          <div class="panel-section">
+            <p class="panel-label">예제</p>
+            <div class="button-stack">
+              <button type="button" id="toggle-studio-mode">촬영 모드</button>
+              <button type="button" id="show-api-calculator">API 계산기</button>
+              <button type="button" id="show-shared-graph">공유 그래프</button>
+              <a
+                class="button-link"
+                href="https://www.desmos.com/calculator/ym9zdoboer"
+                target="_blank"
+                rel="noreferrer"
+              >
+                원본에서 조절
+              </a>
+              <button type="button" data-preset="parabola">포물선 조절</button>
+              <button type="button" data-preset="trig">삼각함수 합성</button>
+              <button type="button" data-preset="polar">극좌표 장미</button>
+              <button type="button" data-preset="implicit">음함수 곡선</button>
+            </div>
+          </div>
+
+          <div class="panel-section">
+            <p class="panel-label">직접 추가</p>
+            <form id="expression-form" class="expression-form">
+              <input
+                id="expression-input"
+                autocomplete="off"
+                spellcheck="false"
+                placeholder="예: y=\\sin(x)"
+              />
+              <button type="submit">추가</button>
+            </form>
+          </div>
+
+          <div class="panel-section">
+            <p class="panel-label">변수 조절</p>
+            <label class="control-label" for="var-a">
+              a <span id="var-a-value">1.50</span>
+            </label>
+            <input id="var-a" type="range" min="-4" max="4" step="0.01" value="1.5" />
+            <label class="control-label" for="var-b">
+              b <span id="var-b-value">0.75</span>
+            </label>
+            <input id="var-b" type="range" min="-4" max="4" step="0.01" value="0.75" />
+            <label class="control-label" for="var-c">
+              c <span id="var-c-value">0.00</span>
+            </label>
+            <input id="var-c" type="range" min="-6.28" max="6.28" step="0.01" value="0" />
+          </div>
+
+          <div class="panel-section">
+            <p class="panel-label">그래프 소리</p>
+            <div class="button-grid">
+              <button type="button" id="start-graph-audio">소리 시작</button>
+              <button type="button" id="stop-graph-audio">소리 정지</button>
+            </div>
+            <label class="control-label" for="graph-audio-mix">
+              믹스 <span id="graph-audio-mix-value">18%</span>
+            </label>
+            <input id="graph-audio-mix" type="range" min="0" max="50" value="18" />
+            <label class="control-label" for="graph-audio-motion">
+              움직임 <span id="graph-audio-motion-value">55%</span>
+            </label>
+            <input id="graph-audio-motion" type="range" min="0" max="100" value="55" />
+          </div>
+
+          <div class="panel-section">
+            <p class="panel-label">상태</p>
+            <div class="button-grid">
+              <button type="button" id="save-state">저장</button>
+              <button type="button" id="load-state">불러오기</button>
+              <button type="button" id="reset-graph">초기화</button>
+              <button type="button" id="export-image">PNG 보기</button>
+            </div>
+          </div>
+
+          <p class="status" id="status" role="status">Desmos를 불러오는 중입니다.</p>
+        </aside>
+
+        <div class="calculator-wrap">
+          <div id="calculator" aria-label="Desmos graphing calculator"></div>
+          <iframe
+            id="shared-graph"
+            title="Shared Desmos graph"
+            src="https://www.desmos.com/calculator/ym9zdoboer"
+            loading="lazy"
+            allowfullscreen
+          ></iframe>
+        </div>
+      </section>
+    </main>
+
+    <script src="./app.js?v=4"></script>
+  </body>
+</html>
