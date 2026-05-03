@@ -33,6 +33,7 @@
   let calculator = null;
   let customExpressionCount = 0;
   let graphAudio = null;
+  let currentPresetName = "trig";
 
   function setStatus(message) {
     statusElement.textContent = message;
@@ -78,22 +79,7 @@
       calculator.destroy();
     }
 
-    calculator = Desmos.GraphingCalculator(calculatorElement, {
-      expressions: true,
-      settingsMenu: true,
-      zoomButtons: true,
-      showResetButtonOnGraphpaper: true,
-      expressionsTopbar: true,
-      images: false,
-      folders: true,
-      notes: true,
-      sliders: true,
-      projectorMode: false,
-      fontSize: 16,
-      backgroundColor: "#ffffff",
-      accentColor: "#006f86",
-      graphDescription: "Interactive Desmos graph embedded in Math Desmos Lab.",
-    });
+    calculator = Desmos.GraphingCalculator(calculatorElement, getCalculatorOptions());
 
     calculator.observeEvent("change", function (_eventName, event) {
       if (event.isUserInitiated) {
@@ -101,9 +87,38 @@
       }
     });
 
-    applyPreset("parabola");
-    showSharedGraph();
-    setStatus("공유 그래프를 메인 화면으로 불러왔습니다. 촬영 모드로 패널을 숨길 수 있습니다.");
+    applyPreset(currentPresetName);
+    showApiCalculator();
+    setStatus("API 계산기가 준비되었습니다. 촬영 모드에서는 그래프만 보이게 전환됩니다.");
+  }
+
+  function getCalculatorOptions() {
+    const clean = document.body.classList.contains("studio-mode");
+    return {
+      expressions: !clean,
+      settingsMenu: !clean,
+      zoomButtons: !clean,
+      showResetButtonOnGraphpaper: !clean,
+      expressionsTopbar: !clean,
+      images: false,
+      folders: true,
+      notes: true,
+      sliders: true,
+      projectorMode: clean,
+      fontSize: clean ? 18 : 16,
+      backgroundColor: "#ffffff",
+      accentColor: "#006f86",
+      graphDescription: "Interactive Desmos graph embedded in Math Desmos Lab.",
+    };
+  }
+
+  function rebuildCalculatorForDisplayMode() {
+    if (!window.Desmos || !calculator) return;
+    const state = calculator.getState();
+    calculator.destroy();
+    calculator = Desmos.GraphingCalculator(calculatorElement, getCalculatorOptions());
+    calculator.setState(state, { allowUndo: true });
+    calculator.resize();
   }
 
   function applyExpressions(expressions, bounds) {
@@ -114,6 +129,7 @@
 
   function applyPreset(name) {
     if (!calculator) return;
+    currentPresetName = name;
     showApiCalculator();
 
     const presets = {
@@ -184,10 +200,16 @@
 
   function toggleStudioMode() {
     document.body.classList.toggle("studio-mode");
+    if (!calculatorWrap.classList.contains("is-shared")) {
+      rebuildCalculatorForDisplayMode();
+    }
   }
 
   function exitStudioMode() {
     document.body.classList.remove("studio-mode");
+    if (!calculatorWrap.classList.contains("is-shared")) {
+      rebuildCalculatorForDisplayMode();
+    }
   }
 
   class GraphAudioTexture {
@@ -418,12 +440,13 @@
   document.getElementById("show-shared-graph").addEventListener("click", showSharedGraph);
 
   document.getElementById("toggle-studio-mode").addEventListener("click", toggleStudioMode);
+  document.getElementById("exit-studio-mode").addEventListener("click", exitStudioMode);
 
   document.addEventListener("keydown", function (event) {
     if (event.key === "Escape") {
       exitStudioMode();
     }
-  });
+  }, true);
 
   document.getElementById("start-graph-audio").addEventListener("click", function () {
     getGraphAudio().start().then(() => {

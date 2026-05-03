@@ -104,6 +104,10 @@ button:focus-visible {
   gap: 18px;
 }
 
+#exit-studio-mode {
+  display: none;
+}
+
 .hero {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(260px, 380px);
@@ -167,6 +171,14 @@ h1 {
   font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   font-size: 0.84rem;
   font-weight: 700;
+}
+
+.hint {
+  margin: 0;
+  color: var(--muted);
+  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 0.78rem;
+  line-height: 1.45;
 }
 
 .key-row {
@@ -304,6 +316,37 @@ body.studio-mode .calculator-wrap {
 body.studio-mode #calculator,
 body.studio-mode #shared-graph {
   min-height: 100vh;
+}
+
+body.studio-mode .calculator-wrap.is-shared {
+  overflow: hidden;
+}
+
+body.studio-mode .calculator-wrap.is-shared #shared-graph {
+  width: calc(100vw + 420px);
+  height: calc(100vh + 90px);
+  min-height: calc(100vh + 90px);
+  transform: translate(-390px, -54px);
+  transform-origin: top left;
+}
+
+body.studio-mode #exit-studio-mode {
+  position: fixed;
+  z-index: 50;
+  top: 12px;
+  right: 12px;
+  display: inline-flex;
+  min-height: 36px;
+  padding: 0 12px;
+  border-color: rgba(255, 255, 255, 0.35);
+  background: rgba(0, 0, 0, 0.35);
+  color: #ffffff;
+  opacity: 0.08;
+}
+
+body.studio-mode #exit-studio-mode:hover,
+body.studio-mode #exit-studio-mode:focus-visible {
+  opacity: 1;
 }
 
 @media (max-width: 900px) {

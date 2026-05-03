@@ -4,10 +4,11 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Math Desmos Lab</title>
-    <link rel="stylesheet" href="./style.css?v=4" />
+    <link rel="stylesheet" href="./style.css?v=6" />
   </head>
   <body>
     <main class="shell">
+      <button type="button" id="exit-studio-mode" aria-label="Exit studio mode">나가기</button>
       <section class="hero" aria-labelledby="page-title">
         <div>
           <p class="eyebrow">Desmos API v1.12</p>
@@ -40,7 +41,7 @@
             <div class="button-stack">
               <button type="button" id="toggle-studio-mode">촬영 모드</button>
               <button type="button" id="show-api-calculator">API 계산기</button>
-              <button type="button" id="show-shared-graph">공유 그래프</button>
+              <button type="button" id="show-shared-graph">공유 그래프 iframe</button>
               <a
                 class="button-link"
                 href="https://www.desmos.com/calculator/ym9zdoboer"
@@ -70,7 +71,7 @@
           </div>
 
           <div class="panel-section">
-            <p class="panel-label">변수 조절</p>
+            <p class="panel-label">API 변수 조절</p>
             <label class="control-label" for="var-a">
               a <span id="var-a-value">1.50</span>
             </label>
@@ -83,6 +84,7 @@
               c <span id="var-c-value">0.00</span>
             </label>
             <input id="var-c" type="range" min="-6.28" max="6.28" step="0.01" value="0" />
+            <p class="hint">이 컨트롤은 API 계산기에만 적용됩니다.</p>
           </div>
 
           <div class="panel-section">
@@ -127,6 +129,6 @@
       </section>
     </main>
 
-    <script src="./app.js?v=4"></script>
+    <script src="./app.js?v=6"></script>
   </body>
 </html>
