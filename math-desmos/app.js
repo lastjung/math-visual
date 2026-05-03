@@ -15,6 +15,11 @@
   const graphAudioMixValue = document.getElementById("graph-audio-mix-value");
   const graphAudioMotion = document.getElementById("graph-audio-motion");
   const graphAudioMotionValue = document.getElementById("graph-audio-motion-value");
+  const musicToggle = document.getElementById("music-toggle");
+  const musicVolume = document.getElementById("music-volume");
+  const musicNext = document.getElementById("music-next");
+  const musicVolumeIcon = document.getElementById("music-volume-icon");
+  const musicTrackLabel = document.getElementById("music-track-label");
   const variableControls = {
     a: {
       input: document.getElementById("var-a"),
@@ -34,6 +39,7 @@
   let customExpressionCount = 0;
   let graphAudio = null;
   let currentPresetName = "trig";
+  let currentTrackPath = "";
 
   function setStatus(message) {
     statusElement.textContent = message;
@@ -375,6 +381,65 @@
     graphAudioMotionValue.textContent = `${graphAudioMotion.value}%`;
   }
 
+  function getFullTrackPath(track) {
+    return track.startsWith("assets/") ? track : `${DesmosMusicConfig.BGM_BASE}${track}`;
+  }
+
+  function getDisplayTrackName(track) {
+    return track
+      .replace(/^.*\//, "")
+      .replace(/_/g, " ")
+      .replace(/\.mp3$/i, "");
+  }
+
+  function pickMusicTrack(autoPlay = true, manualSequential = false) {
+    if (!window.audioManager || !DesmosMusicConfig.tracks.length) return;
+
+    let selectedTrack = "";
+    const currentTrackFilename = currentTrackPath || "";
+
+    if (manualSequential && currentTrackFilename) {
+      const genre = currentTrackFilename.split("/")[0];
+      const genreTracks = DesmosMusicConfig.tracks.filter((track) => track.startsWith(`${genre}/`));
+      if (genreTracks.length > 0) {
+        const currentIndex = genreTracks.indexOf(currentTrackFilename);
+        const nextIndex = (currentIndex + 1) % genreTracks.length;
+        selectedTrack = genreTracks[nextIndex];
+      }
+    }
+
+    if (!selectedTrack) {
+      const candidates = DesmosMusicConfig.tracks.filter((track) => track !== currentTrackFilename);
+      const pool = candidates.length > 0 ? candidates : DesmosMusicConfig.tracks;
+      selectedTrack = pool[Math.floor(Math.random() * pool.length)];
+    }
+
+    currentTrackPath = selectedTrack;
+    musicTrackLabel.textContent = getDisplayTrackName(selectedTrack);
+    window.audioManager.play(getFullTrackPath(selectedTrack), { forceSwitch: true });
+    if (!autoPlay) {
+      window.audioManager.audio.pause();
+    }
+  }
+
+  function syncMusicControls() {
+    if (!window.audioManager) return;
+    const isMuted = window.audioManager.isMuted;
+    musicVolume.value = isMuted ? "0" : String(window.audioManager.getTargetVolume());
+    if (isMuted) {
+      musicVolumeIcon.innerHTML = `
+        <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+        <line x1="23" y1="9" x2="17" y2="15"></line>
+        <line x1="17" y1="9" x2="23" y2="15"></line>`;
+      musicVolumeIcon.style.color = "#f87171";
+    } else {
+      musicVolumeIcon.innerHTML = `
+        <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+        <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>`;
+      musicVolumeIcon.style.color = "rgba(255,255,255,0.84)";
+    }
+  }
+
   function syncVariableControls(values) {
     for (const [key, value] of Object.entries(values)) {
       const control = variableControls[key];
@@ -477,6 +542,38 @@
     }
   });
 
+  musicToggle.addEventListener("click", function () {
+    if (!currentTrackPath) {
+      pickMusicTrack(false, false);
+    }
+    window.audioManager.toggleMute();
+    if (!window.audioManager.isMuted && window.audioManager.currentTrack) {
+      window.audioManager.play(window.audioManager.currentTrack);
+    }
+    syncMusicControls();
+  });
+
+  musicNext.addEventListener("click", function () {
+    pickMusicTrack(true, false);
+    if (window.audioManager.isMuted) {
+      window.audioManager.toggleMute();
+    }
+    syncMusicControls();
+  });
+
+  musicVolume.addEventListener("input", function () {
+    window.audioManager.setTargetVolume(musicVolume.value);
+    if (!currentTrackPath) {
+      pickMusicTrack(true, false);
+    }
+    syncMusicControls();
+  });
+
+  window.audioManager.onEnded = function () {
+    pickMusicTrack(true, false);
+    syncMusicControls();
+  };
+
   Object.entries(variableControls).forEach(function ([key, control]) {
     control.input.addEventListener("input", function () {
       updateCalculatorVariable(key, control.input.value);
@@ -520,5 +617,7 @@
 
   syncVariableControls({ a: 1.5, b: 0.75, c: 0 });
   updateAudioLabels();
+  pickMusicTrack(false, false);
+  syncMusicControls();
   loadDesmos(getApiKey());
 })();

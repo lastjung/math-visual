@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Math Desmos Lab</title>
-    <link rel="stylesheet" href="./style.css?v=6" />
+    <link rel="stylesheet" href="./style.css?v=7" />
   </head>
   <body>
     <main class="shell">
@@ -129,6 +129,26 @@
       </section>
     </main>
 
-    <script src="./app.js?v=6"></script>
+    <div class="music-bar" id="music-bar" aria-label="Music controls">
+      <button type="button" id="music-toggle" class="music-icon-button" title="Music on/off" aria-label="Music on/off">
+        <svg id="music-volume-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+          <line x1="23" y1="9" x2="17" y2="15"></line>
+          <line x1="17" y1="9" x2="23" y2="15"></line>
+        </svg>
+      </button>
+      <input type="range" id="music-volume" class="music-volume" min="0" max="1" step="0.01" value="0.15" aria-label="Music volume" />
+      <button type="button" id="music-next" class="music-icon-button" title="Next track" aria-label="Next track">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="5 4 15 12 5 20 5 4"></polygon>
+          <line x1="19" y1="5" x2="19" y2="19"></line>
+        </svg>
+      </button>
+      <span id="music-track-label" class="music-track-label">No track</span>
+    </div>
+
+    <script src="./music.js?v=1"></script>
+    <script src="./audio.js?v=1"></script>
+    <script src="./app.js?v=7"></script>
   </body>
 </html>
