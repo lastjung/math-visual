@@ -37,11 +37,37 @@ export const SIM_CATEGORIES = {
             'harmonicPlusOvals',
             'harmonicPlusTangentMesh',
             'harmonicPlusCrown',
-            'harmonicPlusExtreme'
+            'harmonicPlusExtreme',
+            'harmonicPlusWebDuo',
+            'harmonicPlusCrownMesh'
         ]
     },
-    'fusion-plus': { name: '🌀 Fusion+', functions: [] },
-    'hyper-plus': { name: '✨ Hyper+', functions: [] }
+    'fusion-plus': {
+        name: '🌀 Fusion+',
+        functions: [
+            'fusionPlusGalaxy',
+            'fusionPlusTanTwist',
+            'fusionPlusSecant',
+            'fusionPlusTanRise',
+            'fusionPlusGeometricShift',
+            'fusionPlusPulsatingPetal',
+            'fusionPlusStarCore',
+            'fusionPlusGalaxyCore',
+            'fusionPlusTangentOscillator'
+        ]
+    },
+    'hyper-plus': {
+        name: '✨ Hyper+',
+        functions: [
+            'hyperPlusMillennialRose',
+            'hyperPlusLissajous',
+            'hyperPlusClover',
+            'hyperPlusRealityBender',
+            'hyperPlusDeadpool',
+            'hyperPlusRoseClover',
+            'hyperPlusRealityWeave'
+        ]
+    },
 };
 
 const TIGHT_RANGE = { xMin: -10, xMax: 10, yMin: -2, yMax: 2 };
@@ -60,6 +86,16 @@ const HARMONIC_HIGH_RANGE = { xMin: -1.2, xMax: 1.2, yMin: -1.2, yMax: 1.2 };
 const HARMONIC_OVAL_RANGE = { xMin: -2.2, xMax: 2.2, yMin: -1.2, yMax: 1.2 };
 const HARMONIC_MESH_RANGE = { xMin: -10, xMax: 10, yMin: -10, yMax: 10 };
 const HARMONIC_EXTREME_RANGE = { xMin: -15, xMax: 15, yMin: -15, yMax: 15 };
+const FUSION_GALAXY_RANGE = { xMin: -5, xMax: 5, yMin: -5, yMax: 5 };
+const FUSION_TAN_TWIST_RANGE = { xMin: -10, xMax: 10, yMin: -5, yMax: 5 };
+const FUSION_SECANT_RANGE = { xMin: -5, xMax: 5, yMin: -2, yMax: 2 };
+const FUSION_IMPLICIT_RANGE = { xMin: -10, xMax: 10, yMin: -10, yMax: 10 };
+const FUSION_PETAL_RANGE = { xMin: -3, xMax: 3, yMin: -3, yMax: 3 };
+const HYPER_SMALL_RANGE = { xMin: -1.2, xMax: 1.2, yMin: -1.2, yMax: 1.2 };
+const HYPER_LISSAJOUS_RANGE = { xMin: -2.5, xMax: 2.5, yMin: -1.8, yMax: 1.8 };
+const HYPER_CLOVER_RANGE = { xMin: -2.5, xMax: 2.5, yMin: -2.5, yMax: 2.5 };
+const HYPER_REALITY_RANGE = { xMin: -10, xMax: 10, yMin: -10, yMax: 10 };
+const HYPER_DEADPOOL_RANGE = { xMin: -4, xMax: 4, yMin: -4, yMax: 4 };
 const BASE_TIMING = { durationMs: 16000, drawMs: 6000 };
 const COLOR_PALETTE = [342, 28, 52, 145, 190, 224, 266, 310];
 const BASE_LAYERS = {
@@ -328,6 +364,19 @@ const BASE_LAYERS = {
         x: (t) => Math.cos(t),
         y: (t, a) => Math.sin(harmonicPhase(a, 50, 140) * t)
     },
+    highFreqDuo: {
+        id: 'highFreqDuo',
+        label: 'High-Freq Web Duo',
+        type: 'parametric',
+        color: '#22d3ee',
+        baseFreq: 440,
+        audioScale: 100,
+        gain: 0.24,
+        sonicProfile: 'spin',
+        tRange: { min: 0, max: 2 * Math.PI },
+        x: (t) => Math.cos(t),
+        y: (t, a) => Math.sin(harmonicPhase(a, 28, 78) * t)
+    },
     harmonicOvals: {
         id: 'harmonicOvals',
         label: 'Harmonic Ovals',
@@ -382,6 +431,180 @@ const BASE_LAYERS = {
         tRange: { min: 0, max: 4 * Math.PI },
         x: (t, a) => Math.tan(harmonicPhase(a, 20, 65) * t) + Math.cos(t),
         y: (t, a) => Math.tan(t) * Math.sin(harmonicPhase(a, 40, 85) * t)
+    },
+    cinematicGalaxy: {
+        id: 'cinematicGalaxy',
+        label: 'Cinematic Galaxy',
+        type: 'polar',
+        color: '#a78bfa',
+        baseFreq: 180,
+        audioScale: 140,
+        gain: 0.29,
+        sonicProfile: 'spin',
+        thetaRange: { min: 0, max: 20 * Math.PI },
+        r: (theta, a) => {
+            const v = fusionPhase(a, 0, Math.PI * 2);
+            return Math.abs(1 / Math.cos(1.2 * theta + v)) + Math.sin(3 * v + Math.cos(1.2 * theta + Math.sin(1.2 * theta)));
+        }
+    },
+    tanTwistMesh: {
+        id: 'tanTwistMesh',
+        label: 'Tan Twist Mesh',
+        type: 'parametric',
+        color: '#06b6d4',
+        baseFreq: 240,
+        audioScale: 90,
+        gain: 0.28,
+        sonicProfile: 'density',
+        tRange: { min: 0, max: 2 * Math.PI },
+        x: (t, a) => Math.tan(2 * t + fusionPhase(a, 0, 5.72)) + Math.cos(4 * t),
+        y: (t) => Math.sin(3 * t) + Math.cos(5 * t)
+    },
+    secantOscillator: {
+        id: 'secantOscillator',
+        label: 'Secant Oscillator',
+        type: 'parametric',
+        color: '#10b981',
+        baseFreq: 300,
+        audioScale: 110,
+        gain: 0.3,
+        sonicProfile: 'motion',
+        tRange: { min: 0, max: 2 * Math.PI },
+        x: (t) => 1 / Math.cos(t),
+        y: (t, a) => Math.sin(4 * t + Math.cos(2 * t) + Math.sin(3 * t) + fusionPhase(a, 0, Math.PI * 2))
+    },
+    tanRiseRidge: {
+        id: 'tanRiseRidge',
+        label: 'Tan Rise Ridge',
+        color: '#f43f5e',
+        baseFreq: 150,
+        audioScale: 130,
+        gain: 0.31,
+        sonicProfile: 'density',
+        fn: (x, a) => {
+            const v = fusionPhase(a, 0, 5.85);
+            return Math.tan(x + v) - Math.sin(10 * x + Math.cos(x));
+        }
+    },
+    geometricShift: {
+        id: 'geometricShift',
+        label: 'Geometric Shift',
+        type: 'implicit',
+        color: '#eab308',
+        baseFreq: 196,
+        audioScale: 120,
+        gain: 0.3,
+        sonicProfile: 'density',
+        f: (x, y, a) => {
+            const v = fusionPhase(a, -2.5, 2.5);
+            return Math.sin(x) - (v * Math.cos(y) + Math.sin(2 * x + v));
+        }
+    },
+    pulsatingPetal: {
+        id: 'pulsatingPetal',
+        label: 'Pulsating Petal',
+        type: 'polar',
+        color: '#ec4899',
+        baseFreq: 220,
+        audioScale: 170,
+        gain: 0.31,
+        sonicProfile: 'spin',
+        thetaRange: { min: 0, max: 2 * Math.PI },
+        r: (theta, a) => Math.sin(fusionPhase(a, -1.5, 1.3) + 4 * theta) + fusionPhase(a, -1.5, 1.3)
+    },
+    starCore: {
+        id: 'starCore',
+        label: 'Star Core',
+        type: 'polar',
+        color: '#f97316',
+        baseFreq: 330,
+        audioScale: 150,
+        gain: 0.29,
+        sonicProfile: 'spin',
+        thetaRange: { min: 0, max: 10 * Math.PI },
+        r: (theta, a) => {
+            const v = fusionPhase(a, 0, Math.PI * 2);
+            return (6 * Math.sin(1.2 * theta) - Math.cos(6 * theta + v)) / 2;
+        }
+    },
+    millennialRose: {
+        id: 'millennialRose',
+        label: 'Millennial Rose',
+        type: 'polar',
+        color: '#e879f9',
+        baseFreq: 440,
+        audioScale: 180,
+        gain: 0.24,
+        sonicProfile: 'spin',
+        thetaRange: { min: 0, max: 2 * Math.PI },
+        r: (theta, a) => Math.sin((2025 * theta) / hyperPhase(a, 100, 35))
+    },
+    hyperLissajous: {
+        id: 'hyperLissajous',
+        label: 'Hyper Lissajous',
+        type: 'parametric',
+        color: '#38bdf8',
+        baseFreq: 260,
+        audioScale: 100,
+        gain: 0.28,
+        sonicProfile: 'motion',
+        tRange: { min: 0, max: 2 * Math.PI },
+        x: (t, a) => 2.2 * Math.cos(Math.sin(20 * t + hyperPhase(a, 1, Math.PI * 2 + 1)) + hyperPhase(a, 1, Math.PI * 2 + 1)),
+        y: (t, a) => Math.sin(25 * t + hyperPhase(a, 1, Math.PI * 2 + 1))
+    },
+    amazingClover: {
+        id: 'amazingClover',
+        label: 'Amazing Clover',
+        type: 'polar',
+        color: '#4ade80',
+        baseFreq: 220,
+        audioScale: 140,
+        gain: 0.28,
+        sonicProfile: 'spin',
+        thetaRange: { min: 0, max: 40 * Math.PI },
+        r: (theta, a) => Math.sin(2.025 * theta + hyperPhase(a, 0, 57)) + Math.cos(1.05 * theta)
+    },
+    realityBender: {
+        id: 'realityBender',
+        label: 'Reality Bender',
+        color: '#facc15',
+        baseFreq: 110,
+        audioScale: 80,
+        gain: 0.32,
+        sonicProfile: 'stepped',
+        fn: (x, a) => {
+            const v = hyperPhase(a, 0, 7);
+            return (gcd(Math.round(2025 * x)) % 5) + v * Math.sin(x) + Math.ceil(v * x) / 5;
+        }
+    },
+    realityBenderLow: {
+        id: 'realityBenderLow',
+        label: 'Reality Bender Low',
+        color: '#facc15',
+        baseFreq: 74,
+        audioScale: 48,
+        gain: 0.24,
+        sonicProfile: 'stepped',
+        fn: (x, a) => {
+            const v = hyperPhase(a, 0, 7);
+            return (gcd(Math.round(2025 * x)) % 5) + v * Math.sin(x) + Math.ceil(v * x) / 5;
+        }
+    },
+    deadpoolGeometry: {
+        id: 'deadpoolGeometry',
+        label: 'Deadpool Geometry',
+        type: 'polar',
+        color: '#fb7185',
+        baseFreq: 165,
+        audioScale: 120,
+        gain: 0.3,
+        sonicProfile: 'spin',
+        thetaRange: { min: 0, max: 2 * Math.PI },
+        r: (theta, a) => {
+            const v = hyperPhase(a, 0, 23.864);
+            const l = 2.025;
+            return Math.abs(Math.sin(theta + l - v) - Math.ceil(2 * Math.sin(2 * theta + v + 1.55)));
+        }
     }
 };
 
@@ -578,8 +801,8 @@ export const SIM_FUNCTIONS = {
         name: 'Beautiful Polar Bloom',
         variable: 'v',
         type: 'layered',
-        formula: 'Shuriken Star + Layered Beauty',
-        latex: 'r_{1}=\\text{Shuriken},\\ r_{2}=\\text{Layered}',
+        formula: 'r1 = sign(cos(kθ-v)) + sin(v+k.05θ)cos(v), r2 = l sign(cos(3θ-lv)) + sin(v+3θ+l) - cos(v)',
+        latex: 'r_1=\\text{sgn}(\\cos(k\\theta-v))+\\sin(v+k.05\\theta)\\cos(v),\\ r_2=l\\text{sgn}(\\cos(3\\theta-lv))+\\sin(v+3\\theta+l)-\\cos(v)',
         range: LAYERED_BEAUTY_RANGE,
         ...BASE_TIMING,
         layers: [BASE_LAYERS.shurikenStar, BASE_LAYERS.layeredBeauty]
@@ -649,6 +872,204 @@ export const SIM_FUNCTIONS = {
         range: HARMONIC_EXTREME_RANGE,
         ...BASE_TIMING,
         layers: [BASE_LAYERS.extremeHarmonic]
+    },
+    harmonicPlusWebDuo: {
+        category: 'harmonic-plus',
+        name: 'Harmonic Web Duo',
+        variable: 'a',
+        type: 'layered',
+        formula: '(cos t, sin(at/2)), (cos t, sin(bt)), b = 28...78',
+        latex: '(\\cos t,\\sin(at/2)),\\ (\\cos t,\\sin(bt)),\\ b=28\\ldots78',
+        range: HARMONIC_INTRO_RANGE,
+        ...BASE_TIMING,
+        layers: [BASE_LAYERS.harmonicIntro, BASE_LAYERS.highFreqDuo]
+    },
+    harmonicPlusCrownMesh: {
+        category: 'harmonic-plus',
+        name: 'Asymptote Crown Mesh',
+        variable: 'v',
+        type: 'layered',
+        formula: '(tan(at), sec t + sin(bt)), (tan t, csc t tan(vt) - sin t)',
+        latex: '(\\tan(at),\\sec t+\\sin(bt)),\\ (\\tan t,\\csc t\\tan(vt)-\\sin t)',
+        range: HARMONIC_MESH_RANGE,
+        ...BASE_TIMING,
+        layers: [BASE_LAYERS.tangentMesh, BASE_LAYERS.asymptoticCrown]
+    },
+    fusionPlusGalaxy: {
+        category: 'fusion-plus',
+        name: 'Cinematic Galaxy',
+        variable: 'v',
+        type: 'single',
+        formula: 'r = sec(1.2θ+v) + sin(3v + cos(1.2θ+sin 1.2θ))',
+        latex: 'r=\\sec(1.2\\theta+v)+\\sin(3v+\\cos(1.2\\theta+\\sin1.2\\theta))',
+        range: FUSION_GALAXY_RANGE,
+        ...BASE_TIMING,
+        layers: [BASE_LAYERS.cinematicGalaxy]
+    },
+    fusionPlusTanTwist: {
+        category: 'fusion-plus',
+        name: 'Tan Twist Mesh',
+        variable: 'v',
+        type: 'single',
+        formula: '(tan(2t+v)+cos4t, sin3t+cos5t)',
+        latex: '(\\tan(2t+v)+\\cos4t,\\sin3t+\\cos5t)',
+        range: FUSION_TAN_TWIST_RANGE,
+        ...BASE_TIMING,
+        layers: [BASE_LAYERS.tanTwistMesh]
+    },
+    fusionPlusSecant: {
+        category: 'fusion-plus',
+        name: 'Secant Oscillator',
+        variable: 'v',
+        type: 'single',
+        formula: '(sec t, sin(4t+cos2t+sin3t+v))',
+        latex: '(\\sec t,\\sin(4t+\\cos2t+\\sin3t+v))',
+        range: FUSION_SECANT_RANGE,
+        ...BASE_TIMING,
+        layers: [BASE_LAYERS.secantOscillator]
+    },
+    fusionPlusTanRise: {
+        category: 'fusion-plus',
+        name: 'Tan Rise Ridge',
+        variable: 'v',
+        type: 'single',
+        formula: 'y = tan(x+v) - sin(10x+cosx)',
+        latex: 'y=\\tan(x+v)-\\sin(10x+\\cos x)',
+        range: FUSION_IMPLICIT_RANGE,
+        ...BASE_TIMING,
+        layers: [BASE_LAYERS.tanRiseRidge]
+    },
+    fusionPlusGeometricShift: {
+        category: 'fusion-plus',
+        name: 'Geometric Shift',
+        variable: 'v',
+        type: 'single',
+        formula: 'sin x = v cos y + sin(2x+v)',
+        latex: '\\sin x=v\\cos y+\\sin(2x+v)',
+        range: FUSION_IMPLICIT_RANGE,
+        ...BASE_TIMING,
+        layers: [BASE_LAYERS.geometricShift]
+    },
+    fusionPlusPulsatingPetal: {
+        category: 'fusion-plus',
+        name: 'Pulsating Petal',
+        variable: 'v',
+        type: 'single',
+        formula: 'r = sin(v + 4θ) + v',
+        latex: 'r=\\sin(v+4\\theta)+v',
+        range: FUSION_PETAL_RANGE,
+        ...BASE_TIMING,
+        layers: [BASE_LAYERS.pulsatingPetal]
+    },
+    fusionPlusStarCore: {
+        category: 'fusion-plus',
+        name: 'Star Core',
+        variable: 'v',
+        type: 'single',
+        formula: '2r = 6sin(1.2θ) - cos(6θ+v)',
+        latex: '2r=6\\sin(1.2\\theta)-\\cos(6\\theta+v)',
+        range: FUSION_GALAXY_RANGE,
+        ...BASE_TIMING,
+        layers: [BASE_LAYERS.starCore]
+    },
+    fusionPlusGalaxyCore: {
+        category: 'fusion-plus',
+        name: 'Fusion Galaxy Core',
+        variable: 'v',
+        type: 'layered',
+        formula: 'r1 = sec(1.2θ+v)+sin(3v+cos(1.2θ+sin1.2θ)), 2r2 = 6sin(1.2θ)-cos(6θ+v)',
+        latex: 'r_1=\\sec(1.2\\theta+v)+\\sin(3v+\\cos(1.2\\theta+\\sin1.2\\theta)),\\ 2r_2=6\\sin(1.2\\theta)-\\cos(6\\theta+v)',
+        range: FUSION_GALAXY_RANGE,
+        ...BASE_TIMING,
+        layers: [BASE_LAYERS.cinematicGalaxy, BASE_LAYERS.starCore]
+    },
+    fusionPlusTangentOscillator: {
+        category: 'fusion-plus',
+        name: 'Fusion Tangent Oscillator',
+        variable: 'v',
+        type: 'layered',
+        formula: '(tan(2t+v)+cos4t, sin3t+cos5t), (sec t, sin(4t+cos2t+sin3t+v))',
+        latex: '(\\tan(2t+v)+\\cos4t,\\sin3t+\\cos5t),\\ (\\sec t,\\sin(4t+\\cos2t+\\sin3t+v))',
+        range: FUSION_TAN_TWIST_RANGE,
+        ...BASE_TIMING,
+        layers: [BASE_LAYERS.tanTwistMesh, BASE_LAYERS.secantOscillator]
+    },
+    hyperPlusMillennialRose: {
+        category: 'hyper-plus',
+        name: 'Millennial Rose',
+        variable: 'd',
+        type: 'single',
+        formula: 'r = sin(2025θ / d), d = 100...35',
+        latex: 'r=\\sin\\left(\\frac{2025\\theta}{d}\\right),\\ d=100\\ldots35',
+        range: HYPER_SMALL_RANGE,
+        ...BASE_TIMING,
+        layers: [BASE_LAYERS.millennialRose]
+    },
+    hyperPlusLissajous: {
+        category: 'hyper-plus',
+        name: 'Hyper Lissajous',
+        variable: 'v',
+        type: 'single',
+        formula: '(4cos(sin(20t+v)+v), sin(25t+v))',
+        latex: '(4\\cos(\\sin(20t+v)+v),\\sin(25t+v))',
+        range: HYPER_LISSAJOUS_RANGE,
+        ...BASE_TIMING,
+        layers: [BASE_LAYERS.hyperLissajous]
+    },
+    hyperPlusClover: {
+        category: 'hyper-plus',
+        name: 'Amazing Clover',
+        variable: 'v',
+        type: 'single',
+        formula: 'r = sin(2.025θ+v) + cos(1.05θ)',
+        latex: 'r=\\sin(2.025\\theta+v)+\\cos(1.05\\theta)',
+        range: HYPER_CLOVER_RANGE,
+        ...BASE_TIMING,
+        layers: [BASE_LAYERS.amazingClover]
+    },
+    hyperPlusRealityBender: {
+        category: 'hyper-plus',
+        name: 'Reality Bender',
+        variable: 'v',
+        type: 'single',
+        formula: 'y = mod(gcd(2025x), 5) + v sin x + ceil(vx)/5',
+        latex: 'y=\\gcd(2025x)\\bmod5+v\\sin x+\\frac{\\lceil vx\\rceil}{5}',
+        range: HYPER_REALITY_RANGE,
+        ...BASE_TIMING,
+        layers: [BASE_LAYERS.realityBender]
+    },
+    hyperPlusDeadpool: {
+        category: 'hyper-plus',
+        name: 'Deadpool Geometry',
+        variable: 'v',
+        type: 'single',
+        formula: 'r = |sin(θ+l-v) - ceil(2sin(2θ+v+1.55))|',
+        latex: 'r=|\\sin(\\theta+l-v)-\\lceil2\\sin(2\\theta+v+1.55)\\rceil|',
+        range: HYPER_DEADPOOL_RANGE,
+        ...BASE_TIMING,
+        layers: [BASE_LAYERS.deadpoolGeometry]
+    },
+    hyperPlusRoseClover: {
+        category: 'hyper-plus',
+        name: 'Hyper Rose Clover',
+        variable: 'v',
+        type: 'layered',
+        formula: 'r1 = sin(2025θ/d), r2 = sin(2.025θ+v) + cos(1.05θ)',
+        latex: 'r_1=\\sin\\left(\\frac{2025\\theta}{d}\\right),\\ r_2=\\sin(2.025\\theta+v)+\\cos(1.05\\theta)',
+        range: HYPER_CLOVER_RANGE,
+        ...BASE_TIMING,
+        layers: [BASE_LAYERS.millennialRose, BASE_LAYERS.amazingClover]
+    },
+    hyperPlusRealityWeave: {
+        category: 'hyper-plus',
+        name: 'Hyper Reality Weave',
+        variable: 'v',
+        type: 'layered',
+        formula: '(4cos(sin(20t+v)+v), sin(25t+v)), y = mod(gcd(2025x),5)+v sin x+ceil(vx)/5',
+        latex: '(4\\cos(\\sin(20t+v)+v),\\sin(25t+v)),\\ y=\\gcd(2025x)\\bmod5+v\\sin x+\\frac{\\lceil vx\\rceil}{5}',
+        range: HYPER_REALITY_RANGE,
+        ...BASE_TIMING,
+        layers: [BASE_LAYERS.hyperLissajous, BASE_LAYERS.realityBenderLow]
     }
 };
 
@@ -1190,6 +1611,28 @@ function formatVariableValue(sim, a) {
             return harmonicPhase(a, 0.95, 1.04).toFixed(2);
         case 'asymptoticCrown':
             return harmonicPhase(a, 0.9, 1.09).toFixed(2);
+        case 'cinematicGalaxy':
+        case 'secantOscillator':
+        case 'starCore':
+            return fusionPhase(a, 0, Math.PI * 2).toFixed(2);
+        case 'tanTwistMesh':
+            return fusionPhase(a, 0, 5.72).toFixed(2);
+        case 'tanRiseRidge':
+            return fusionPhase(a, 0, 5.85).toFixed(2);
+        case 'geometricShift':
+            return fusionPhase(a, -2.5, 2.5).toFixed(2);
+        case 'pulsatingPetal':
+            return fusionPhase(a, -1.5, 1.3).toFixed(2);
+        case 'millennialRose':
+            return hyperPhase(a, 100, 35).toFixed(2);
+        case 'hyperLissajous':
+            return hyperPhase(a, 1, Math.PI * 2 + 1).toFixed(2);
+        case 'amazingClover':
+            return hyperPhase(a, 0, 57).toFixed(2);
+        case 'realityBender':
+            return hyperPhase(a, 0, 7).toFixed(2);
+        case 'deadpoolGeometry':
+            return hyperPhase(a, 0, 23.864).toFixed(2);
         default:
             return beautifulPhase(a, 0, 1).toFixed(2);
     }
@@ -1269,6 +1712,16 @@ function beautifulPhase(a, min, max) {
 }
 
 function harmonicPhase(a, min, max) {
+    const t = clamp((a - 1.6) / 28.4, 0, 1);
+    return min + (max - min) * t;
+}
+
+function fusionPhase(a, min, max) {
+    const t = clamp((a - 1.6) / 28.4, 0, 1);
+    return min + (max - min) * t;
+}
+
+function hyperPhase(a, min, max) {
     const t = clamp((a - 1.6) / 28.4, 0, 1);
     return min + (max - min) * t;
 }
