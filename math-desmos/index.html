@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Math Desmos Lab</title>
-    <link rel="stylesheet" href="./style.css?v=7" />
+    <link rel="stylesheet" href="./style.css?v=19" />
   </head>
   <body>
     <main class="shell">
@@ -52,6 +52,7 @@
               </a>
               <button type="button" data-preset="parabola">포물선 조절</button>
               <button type="button" data-preset="trig">삼각함수 합성</button>
+              <button type="button" data-preset="amazing-part-3">Amazing Part 3</button>
               <button type="button" data-preset="polar">극좌표 장미</button>
               <button type="button" data-preset="implicit">음함수 곡선</button>
             </div>
@@ -90,8 +91,10 @@
           <div class="panel-section">
             <p class="panel-label">그래프 소리</p>
             <div class="button-grid">
-              <button type="button" id="start-graph-audio">소리 시작</button>
+              <button type="button" id="start-graph-audio">오디오 준비</button>
               <button type="button" id="stop-graph-audio">소리 정지</button>
+              <button type="button" id="start-graph-scan">그래프 읽기</button>
+              <button type="button" id="stop-graph-scan">읽기 정지</button>
             </div>
             <label class="control-label" for="graph-audio-mix">
               믹스 <span id="graph-audio-mix-value">18%</span>
@@ -101,6 +104,8 @@
               움직임 <span id="graph-audio-motion-value">55%</span>
             </label>
             <input id="graph-audio-motion" type="range" min="0" max="100" value="55" />
+            <p class="hint">감지된 a: <span id="detected-a-value">-</span></p>
+            <p class="hint">스캔 T: <span id="detected-t-value">-</span></p>
           </div>
 
           <div class="panel-section">
@@ -149,6 +154,6 @@
 
     <script src="./music.js?v=1"></script>
     <script src="./audio.js?v=1"></script>
-    <script src="./app.js?v=7"></script>
+    <script src="./app.js?v=19"></script>
   </body>
 </html>

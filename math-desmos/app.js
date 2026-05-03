@@ -15,6 +15,8 @@
   const graphAudioMixValue = document.getElementById("graph-audio-mix-value");
   const graphAudioMotion = document.getElementById("graph-audio-motion");
   const graphAudioMotionValue = document.getElementById("graph-audio-motion-value");
+  const detectedAValue = document.getElementById("detected-a-value");
+  const detectedTValue = document.getElementById("detected-t-value");
   const musicToggle = document.getElementById("music-toggle");
   const musicVolume = document.getElementById("music-volume");
   const musicNext = document.getElementById("music-next");
@@ -38,8 +40,18 @@
   let calculator = null;
   let customExpressionCount = 0;
   let graphAudio = null;
-  let currentPresetName = "trig";
+  let currentPresetName = "amazing-part-3";
   let currentTrackPath = "";
+  let lastDetectedA = null;
+  const graphScan = {
+    rafId: null,
+    startedAt: 0,
+    durationMs: 8000,
+    min: -3,
+    max: 3,
+    lastSoundAt: 0,
+    lastVisualAt: 0,
+  };
 
   function setStatus(message) {
     statusElement.textContent = message;
@@ -89,11 +101,12 @@
 
     calculator.observeEvent("change", function (_eventName, event) {
       if (event.isUserInitiated) {
-        setStatus("그래프가 변경되었습니다. 저장 버튼으로 현재 상태를 보관할 수 있습니다.");
+        handleCalculatorChange();
       }
     });
 
     applyPreset(currentPresetName);
+    handleCalculatorChange();
     showApiCalculator();
     setStatus("API 계산기가 준비되었습니다. 촬영 모드에서는 그래프만 보이게 전환됩니다.");
   }
@@ -135,6 +148,7 @@
 
   function applyPreset(name) {
     if (!calculator) return;
+    stopGraphScan();
     currentPresetName = name;
     showApiCalculator();
 
@@ -161,6 +175,30 @@
           { id: "sum", latex: "y=a\\sin\\left(x+c\\right)+b\\cos\\left(2x\\right)", color: "#c74440", lineWidth: 4 },
         ],
         bounds: { left: -10, right: 10, bottom: -5, top: 5 },
+        controls: {
+          a: { min: 0, max: 4, step: 0.01, value: 1.5, enabled: true },
+          b: { min: 0, max: 4, step: 0.01, value: 0.75, enabled: true },
+          c: { min: -6.28, max: 6.28, step: 0.01, value: 0, enabled: true },
+        },
+      },
+      "amazing-part-3": {
+        expressions: [
+          { id: "note", type: "text", text: "math-symphony/score/01_amazing_part3.md에서 가져온 핵심 수식입니다. a를 0-30으로 스캔합니다." },
+          { id: "a", latex: "a=1.6", sliderBounds: { min: 0, max: 30, step: 0.01 } },
+          { id: "T", latex: "T=-3", sliderBounds: { min: -3, max: 3, step: 0.01 } },
+          { id: "scan-cursor", latex: "x=T", color: "#ffffff", lineStyle: Desmos.Styles.DASHED, lineWidth: 2 },
+          { id: "standard-resonance", latex: "y=\\cos\\left(ax\\right)\\left\\{x<T\\right\\}", color: "#ff0000", lineWidth: 3 },
+          { id: "expanding-resonance", latex: "y=x\\cos\\left(ax\\right)\\left\\{x<T\\right\\}", color: "#00ff00", lineWidth: 2 },
+          { id: "envelope-modulation", latex: "y=\\cos\\left(x\\right)\\cos\\left(ax\\right)\\left\\{x<T\\right\\}", color: "#ffffff", lineWidth: 3 },
+          { id: "grid-distortion", latex: "\\cos\\left(ax\\right)=\\sin\\left(ay\\right)\\left\\{x<T\\right\\}", color: "#00ff00", lineWidth: 2 },
+          { id: "radial-whirlpool", latex: "y=4.8\\cos\\left(\\frac{axy}{x^2+y^2}\\right)\\left\\{x<T\\right\\}", color: "#ff0000", lineWidth: 2 },
+        ],
+        bounds: { left: -10, right: 10, bottom: -10, top: 10 },
+        controls: {
+          a: { min: 0, max: 30, step: 0.01, value: 1.6, enabled: true },
+          b: { min: -4, max: 4, step: 0.01, value: 0, enabled: false },
+          c: { min: -6.28, max: 6.28, step: 0.01, value: 0, enabled: false },
+        },
       },
       polar: {
         expressions: [
@@ -184,8 +222,8 @@
 
     const preset = presets[name] || presets.parabola;
     applyExpressions(preset.expressions, preset.bounds);
-    if (name === "trig") {
-      syncVariableControls({ a: 1.5, b: 0.75, c: 0 });
+    if (preset.controls) {
+      configureVariableControls(preset.controls);
     }
     setStatus(`"${name}" 예제를 불러왔습니다.`);
   }
@@ -232,6 +270,8 @@
       this.motion = 0.55;
       this.timerId = null;
       this.startedAt = 0;
+      this.controllerValue = 0;
+      this.previousControllerNorm = 0;
 
       this.filter.type = "lowpass";
       this.filter.frequency.value = 2400;
@@ -251,12 +291,20 @@
     }
 
     async start() {
+      await this.startGraphReadMode();
+    }
+
+    async startGraphReadMode() {
       await this.context.resume();
-      if (this.isRunning) return;
       this.isRunning = true;
-      this.startedAt = this.context.currentTime;
-      this.scheduleLoop();
-      this.timerId = window.setInterval(() => this.scheduleLoop(), 220);
+      if (this.timerId) {
+        window.clearInterval(this.timerId);
+        this.timerId = null;
+      }
+      const now = this.context.currentTime;
+      this.master.gain.cancelScheduledValues(now);
+      this.master.gain.setTargetAtTime(Math.max(this.mix, 0.28), now, 0.04);
+      this.playBell(440, now + 0.02, 0.18, 0, 0.12);
     }
 
     stop() {
@@ -270,6 +318,12 @@
       this.master.gain.setTargetAtTime(0.0001, now, 0.08);
     }
 
+    muteGraphReadMode() {
+      const now = this.context.currentTime;
+      this.master.gain.cancelScheduledValues(now);
+      this.master.gain.setTargetAtTime(0.0001, now, 0.04);
+    }
+
     setMix(value) {
       this.mix = value;
       const now = this.context.currentTime;
@@ -281,11 +335,44 @@
       this.motion = value;
     }
 
+    reactToControllerValue(value, min, max) {
+      const range = Math.max(0.0001, max - min);
+      const norm = Math.max(0, Math.min(1, (value - min) / range));
+      const delta = Math.abs(norm - this.previousControllerNorm);
+      this.previousControllerNorm = norm;
+      this.controllerValue = norm;
+      this.motion = Math.max(this.motion, 0.22 + norm * 0.72);
+
+      if (!this.isRunning) return;
+
+      const now = this.context.currentTime;
+      this.filter.frequency.setTargetAtTime(900 + norm * 5200, now, 0.035);
+      if (delta > 0.006) {
+        const frequency = 164.81 * Math.pow(2, Math.round(norm * 24) / 12);
+        this.playBell(frequency, now, 0.22 + delta * 2.2, -0.7 + norm * 1.4, 0.035 + Math.min(0.08, delta * 2.4));
+      }
+    }
+
+    playGraphSample(sample, slope, scanNorm) {
+      if (!this.isRunning) return;
+      const now = this.context.currentTime;
+      const clamped = Math.max(-1, Math.min(1, sample));
+      const slopeEnergy = Math.max(0, Math.min(1, Math.abs(slope) / 12));
+      const semitone = Math.round((clamped + 1) * 12);
+      const frequency = 146.83 * Math.pow(2, semitone / 12);
+      const gain = 0.16 + Math.abs(clamped) * 0.2 + slopeEnergy * 0.14;
+      const duration = 0.2 + slopeEnergy * 0.2;
+      const pan = -0.85 + scanNorm * 1.7;
+
+      this.filter.frequency.setTargetAtTime(900 + slopeEnergy * 5200 + scanNorm * 900, now, 0.025);
+      this.playBell(frequency, now, duration, pan, gain);
+    }
+
     scheduleLoop() {
       if (!this.isRunning) return;
       const now = this.context.currentTime;
       const t = now - this.startedAt;
-      const motion = this.motion;
+      const motion = Math.max(this.motion, 0.2 + this.controllerValue * 0.75);
       const base = 110 + 28 * Math.sin(t * 0.23);
       const shimmerEvery = motion > 0.72 ? 0.16 : 0.28;
 
@@ -381,6 +468,106 @@
     graphAudioMotionValue.textContent = `${graphAudioMotion.value}%`;
   }
 
+  function handleCalculatorChange() {
+    const value = readSliderValue("a");
+    if (value === null) {
+      setStatus("그래프가 변경되었습니다. 저장 버튼으로 현재 상태를 보관할 수 있습니다.");
+      return;
+    }
+    detectedAValue.textContent = value.toFixed(2);
+    if (lastDetectedA === null || Math.abs(value - lastDetectedA) > 0.015) {
+      lastDetectedA = value;
+      if (graphAudio) {
+        graphAudio.reactToControllerValue(value, 0, 30);
+      }
+      setStatus(`Desmos 내부 슬라이더 a=${value.toFixed(2)} 감지됨`);
+    }
+  }
+
+  function readSliderValue(id) {
+    if (!calculator) return null;
+    const expression = calculator.getExpressions().find((entry) => entry.id === id);
+    if (!expression?.latex) return null;
+    const match = expression.latex.match(new RegExp(`^${id}\\s*=\\s*(-?\\d+(?:\\.\\d+)?)`));
+    if (!match) return null;
+    const value = Number(match[1]);
+    return Number.isFinite(value) ? value : null;
+  }
+
+  function startGraphScan() {
+    if (!calculator) return;
+    stopGraphScan();
+    showApiCalculator();
+    getGraphAudio().startGraphReadMode().then(() => {
+      graphScan.startedAt = performance.now();
+      graphScan.lastSoundAt = 0;
+      graphScan.lastVisualAt = 0;
+      graphScan.rafId = requestAnimationFrame(tickGraphScan);
+      setStatus("실제 그래프를 T=-3부터 3까지 읽으며 소리로 변환합니다.");
+    }).catch(() => {
+      setStatus("그래프 읽기 오디오를 시작하지 못했습니다.");
+    });
+  }
+
+  function stopGraphScan() {
+    if (graphScan.rafId !== null) {
+      cancelAnimationFrame(graphScan.rafId);
+      graphScan.rafId = null;
+    }
+    graphScan.lastSoundAt = performance.now();
+    if (graphAudio) {
+      graphAudio.muteGraphReadMode();
+    }
+  }
+
+  function tickGraphScan(now) {
+    const elapsed = (now - graphScan.startedAt) % (graphScan.durationMs * 2);
+    const phase = elapsed / graphScan.durationMs;
+    const scanNorm = phase <= 1 ? phase : 2 - phase;
+    const x = graphScan.min + (graphScan.max - graphScan.min) * scanNorm;
+    const a = readSliderValue("a") ?? 1.6;
+    const b = readSliderValue("b") ?? 0.75;
+    const c = readSliderValue("c") ?? 0;
+    const sample = sampleCurrentGraph(x, { a, b, c });
+
+    if (now - graphScan.lastVisualAt > 33) {
+      calculator.setExpression({
+        id: "T",
+        latex: `T=${x.toFixed(3)}`,
+        sliderBounds: { min: graphScan.min, max: graphScan.max, step: 0.001 },
+      });
+      detectedTValue.textContent = x.toFixed(2);
+      graphScan.lastVisualAt = now;
+    }
+
+    if (sample && now - graphScan.lastSoundAt > 220) {
+      getGraphAudio().playGraphSample(sample.y, sample.slope, scanNorm);
+      graphScan.lastSoundAt = now;
+    }
+
+    graphScan.rafId = requestAnimationFrame(tickGraphScan);
+  }
+
+  function sampleCurrentGraph(x, params) {
+    if (currentPresetName === "amazing-part-3") {
+      const y1 = Math.cos(params.a * x);
+      const y2 = Math.cos(x) * Math.cos(params.a * x);
+      const y = (y1 + y2) * 0.5;
+      const slope1 = -params.a * Math.sin(params.a * x);
+      const slope2 = -Math.sin(x) * Math.cos(params.a * x) - params.a * Math.cos(x) * Math.sin(params.a * x);
+      const slope = (slope1 + slope2) * 0.5;
+      return { y, slope };
+    }
+
+    if (currentPresetName === "trig") {
+      const y = params.a * Math.sin(x + params.c) + params.b * Math.cos(2 * x);
+      const slope = params.a * Math.cos(x + params.c) - 2 * params.b * Math.sin(2 * x);
+      return { y: y / 5, slope };
+    }
+
+    return null;
+  }
+
   function getFullTrackPath(track) {
     return track.startsWith("assets/") ? track : `${DesmosMusicConfig.BGM_BASE}${track}`;
   }
@@ -449,6 +636,20 @@
     }
   }
 
+  function configureVariableControls(config) {
+    for (const [key, control] of Object.entries(variableControls)) {
+      const setting = config[key] || { enabled: false, value: 0 };
+      control.input.disabled = setting.enabled === false;
+      if (setting.min !== undefined) control.input.min = String(setting.min);
+      if (setting.max !== undefined) control.input.max = String(setting.max);
+      if (setting.step !== undefined) control.input.step = String(setting.step);
+      if (setting.value !== undefined) {
+        control.input.value = String(setting.value);
+        control.value.textContent = Number(setting.value).toFixed(2);
+      }
+    }
+  }
+
   function updateCalculatorVariable(key, value) {
     const control = variableControls[key];
     if (control) {
@@ -460,9 +661,9 @@
       id: key,
       latex: `${key}=${Number(value).toFixed(2)}`,
       sliderBounds: {
-        min: control.input.min,
-        max: control.input.max,
-        step: control.input.step,
+        min: Number(control.input.min),
+        max: Number(control.input.max),
+        step: Number(control.input.step),
       },
     });
   }
@@ -515,17 +716,25 @@
 
   document.getElementById("start-graph-audio").addEventListener("click", function () {
     getGraphAudio().start().then(() => {
-      setStatus("그래프 질감 소리를 재생 중입니다. 준비된 음악 위에 낮게 얹어 쓰세요.");
+      setStatus("그래프 오디오가 준비되었습니다. '그래프 읽기'를 누르면 실제 그래프 샘플 소리만 납니다.");
     }).catch(() => {
       setStatus("오디오를 시작하지 못했습니다. 브라우저 오디오 권한을 확인하세요.");
     });
   });
 
   document.getElementById("stop-graph-audio").addEventListener("click", function () {
+    stopGraphScan();
     if (graphAudio) {
       graphAudio.stop();
     }
     setStatus("그래프 질감 소리를 정지했습니다.");
+  });
+
+  document.getElementById("start-graph-scan").addEventListener("click", startGraphScan);
+
+  document.getElementById("stop-graph-scan").addEventListener("click", function () {
+    stopGraphScan();
+    setStatus("그래프 읽기를 정지했습니다.");
   });
 
   graphAudioMix.addEventListener("input", function () {

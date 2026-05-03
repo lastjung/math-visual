@@ -88,6 +88,10 @@ input[type="range"] {
   accent-color: var(--accent);
 }
 
+input[type="range"]:disabled {
+  opacity: 0.35;
+}
+
 input:focus,
 button:focus-visible {
   outline: 3px solid rgba(0, 111, 134, 0.22);
