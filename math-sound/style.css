@@ -301,6 +301,15 @@ body {
     text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
 }
 
+.canvas-wrapper.sim-mode .function-title {
+    font-size: 1rem;
+    font-weight: 600;
+    letter-spacing: 0;
+    color: #f8fafc;
+    text-shadow: none;
+    font-family: 'Inter', sans-serif;
+}
+
 .function-subtitle {
     position: absolute;
     bottom: 12px;
@@ -326,6 +335,35 @@ body {
     z-index: 10;
     font-variant-numeric: tabular-nums;
     text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
+}
+
+.sim-hud {
+    position: absolute;
+    left: 16px;
+    right: 16px;
+    bottom: 14px;
+    z-index: 12;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+    padding: 8px 12px;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 8px;
+    background: rgba(0, 0, 0, 0.58);
+    color: #f8fafc;
+    font-size: 0.9rem;
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+    backdrop-filter: blur(8px);
+}
+
+.sim-hud[hidden] {
+    display: none;
+}
+
+.sim-hud span {
+    white-space: nowrap;
 }
 
 /* Formula Display */

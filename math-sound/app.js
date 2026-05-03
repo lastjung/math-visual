@@ -2,6 +2,15 @@ import { MATH_FUNCTIONS, CATEGORIES } from './modules/constants.js';
 import { state, elements, ctx } from './modules/state.js';
 import { playSound, stopSound, stopAllSounds, stopPreview } from './modules/audio.js';
 import { drawStaticGraph, animate, setRendererCallbacks } from './modules/renderer.js';
+import {
+    SIM_CATEGORIES,
+    SIM_FUNCTIONS,
+    isSymphonySimCategory,
+    isSymphonySimFunction,
+    drawSymphonySimStatic,
+    startSymphonySim,
+    stopSymphonySim
+} from './modules/symphony-sim.js';
 
 const FAVORITES_KEY = 'math-sound:favorites';
 const QUEUE_STORAGE_KEY = 'math-sound:play-queue';
@@ -10,6 +19,25 @@ const EQUATION_OUTRO_COPY = 'This one is finished. Waiting for the next equation
 const EQUATION_INTRO_DURATION_MS = 3000;
 const EQUATION_OUTRO_DURATION_MS = 2000;
 let favoriteSet = new Set();
+
+function getAllFunctionKeys() {
+    return [...Object.keys(MATH_FUNCTIONS), ...Object.keys(SIM_FUNCTIONS)];
+}
+
+function getFunctionData(funcKey) {
+    return SIM_FUNCTIONS[funcKey] || MATH_FUNCTIONS[funcKey];
+}
+
+function renderCurrentGraph() {
+    if (isSymphonySimFunction(state.currentFunction)) {
+        elements.canvasWrapper.classList.add('sim-mode');
+        drawSymphonySimStatic(state.currentFunction);
+        return;
+    }
+    elements.canvasWrapper.classList.remove('sim-mode');
+    if (elements.simHud) elements.simHud.hidden = true;
+    drawStaticGraph();
+}
 
 // ==========================================
 // 초기화
@@ -22,10 +50,10 @@ function init() {
     setupEventListeners();
     setRendererCallbacks(updateTimer, playNextAuto, stopPreview);
     
-    elements.totalCount.textContent = Object.keys(MATH_FUNCTIONS).length;
+    elements.totalCount.textContent = getAllFunctionKeys().length;
     selectCategory('waves');
     selectFunction('sine');
-    drawStaticGraph();
+    renderCurrentGraph();
     renderQueue();
 
     if (elements.slidersPanel) elements.slidersPanel.classList.add('collapsed');
@@ -108,7 +136,7 @@ function setupEventListeners() {
         ghostBtn.addEventListener('click', () => {
             state.showGhost = !state.showGhost;
             ghostBtn.classList.toggle('active', state.showGhost);
-            drawStaticGraph();
+            renderCurrentGraph();
         });
     }
 
@@ -128,7 +156,7 @@ function setupEventListeners() {
             e.preventDefault();
             el.classList.remove('drag-over');
             const funcKey = e.dataTransfer.getData('text/plain');
-            if (funcKey && MATH_FUNCTIONS[funcKey]) {
+            if (funcKey && getFunctionData(funcKey)) {
                 addToQueue(funcKey);
                 // Show mixer when something is added
                 if (mixerPanel) mixerPanel.classList.remove('hidden');
@@ -191,7 +219,7 @@ function setupEventListeners() {
             elements.menuPanel.style.display = 'none';
             document.querySelector('.layout').classList.add('menu-hidden');
             setupCanvas();
-            drawStaticGraph();
+            renderCurrentGraph();
         });
     }
 
@@ -203,7 +231,7 @@ function setupEventListeners() {
 
     window.addEventListener('resize', () => {
         setupCanvas();
-        if (!state.isPlaying) drawStaticGraph();
+        if (!state.isPlaying) renderCurrentGraph();
     });
 
     let sPressed = false;
@@ -239,7 +267,7 @@ function setupEventListeners() {
                 const ghostBtn = document.getElementById('ghostBtn');
                 state.showGhost = !state.showGhost;
                 if (ghostBtn) ghostBtn.classList.toggle('active', state.showGhost);
-                drawStaticGraph();
+                renderCurrentGraph();
                 return;
             }
         }
@@ -266,7 +294,7 @@ function setupEventListeners() {
             }
             
             setupCanvas();
-            drawStaticGraph();
+            renderCurrentGraph();
         }
     });
 
@@ -281,12 +309,14 @@ function setupEventListeners() {
 function renderCategoryTabs() {
     const existingContainer = elements.categoryTabsExisting;
     const symphonyContainer = elements.categoryTabsSymphony;
+    const symphonyPlusContainer = elements.categoryTabsSymphonyPlus || symphonyContainer;
     const cosmicContainer = elements.categoryTabsCosmic;
     
     if (!existingContainer || !symphonyContainer || !cosmicContainer) return;
 
     existingContainer.innerHTML = '';
     symphonyContainer.innerHTML = '';
+    if (symphonyPlusContainer !== symphonyContainer) symphonyPlusContainer.innerHTML = '';
     cosmicContainer.innerHTML = '';
 
     // 1. Add 'All' button to existing row
@@ -320,8 +350,17 @@ function renderCategoryTabs() {
         }
     });
 
+    Object.entries(SIM_CATEGORIES).forEach(([catId, cat]) => {
+        const btn = document.createElement('button');
+        btn.className = 'category-tab' + (catId === state.currentCategory ? ' active' : '');
+        btn.dataset.category = catId;
+        btn.textContent = cat.name;
+        btn.addEventListener('click', () => selectCategory(catId, true));
+        symphonyPlusContainer.appendChild(btn);
+    });
+
     // Horizontal scroll & Drag support for all containers
-    [existingContainer, symphonyContainer, cosmicContainer].forEach(container => {
+    [existingContainer, symphonyContainer, symphonyPlusContainer, cosmicContainer].forEach(container => {
         if (!container) return;
         let isDown = false;
         let startX;
@@ -399,7 +438,8 @@ function renderFunctionButtons(category) {
 
     const fragment = document.createDocumentFragment();
     funcKeys.forEach(funcKey => {
-        const func = MATH_FUNCTIONS[funcKey];
+        const func = getFunctionData(funcKey);
+        if (!func) return;
         const card = document.createElement('div');
         card.className = 'func-card' + (funcKey === state.currentFunction ? ' active' : '');
         card.dataset.func = funcKey;
@@ -408,7 +448,7 @@ function renderFunctionButtons(category) {
         card.tabIndex = 0;
         card.draggable = true;
 
-        const categoryLabel = CATEGORIES[func.category]?.name || func.category;
+        const categoryLabel = SIM_CATEGORIES[func.category]?.name || CATEGORIES[func.category]?.name || func.category;
         card.innerHTML = `
             <div class="card-top">
                 <span class="card-title">${func.name}</span>
@@ -468,7 +508,8 @@ function renderFunctionButtons(category) {
  * Just update the UI text without changing the active state or playing audio
  */
 function previewFunction(funcName) {
-    const funcData = MATH_FUNCTIONS[funcName];
+    const funcData = getFunctionData(funcName);
+    if (!funcData) return;
     // Hint that this is just a preview
     elements.functionTitle.textContent = funcData.name + " (Viewing)";
     
@@ -492,17 +533,18 @@ function selectFunction(funcName) {
         state.currentFunction = null;
         elements.functionTitle.textContent = "Select a Function";
         elements.formulaText.textContent = "";
-        drawStaticGraph();
+        renderCurrentGraph();
         return;
     }
     state.currentFunction = funcName;
     document.querySelectorAll('.func-card').forEach(card => card.classList.toggle('active', card.dataset.func === funcName));
     
-    const allFuncs = Object.keys(MATH_FUNCTIONS);
+    const allFuncs = getAllFunctionKeys();
     state.functionIndex = allFuncs.indexOf(funcName) + 1;
     elements.currentIndex.textContent = state.functionIndex;
 
-    const funcData = MATH_FUNCTIONS[funcName];
+    const funcData = getFunctionData(funcName);
+    if (!funcData) return;
     elements.functionTitle.textContent = funcData.name;
 
     if (window.katex) {
@@ -524,18 +566,24 @@ function selectFunction(funcName) {
     void elements.canvasWrapper.offsetWidth;
     elements.canvasWrapper.classList.add('zoom-in-effect');
     
-    drawStaticGraph();
+    stopSymphonySim();
+    renderCurrentGraph();
     
     if (state.isPlaying) {
-        playSound(state.currentFunction);
-        animate();
+        if (isSymphonySimFunction(state.currentFunction)) {
+            stopPreview();
+            startSymphonySim(state.currentFunction);
+        } else {
+            playSound(state.currentFunction);
+            animate();
+        }
     } else if (state.isPrimingPlayback) {
         updateEquationIntroContent();
     }
 }
 
 function navigateFunction(direction) {
-    const allFuncs = Object.keys(MATH_FUNCTIONS);
+    const allFuncs = getAllFunctionKeys();
     let newIndex = allFuncs.indexOf(state.currentFunction) + direction;
     if (newIndex < 0) newIndex = allFuncs.length - 1;
     if (newIndex >= allFuncs.length) newIndex = 0;
@@ -543,13 +591,15 @@ function navigateFunction(direction) {
 }
 
 function getCategoryFunctions(category) {
-    if (category === 'all') return Object.keys(MATH_FUNCTIONS);
+    if (category === 'all') return getAllFunctionKeys();
+    if (isSymphonySimCategory(category)) return SIM_CATEGORIES[category]?.functions || [];
     return CATEGORIES[category]?.functions || [];
 }
 
 function matchesSearch(funcKey) {
     if (!state.searchQuery) return true;
-    const func = MATH_FUNCTIONS[funcKey];
+    const func = getFunctionData(funcKey);
+    if (!func) return false;
     const hay = [
         func.name,
         func.formula,
@@ -578,7 +628,7 @@ function loadQueue() {
     try {
         const raw = localStorage.getItem(QUEUE_STORAGE_KEY);
         const list = raw ? JSON.parse(raw) : [];
-        state.playQueue = Array.isArray(list) ? list.filter((key) => MATH_FUNCTIONS[key]) : [];
+        state.playQueue = Array.isArray(list) ? list.filter((key) => getFunctionData(key)) : [];
         state.isQueueMode = state.playQueue.length > 0;
         state.currentQueueIndex = state.playQueue.length > 0 ? 0 : -1;
     } catch (e) {
@@ -609,7 +659,7 @@ function togglePlay() {
 }
 
 function updateEquationIntroContent() {
-    const funcData = MATH_FUNCTIONS[state.currentFunction];
+    const funcData = getFunctionData(state.currentFunction);
     if (!funcData || !elements.equationIntroFormula) return;
 
     if (window.katex) {
@@ -697,8 +747,14 @@ function startPlaybackNow() {
         selectFunction(state.playQueue[0]);
     }
     
-    playSound();
-    animate();
+    if (isSymphonySimFunction(state.currentFunction)) {
+        stopPreview();
+        startSymphonySim(state.currentFunction);
+    } else {
+        stopSymphonySim();
+        playSound();
+        animate();
+    }
 }
 
 function play(withIntro = false) {
@@ -726,6 +782,7 @@ function addToQueue(funcName) {
         state.audioContext.resume();
     }
     const targetFunc = funcName || state.currentFunction;
+    if (!getFunctionData(targetFunc)) return;
     state.playQueue.push(targetFunc);
     state.isQueueMode = true;
     
@@ -779,7 +836,7 @@ function renderQueue() {
 
     // 현재 대기열 표시
     currentList.forEach((funcKey, index) => {
-        const func = MATH_FUNCTIONS[funcKey];
+        const func = getFunctionData(funcKey);
         if (!func) return; // Safety guard
         
         const tag = document.createElement('div');
@@ -847,6 +904,7 @@ function pause() {
     
     // Only stop the preview sound, keep MIDI layers active
     stopPreview();
+    stopSymphonySim();
     
     if (state.animationId) cancelAnimationFrame(state.animationId);
     renderQueue();
@@ -866,7 +924,7 @@ function stop() {
         state.currentQueueIndex = -1;
     }
     renderQueue();
-    drawStaticGraph();
+    renderCurrentGraph();
 }
 
 function reset() {
@@ -875,7 +933,7 @@ function reset() {
     
     // Ensure we keep the queue! Just reset the play state.
     renderQueue();
-    drawStaticGraph();
+    renderCurrentGraph();
 }
 
 function clearAllQueue() {
@@ -894,7 +952,7 @@ function clearAllQueue() {
     }
     
     renderQueue();
-    drawStaticGraph();
+    renderCurrentGraph();
 }
 
 // ==========================================
@@ -992,6 +1050,6 @@ function toggleFullscreen() {
     // Refresh layout and canvas
     setTimeout(() => {
         setupCanvas();
-        drawStaticGraph();
+        renderCurrentGraph();
     }, 50);
 }
