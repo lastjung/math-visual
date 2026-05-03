@@ -22,20 +22,6 @@
   const musicNext = document.getElementById("music-next");
   const musicVolumeIcon = document.getElementById("music-volume-icon");
   const musicTrackLabel = document.getElementById("music-track-label");
-  const variableControls = {
-    a: {
-      input: document.getElementById("var-a"),
-      value: document.getElementById("var-a-value"),
-    },
-    b: {
-      input: document.getElementById("var-b"),
-      value: document.getElementById("var-b-value"),
-    },
-    c: {
-      input: document.getElementById("var-c"),
-      value: document.getElementById("var-c-value"),
-    },
-  };
 
   let calculator = null;
   let customExpressionCount = 0;
@@ -198,11 +184,11 @@
           { id: "a", latex: "a=1.6", sliderBounds: { min: 0, max: 30, step: 0.01 } },
           { id: "T", latex: "T=10", sliderBounds: { min: -10, max: 10, step: 0.01 } },
           { id: "scan-cursor", latex: "x=T", color: "#ffffff", lineStyle: Desmos.Styles.DASHED, lineWidth: 2 },
-          { id: "standard-resonance", latex: "y=\\cos\\left(ax\\right)\\left\\{x<T\\right\\}", color: "#ff0000", lineWidth: 3 },
-          { id: "expanding-resonance", latex: "y=x\\cos\\left(ax\\right)\\left\\{x<T\\right\\}", color: "#00ff00", lineWidth: 2 },
-          { id: "envelope-modulation", latex: "y=\\cos\\left(x\\right)\\cos\\left(ax\\right)\\left\\{x<T\\right\\}", color: "#ffffff", lineWidth: 3 },
-          { id: "grid-distortion", latex: "\\cos\\left(ax\\right)=\\sin\\left(ay\\right)\\left\\{x<T\\right\\}", color: "#00ff00", lineWidth: 2 },
-          { id: "radial-whirlpool", latex: "y=4.8\\cos\\left(\\frac{axy}{x^2+y^2}\\right)\\left\\{x<T\\right\\}", color: "#ff0000", lineWidth: 2 },
+          { id: "standard-resonance", latex: "y=\\cos\\left(ax\\right)\\left\\{x<T\\right\\}", color: "#ff3b5f", lineWidth: 3 },
+          { id: "expanding-resonance", latex: "y=x\\cos\\left(ax\\right)\\left\\{x<T\\right\\}", color: "#00f5ff", lineWidth: 2 },
+          { id: "envelope-modulation", latex: "y=\\cos\\left(x\\right)\\cos\\left(ax\\right)\\left\\{x<T\\right\\}", color: "#fff45c", lineWidth: 3 },
+          { id: "grid-distortion", latex: "\\cos\\left(ax\\right)=\\sin\\left(ay\\right)\\left\\{x<T\\right\\}", color: "#6dff4a", lineWidth: 2 },
+          { id: "radial-whirlpool", latex: "y=4.8\\cos\\left(\\frac{axy}{x^2+y^2}\\right)\\left\\{x<T\\right\\}", color: "#ff8a00", lineWidth: 2 },
         ],
         bounds: { left: -10, right: 10, bottom: -10, top: 10 },
         controls: {
@@ -210,6 +196,27 @@
           b: { min: -4, max: 4, step: 0.01, value: 0, enabled: false },
           c: { min: -6.28, max: 6.28, step: 0.01, value: 0, enabled: false },
         },
+      },
+      "more-beautiful": {
+        expressions: [
+          { id: "note", type: "text", text: "math-symphony/score/02_more_beautiful.md에서 가져온 sign 기반 핵심 수식입니다." },
+          { id: "colors-background-title", type: "text", text: "Colors / Background" },
+          { id: "background", latex: "\\left|y\\right|>0", color: "#000000", fillOpacity: 1, lineOpacity: 0 },
+          { id: "T", latex: "T=10", sliderBounds: { min: -10, max: 10, step: 0.01 } },
+          { id: "v_1", latex: "v_1=10", sliderBounds: { min: -15, max: 10, step: 0.1 } },
+          { id: "v_6", latex: "v_6=-7.07", sliderBounds: { min: -8, max: 8, step: 0.01 } },
+          { id: "v_9", latex: "v_9=3.01", sliderBounds: { min: 0, max: 6.283, step: 0.01 } },
+          { id: "v_{13}", latex: "v_{13}=0", sliderBounds: { min: 0, max: 6.283, step: 0.01 } },
+          { id: "v_{14}", latex: "v_{14}=4.33", sliderBounds: { min: 0, max: 6.283, step: 0.01 } },
+          { id: "scan-cursor", latex: "x=T", color: "#ffffff", lineStyle: Desmos.Styles.DASHED, lineWidth: 2 },
+          { id: "sign-x", latex: "y=\\operatorname{sign}\\left(x\\right)\\left\\{x<T\\right\\}", color: "#00f5ff", lineWidth: 3 },
+          { id: "sign-sin", latex: "y=\\operatorname{sign}\\left(\\sin\\left(x\\right)\\right)\\left\\{x<T\\right\\}", color: "#fff45c", lineWidth: 3 },
+          { id: "punk-hair", latex: "y=x\\operatorname{sign}\\left(\\csc\\left(\\tan\\left(x+v_9\\right)+v_9\\right)\\right)+\\cos\\left(x\\right)\\left\\{x<T\\right\\}", color: "#ff3b5f", lineWidth: 2 },
+          { id: "up-down", latex: "y=v_6\\operatorname{sign}\\left(v_6x-y\\right)+\\cos\\left(v_6+x\\right)\\left\\{x<T\\right\\}", color: "#6dff4a", lineWidth: 2 },
+          { id: "spinny", latex: "r=\\operatorname{sign}\\left(\\cos\\left(5\\theta+3v_{13}\\right)\\right)+\\sin\\left(\\frac{v_{13}\\theta}{20}\\right)", color: "#ff8a00", lineWidth: 2 },
+          { id: "shuriken", latex: "r=\\operatorname{sign}\\left(\\cos\\left(5\\theta-v_{14}\\right)\\right)+\\sin\\left(v_{14}+5.05\\theta\\right)\\cos\\left(v_{14}\\right)", color: "#d86bff", lineWidth: 2 },
+        ],
+        bounds: { left: -10, right: 10, bottom: -10, top: 10 },
       },
       polar: {
         expressions: [
@@ -233,11 +240,8 @@
 
     const preset = presets[name] || presets.parabola;
     applyExpressions(preset.expressions, preset.bounds);
-    if (name === "amazing-part-3") {
+    if (name === "amazing-part-3" || name === "more-beautiful") {
       setScanPosition(graphScan.max);
-    }
-    if (preset.controls) {
-      configureVariableControls(preset.controls);
     }
     setStatus(`"${name}" 예제를 불러왔습니다.`);
   }
@@ -560,10 +564,14 @@
     if (!calculator) return null;
     const expression = calculator.getExpressions().find((entry) => entry.id === id);
     if (!expression?.latex) return null;
-    const match = expression.latex.match(new RegExp(`^${id}\\s*=\\s*(-?\\d+(?:\\.\\d+)?)`));
+    const match = expression.latex.match(new RegExp(`^${escapeRegExp(id)}\\s*=\\s*(-?\\d+(?:\\.\\d+)?)`));
     if (!match) return null;
     const value = Number(match[1]);
     return Number.isFinite(value) ? value : null;
+  }
+
+  function escapeRegExp(value) {
+    return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   }
 
   function startGraphScan() {
@@ -610,7 +618,10 @@
     const a = readSliderValue("a") ?? 1.6;
     const b = readSliderValue("b") ?? 0.75;
     const c = readSliderValue("c") ?? 0;
-    const samples = sampleCurrentGraphLayers(x, { a, b, c });
+    const v9 = readSliderValue("v_9") ?? 3.01;
+    const v13 = readSliderValue("v_{13}") ?? 0;
+    const v14 = readSliderValue("v_{14}") ?? 4.33;
+    const samples = sampleCurrentGraphLayers(x, { a, b, c, v9, v13, v14 });
 
     if (now - graphScan.lastVisualAt > 33) {
       setScanPosition(x);
@@ -648,6 +659,22 @@
         { y: y1 / 4, slope: slope1 },
         { y: y2 / 4, slope: slope2 },
         { y: (y1 + y2) / 5, slope: slope1 + slope2 },
+      ];
+    }
+
+    if (currentPresetName === "more-beautiful") {
+      const y1 = Math.sign(Math.sin(x));
+      const slope1 = Math.abs(Math.sin(x)) < 0.08 ? 14 : 0.2 * Math.cos(x);
+      const tan = Math.tan(x + params.v9);
+      const csc = 1 / Math.sin(tan + params.v9);
+      const y2 = (x * Math.sign(csc) + Math.cos(x)) / 10;
+      const slope2 = Math.abs(Math.cos(x));
+      const y3 = Math.sign(x);
+      const slope3 = Math.abs(x) < 0.08 ? 18 : 0.1;
+      return [
+        { y: y1, slope: slope1 },
+        { y: y2, slope: slope2 },
+        { y: y3, slope: slope3 },
       ];
     }
 
@@ -711,47 +738,6 @@
         <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>`;
       musicVolumeIcon.style.color = "rgba(255,255,255,0.84)";
     }
-  }
-
-  function syncVariableControls(values) {
-    for (const [key, value] of Object.entries(values)) {
-      const control = variableControls[key];
-      if (!control) continue;
-      control.input.value = String(value);
-      control.value.textContent = Number(value).toFixed(2);
-    }
-  }
-
-  function configureVariableControls(config) {
-    for (const [key, control] of Object.entries(variableControls)) {
-      const setting = config[key] || { enabled: false, value: 0 };
-      control.input.disabled = setting.enabled === false;
-      if (setting.min !== undefined) control.input.min = String(setting.min);
-      if (setting.max !== undefined) control.input.max = String(setting.max);
-      if (setting.step !== undefined) control.input.step = String(setting.step);
-      if (setting.value !== undefined) {
-        control.input.value = String(setting.value);
-        control.value.textContent = Number(setting.value).toFixed(2);
-      }
-    }
-  }
-
-  function updateCalculatorVariable(key, value) {
-    const control = variableControls[key];
-    if (control) {
-      control.value.textContent = Number(value).toFixed(2);
-    }
-    if (!calculator || !control) return;
-    showApiCalculator();
-    calculator.setExpression({
-      id: key,
-      latex: `${key}=${Number(value).toFixed(2)}`,
-      sliderBounds: {
-        min: Number(control.input.min),
-        max: Number(control.input.max),
-        step: Number(control.input.step),
-      },
-    });
   }
 
   document.getElementById("api-key-form").addEventListener("submit", function (event) {
@@ -869,12 +855,6 @@
     syncMusicControls();
   };
 
-  Object.entries(variableControls).forEach(function ([key, control]) {
-    control.input.addEventListener("input", function () {
-      updateCalculatorVariable(key, control.input.value);
-    });
-  });
-
   document.getElementById("save-state").addEventListener("click", function () {
     if (!calculator) return;
     localStorage.setItem(storageKeys.graphState, JSON.stringify(calculator.getState()));
@@ -910,7 +890,6 @@
     setStatus("현재 그래프의 PNG 미리보기를 새 창으로 열었습니다.");
   });
 
-  syncVariableControls({ a: 1.5, b: 0.75, c: 0 });
   updateAudioLabels();
   pickMusicTrack(false, false);
   syncMusicControls();
