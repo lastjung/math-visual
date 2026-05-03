@@ -47,8 +47,8 @@
     rafId: null,
     startedAt: 0,
     durationMs: 8000,
-    min: -3,
-    max: 3,
+    min: -10,
+    max: 10,
     lastSoundAt: 0,
     lastVisualAt: 0,
   };
@@ -97,13 +97,7 @@
       calculator.destroy();
     }
 
-    calculator = Desmos.GraphingCalculator(calculatorElement, getCalculatorOptions());
-
-    calculator.observeEvent("change", function (_eventName, event) {
-      if (event.isUserInitiated) {
-        handleCalculatorChange();
-      }
-    });
+    createCalculator();
 
     applyPreset(currentPresetName);
     handleCalculatorChange();
@@ -131,12 +125,23 @@
     };
   }
 
+  function createCalculator(state = null) {
+    calculator = Desmos.GraphingCalculator(calculatorElement, getCalculatorOptions());
+    calculator.observeEvent("change", function (_eventName, event) {
+      if (event.isUserInitiated) {
+        handleCalculatorChange();
+      }
+    });
+    if (state) {
+      calculator.setState(state, { allowUndo: true });
+    }
+  }
+
   function rebuildCalculatorForDisplayMode() {
     if (!window.Desmos || !calculator) return;
     const state = calculator.getState();
     calculator.destroy();
-    calculator = Desmos.GraphingCalculator(calculatorElement, getCalculatorOptions());
-    calculator.setState(state, { allowUndo: true });
+    createCalculator(state);
     calculator.resize();
   }
 
@@ -149,7 +154,11 @@
   function applyPreset(name) {
     if (!calculator) return;
     stopGraphScan();
+    const previousPresetName = currentPresetName;
     currentPresetName = name;
+    if ((previousPresetName === "amazing-part-3") !== (name === "amazing-part-3")) {
+      rebuildCalculatorForDisplayMode();
+    }
     showApiCalculator();
 
     const presets = {
@@ -184,8 +193,10 @@
       "amazing-part-3": {
         expressions: [
           { id: "note", type: "text", text: "math-symphony/score/01_amazing_part3.md에서 가져온 핵심 수식입니다. a를 0-30으로 스캔합니다." },
+          { id: "colors-background-title", type: "text", text: "Colors / Background" },
+          { id: "background", latex: "\\left|y\\right|>0", color: "#000000", fillOpacity: 1, lineOpacity: 0 },
           { id: "a", latex: "a=1.6", sliderBounds: { min: 0, max: 30, step: 0.01 } },
-          { id: "T", latex: "T=-3", sliderBounds: { min: -3, max: 3, step: 0.01 } },
+          { id: "T", latex: "T=10", sliderBounds: { min: -10, max: 10, step: 0.01 } },
           { id: "scan-cursor", latex: "x=T", color: "#ffffff", lineStyle: Desmos.Styles.DASHED, lineWidth: 2 },
           { id: "standard-resonance", latex: "y=\\cos\\left(ax\\right)\\left\\{x<T\\right\\}", color: "#ff0000", lineWidth: 3 },
           { id: "expanding-resonance", latex: "y=x\\cos\\left(ax\\right)\\left\\{x<T\\right\\}", color: "#00ff00", lineWidth: 2 },
@@ -222,6 +233,9 @@
 
     const preset = presets[name] || presets.parabola;
     applyExpressions(preset.expressions, preset.bounds);
+    if (name === "amazing-part-3") {
+      setScanPosition(graphScan.max);
+    }
     if (preset.controls) {
       configureVariableControls(preset.controls);
     }
@@ -272,6 +286,7 @@
       this.startedAt = 0;
       this.controllerValue = 0;
       this.previousControllerNorm = 0;
+      this.graphLayers = [];
 
       this.filter.type = "lowpass";
       this.filter.frequency.value = 2400;
@@ -304,7 +319,7 @@
       const now = this.context.currentTime;
       this.master.gain.cancelScheduledValues(now);
       this.master.gain.setTargetAtTime(Math.max(this.mix, 0.28), now, 0.04);
-      this.playBell(440, now + 0.02, 0.18, 0, 0.12);
+      this.ensureGraphLayers();
     }
 
     stop() {
@@ -322,6 +337,10 @@
       const now = this.context.currentTime;
       this.master.gain.cancelScheduledValues(now);
       this.master.gain.setTargetAtTime(0.0001, now, 0.04);
+      this.graphLayers.forEach((layer) => {
+        layer.gain.gain.cancelScheduledValues(now);
+        layer.gain.gain.setTargetAtTime(0.0001, now, 0.025);
+      });
     }
 
     setMix(value) {
@@ -366,6 +385,56 @@
 
       this.filter.frequency.setTargetAtTime(900 + slopeEnergy * 5200 + scanNorm * 900, now, 0.025);
       this.playBell(frequency, now, duration, pan, gain);
+    }
+
+    ensureGraphLayers() {
+      if (this.graphLayers.length) return;
+      const specs = [
+        { id: "main", type: "sine", base: 174.61, scale: 20, level: 0.16, pan: -0.45 },
+        { id: "bass", type: "triangle", base: 82.41, scale: 11, level: 0.12, pan: 0 },
+        { id: "shimmer", type: "sine", base: 349.23, scale: 28, level: 0.08, pan: 0.48 },
+      ];
+
+      this.graphLayers = specs.map((spec) => {
+        const osc = this.context.createOscillator();
+        const gain = this.context.createGain();
+        const panner = this.context.createStereoPanner();
+        osc.type = spec.type;
+        osc.frequency.value = spec.base;
+        gain.gain.value = 0.0001;
+        panner.pan.value = spec.pan;
+        osc.connect(gain);
+        gain.connect(panner);
+        panner.connect(this.filter);
+        osc.start();
+        return { ...spec, osc, gain, panner };
+      });
+    }
+
+    updateGraphLayers(samples, scanNorm) {
+      if (!this.isRunning) return;
+      this.ensureGraphLayers();
+      const now = this.context.currentTime;
+      const normalized = samples.slice(0, this.graphLayers.length);
+      let brightness = 0;
+
+      normalized.forEach((sample, index) => {
+        const layer = this.graphLayers[index];
+        if (!layer || !sample) return;
+        const y = Math.max(-1, Math.min(1, sample.y));
+        const slope = Math.max(0, Math.min(1, Math.abs(sample.slope) / 18));
+        const semitone = y * layer.scale;
+        const frequency = layer.base * Math.pow(2, semitone / 12);
+        const targetGain = layer.level * (0.28 + Math.abs(y) * 0.55 + slope * 0.42);
+        const targetPan = Math.max(-0.95, Math.min(0.95, layer.pan + (scanNorm - 0.5) * 0.45));
+
+        layer.osc.frequency.setTargetAtTime(Math.max(35, Math.min(2200, frequency)), now, 0.035);
+        layer.gain.gain.setTargetAtTime(Math.max(0.0001, targetGain), now, 0.035);
+        layer.panner.pan.setTargetAtTime(targetPan, now, 0.05);
+        brightness += slope;
+      });
+
+      this.filter.frequency.setTargetAtTime(1200 + Math.min(1, brightness / this.graphLayers.length) * 4400, now, 0.05);
     }
 
     scheduleLoop() {
@@ -480,6 +549,9 @@
       if (graphAudio) {
         graphAudio.reactToControllerValue(value, 0, 30);
       }
+      if (currentPresetName === "amazing-part-3" && graphScan.rafId === null) {
+        setScanPosition(graphScan.max);
+      }
       setStatus(`Desmos 내부 슬라이더 a=${value.toFixed(2)} 감지됨`);
     }
   }
@@ -520,6 +592,16 @@
     }
   }
 
+  function setScanPosition(value) {
+    if (!calculator) return;
+    calculator.setExpression({
+      id: "T",
+      latex: `T=${Number(value).toFixed(3)}`,
+      sliderBounds: { min: graphScan.min, max: graphScan.max, step: 0.001 },
+    });
+    detectedTValue.textContent = Number(value).toFixed(2);
+  }
+
   function tickGraphScan(now) {
     const elapsed = (now - graphScan.startedAt) % (graphScan.durationMs * 2);
     const phase = elapsed / graphScan.durationMs;
@@ -528,44 +610,48 @@
     const a = readSliderValue("a") ?? 1.6;
     const b = readSliderValue("b") ?? 0.75;
     const c = readSliderValue("c") ?? 0;
-    const sample = sampleCurrentGraph(x, { a, b, c });
+    const samples = sampleCurrentGraphLayers(x, { a, b, c });
 
     if (now - graphScan.lastVisualAt > 33) {
-      calculator.setExpression({
-        id: "T",
-        latex: `T=${x.toFixed(3)}`,
-        sliderBounds: { min: graphScan.min, max: graphScan.max, step: 0.001 },
-      });
-      detectedTValue.textContent = x.toFixed(2);
+      setScanPosition(x);
       graphScan.lastVisualAt = now;
     }
 
-    if (sample && now - graphScan.lastSoundAt > 220) {
-      getGraphAudio().playGraphSample(sample.y, sample.slope, scanNorm);
-      graphScan.lastSoundAt = now;
+    if (samples.length) {
+      getGraphAudio().updateGraphLayers(samples, scanNorm);
     }
 
     graphScan.rafId = requestAnimationFrame(tickGraphScan);
   }
 
-  function sampleCurrentGraph(x, params) {
+  function sampleCurrentGraphLayers(x, params) {
     if (currentPresetName === "amazing-part-3") {
       const y1 = Math.cos(params.a * x);
-      const y2 = Math.cos(x) * Math.cos(params.a * x);
-      const y = (y1 + y2) * 0.5;
       const slope1 = -params.a * Math.sin(params.a * x);
-      const slope2 = -Math.sin(x) * Math.cos(params.a * x) - params.a * Math.cos(x) * Math.sin(params.a * x);
-      const slope = (slope1 + slope2) * 0.5;
-      return { y, slope };
+      const y2 = (x / 5) * Math.cos(params.a * x);
+      const slope2 = (Math.cos(params.a * x) - params.a * x * Math.sin(params.a * x)) / 5;
+      const y3 = Math.cos(x) * Math.cos(params.a * x);
+      const slope3 = -Math.sin(x) * Math.cos(params.a * x) - params.a * Math.cos(x) * Math.sin(params.a * x);
+      return [
+        { y: y1, slope: slope1 },
+        { y: y2, slope: slope2 },
+        { y: y3, slope: slope3 },
+      ];
     }
 
     if (currentPresetName === "trig") {
-      const y = params.a * Math.sin(x + params.c) + params.b * Math.cos(2 * x);
-      const slope = params.a * Math.cos(x + params.c) - 2 * params.b * Math.sin(2 * x);
-      return { y: y / 5, slope };
+      const y1 = params.a * Math.sin(x + params.c);
+      const slope1 = params.a * Math.cos(x + params.c);
+      const y2 = params.b * Math.cos(2 * x);
+      const slope2 = -2 * params.b * Math.sin(2 * x);
+      return [
+        { y: y1 / 4, slope: slope1 },
+        { y: y2 / 4, slope: slope2 },
+        { y: (y1 + y2) / 5, slope: slope1 + slope2 },
+      ];
     }
 
-    return null;
+    return [];
   }
 
   function getFullTrackPath(track) {
