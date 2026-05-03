@@ -12,7 +12,16 @@ export const SIM_CATEGORIES = {
             'amazingPlusResonance'
         ]
     },
-    'beautiful-plus': { name: '💖 Beautiful+', functions: [] },
+    'beautiful-plus': {
+        name: '💖 Beautiful+',
+        functions: [
+            'beautifulPlusSignIntro',
+            'beautifulPlusSignTrace',
+            'beautifulPlusDiagonal',
+            'beautifulPlusSpinnyRose',
+            'beautifulPlusPunkHair'
+        ]
+    },
     'harmonic-plus': { name: '🎼 Harmonic+', functions: [] },
     'fusion-plus': { name: '🌀 Fusion+', functions: [] },
     'hyper-plus': { name: '✨ Hyper+', functions: [] }
@@ -22,7 +31,11 @@ const TIGHT_RANGE = { xMin: -10, xMax: 10, yMin: -2, yMax: 2 };
 const WIDE_RANGE = { xMin: -10, xMax: 10, yMin: -5, yMax: 5 };
 const GRID_RANGE = { xMin: -18, xMax: 18, yMin: -18, yMax: 18 };
 const RADIAL_RANGE = { xMin: -10, xMax: 10, yMin: -10, yMax: 10 };
+const DIAGONAL_RANGE = { xMin: -10, xMax: 10, yMin: -10, yMax: 10 };
+const ROSE_RANGE = { xMin: -3, xMax: 3, yMin: -3, yMax: 3 };
+const PUNK_RANGE = { xMin: -10, xMax: 10, yMin: -12, yMax: 12 };
 const BASE_TIMING = { durationMs: 16000, drawMs: 6000 };
+const COLOR_PALETTE = [342, 28, 52, 145, 190, 224, 266, 310];
 const BASE_LAYERS = {
     standard: {
         id: 'standard',
@@ -31,6 +44,7 @@ const BASE_LAYERS = {
         baseFreq: 220,
         audioScale: 150,
         gain: 0.38,
+        sonicProfile: 'motion',
         fn: (x, a) => Math.cos(a * x)
     },
     expanding: {
@@ -40,6 +54,7 @@ const BASE_LAYERS = {
         baseFreq: 260,
         audioScale: 120,
         gain: 0.34,
+        sonicProfile: 'motion',
         fn: (x, a) => (x / 5) * Math.cos(a * x)
     },
     envelope: {
@@ -49,6 +64,7 @@ const BASE_LAYERS = {
         baseFreq: 330,
         audioScale: 180,
         gain: 0.32,
+        sonicProfile: 'motion',
         fn: (x, a) => Math.cos(x) * Math.cos(a * x)
     },
     grid: {
@@ -59,6 +75,7 @@ const BASE_LAYERS = {
         baseFreq: 440,
         audioScale: 100,
         gain: 0.3,
+        sonicProfile: 'motion',
         tRange: { min: 0, max: 1 },
         x: (t, a) => {
             const aa = Math.max(1, a * 0.5);
@@ -102,9 +119,87 @@ const BASE_LAYERS = {
         baseFreq: 220,
         audioScale: 160,
         gain: 0.32,
+        sonicProfile: 'density',
         f: (x, y, a) => {
             const aa = 5 + a * 1.6;
             return y - 4.8 * Math.cos((aa * x * y) / (x * x + y * y + 0.1));
+        }
+    },
+    signIntro: {
+        id: 'signIntro',
+        label: 'The Signum Glitch',
+        color: '#fb7185',
+        baseFreq: 110,
+        audioScale: 200,
+        gain: 0.34,
+        sonicProfile: 'stepped',
+        fn: (x, a) => Math.sign(Math.sin(beautifulPhase(a, 1, 10) * x / 4))
+    },
+    signTrace: {
+        id: 'signTrace',
+        label: 'Dancing Sign Trace',
+        type: 'parametric',
+        color: '#f472b6',
+        baseFreq: 105,
+        audioScale: 180,
+        gain: 0.32,
+        sonicProfile: 'stepped',
+        tRange: { min: -10, max: 10 },
+        x: (t, a) => t * Math.cos(beautifulPhase(a, 1, 6.5) * 0.1),
+        y: (t, a) => Math.sign(Math.sin(beautifulPhase(a, 1, 10) * t))
+    },
+    diagonal: {
+        id: 'diagonal',
+        label: 'Oscillating Diagonal',
+        type: 'parametric',
+        color: '#38bdf8',
+        baseFreq: 120,
+        audioScale: 110,
+        gain: 0.3,
+        sonicProfile: 'takeoff',
+        tRange: { min: -10, max: 10 },
+        x: (t) => t,
+        y: (t, a) => {
+            const v = beautifulPhase(a, 0, 2.8);
+            return t + Math.sin(v * t);
+        },
+        audioY: (t, a) => {
+            const v = beautifulPhase(a, 0, 2.8);
+            const wave = Math.sin(v * t);
+            const motion = Math.cos(v * t) * v;
+            return wave * 0.72 + Math.tanh(motion) * 0.28;
+        }
+    },
+    spinnyRose: {
+        id: 'spinnyRose',
+        label: 'Mind Blowing Spinny',
+        type: 'polar',
+        color: '#c084fc',
+        baseFreq: 220,
+        audioScale: 180,
+        gain: 0.3,
+        sonicProfile: 'spin',
+        thetaRange: { min: 0, max: 4 * Math.PI },
+        lineWidth: 1.8,
+        r: (theta, a) => {
+            const v = beautifulPhase(a, 0, 5);
+            const n = 6;
+            return Math.sign(Math.cos(n * theta + 3 * v)) + Math.sin((v * theta) / 20);
+        }
+    },
+    punkHair: {
+        id: 'punkHair',
+        label: 'Punk Hair Laser',
+        color: '#f59e0b',
+        baseFreq: 180,
+        audioScale: 100,
+        gain: 0.31,
+        sonicProfile: 'stepped',
+        fn: (x, a) => {
+            const v = beautifulPhase(a, 0, Math.PI * 1.75);
+            const tanVal = Math.tan(x + v) + v;
+            const cscVal = 1 / Math.sin(tanVal);
+            return x * Math.sign(cscVal) + Math.cos(x);
         }
     }
 };
@@ -169,6 +264,56 @@ export const SIM_FUNCTIONS = {
         range: RADIAL_RANGE,
         ...BASE_TIMING,
         layers: [BASE_LAYERS.radial]
+    },
+    beautifulPlusSignIntro: {
+        category: 'beautiful-plus',
+        name: 'The Signum Glitch',
+        type: 'single',
+        formula: 'y = sign(sin(ax/4))',
+        latex: 'y=\\text{sgn}(\\sin(\\frac{ax}{4}))',
+        range: TIGHT_RANGE,
+        ...BASE_TIMING,
+        layers: [BASE_LAYERS.signIntro]
+    },
+    beautifulPlusSignTrace: {
+        category: 'beautiful-plus',
+        name: 'Dancing Sign Trace',
+        type: 'single',
+        formula: '(t cos(0.1a), sign(sin at))',
+        latex: '(t\\cos(0.1a),\\text{sgn}(\\sin at))',
+        range: TIGHT_RANGE,
+        ...BASE_TIMING,
+        layers: [BASE_LAYERS.signTrace]
+    },
+    beautifulPlusDiagonal: {
+        category: 'beautiful-plus',
+        name: 'Oscillating Diagonal',
+        type: 'single',
+        formula: '(t, t + sin(at))',
+        latex: '(t,t+\\sin(at))',
+        range: DIAGONAL_RANGE,
+        ...BASE_TIMING,
+        layers: [BASE_LAYERS.diagonal]
+    },
+    beautifulPlusSpinnyRose: {
+        category: 'beautiful-plus',
+        name: 'Mind Blowing Spinny',
+        type: 'single',
+        formula: 'r = sign(cos(nθ + 3v)) + sin(vθ/20)',
+        latex: 'r=\\text{sgn}(\\cos(n\\theta+3v))+\\sin(v\\theta/20)',
+        range: ROSE_RANGE,
+        ...BASE_TIMING,
+        layers: [BASE_LAYERS.spinnyRose]
+    },
+    beautifulPlusPunkHair: {
+        category: 'beautiful-plus',
+        name: 'Punk Hair Laser',
+        type: 'single',
+        formula: 'y = x sign(csc(tan(x+v)+v)) + cos(x)',
+        latex: 'y=x\\text{sgn}(\\csc(\\tan(x+v)+v))+\\cos(x)',
+        range: PUNK_RANGE,
+        ...BASE_TIMING,
+        layers: [BASE_LAYERS.punkHair]
     }
 };
 
@@ -270,7 +415,7 @@ function ensureAudio(sim) {
         const osc = simAudio.context.createOscillator();
         const gain = simAudio.context.createGain();
         const panner = simAudio.context.createStereoPanner();
-        osc.type = layer.id === 'expanding' ? 'triangle' : 'sine';
+        osc.type = layer.sonicProfile === 'stepped' ? 'square' : layer.id === 'expanding' ? 'triangle' : 'sine';
         osc.frequency.value = layer.baseFreq;
         gain.gain.value = 0.0001;
         panner.pan.value = layer.id === 'standard' ? -0.45 : layer.id === 'envelope' ? 0.45 : 0;
@@ -335,12 +480,15 @@ function drawSimLayers(graphCtx, sim, width, height, progress, a) {
 
         if (layer.type === 'parametric') {
             drawParametricLayer(graphCtx, layer, sim.range, width, height, progress, a);
+        } else if (layer.type === 'polar') {
+            drawPolarLayer(graphCtx, layer, sim.range, width, height, progress, a);
         } else if (layer.type === 'implicit') {
             drawImplicitLayer(graphCtx, layer, sim.range, width, height, progress, a);
         } else {
-            graphCtx.beginPath();
             graphCtx.lineWidth = layer.id === 'standard' ? 3 : 2.2;
             let first = true;
+            let prevX = 0;
+            let prevY = 0;
             for (let i = 0; i <= steps; i++) {
                 const x = xMin + (xRange * i) / totalSteps;
                 let y = layer.fn(x, a);
@@ -355,13 +503,15 @@ function drawSimLayers(graphCtx, sim, width, height, progress, a) {
                     continue;
                 }
                 if (first) {
-                    graphCtx.moveTo(px, py);
+                    prevX = px;
+                    prevY = py;
                     first = false;
                 } else {
-                    graphCtx.lineTo(px, py);
+                    strokeSegment(graphCtx, layer, prevX, prevY, px, py, i / Math.max(1, steps), y, a);
+                    prevX = px;
+                    prevY = py;
                 }
             }
-            graphCtx.stroke();
         }
         graphCtx.restore();
     });
@@ -378,6 +528,8 @@ function drawParametricLayer(graphCtx, layer, range, width, height, progress, a)
     graphCtx.beginPath();
     graphCtx.lineWidth = 2.4;
     let first = true;
+    let prevX = 0;
+    let prevY = 0;
 
     for (let i = 0; i <= steps; i++) {
         const t = tMin + ((tMax - tMin) * i) / totalSteps;
@@ -394,13 +546,56 @@ function drawParametricLayer(graphCtx, layer, range, width, height, progress, a)
             continue;
         }
         if (first) {
-            graphCtx.moveTo(px, py);
+            prevX = px;
+            prevY = py;
             first = false;
         } else {
-            graphCtx.lineTo(px, py);
+            strokeSegment(graphCtx, layer, prevX, prevY, px, py, i / Math.max(1, steps), y, a);
+            prevX = px;
+            prevY = py;
         }
     }
-    graphCtx.stroke();
+}
+
+function drawPolarLayer(graphCtx, layer, range, width, height, progress, a) {
+    const { xMin, xMax, yMin, yMax } = range;
+    const thetaMin = layer.thetaRange?.min ?? 0;
+    const thetaMax = layer.thetaRange?.max ?? Math.PI * 2;
+    const totalSteps = 4200;
+    const steps = Math.max(2, Math.floor(totalSteps * progress));
+    const xRange = xMax - xMin;
+    const yRange = yMax - yMin;
+    graphCtx.beginPath();
+    graphCtx.lineWidth = layer.lineWidth || 2.2;
+    let first = true;
+    let prevX = 0;
+    let prevY = 0;
+
+    for (let i = 0; i <= steps; i++) {
+        const theta = thetaMin + ((thetaMax - thetaMin) * i) / totalSteps;
+        const r = layer.r(theta, a);
+        const x = r * Math.cos(theta);
+        const y = r * Math.sin(theta);
+        if (!Number.isFinite(x) || !Number.isFinite(y)) {
+            first = true;
+            continue;
+        }
+        const px = ((x - xMin) / xRange) * width;
+        const py = ((yMax - y) / yRange) * height;
+        if (px < -80 || px > width + 80 || py < -80 || py > height + 80) {
+            first = true;
+            continue;
+        }
+        if (first) {
+            prevX = px;
+            prevY = py;
+            first = false;
+        } else {
+            strokeSegment(graphCtx, layer, prevX, prevY, px, py, i / Math.max(1, steps), r, a);
+            prevX = px;
+            prevY = py;
+        }
+    }
 }
 
 function drawImplicitLayer(graphCtx, layer, range, width, height, progress, a) {
@@ -411,7 +606,6 @@ function drawImplicitLayer(graphCtx, layer, range, width, height, progress, a) {
     const cellW = width / resX;
     const cellH = height / resY;
     const threshold = 0.08;
-    graphCtx.fillStyle = layer.color;
 
     for (let i = 0; i <= cols; i++) {
         const x = xMin + ((xMax - xMin) * i) / resX;
@@ -421,12 +615,29 @@ function drawImplicitLayer(graphCtx, layer, range, width, height, progress, a) {
             if (Number.isFinite(v) && Math.abs(v) < threshold) {
                 const px = ((x - xMin) / (xMax - xMin)) * width;
                 const py = ((yMax - y) / (yMax - yMin)) * height;
+                graphCtx.fillStyle = colorForLayer(layer, i / Math.max(1, cols), y / Math.max(1, Math.abs(yMax)), a);
                 graphCtx.globalAlpha = 0.86;
                 graphCtx.fillRect(px, py, Math.max(1.2, cellW * 1.35), Math.max(1.2, cellH * 1.35));
             }
         }
     }
     graphCtx.globalAlpha = 1;
+}
+
+function strokeSegment(graphCtx, layer, x1, y1, x2, y2, progress, value, a) {
+    graphCtx.beginPath();
+    graphCtx.strokeStyle = colorForLayer(layer, progress, value, a);
+    graphCtx.moveTo(x1, y1);
+    graphCtx.lineTo(x2, y2);
+    graphCtx.stroke();
+}
+
+function colorForLayer(layer, progress, value, a) {
+    const base = COLOR_PALETTE[Math.abs(hashString(layer.id)) % COLOR_PALETTE.length];
+    const wave = Math.sin((value || 0) * 1.8 + a * 0.11) * 24;
+    const hue = (base + progress * 190 + wave + 360) % 360;
+    const lightness = 58 + 10 * Math.sin(progress * Math.PI);
+    return `hsl(${hue}, 92%, ${lightness}%)`;
 }
 
 function updateAudio(sim, progress, a) {
@@ -436,17 +647,115 @@ function updateAudio(sim, progress, a) {
 
     simAudio.layers.forEach((layer, index) => {
         const simLayer = sim.layers[index];
-        const y = clamp(sampleLayerY(simLayer, sim.range, progress, a), -1, 1);
-        const yAhead = clamp(sampleLayerY(simLayer, sim.range, Math.min(1, progress + 0.002), a), -1, 1);
-        const slope = clamp(Math.abs((yAhead - y) / 0.02) / 18, 0, 1);
-        const freq = simLayer.baseFreq + y * simLayer.audioScale;
-        const gain = simLayer.gain * (0.4 + Math.abs(y) * 0.65 + slope * 0.5);
+        const motion = sampleLayerMotion(simLayer, sim.range, progress, a);
+        const sound = soundFromMotion(simLayer, motion, progress);
+        const freq = simLayer.baseFreq + sound.pitch;
+        const gain = simLayer.gain * sound.gain;
         layer.osc.frequency.setTargetAtTime(clamp(freq, 35, 2400), now, 0.035);
         layer.gain.gain.setTargetAtTime(Math.max(0.0001, gain), now, 0.035);
-        brightness += slope;
+        brightness += sound.brightness;
     });
 
     simAudio.filter.frequency.setTargetAtTime(1200 + clamp(brightness / simAudio.layers.length, 0, 1) * 4200, now, 0.05);
+}
+
+function soundFromMotion(layer, motion, progress) {
+    const travel = progress * 2 - 1;
+    const profile = layer.sonicProfile || 'motion';
+
+    if (profile === 'stepped') {
+        return {
+            pitch: motion.position * layer.audioScale + motion.jump * 520 + motion.direction * 70,
+            gain: 0.22 + Math.abs(motion.position) * 0.28 + motion.jump * 1.45 + motion.velocity * 0.22,
+            brightness: motion.jump * 1.5 + motion.curvature * 0.55 + motion.velocity * 0.25
+        };
+    }
+
+    if (profile === 'takeoff') {
+        return {
+            pitch: travel * 240 + motion.position * 90 + motion.velocity * 90 + motion.direction * 55,
+            gain: 0.28 + progress * 0.45 + motion.velocity * 0.35 + motion.curvature * 0.18,
+            brightness: progress * 0.6 + motion.velocity * 0.45 + motion.curvature * 0.4
+        };
+    }
+
+    if (profile === 'spin') {
+        return {
+            pitch: motion.position * layer.audioScale + motion.curvature * 220 + Math.sin(progress * Math.PI * 8) * 70,
+            gain: 0.26 + motion.velocity * 0.45 + motion.curvature * 0.35,
+            brightness: motion.curvature * 1.2 + motion.velocity * 0.35
+        };
+    }
+
+    if (profile === 'density') {
+        return {
+            pitch: motion.position * layer.audioScale + motion.curvature * 180 + motion.velocity * 120,
+            gain: 0.24 + motion.velocity * 0.55 + motion.curvature * 0.65 + motion.jump * 0.7,
+            brightness: motion.curvature * 1.1 + motion.jump * 0.9 + motion.velocity * 0.45
+        };
+    }
+
+    return {
+        pitch: travel * 90 + motion.position * layer.audioScale + motion.velocity * 100 + motion.jump * 220,
+        gain: 0.28 + Math.abs(motion.position) * 0.42 + motion.velocity * 0.4 + motion.jump * 0.8,
+        brightness: motion.velocity * 0.6 + motion.curvature * 0.6 + motion.jump * 0.8
+    };
+}
+
+function sampleLayerMotion(layer, range, progress, a) {
+    const dt = 0.004;
+    const p0 = pointForLayer(layer, range, clamp(progress - dt, 0, 1), a);
+    const p1 = pointForLayer(layer, range, progress, a);
+    const p2 = pointForLayer(layer, range, clamp(progress + dt, 0, 1), a);
+    const v1x = p1.x - p0.x;
+    const v1y = p1.y - p0.y;
+    const v2x = p2.x - p1.x;
+    const v2y = p2.y - p1.y;
+    const velocity = clamp(Math.hypot(v1x, v1y) / dt / 18, 0, 1);
+    const jump = clamp(Math.abs(p1.soundY - p0.soundY) * 0.85, 0, 1);
+    const a1 = Math.atan2(v1y, v1x);
+    const a2 = Math.atan2(v2y, v2x);
+    const curvature = clamp(Math.abs(Math.atan2(Math.sin(a2 - a1), Math.cos(a2 - a1))) / Math.PI, 0, 1);
+    return {
+        position: clamp(p1.soundY, -1, 1),
+        direction: clamp(a1 / Math.PI, -1, 1),
+        velocity,
+        jump,
+        curvature
+    };
+}
+
+function pointForLayer(layer, range, progress, a) {
+    const { xMin, xMax, yMin, yMax } = range;
+    if (layer.type === 'parametric') {
+        const tMin = layer.tRange?.min ?? 0;
+        const tMax = layer.tRange?.max ?? 1;
+        const t = tMin + (tMax - tMin) * progress;
+        const x = layer.x(t, a);
+        const y = layer.y(t, a);
+        const soundY = layer.audioY ? layer.audioY(t, a) : normalizeY(y, yMin, yMax);
+        return { x: normalizeX(x, xMin, xMax), y: normalizeY(y, yMin, yMax), soundY };
+    }
+
+    if (layer.type === 'polar') {
+        const thetaMin = layer.thetaRange?.min ?? 0;
+        const thetaMax = layer.thetaRange?.max ?? Math.PI * 2;
+        const theta = thetaMin + (thetaMax - thetaMin) * progress;
+        const r = layer.r(theta, a);
+        const x = r * Math.cos(theta);
+        const y = r * Math.sin(theta);
+        return { x: normalizeX(x, xMin, xMax), y: normalizeY(y, yMin, yMax), soundY: clamp(r / Math.max(1, Math.abs(xMax)), -1, 1) };
+    }
+
+    if (layer.type === 'implicit') {
+        const x = xMin + (xMax - xMin) * progress;
+        const y = findImplicitY(layer, range, x, a);
+        return { x: normalizeX(x, xMin, xMax), y: normalizeY(y, yMin, yMax), soundY: normalizeY(y, yMin, yMax) };
+    }
+
+    const x = xMin + (xMax - xMin) * progress;
+    const y = layer.fn(x, a);
+    return { x: normalizeX(x, xMin, xMax), y: normalizeY(y, yMin, yMax), soundY: normalizeY(y, yMin, yMax) };
 }
 
 function sampleLayerY(layer, range, progress, a) {
@@ -455,6 +764,13 @@ function sampleLayerY(layer, range, progress, a) {
         const tMax = layer.tRange?.max ?? 1;
         const t = tMin + (tMax - tMin) * progress;
         return layer.audioY ? layer.audioY(t, a) : layer.y(t, a);
+    }
+
+    if (layer.type === 'polar') {
+        const thetaMin = layer.thetaRange?.min ?? 0;
+        const thetaMax = layer.thetaRange?.max ?? Math.PI * 2;
+        const theta = thetaMin + (thetaMax - thetaMin) * progress;
+        return layer.r(theta, a);
     }
 
     if (layer.type === 'implicit') {
@@ -477,6 +793,32 @@ function sampleLayerY(layer, range, progress, a) {
     const { xMin, xMax } = range;
     const x = xMin + (xMax - xMin) * progress;
     return layer.fn(x, a);
+}
+
+function findImplicitY(layer, range, x, a) {
+    const { yMin, yMax } = range;
+    let bestY = 0;
+    let bestAbs = Infinity;
+    const steps = 96;
+    for (let i = 0; i <= steps; i++) {
+        const y = yMin + ((yMax - yMin) * i) / steps;
+        const v = Math.abs(layer.f(x, y, a));
+        if (Number.isFinite(v) && v < bestAbs) {
+            bestAbs = v;
+            bestY = y;
+        }
+    }
+    return bestY;
+}
+
+function normalizeX(x, xMin, xMax) {
+    if (!Number.isFinite(x)) return 0;
+    return clamp(((x - xMin) / (xMax - xMin)) * 2 - 1, -1.5, 1.5);
+}
+
+function normalizeY(y, yMin, yMax) {
+    if (!Number.isFinite(y)) return 0;
+    return clamp(((y - yMin) / (yMax - yMin)) * 2 - 1, -1.5, 1.5);
 }
 
 function updateHud(sim, a) {
@@ -556,4 +898,17 @@ function drawAxes(graphCtx, width, height, range) {
 function clamp(value, min, max) {
     if (!Number.isFinite(value)) return 0;
     return Math.max(min, Math.min(max, value));
+}
+
+function beautifulPhase(a, min, max) {
+    const t = clamp((a - 1.6) / 28.4, 0, 1);
+    return min + (max - min) * t;
+}
+
+function hashString(value) {
+    let hash = 0;
+    for (let i = 0; i < value.length; i++) {
+        hash = (hash * 31 + value.charCodeAt(i)) | 0;
+    }
+    return hash;
 }

@@ -324,6 +324,10 @@ body {
     text-shadow: 0 1px 4px rgba(255, 255, 255, 0.9);
 }
 
+.canvas-wrapper.sim-mode .function-subtitle {
+    display: none;
+}
+
 /* Clock on Canvas */
 .canvas-clock {
     position: absolute;
