@@ -19,10 +19,27 @@ export const SIM_CATEGORIES = {
             'beautifulPlusSignTrace',
             'beautifulPlusDiagonal',
             'beautifulPlusSpinnyRose',
-            'beautifulPlusPunkHair'
+            'beautifulPlusPunkHair',
+            'beautifulPlusUpAndDown',
+            'beautifulPlusJaggedSineGcd',
+            'beautifulPlusModuloJaggedWave',
+            'beautifulPlusShurikenStar',
+            'beautifulPlusLayeredBeauty',
+            'beautifulPlusStepDuo',
+            'beautifulPlusPolarBloom'
         ]
     },
-    'harmonic-plus': { name: '🎼 Harmonic+', functions: [] },
+    'harmonic-plus': {
+        name: '🎼 Harmonic+',
+        functions: [
+            'harmonicPlusIntro',
+            'harmonicPlusHighFreq',
+            'harmonicPlusOvals',
+            'harmonicPlusTangentMesh',
+            'harmonicPlusCrown',
+            'harmonicPlusExtreme'
+        ]
+    },
     'fusion-plus': { name: '🌀 Fusion+', functions: [] },
     'hyper-plus': { name: '✨ Hyper+', functions: [] }
 };
@@ -34,6 +51,15 @@ const RADIAL_RANGE = { xMin: -10, xMax: 10, yMin: -10, yMax: 10 };
 const DIAGONAL_RANGE = { xMin: -10, xMax: 10, yMin: -10, yMax: 10 };
 const ROSE_RANGE = { xMin: -3, xMax: 3, yMin: -3, yMax: 3 };
 const PUNK_RANGE = { xMin: -10, xMax: 10, yMin: -12, yMax: 12 };
+const JAGGED_RANGE = { xMin: -10, xMax: 10, yMin: -12, yMax: 12 };
+const MODULO_RANGE = { xMin: -10, xMax: 10, yMin: -4, yMax: 4 };
+const SHURIKEN_RANGE = { xMin: -2.5, xMax: 2.5, yMin: -2.5, yMax: 2.5 };
+const LAYERED_BEAUTY_RANGE = { xMin: -15, xMax: 15, yMin: -15, yMax: 15 };
+const HARMONIC_INTRO_RANGE = { xMin: -1.5, xMax: 1.5, yMin: -1.5, yMax: 1.5 };
+const HARMONIC_HIGH_RANGE = { xMin: -1.2, xMax: 1.2, yMin: -1.2, yMax: 1.2 };
+const HARMONIC_OVAL_RANGE = { xMin: -2.2, xMax: 2.2, yMin: -1.2, yMax: 1.2 };
+const HARMONIC_MESH_RANGE = { xMin: -10, xMax: 10, yMin: -10, yMax: 10 };
+const HARMONIC_EXTREME_RANGE = { xMin: -15, xMax: 15, yMin: -15, yMax: 15 };
 const BASE_TIMING = { durationMs: 16000, drawMs: 6000 };
 const COLOR_PALETTE = [342, 28, 52, 145, 190, 224, 266, 310];
 const BASE_LAYERS = {
@@ -201,6 +227,161 @@ const BASE_LAYERS = {
             const cscVal = 1 / Math.sin(tanVal);
             return x * Math.sign(cscVal) + Math.cos(x);
         }
+    },
+    upAndDown: {
+        id: 'upAndDown',
+        label: 'Up and Down',
+        type: 'implicit',
+        color: '#14b8a6',
+        baseFreq: 150,
+        audioScale: 160,
+        gain: 0.32,
+        sonicProfile: 'density',
+        f: (x, y, a) => {
+            const v = -8 + beautifulPhase(a, 0, 1) * 16;
+            return y - (v * Math.sign(v * x - y) + Math.cos(v + x));
+        }
+    },
+    jaggedSineGcd: {
+        id: 'jaggedSineGcd',
+        label: 'Jagged Sine GCD',
+        color: '#ef4444',
+        baseFreq: 140,
+        audioScale: 90,
+        gain: 0.33,
+        sonicProfile: 'stepped',
+        fn: (x, a) => {
+            const v = beautifulPhase(a, 1, 10);
+            return gcd(Math.round(v * x)) * Math.sign(Math.sin(x)) - Math.sin(x);
+        }
+    },
+    moduloJaggedWave: {
+        id: 'moduloJaggedWave',
+        label: 'Modulo Jagged Wave',
+        color: '#84cc16',
+        baseFreq: 165,
+        audioScale: 170,
+        gain: 0.33,
+        sonicProfile: 'stepped',
+        fn: (x, a) => {
+            const v = 0.19 + beautifulPhase(a, 0, 1) * 1.98;
+            const mod = ((8 * x) % v + v) % v;
+            return 2 * Math.sign(Math.sin(x - v)) + mod - Math.sin(x + v);
+        }
+    },
+    shurikenStar: {
+        id: 'shurikenStar',
+        label: 'Shuriken Star',
+        type: 'polar',
+        color: '#60a5fa',
+        baseFreq: 260,
+        audioScale: 160,
+        gain: 0.31,
+        sonicProfile: 'spin',
+        thetaRange: { min: 0, max: 2 * Math.PI },
+        r: (theta, a) => {
+            const v = beautifulPhase(a, 0, 7.5);
+            const k = 5;
+            return Math.sign(Math.cos(k * theta - v)) + Math.sin(v + (k + 0.05) * theta) * Math.cos(v);
+        }
+    },
+    layeredBeauty: {
+        id: 'layeredBeauty',
+        label: 'Layered Beauty',
+        type: 'polar',
+        color: '#f97316',
+        baseFreq: 200,
+        audioScale: 120,
+        gain: 0.29,
+        sonicProfile: 'spin',
+        thetaRange: { min: 0, max: 2 * Math.PI },
+        r: (theta, a) => {
+            const v = beautifulPhase(a, 0, 5.4);
+            const layers = [2, 4, 6, 8, 10];
+            const layer = layers[Math.min(layers.length - 1, Math.floor(beautifulPhase(a, 0, layers.length - 0.001)))];
+            return layer * Math.sign(Math.cos(3 * theta - layer * v)) + Math.sin(v + 3 * theta + layer) - Math.cos(v);
+        }
+    },
+    harmonicIntro: {
+        id: 'harmonicIntro',
+        label: 'Harmonic Intro',
+        type: 'parametric',
+        color: '#818cf8',
+        baseFreq: 220,
+        audioScale: 150,
+        gain: 0.31,
+        sonicProfile: 'spin',
+        tRange: { min: 0, max: 4 * Math.PI },
+        x: (t) => Math.cos(t),
+        y: (t, a) => Math.sin(harmonicPhase(a, 1, 15) * t / 2)
+    },
+    highFreqOscillator: {
+        id: 'highFreqOscillator',
+        label: 'High-Freq Web',
+        type: 'parametric',
+        color: '#22d3ee',
+        baseFreq: 440,
+        audioScale: 100,
+        gain: 0.24,
+        sonicProfile: 'spin',
+        tRange: { min: 0, max: 2 * Math.PI },
+        x: (t) => Math.cos(t),
+        y: (t, a) => Math.sin(harmonicPhase(a, 50, 140) * t)
+    },
+    harmonicOvals: {
+        id: 'harmonicOvals',
+        label: 'Harmonic Ovals',
+        type: 'parametric',
+        color: '#34d399',
+        baseFreq: 180,
+        audioScale: 120,
+        gain: 0.3,
+        sonicProfile: 'spin',
+        tRange: { min: 0, max: 20 * Math.PI },
+        x: (t, a) => Math.sin(harmonicPhase(a, 0.95, 1.04) * t) + Math.cos(t),
+        y: (t) => Math.cos(t)
+    },
+    tangentMesh: {
+        id: 'tangentMesh',
+        label: 'Tangent Mesh',
+        type: 'parametric',
+        color: '#f472b6',
+        baseFreq: 330,
+        audioScale: 80,
+        gain: 0.27,
+        sonicProfile: 'density',
+        tRange: { min: 0, max: 2 * Math.PI },
+        x: (t, a) => Math.tan(harmonicPhase(a, 15, 24) * t),
+        y: (t, a) => (1 / Math.cos(t)) + Math.sin(harmonicPhase(a, 30, 44) * t)
+    },
+    asymptoticCrown: {
+        id: 'asymptoticCrown',
+        label: 'The Crown',
+        type: 'parametric',
+        color: '#facc15',
+        baseFreq: 440,
+        audioScale: 70,
+        gain: 0.24,
+        sonicProfile: 'density',
+        tRange: { min: 0, max: 50 * Math.PI },
+        x: (t) => Math.tan(t),
+        y: (t, a) => {
+            const v = harmonicPhase(a, 0.9, 1.09);
+            return (1 / Math.sin(t)) * Math.tan(v * t) - Math.sin(t);
+        }
+    },
+    extremeHarmonic: {
+        id: 'extremeHarmonic',
+        label: 'Extreme Harmonic',
+        type: 'parametric',
+        color: '#fb923c',
+        baseFreq: 220,
+        audioScale: 100,
+        gain: 0.25,
+        sonicProfile: 'density',
+        tRange: { min: 0, max: 4 * Math.PI },
+        x: (t, a) => Math.tan(harmonicPhase(a, 20, 65) * t) + Math.cos(t),
+        y: (t, a) => Math.tan(t) * Math.sin(harmonicPhase(a, 40, 85) * t)
     }
 };
 
@@ -208,6 +389,7 @@ export const SIM_FUNCTIONS = {
     amazingPlusResonance: {
         category: 'amazing-plus',
         name: 'Amazing Resonance Sim',
+        variable: 'a',
         type: 'layered',
         formula: 'y = cos(ax), y = x cos(ax), y = cos(x)cos(ax)',
         latex: 'y=\\cos(ax),\\ y=x\\cos(ax),\\ y=\\cos(x)\\cos(ax)',
@@ -218,6 +400,7 @@ export const SIM_FUNCTIONS = {
     amazingPlusStandard: {
         category: 'amazing-plus',
         name: 'Standard Resonance',
+        variable: 'a',
         type: 'single',
         formula: 'y = cos(ax)',
         latex: 'y=\\cos(ax)',
@@ -228,6 +411,7 @@ export const SIM_FUNCTIONS = {
     amazingPlusExpanding: {
         category: 'amazing-plus',
         name: 'Expanding Resonance',
+        variable: 'a',
         type: 'single',
         formula: 'y = (x / 5) cos(ax)',
         latex: 'y=\\frac{x}{5}\\cos(ax)',
@@ -238,6 +422,7 @@ export const SIM_FUNCTIONS = {
     amazingPlusEnvelope: {
         category: 'amazing-plus',
         name: 'Envelope Modulation',
+        variable: 'a',
         type: 'single',
         formula: 'y = cos(x)cos(ax)',
         latex: 'y=\\cos(x)\\cos(ax)',
@@ -248,6 +433,7 @@ export const SIM_FUNCTIONS = {
     amazingPlusGridDistortion: {
         category: 'amazing-plus',
         name: 'Grid Distortion',
+        variable: 'a',
         type: 'single',
         formula: 'cos(ax) = sin(ay)',
         latex: '\\cos(ax)=\\sin(ay)',
@@ -258,6 +444,7 @@ export const SIM_FUNCTIONS = {
     amazingPlusRadialWhirlpool: {
         category: 'amazing-plus',
         name: 'Radial Whirlpool',
+        variable: 'a',
         type: 'single',
         formula: 'y = 4.8 cos(axy / (x²+y²+0.1))',
         latex: 'y=4.8\\cos\\left(\\frac{axy}{x^2+y^2+0.1}\\right)',
@@ -268,6 +455,7 @@ export const SIM_FUNCTIONS = {
     beautifulPlusSignIntro: {
         category: 'beautiful-plus',
         name: 'The Signum Glitch',
+        variable: 'a',
         type: 'single',
         formula: 'y = sign(sin(ax/4))',
         latex: 'y=\\text{sgn}(\\sin(\\frac{ax}{4}))',
@@ -278,6 +466,7 @@ export const SIM_FUNCTIONS = {
     beautifulPlusSignTrace: {
         category: 'beautiful-plus',
         name: 'Dancing Sign Trace',
+        variable: 'a',
         type: 'single',
         formula: '(t cos(0.1a), sign(sin at))',
         latex: '(t\\cos(0.1a),\\text{sgn}(\\sin at))',
@@ -288,6 +477,7 @@ export const SIM_FUNCTIONS = {
     beautifulPlusDiagonal: {
         category: 'beautiful-plus',
         name: 'Oscillating Diagonal',
+        variable: 'a',
         type: 'single',
         formula: '(t, t + sin(at))',
         latex: '(t,t+\\sin(at))',
@@ -298,6 +488,7 @@ export const SIM_FUNCTIONS = {
     beautifulPlusSpinnyRose: {
         category: 'beautiful-plus',
         name: 'Mind Blowing Spinny',
+        variable: 'v',
         type: 'single',
         formula: 'r = sign(cos(nθ + 3v)) + sin(vθ/20)',
         latex: 'r=\\text{sgn}(\\cos(n\\theta+3v))+\\sin(v\\theta/20)',
@@ -308,12 +499,156 @@ export const SIM_FUNCTIONS = {
     beautifulPlusPunkHair: {
         category: 'beautiful-plus',
         name: 'Punk Hair Laser',
+        variable: 'v',
         type: 'single',
         formula: 'y = x sign(csc(tan(x+v)+v)) + cos(x)',
         latex: 'y=x\\text{sgn}(\\csc(\\tan(x+v)+v))+\\cos(x)',
         range: PUNK_RANGE,
         ...BASE_TIMING,
         layers: [BASE_LAYERS.punkHair]
+    },
+    beautifulPlusUpAndDown: {
+        category: 'beautiful-plus',
+        name: 'Up and Down',
+        variable: 'v',
+        type: 'single',
+        formula: 'y = v sign(vx - y) + cos(v + x)',
+        latex: 'y=v\\text{sgn}(vx-y)+\\cos(v+x)',
+        range: RADIAL_RANGE,
+        ...BASE_TIMING,
+        layers: [BASE_LAYERS.upAndDown]
+    },
+    beautifulPlusJaggedSineGcd: {
+        category: 'beautiful-plus',
+        name: 'Jagged Sine GCD',
+        variable: 'v',
+        type: 'single',
+        formula: 'y = gcd(vx) sign(sin x) - sin x',
+        latex: 'y=\\gcd(vx)\\text{sgn}(\\sin x)-\\sin x',
+        range: JAGGED_RANGE,
+        ...BASE_TIMING,
+        layers: [BASE_LAYERS.jaggedSineGcd]
+    },
+    beautifulPlusModuloJaggedWave: {
+        category: 'beautiful-plus',
+        name: 'Modulo Jagged Wave',
+        variable: 'v',
+        type: 'single',
+        formula: 'y = 2 sign(sin(x-v)) + mod(8x,v) - sin(x+v)',
+        latex: 'y=2\\text{sgn}(\\sin(x-v))+\\bmod(8x,v)-\\sin(x+v)',
+        range: MODULO_RANGE,
+        ...BASE_TIMING,
+        layers: [BASE_LAYERS.moduloJaggedWave]
+    },
+    beautifulPlusShurikenStar: {
+        category: 'beautiful-plus',
+        name: 'Shuriken Star',
+        variable: 'v',
+        type: 'single',
+        formula: 'r = sign(cos(kθ - v)) + sin(v + k.05θ)cos(v)',
+        latex: 'r=\\text{sgn}(\\cos(k\\theta-v))+\\sin(v+k.05\\theta)\\cos(v)',
+        range: SHURIKEN_RANGE,
+        ...BASE_TIMING,
+        layers: [BASE_LAYERS.shurikenStar]
+    },
+    beautifulPlusLayeredBeauty: {
+        category: 'beautiful-plus',
+        name: 'Layered Beauty',
+        variable: 'v',
+        type: 'single',
+        formula: 'r = l sign(cos(3θ-lv)) + sin(v+3θ+l) - cos(v)',
+        latex: 'r=l\\text{sgn}(\\cos(3\\theta-lv))+\\sin(v+3\\theta+l)-\\cos(v)',
+        range: LAYERED_BEAUTY_RANGE,
+        ...BASE_TIMING,
+        layers: [BASE_LAYERS.layeredBeauty]
+    },
+    beautifulPlusStepDuo: {
+        category: 'beautiful-plus',
+        name: 'Beautiful Step Duo',
+        variable: 'a',
+        type: 'layered',
+        formula: 'sign(sin(ax/4)) + (t cos(0.1a), sign(sin at))',
+        latex: '\\text{sgn}(\\sin(\\frac{ax}{4}))+(t\\cos(0.1a),\\text{sgn}(\\sin at))',
+        range: TIGHT_RANGE,
+        ...BASE_TIMING,
+        layers: [BASE_LAYERS.signIntro, BASE_LAYERS.signTrace]
+    },
+    beautifulPlusPolarBloom: {
+        category: 'beautiful-plus',
+        name: 'Beautiful Polar Bloom',
+        variable: 'v',
+        type: 'layered',
+        formula: 'Shuriken Star + Layered Beauty',
+        latex: 'r_{1}=\\text{Shuriken},\\ r_{2}=\\text{Layered}',
+        range: LAYERED_BEAUTY_RANGE,
+        ...BASE_TIMING,
+        layers: [BASE_LAYERS.shurikenStar, BASE_LAYERS.layeredBeauty]
+    },
+    harmonicPlusIntro: {
+        category: 'harmonic-plus',
+        name: 'Harmonic Intro',
+        variable: 'a',
+        type: 'single',
+        formula: '(cos t, sin(at/2))',
+        latex: '(\\cos t,\\sin(at/2))',
+        range: HARMONIC_INTRO_RANGE,
+        ...BASE_TIMING,
+        layers: [BASE_LAYERS.harmonicIntro]
+    },
+    harmonicPlusHighFreq: {
+        category: 'harmonic-plus',
+        name: 'High-Freq Web',
+        variable: 'a',
+        type: 'single',
+        formula: '(cos t, sin(at))',
+        latex: '(\\cos t,\\sin(at))',
+        range: HARMONIC_HIGH_RANGE,
+        ...BASE_TIMING,
+        layers: [BASE_LAYERS.highFreqOscillator]
+    },
+    harmonicPlusOvals: {
+        category: 'harmonic-plus',
+        name: 'Harmonic Ovals',
+        variable: 'v',
+        type: 'single',
+        formula: '(sin(vt) + cos t, cos t)',
+        latex: '(\\sin(vt)+\\cos t,\\cos t)',
+        range: HARMONIC_OVAL_RANGE,
+        ...BASE_TIMING,
+        layers: [BASE_LAYERS.harmonicOvals]
+    },
+    harmonicPlusTangentMesh: {
+        category: 'harmonic-plus',
+        name: 'Tangent Mesh',
+        variable: 'a',
+        type: 'single',
+        formula: 'x=tan(at), y=sec t + sin(bt)',
+        latex: 'x=\\tan(at),y=\\sec t+\\sin(bt)',
+        range: HARMONIC_MESH_RANGE,
+        ...BASE_TIMING,
+        layers: [BASE_LAYERS.tangentMesh]
+    },
+    harmonicPlusCrown: {
+        category: 'harmonic-plus',
+        name: 'The Crown',
+        variable: 'v',
+        type: 'single',
+        formula: 'x=tan t, y=csc t tan(vt) - sin t',
+        latex: 'x=\\tan t,y=\\csc t\\tan(vt)-\\sin t',
+        range: HARMONIC_MESH_RANGE,
+        ...BASE_TIMING,
+        layers: [BASE_LAYERS.asymptoticCrown]
+    },
+    harmonicPlusExtreme: {
+        category: 'harmonic-plus',
+        name: 'Extreme Harmonic',
+        variable: 'a',
+        type: 'single',
+        formula: 'x=tan(at)+cos t, y=tan t sin(bt)',
+        latex: 'x=\\tan(at)+\\cos t,y=\\tan t\\sin(bt)',
+        range: HARMONIC_EXTREME_RANGE,
+        ...BASE_TIMING,
+        layers: [BASE_LAYERS.extremeHarmonic]
     }
 };
 
@@ -825,10 +1160,38 @@ function updateHud(sim, a) {
     if (!elements.simHud) return;
     elements.simHud.hidden = false;
     if (elements.simHudA) {
-        elements.simHudA.textContent = `a = ${a.toFixed(2)}`;
+        const variable = sim.variable || 'a';
+        elements.simHudA.textContent = `${variable} = ${formatVariableValue(sim, a)}`;
     }
     if (elements.simHudLayers) {
         elements.simHudLayers.textContent = `${sim.layers.length} layer${sim.layers.length === 1 ? '' : 's'}`;
+    }
+}
+
+function formatVariableValue(sim, a) {
+    if (sim.variable !== 'v') return a.toFixed(2);
+    const layer = sim.layers[0];
+    switch (layer?.id) {
+        case 'spinnyRose':
+            return beautifulPhase(a, 0, 5).toFixed(2);
+        case 'punkHair':
+            return beautifulPhase(a, 0, Math.PI * 1.75).toFixed(2);
+        case 'upAndDown':
+            return (-8 + beautifulPhase(a, 0, 1) * 16).toFixed(2);
+        case 'jaggedSineGcd':
+            return beautifulPhase(a, 1, 10).toFixed(2);
+        case 'moduloJaggedWave':
+            return (0.19 + beautifulPhase(a, 0, 1) * 1.98).toFixed(2);
+        case 'shurikenStar':
+            return beautifulPhase(a, 0, 7.5).toFixed(2);
+        case 'layeredBeauty':
+            return beautifulPhase(a, 0, 5.4).toFixed(2);
+        case 'harmonicOvals':
+            return harmonicPhase(a, 0.95, 1.04).toFixed(2);
+        case 'asymptoticCrown':
+            return harmonicPhase(a, 0.9, 1.09).toFixed(2);
+        default:
+            return beautifulPhase(a, 0, 1).toFixed(2);
     }
 }
 
@@ -903,6 +1266,24 @@ function clamp(value, min, max) {
 function beautifulPhase(a, min, max) {
     const t = clamp((a - 1.6) / 28.4, 0, 1);
     return min + (max - min) * t;
+}
+
+function harmonicPhase(a, min, max) {
+    const t = clamp((a - 1.6) / 28.4, 0, 1);
+    return min + (max - min) * t;
+}
+
+function gcd(aIn, bIn = 0) {
+    let a = Math.abs(Math.trunc(aIn));
+    let b = Math.abs(Math.trunc(bIn));
+    if (!Number.isFinite(a)) a = 0;
+    if (!Number.isFinite(b)) b = 0;
+    while (b !== 0) {
+        const temp = b;
+        b = a % b;
+        a = temp;
+    }
+    return a;
 }
 
 function hashString(value) {
