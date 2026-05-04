@@ -39,6 +39,14 @@ export const CSIM_CATEGORIES = {
             'fourierSquareSim', 'complexWaveSim', 'gaussianSim', 'sincSim',
             'logisticSim', 'hyperbolicSim', 'parabolaSim'
         ]
+    },
+    'sound-plus': {
+        name: '🔊 Sound+',
+        functions: [
+            'trumpetSim', 'fmSynthSim', 'amSynthSim', 'harmonicsSim', 'beatingSim',
+            'beating2Sim', 'arctanWaveSim', 'fmSynth2Sim', 'wobbleBassSim',
+            'gatedNoiseSim', 'warpWaveSim', 'recursiveSineSim', 'chirpSim'
+        ]
     }
 };
 
@@ -64,10 +72,10 @@ export const CSIM_FUNCTIONS = {
         id: 'sineMultiSim', category: 'waves-plus', name: 'Sine Multi Sim', type: 'cartesian',
         formula: 'y = Σ sin(x + i·b/10)',
         latex: 'y = \\sum_{i=1}^{a} \\sin(x + \\frac{i \\cdot b}{10})',
-        range: { xMin: -6.28, xMax: 6.28, yMin: -10, yMax: 10 },
+        range: { xMin: -6.28, xMax: 6.28, yMin: -120, yMax: 120 },
         drawMs: 2000, durationMs: 12000,
-        varA: { name: 'Layers', min: 1, max: 50, default: 10 },
-        varB: { name: 'Phase', min: 0, max: 10, default: 2 },
+        varA: { name: 'Layers', min: 1, max: 100, default: 10 },
+        varB: { name: 'Phase', min: 0, max: 20, default: 2 },
         fn: (x, a, b) => {
             let s = 0; const n = Math.floor(a);
             for (let i = 1; i <= n; i++) s += Math.sin(x + (i * b) / 10);
@@ -81,8 +89,8 @@ export const CSIM_FUNCTIONS = {
         latex: 'y = \\frac{4}{\\pi}\\sum_{n=0}^{a} \\frac{\\sin((2n+1)x)}{2n+1}',
         range: { xMin: -6.28, xMax: 6.28, yMin: -2, yMax: 2 },
         drawMs: 2000, durationMs: 12000,
-        varA: { name: 'Harmonics', min: 0, max: 50, default: 5 },
-        varB: { name: 'Frequency', min: 0.5, max: 5, default: 1 },
+        varA: { name: 'Harmonics', min: 0, max: 100, default: 5 },
+        varB: { name: 'Frequency', min: 0.1, max: 24, default: 1 },
         fn: (x, a, b) => {
             let sq = 0; const n = Math.floor(a);
             for (let i = 0; i <= n; i++) { const k = 2 * i + 1; sq += Math.sin(k * b * x) / k; }
@@ -96,8 +104,8 @@ export const CSIM_FUNCTIONS = {
         latex: 'y = \\frac{2}{\\pi}\\sum_{n=1}^{a} \\frac{\\sin(nx)}{n}',
         range: { xMin: -6.28, xMax: 6.28, yMin: -2, yMax: 2 },
         drawMs: 2000, durationMs: 12000,
-        varA: { name: 'Harmonics', min: 1, max: 50, default: 5 },
-        varB: { name: 'Frequency', min: 0.5, max: 5, default: 1 },
+        varA: { name: 'Harmonics', min: 1, max: 100, default: 5 },
+        varB: { name: 'Frequency', min: 0.1, max: 24, default: 1 },
         fn: (x, a, b) => {
             let sw = 0; const n = Math.floor(a);
             for (let i = 1; i <= n; i++) sw += Math.sin(i * b * x) / i;
@@ -111,8 +119,8 @@ export const CSIM_FUNCTIONS = {
         latex: 'y = a \\cdot (\\operatorname{abs}(4 \\cdot \\operatorname{frac}(xb - 0.25) - 2) - 1)',
         range: { xMin: -6.28, xMax: 6.28, yMin: -10, yMax: 10 },
         drawMs: 2000, durationMs: 12000,
-        varA: { name: 'Amplitude', min: 0.5, max: 10, default: 5 },
-        varB: { name: 'Frequency', min: 0.5, max: 10, default: 2 },
+        varA: { name: 'Amplitude', min: 0.5, max: 15, default: 5 },
+        varB: { name: 'Frequency', min: 0.1, max: 30, default: 2 },
         fn: (x, a, b) => {
             const t = (x * b / (2 * Math.PI) - 0.25);
             return a * (Math.abs(4 * ((t % 1 + 1) % 1) - 2) - 1);
@@ -126,7 +134,7 @@ export const CSIM_FUNCTIONS = {
         range: { xMin: -6.28, xMax: 6.28, yMin: -2, yMax: 2 },
         drawMs: 2000, durationMs: 12000,
         varA: { name: 'Pulse Width', min: 0, max: Math.PI, default: Math.PI/2 },
-        varB: { name: 'Frequency', min: 0.5, max: 5, default: 1 },
+        varB: { name: 'Frequency', min: 0.1, max: 24, default: 1 },
         fn: (x, a, b) => Math.sign(Math.sin(b * x) + Math.cos(a)),
         audioScale: 200, baseFreq: 110
     },
@@ -136,8 +144,8 @@ export const CSIM_FUNCTIONS = {
         latex: 'y = \\frac{\\lfloor a \\cdot \\sin(bx) \\rfloor}{a}',
         range: { xMin: -6.28, xMax: 6.28, yMin: -1.5, yMax: 1.5 },
         drawMs: 2000, durationMs: 12000,
-        varA: { name: 'Steps', min: 1, max: 20, default: 4 },
-        varB: { name: 'Frequency', min: 0.5, max: 5, default: 1 },
+        varA: { name: 'Steps', min: 1, max: 100, default: 4 },
+        varB: { name: 'Frequency', min: 0.1, max: 24, default: 1 },
         fn: (x, a, b) => Math.floor(a * Math.sin(b * x)) / Math.max(1, a),
         audioScale: 170, baseFreq: 180
     },
@@ -147,8 +155,8 @@ export const CSIM_FUNCTIONS = {
         latex: 'y = \\tanh(a \\cdot \\tan(bx))',
         range: { xMin: -6.28, xMax: 6.28, yMin: -4, yMax: 4 },
         drawMs: 2000, durationMs: 12000,
-        varA: { name: 'Gain', min: 0.1, max: 20, default: 1 },
-        varB: { name: 'Frequency', min: 0.5, max: 5, default: 1 },
+        varA: { name: 'Gain', min: 0.1, max: 50, default: 1 },
+        varB: { name: 'Frequency', min: 0.1, max: 30, default: 1 },
         fn: (x, a, b) => Math.tanh(a * Math.tan(b * x / 10)),
         audioScale: 100, baseFreq: 330
     },
@@ -158,8 +166,8 @@ export const CSIM_FUNCTIONS = {
         latex: 'y = a e^{-0.2|x|} \\sin(bx)',
         range: { xMin: -10, xMax: 10, yMin: -10, yMax: 10 },
         drawMs: 2000, durationMs: 12000,
-        varA: { name: 'Amplitude', min: 1, max: 15, default: 8 },
-        varB: { name: 'Frequency', min: 0.5, max: 10, default: 4 },
+        varA: { name: 'Amplitude', min: 1, max: 20, default: 8 },
+        varB: { name: 'Frequency', min: 0.1, max: 40, default: 4 },
         fn: (x, a, b) => a * Math.exp(-0.2 * Math.abs(x)) * Math.sin(b * x),
         audioScale: 120, baseFreq: 180
     },
@@ -169,8 +177,8 @@ export const CSIM_FUNCTIONS = {
         latex: 'y = a \\sin(bx) \\cos(3x)',
         range: { xMin: -10, xMax: 10, yMin: -10, yMax: 10 },
         drawMs: 2000, durationMs: 12000,
-        varA: { name: 'Amplitude', min: 1, max: 10, default: 5 },
-        varB: { name: 'Frequency', min: 0.5, max: 20, default: 5 },
+        varA: { name: 'Amplitude', min: 1, max: 20, default: 5 },
+        varB: { name: 'Frequency', min: 0.1, max: 50, default: 5 },
         fn: (x, a, b) => a * Math.sin(b * x) * Math.cos(3 * x),
         audioScale: 130, baseFreq: 220
     },
@@ -180,8 +188,8 @@ export const CSIM_FUNCTIONS = {
         latex: 'y = \\sum_{i=1}^{a} \\frac{\\tanh(\\sin(ibx))}{i}',
         range: { xMin: -6.28, xMax: 6.28, yMin: -3, yMax: 3 },
         drawMs: 2000, durationMs: 12000,
-        varA: { name: 'Layers', min: 1, max: 20, default: 5 },
-        varB: { name: 'Frequency', min: 0.5, max: 5, default: 1 },
+        varA: { name: 'Layers', min: 1, max: 100, default: 5 },
+        varB: { name: 'Frequency', min: 0.1, max: 24, default: 1 },
         fn: (x, a, b) => {
             let sf = 0; const n = Math.floor(a);
             for (let i = 1; i <= n; i++) sf += Math.tanh(Math.sin(i * b * x)) / i;
@@ -290,8 +298,8 @@ export const CSIM_FUNCTIONS = {
         range: { xMin: -4, xMax: 4, yMin: -3, yMax: 5 },
         color: '#ef4444',
         drawMs: 2000, durationMs: 12000,
-        varA: { name: 'Intensity', min: 0.5, max: 1.5, default: 0.95 },
-        varB: { name: 'Frequency', min: 0.5, max: 10.0, default: 1.0 },
+        varA: { name: 'Intensity', min: 0.5, max: 2.0, default: 0.95 },
+        varB: { name: 'Frequency', min: 0.1, max: 30.0, default: 1.0 },
         fn: (x, a, b) => {
             const e2 = Math.exp(2); const inside = (e2 - x * x);
             if (inside < 0) return 0;
@@ -325,8 +333,8 @@ export const CSIM_FUNCTIONS = {
         viewBox: { xMin: -30, xMax: 30, yMin: -30, yMax: 25 },
         tRange: { min: 0, max: 3.5 * Math.PI },
         drawMs: 2000, durationMs: 15000,
-        varA: { name: 'Scale', min: 0.5, max: 1.5, default: 1.0 },
-        varB: { name: 'Crack Density', min: 5, max: 20, default: 10 },
+        varA: { name: 'Scale', min: 0.5, max: 2.0, default: 1.0 },
+        varB: { name: 'Crack Density', min: 1, max: 100, default: 10 },
         x: (t, a, b) => {
             if (t <= 2 * Math.PI) return a * 16 * Math.pow(Math.sin(t), 3);
             const p = (t - 2 * Math.PI) / (1.5 * Math.PI);
@@ -359,8 +367,8 @@ export const CSIM_FUNCTIONS = {
         latex: 'f(x) = a \\left( x^{2/3} + 0.9 \\sin(bx) \\sqrt{3 - x^2} \\right)',
         range: { xMin: -1.8, xMax: 1.8, yMin: -1.2, yMax: 2.2 },
         drawMs: 2000, durationMs: 10000,
-        varA: { name: 'Scale', min: 0.5, max: 1.2, default: 1.0 },
-        varB: { name: 'Frequency', min: 10, max: 200, default: 100 },
+        varA: { name: 'Scale', min: 0.5, max: 1.5, default: 1.0 },
+        varB: { name: 'Frequency', min: 1, max: 300, default: 100 },
         fn: (x, a, b) => {
             const x2 = x * x; if (x2 > 3) return 0;
             return a * (Math.pow(Math.abs(x), 2/3) + 0.9 * Math.sin(b * x) * Math.sqrt(3 - x2));
@@ -374,8 +382,8 @@ export const CSIM_FUNCTIONS = {
         viewBox: { xMin: -4, xMax: 4, yMin: -3, yMax: 3 },
         tRange: { min: 0, max: 2 * Math.PI },
         drawMs: 2000, durationMs: 12000,
-        varA: { name: 'Freq X', min: 1, max: 10, default: 3 },
-        varB: { name: 'Freq Y', min: 1, max: 10, default: 4 },
+        varA: { name: 'Freq X', min: 0.1, max: 30, default: 3 },
+        varB: { name: 'Freq Y', min: 0.1, max: 30, default: 4 },
         x: (t, a, b) => 3 * Math.sin(a * t),
         y: (t, a, b) => 2 * Math.sin(b * t),
         audioScale: 300, baseFreq: 330
@@ -387,8 +395,8 @@ export const CSIM_FUNCTIONS = {
         viewBox: { xMin: -2, xMax: 2, yMin: -2, yMax: 2 },
         tRange: { min: 0, max: 2 * Math.PI },
         drawMs: 2000, durationMs: 12000,
-        varA: { name: 'Size', min: 0.5, max: 1.5, default: 1.0 },
-        varB: { name: 'Petals', min: 1, max: 12, default: 4 },
+        varA: { name: 'Size', min: 0.5, max: 2.0, default: 1.0 },
+        varB: { name: 'Petals', min: 1, max: 64, default: 4 },
         r: (theta, a, b) => a * Math.cos(b * theta),
         audioScale: 400, baseFreq: 440
     },
@@ -447,8 +455,8 @@ export const CSIM_FUNCTIONS = {
         viewBox: { xMin: -2.5, xMax: 2.5, yMin: -2.5, yMax: 2.5 },
         tRange: { min: 0, max: 2 * Math.PI },
         drawMs: 2000, durationMs: 12000,
-        varA: { name: 'Base', min: 0.5, max: 2.0, default: 1.0 },
-        varB: { name: 'Frequency', min: 1, max: 10, default: 3 },
+        varA: { name: 'Base', min: 0.1, max: 5.0, default: 1.0 },
+        varB: { name: 'Frequency', min: 0.1, max: 30, default: 3 },
         r: (theta, a, b) => a - Math.cos(theta) * Math.sin(b * theta),
         audioScale: 320, baseFreq: 360
     },
@@ -524,8 +532,8 @@ export const CSIM_FUNCTIONS = {
         viewBox: { xMin: -10, xMax: 10, yMin: -10, yMax: 10 },
         tRange: { min: 0, max: 2 * Math.PI },
         drawMs: 2000, durationMs: 12000,
-        varA: { name: 'Petals', min: 1, max: 64, default: 32 },
-        varB: { name: 'Density', min: 1, max: 10, default: 1 },
+        varA: { name: 'Petals', min: 1, max: 128, default: 32 },
+        varB: { name: 'Density', min: 0.1, max: 24, default: 1 },
         r: (theta, a, b) => -8 * Math.sin(a * theta * b),
         audioScale: 350, baseFreq: 440
     },
@@ -548,8 +556,8 @@ export const CSIM_FUNCTIONS = {
         viewBox: { xMin: -8, xMax: 8, yMin: -8, yMax: 8 },
         tRange: { min: 0, max: 2 * Math.PI },
         drawMs: 2000, durationMs: 12000,
-        varA: { name: 'Sharpness', min: 1, max: 10, default: 6 },
-        varB: { name: 'Points', min: 2, max: 12, default: 6 },
+        varA: { name: 'Sharpness', min: 1, max: 24, default: 6 },
+        varB: { name: 'Points', min: 2, max: 64, default: 6 },
         r: (theta, a, b) => Math.sin(2 * theta) - a * Math.pow(Math.cos(b * theta), 3),
         audioScale: 150, baseFreq: 220
     },
@@ -560,8 +568,8 @@ export const CSIM_FUNCTIONS = {
         viewBox: { xMin: -4, xMax: 4, yMin: -4, yMax: 4 },
         tRange: { min: 0, max: Math.PI },
         drawMs: 2000, durationMs: 12000,
-        varA: { name: 'Intensity', min: 1, max: 5, default: 3 },
-        varB: { name: 'Spikes', min: 2, max: 30, default: 14 },
+        varA: { name: 'Intensity', min: 1, max: 12, default: 3 },
+        varB: { name: 'Spikes', min: 2, max: 100, default: 14 },
         r: (theta, a, b) => a * Math.pow(Math.cos(b * theta), 3),
         audioScale: 200, baseFreq: 440
     },
@@ -572,8 +580,8 @@ export const CSIM_FUNCTIONS = {
         viewBox: { xMin: -2, xMax: 2, yMin: -2, yMax: 2 },
         tRange: { min: 0, max: 6 * Math.PI },
         drawMs: 2000, durationMs: 12000,
-        varA: { name: 'Wings', min: 1, max: 5, default: 2 },
-        varB: { name: 'Drift', min: 0, max: 1, default: 0 },
+        varA: { name: 'Wings', min: 1, max: 24, default: 2 },
+        varB: { name: 'Drift', min: 0, max: 5, default: 0 },
         r: (theta, a, b) => {
             if (Math.abs(theta) < 0.001) return a;
             return (Math.sin(a * theta) * Math.cos(a * theta)) / (theta + b);
@@ -611,8 +619,8 @@ export const CSIM_FUNCTIONS = {
         viewBox: { xMin: -4, xMax: 4, yMin: -4, yMax: 4 },
         tRange: { min: 0, max: 2 * Math.PI },
         drawMs: 2000, durationMs: 12000,
-        varA: { name: 'Frequency', min: 2, max: 20, default: 10 },
-        varB: { name: 'Split', min: 1, max: 5, default: 2 },
+        varA: { name: 'Frequency', min: 1, max: 60, default: 10 },
+        varB: { name: 'Split', min: 0.1, max: 24, default: 2 },
         r: (theta, a, b) => {
             const denom = b * Math.cos(theta);
             if (Math.abs(denom) < 0.01) return 0;
@@ -626,8 +634,8 @@ export const CSIM_FUNCTIONS = {
         latex: 'y = a \\cdot x \\cdot \\sin(bx)',
         range: { xMin: -10, xMax: 10, yMin: -12, yMax: 12 },
         drawMs: 2000, durationMs: 12000,
-        varA: { name: 'Envelope', min: 0.1, max: 2.0, default: 1.0 },
-        varB: { name: 'Frequency', min: 1, max: 50, default: 10 },
+        varA: { name: 'Envelope', min: 0.1, max: 5.0, default: 1.0 },
+        varB: { name: 'Frequency', min: 0.1, max: 100, default: 10 },
         fn: (x, a, b) => a * x * Math.sin(x * b),
         audioScale: 150, baseFreq: 330
     },
@@ -637,8 +645,8 @@ export const CSIM_FUNCTIONS = {
         latex: 'y = a(2-|x|) \\cdot \\sin(bx)',
         range: { xMin: -2, xMax: 2, yMin: -2.5, yMax: 2.5 },
         drawMs: 2000, durationMs: 12000,
-        varA: { name: 'Size', min: 0.5, max: 2.0, default: 1.0 },
-        varB: { name: 'Frequency', min: 10, max: 200, default: 60 },
+        varA: { name: 'Size', min: 0.5, max: 5.0, default: 1.0 },
+        varB: { name: 'Frequency', min: 1, max: 400, default: 60 },
         fn: (x, a, b) => a * (2 - Math.abs(x)) * Math.sin(x * b),
         audioScale: 120, baseFreq: 440
     },
@@ -648,8 +656,8 @@ export const CSIM_FUNCTIONS = {
         latex: 'y = \\left(\\sqrt{4-x^2} \\cdot (a + |\\sin(2.3x)|) + 3e^{-15x^2}\\right) \\cdot \\sin(bx)',
         range: { xMin: -2.1, xMax: 2.1, yMin: -5, yMax: 5 },
         drawMs: 2000, durationMs: 12000,
-        varA: { name: 'Envelope', min: 0.1, max: 1.0, default: 0.2 },
-        varB: { name: 'Frequency', min: 10, max: 200, default: 100 },
+        varA: { name: 'Envelope', min: 0.1, max: 2.0, default: 0.2 },
+        varB: { name: 'Frequency', min: 1, max: 400, default: 100 },
         fn: (x, a, b) => {
             const env = (Math.sqrt(Math.max(0, 4 - x * x)) * (a + Math.abs(Math.sin(2.3 * x))) + 3 * Math.exp(-15 * x * x));
             return env * Math.sin(b * x);
@@ -664,8 +672,8 @@ export const CSIM_FUNCTIONS = {
         latex: 'y = -\\frac{24}{\\pi} \\sum_{n=0}^{10} \\frac{\\sin((2n+1)ax)}{2n+1}',
         range: { xMin: -2, xMax: 2, yMin: -10, yMax: 10 },
         drawMs: 2000, durationMs: 12000,
-        varA: { name: 'Frequency', min: 0.1, max: 12, default: 2 * Math.PI },
-        varB: { name: 'Harmonics', min: 1, max: 20, default: 10 },
+        varA: { name: 'Frequency', min: 0.1, max: 30, default: 2 * Math.PI },
+        varB: { name: 'Harmonics', min: 1, max: 100, default: 10 },
         fn: (x, a, b) => {
             let sum = 0; const phase = x * a;
             for (let n = 0; n <= Math.floor(b); n++) {
@@ -681,8 +689,8 @@ export const CSIM_FUNCTIONS = {
         latex: 'y = \\frac{24}{\\pi} \\sum_{n=0}^{7} \\frac{\\sin((4n+1)ax)}{n+1}',
         range: { xMin: -2, xMax: 2, yMin: -15, yMax: 15 },
         drawMs: 2000, durationMs: 12000,
-        varA: { name: 'Frequency', min: 0.1, max: 12, default: 2 * Math.PI },
-        varB: { name: 'Complexity', min: 1, max: 15, default: 7 },
+        varA: { name: 'Frequency', min: 0.1, max: 30, default: 2 * Math.PI },
+        varB: { name: 'Complexity', min: 1, max: 64, default: 7 },
         fn: (x, a, b) => {
             let sum = 0; const phase = x * a;
             for (let n = 0; n <= Math.floor(b); n++) {
@@ -709,8 +717,8 @@ export const CSIM_FUNCTIONS = {
         latex: 'y = \\frac{\\sin(ax)}{ax}',
         range: { xMin: -3, xMax: 3, yMin: -0.5, yMax: 1.5 },
         drawMs: 2000, durationMs: 12000,
-        varA: { name: 'Frequency', min: 0.1, max: 60, default: 4 * Math.PI },
-        varB: { name: 'Decay', min: 0.3, max: 2.0, default: 1.0 },
+        varA: { name: 'Frequency', min: 0.1, max: 100, default: 4 * Math.PI },
+        varB: { name: 'Decay', min: 0.1, max: 5.0, default: 1.0 },
         fn: (x, a, b) => {
             const val = x * a;
             if (Math.abs(val) < 0.0001) return 1 / b;
@@ -724,8 +732,8 @@ export const CSIM_FUNCTIONS = {
         latex: 'y = \\frac{1}{1 + e^{-ax}}',
         range: { xMin: -4, xMax: 4, yMin: -0.5, yMax: 1.5 },
         drawMs: 2000, durationMs: 12000,
-        varA: { name: 'Steepness', min: 0.5, max: 10, default: 2 },
-        varB: { name: 'Midpoint', min: -2, max: 2, default: 0 },
+        varA: { name: 'Steepness', min: 0.1, max: 30, default: 2 },
+        varB: { name: 'Midpoint', min: -5, max: 5, default: 0 },
         fn: (x, a, b) => 1 / (1 + Math.exp(-a * (x - b))),
         audioScale: 600, baseFreq: 500
     },
@@ -752,6 +760,158 @@ export const CSIM_FUNCTIONS = {
         varB: { name: 'Shift', min: -2, max: 2, default: 0 },
         fn: (x, a, b) => a * (x - b) * (x - b),
         audioScale: 200, baseFreq: 220
+    },
+
+    // ---------- Sound+ (Total 13) ----------
+    trumpetSim: {
+        id: 'trumpetSim', category: 'sound-plus', name: 'Trumpet Sim', type: 'cartesian',
+        formula: 'y = sin(ax) / (|x| + b)',
+        latex: 'y = \\frac{\\sin(ax)}{|x| + b}',
+        range: { xMin: -3, xMax: 3, yMin: -2, yMax: 2 },
+        drawMs: 2000, durationMs: 12000,
+        varA: { name: 'Frequency', min: 1, max: 100, default: 20 },
+        varB: { name: 'Clarity', min: 0.01, max: 1.0, default: 0.1 },
+        fn: (x, a, b) => x === 0 ? 1 : Math.sin(x * a) / (Math.abs(x) + b),
+        audioScale: 300, baseFreq: 280
+    },
+    fmSynthSim: {
+        id: 'fmSynthSim', category: 'sound-plus', name: 'FM Synth Sim', type: 'cartesian',
+        formula: 'y = sin(ax + sin(bx))',
+        latex: 'y = \\sin(ax + \\sin(bx))',
+        range: { xMin: -3, xMax: 3, yMin: -1.5, yMax: 1.5 },
+        drawMs: 2000, durationMs: 12000,
+        varA: { name: 'Carrier', min: 0.1, max: 100, default: 6 },
+        varB: { name: 'Modulator', min: 1, max: 100, default: 18 },
+        fn: (x, a, b) => Math.sin(x * a + Math.sin(x * b)),
+        audioScale: 400, baseFreq: 440
+    },
+    amSynthSim: {
+        id: 'amSynthSim', category: 'sound-plus', name: 'AM Synth Sim', type: 'cartesian',
+        formula: 'y = sin(ax)·(1 + b·sin(2x))',
+        latex: 'y = \\sin(ax) \\cdot (1 + b\\sin(2x))',
+        range: { xMin: -3, xMax: 3, yMin: -2, yMax: 2 },
+        drawMs: 2000, durationMs: 12000,
+        varA: { name: 'Carrier', min: 0.1, max: 100, default: 8 },
+        varB: { name: 'Modulation', min: 0, max: 2, default: 0.5 },
+        fn: (x, a, b) => Math.sin(x * a) * (1 + b * Math.sin(x * 2)),
+        audioScale: 350, baseFreq: 380
+    },
+    harmonicsSim: {
+        id: 'harmonicsSim', category: 'sound-plus', name: 'Harmonics Sim', type: 'cartesian',
+        formula: 'y = Σ sin(nax)/n',
+        latex: 'y = \\sum_{n=1}^{b} \\frac{\\sin(nax)}{n}',
+        range: { xMin: -3, xMax: 3, yMin: -2.5, yMax: 2.5 },
+        drawMs: 2000, durationMs: 12000,
+        varA: { name: 'Base Freq', min: 0.1, max: 50, default: 4 },
+        varB: { name: 'Layers', min: 1, max: 32, default: 4 },
+        fn: (x, a, b) => {
+            let s = 0; const n = Math.floor(b);
+            for (let i = 1; i <= n; i++) s += Math.sin(i * a * x) / i;
+            return s;
+        },
+        audioScale: 280, baseFreq: 260
+    },
+    beatingSim: {
+        id: 'beatingSim', category: 'sound-plus', name: 'Beating Sim', type: 'cartesian',
+        formula: 'y = sin(ax)·sin(bx)',
+        latex: 'y = \\sin(ax) \\cdot \\sin(bx)',
+        range: { xMin: -4, xMax: 4, yMin: -1.5, yMax: 1.5 },
+        drawMs: 2000, durationMs: 12000,
+        varA: { name: 'Freq 1', min: 10, max: 30, default: 20 },
+        varB: { name: 'Freq 2', min: 0.1, max: 5, default: 1 },
+        fn: (x, a, b) => Math.sin(x * a) * Math.sin(x * b),
+        audioScale: 320, baseFreq: 300
+    },
+    beating2Sim: {
+        id: 'beating2Sim', category: 'sound-plus', name: 'Beating 2 Sim', type: 'cartesian',
+        formula: 'y = a(sin(bx) + sin(0.9bx))',
+        latex: 'y = a(\\sin(bx) + \\sin(0.9bx))',
+        range: { xMin: -10, xMax: 10, yMin: -25, yMax: 25 },
+        drawMs: 2000, durationMs: 12000,
+        varA: { name: 'Amplitude', min: 5, max: 20, default: 12 },
+        varB: { name: 'Frequency', min: 1, max: 20, default: 10 },
+        fn: (x, a, b) => a * (Math.sin(x * b) + Math.sin(0.9 * x * b)),
+        audioScale: 100, baseFreq: 220
+    },
+    arctanWaveSim: {
+        id: 'arctanWaveSim', category: 'sound-plus', name: 'Arctan Wave Sim', type: 'cartesian',
+        formula: 'y = a·arctan(b·sin(x))',
+        latex: 'y = a \\arctan(b \\sin(4\\pi x))',
+        range: { xMin: -2, xMax: 2, yMin: -5, yMax: 5 },
+        drawMs: 2000, durationMs: 12000,
+        varA: { name: 'Amplitude', min: 1, max: 5, default: 3 },
+        varB: { name: 'Drive', min: 1, max: 10, default: 3 },
+        fn: (x, a, b) => a * Math.atan(b * Math.sin(x * 4 * Math.PI)),
+        audioScale: 100, baseFreq: 220
+    },
+    fmSynth2Sim: {
+        id: 'fmSynth2Sim', category: 'sound-plus', name: 'FM Synth 2 Sim', type: 'cartesian',
+        formula: 'y = sin(ax + b·sin(2ax))',
+        latex: 'y = \\sin(ax + b\\sin(2ax))',
+        range: { xMin: -3, xMax: 3, yMin: -2, yMax: 2 },
+        drawMs: 2000, durationMs: 12000,
+        varA: { name: 'Carrier', min: 1, max: 10, default: 6 },
+        varB: { name: 'Index', min: 1, max: 5, default: 2 },
+        fn: (x, a, b) => Math.sin(x * a + b * Math.sin(x * 2 * a)),
+        audioScale: 400, baseFreq: 440
+    },
+    wobbleBassSim: {
+        id: 'wobbleBassSim', category: 'sound-plus', name: 'Wobble Bass Sim', type: 'cartesian',
+        formula: 'y = sin(x·(a + b·sin(2x)))',
+        latex: 'y = \\sin(x \\cdot (a + b\\sin(2x)))',
+        range: { xMin: -4, xMax: 4, yMin: -1.5, yMax: 1.5 },
+        drawMs: 2000, durationMs: 12000,
+        varA: { name: 'Base Freq', min: 10, max: 30, default: 20 },
+        varB: { name: 'Wobble', min: 1, max: 20, default: 10 },
+        fn: (x, a, b) => Math.sin(x * (a + b * Math.sin(x * 2))),
+        audioScale: 150, baseFreq: 110
+    },
+    gatedNoiseSim: {
+        id: 'gatedNoiseSim', category: 'sound-plus', name: 'Gated Noise Sim', type: 'cartesian',
+        formula: 'y = sin(ax)·⌊sin(bx)+1.1⌋',
+        latex: 'y = \\sin(ax) \\cdot \\lfloor \\sin(bx) + 1.1 \\rfloor',
+        range: { xMin: -4, xMax: 4, yMin: -1.5, yMax: 1.5 },
+        drawMs: 2000, durationMs: 12000,
+        varA: { name: 'Frequency', min: 50, max: 200, default: 100 },
+        varB: { name: 'Gate Rate', min: 0.5, max: 5, default: 1 },
+        fn: (x, a, b) => Math.sin(x * a) * Math.floor(Math.sin(x * b) + 1.1),
+        audioScale: 200, baseFreq: 440
+    },
+    warpWaveSim: {
+        id: 'warpWaveSim', category: 'sound-plus', name: 'Warp Wave Sim', type: 'cartesian',
+        formula: 'y = sin(a·sin(bx))',
+        latex: 'y = \\sin(a\\sin(bx))',
+        range: { xMin: -4, xMax: 4, yMin: -1.5, yMax: 1.5 },
+        drawMs: 2000, durationMs: 12000,
+        varA: { name: 'Warp', min: 1, max: 20, default: 10 },
+        varB: { name: 'Frequency', min: 0.5, max: 5, default: 1 },
+        fn: (x, a, b) => Math.sin(a * Math.sin(x * b)),
+        audioScale: 300, baseFreq: 220
+    },
+    recursiveSineSim: {
+        id: 'recursiveSineSim', category: 'sound-plus', name: 'Recursive Sine Sim', type: 'cartesian',
+        formula: 'y = sin(ax + sin(ax + sin(ax)))',
+        latex: 'y = \\sin(ax + \\sin(ax + \\sin(ax)))',
+        range: { xMin: -10, xMax: 10, yMin: -1.5, yMax: 1.5 },
+        drawMs: 2000, durationMs: 12000,
+        varA: { name: 'Frequency', min: 0.5, max: 5, default: 1 },
+        varB: { name: 'Depth', min: 1, max: 10, default: 1 },
+        fn: (x, a, b) => {
+            const f = x * a;
+            return Math.sin(f + Math.sin(f + Math.sin(f * b)));
+        },
+        audioScale: 400, baseFreq: 330
+    },
+    chirpSim: {
+        id: 'chirpSim', category: 'sound-plus', name: 'Chirp Sim', type: 'cartesian',
+        formula: 'y = sin(ax² + bx)',
+        latex: 'y = \\sin(ax^2 + bx)',
+        range: { xMin: -4, xMax: 4, yMin: -1.5, yMax: 1.5 },
+        drawMs: 2000, durationMs: 12000,
+        varA: { name: 'Sweep', min: 1, max: 10, default: 4 },
+        varB: { name: 'Start', min: 0, max: 20, default: 0 },
+        fn: (x, a, b) => Math.sin(a * x * x + b * x),
+        audioScale: 250, baseFreq: 350
     }
 };
 

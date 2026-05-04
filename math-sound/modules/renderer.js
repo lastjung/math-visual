@@ -827,7 +827,7 @@ export function drawPoint(canvasX, canvasY, category, height, isBackground = fal
 
 export function getCategoryColor(category) {
     const colors = {
-        waves: '#10b981',    // Green
+        waves: '#3b82f6',    // Blue (Changed from Green)
         curves: '#ec4899',   // Pink
         art: '#8b5cf6',      // Purple
         ani: '#f43f5e',      // Rose Pink
@@ -841,7 +841,7 @@ export function getCategoryColor(category) {
         fusion: '#06b6d4',    // Cyan
         hyper: '#8b5cf6',     // Purple
         insane: '#f43f5e',    // Rose Pink
-        fantastic: '#10b981',   // Green
+        fantastic: '#6366f1',   // Indigo (Changed from Green)
         incredible: '#f97316',  // Orange
         incomprehensible: '#6366f1' // Indigo
     };
@@ -856,7 +856,7 @@ function getLoopAwareColor(category, loopIndex = 0) {
         '#db2777', // Pink
         '#ec4899', // Hot Pink
         '#f59e0b', // Amber
-        '#10b981', // Emerald
+        '#6366f1', // Indigo (Changed from Green)
         '#06b6d4', // Cyan
         '#6366f1', // Indigo
         '#dc2626'  // Red
