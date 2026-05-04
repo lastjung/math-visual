@@ -12,7 +12,7 @@ export const CSIM_CATEGORIES = {
     'waves-plus': {
         name: '🌊 Waves+',
         functions: [
-            'sineMultiSim', 'squareFourierSim', 'sawtoothFourierSim', 'triangleFourierSim',
+            'sineMultiSim', 'squareFourierSim', 'sawtoothFourierSim', 'triangleSim',
             'pulsePwmSim', 'steppyQuantizeSim', 'tanhTanClipSim', 'dampedDecaySim',
             'chaosInterferenceSim', 'softHarmonicsSim'
         ]
@@ -86,25 +86,21 @@ export const CSIM_FUNCTIONS = {
         audioScale: 160,
         baseFreq: 240
     },
-    triangleFourierSim: {
-        id: 'triangleFourierSim',
+    triangleSim: {
+        id: 'triangleSim',
         category: 'waves-plus',
-        name: 'Triangle Fourier Sim',
-        formula: 'y = Σ (-1)ⁿ sin((2n+1)x)/(2n+1)²',
-        latex: 'y = \\frac{8}{\\pi^2}\\sum_{n=0}^{a} (-1)^n \\frac{\\sin((2n+1)x)}{(2n+1)^2}',
-        range: { xMin: -6.28, xMax: 6.28, yMin: -1.5, yMax: 1.5 },
+        name: 'Triangle Sim',
+        formula: 'y = a · triangle(bx)',
+        latex: 'y = a \\cdot (\\operatorname{abs}(4 \\cdot \\operatorname{frac}(xb - 0.25) - 2) - 1)',
+        range: { xMin: -6.28, xMax: 6.28, yMin: -10, yMax: 10 },
         drawMs: 2000,
         durationMs: 12000,
-        varA: { name: 'Harmonics', min: 0, max: 20, default: 3 },
-        varB: { name: 'Frequency', min: 0.5, max: 5, default: 1 },
+        varA: { name: 'Amplitude', min: 0.5, max: 10, default: 5 },
+        varB: { name: 'Frequency', min: 0.5, max: 10, default: 2 },
         fn: (x, a, b) => {
-            let tr = 0;
-            const n = Math.floor(a);
-            for (let i = 0; i <= n; i++) {
-                const k = 2 * i + 1;
-                tr += Math.pow(-1, i) * Math.sin(k * b * x) / (k * k);
-            }
-            return (8 / (Math.PI * Math.PI)) * tr;
+            // b는 주파수, a는 진폭
+            const t = (x * b / (2 * Math.PI) - 0.25);
+            return a * (Math.abs(4 * ((t % 1 + 1) % 1) - 2) - 1);
         },
         audioScale: 140,
         baseFreq: 220
@@ -246,7 +242,7 @@ export function drawConstantsSimStatic(functionId) {
     drawAxes(graphCtx, width, height, sim.range);
     drawSimCurve(graphCtx, sim, width, height, 1, sim.varA.default, sim.varB.default);
     clearWaveform();
-    updateHud(sim, sim.varA.default, sim.varB.default);
+    updateHud(sim, sim.varA.default, sim.varB.default, null); // null indicates static state
 }
 
 export function startConstantsSim(functionId) {
@@ -328,16 +324,33 @@ function tick() {
     const drawProgress = Math.min(1, elapsed / sim.drawMs);
     const animateProgress = Math.max(0, (elapsed - sim.drawMs) / Math.max(1, sim.durationMs - sim.drawMs));
 
-    // Phase 1: Only varA oscillates, varB stays at default
-    const cycle = 0.5 - 0.5 * Math.cos(animateProgress * Math.PI * 2);
-    const valA = sim.varA.min + (sim.varA.max - sim.varA.min) * cycle;
-    const valB = sim.varB.default;
+    const phaseProgress = (animateProgress * 2) % 1; // 0 to 1 within each half
+    let valA, valB;
+    // cycle: 0 -> 1 -> 0 -> -1 -> 0 (Sin 기반으로 시작점을 0으로 맞춤)
+    const cycle = Math.sin(phaseProgress * Math.PI * 2);
+
+    if (animateProgress <= 0) {
+        // 1. 드로잉 단계: 항상 기본값(default) 사용
+        valA = sim.varA.default;
+        valB = sim.varB.default;
+    } else if (animateProgress < 0.5) {
+        // 2. Phase A: a 시뮬레이션
+        // default를 기준으로 min 또는 max까지 부드럽게 왕복
+        const diffA = cycle > 0 ? (sim.varA.max - sim.varA.default) : (sim.varA.default - sim.varA.min);
+        valA = sim.varA.default + diffA * cycle;
+        valB = sim.varB.default;
+    } else {
+        // 3. Phase B: b 시뮬레이션
+        valA = sim.varA.default;
+        const diffB = cycle > 0 ? (sim.varB.max - sim.varB.default) : (sim.varB.default - sim.varB.min);
+        valB = sim.varB.default + diffB * cycle;
+    }
 
     state.drawProgress = drawProgress;
     drawFrame(sim, drawProgress, valA, valB);
-    updateAudio(sim, valA, valB);
+    updateAudio(sim, drawProgress, valA, valB);
     drawWaveform();
-    updateHud(sim, valA, valB);
+    updateHud(sim, valA, valB, animateProgress < 0.5);
 
     if (elements.canvasClock) {
         const total = Math.floor(elapsed);
@@ -364,6 +377,15 @@ function drawFrame(sim, progress, valA, valB) {
     drawSimCurve(graphCtx, sim, width, height, progress, valA, valB);
 }
 
+function getSimColor() {
+    // Symphony Sim 색상을 사용하지 않고, 각 함수마다 고유한 단색을 생성합니다.
+    // 황금각(137.5도)을 사용하여 색상이 골고루 분산되도록 합니다.
+    const hue = ((state.functionIndex || 0) * 137.5) % 360;
+    const saturation = 85;
+    const lightness = state.theme === 'dark' ? 68 : 45;
+    return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+}
+
 function drawSimCurve(graphCtx, sim, width, height, progress, valA, valB) {
     const { xMin, xMax, yMin, yMax } = sim.range;
     const totalSteps = 2200;
@@ -373,7 +395,7 @@ function drawSimCurve(graphCtx, sim, width, height, progress, valA, valB) {
 
     graphCtx.beginPath();
     graphCtx.lineWidth = 2.8;
-    graphCtx.strokeStyle = state.theme === 'dark' ? '#60a5fa' : '#2563eb';
+    graphCtx.strokeStyle = getSimColor();
     graphCtx.lineJoin = 'round';
     graphCtx.lineCap = 'round';
 
@@ -402,33 +424,102 @@ function drawSimCurve(graphCtx, sim, width, height, progress, valA, valB) {
 }
 
 // ==========================================
-// Audio
+// Audio Synthesis (High-Fidelity Motion Engine)
 // ==========================================
-function updateAudio(sim, valA, valB) {
+function updateAudio(sim, progress, valA, valB) {
     if (!simAudio.osc || !simAudio.context) return;
+    const now = simAudio.context.currentTime;
 
-    const baseFreq = sim.baseFreq || 220;
-    const scale = sim.audioScale || 100;
-    const normA = (valA - sim.varA.min) / Math.max(1, sim.varA.max - sim.varA.min);
-    const freq = baseFreq + normA * scale;
+    // 1. 샘플링 및 모션 분석
+    const motion = sampleMotion(sim, progress, valA, valB);
+    
+    // 2. 물리량을 사운드 파라미터로 변환
+    // progress: 0~1 (그리는 진행도), motion.position: -1~1 (y좌표)
+    const travel = progress * 2 - 1;
+    const basePitch = (sim.baseFreq || 220);
+    const audioScale = sim.audioScale || 120;
 
-    simAudio.osc.frequency.setTargetAtTime(freq, simAudio.context.currentTime, 0.08);
-    if (simAudio.gain) {
-        simAudio.gain.gain.setTargetAtTime(0.25, simAudio.context.currentTime, 0.05);
+    // 음높이 계산: 베이스 + y위치 + 진행도 + 속도 + 도약(튀는 정도)
+    const pitch = travel * 60 + motion.position * audioScale + motion.velocity * 80 + motion.jump * 150;
+    const freq = clamp(basePitch + pitch, 40, 2800);
+
+    // 음량 계산: 기본 + 위치 + 속도 + 도약
+    const gain = 0.25 + Math.abs(motion.position) * 0.35 + motion.velocity * 0.3 + motion.jump * 0.6;
+    
+    // 필터 밝기: 곡률과 도약에 반응
+    const brightness = motion.curvature * 1.2 + motion.jump * 0.8 + motion.velocity * 0.4;
+
+    // 3. 오디오 노드 적용 (TargetAtTime으로 부드럽게 연결)
+    simAudio.osc.frequency.setTargetAtTime(freq, now, 0.04);
+    simAudio.gain.gain.setTargetAtTime(Math.max(0.0001, gain * state.volume), now, 0.04);
+    
+    if (simAudio.filter) {
+        const filterFreq = 1000 + clamp(brightness, 0, 1) * 4000;
+        simAudio.filter.frequency.setTargetAtTime(filterFreq, now, 0.06);
     }
+}
+
+function sampleMotion(sim, progress, valA, valB) {
+    const dt = 0.004;
+    const p0 = pointForSim(sim, clamp(progress - dt, 0, 1), valA, valB);
+    const p1 = pointForSim(sim, progress, valA, valB);
+    const p2 = pointForSim(sim, clamp(progress + dt, 0, 1), valA, valB);
+
+    const v1x = p1.x - p0.x;
+    const v1y = p1.y - p0.y;
+    const v2x = p2.x - p1.x;
+    const v2y = p2.y - p1.y;
+
+    // 속도 계산
+    const velocity = clamp(Math.hypot(v1x, v1y) / dt / 15, 0, 1);
+    // 도약(튀는 정도) 계산: y값의 급격한 변화
+    const jump = clamp(Math.abs(p1.soundY - p0.soundY) * 1.2, 0, 1);
+    
+    // 곡률 계산 (방향 변화량)
+    const a1 = Math.atan2(v1y, v1x);
+    const a2 = Math.atan2(v2y, v2x);
+    const curvature = clamp(Math.abs(Math.atan2(Math.sin(a2 - a1), Math.cos(a2 - a1))) / Math.PI, 0, 1);
+
+    return {
+        position: clamp(p1.soundY, -1, 1),
+        velocity,
+        jump,
+        curvature
+    };
+}
+
+function pointForSim(sim, progress, valA, valB) {
+    const { xMin, xMax, yMin, yMax } = sim.range;
+    const x = xMin + (xMax - xMin) * progress;
+    const y = sim.fn(x, valA, valB);
+    // 사운드 매핑을 위해 y값을 -1~1로 정규화
+    const soundY = (y - yMin) / (yMax - yMin) * 2 - 1;
+    return { x, y, soundY: isFinite(soundY) ? soundY : 0 };
+}
+
+function clamp(val, min, max) {
+    return Math.max(min, Math.min(max, val));
 }
 
 // ==========================================
 // HUD
 // ==========================================
-function updateHud(sim, valA, valB) {
+function updateHud(sim, valA, valB, activePhase) {
     if (!elements.simHud) return;
     elements.simHud.hidden = false;
+
+    // activePhase: true (A), false (B), null (Static)
+    const isPhaseA = activePhase === true;
+    const isPhaseB = activePhase === false;
+
     if (elements.simHudA) {
-        elements.simHudA.textContent = `${sim.varA.name}: ${valA.toFixed(2)}`;
+        const labelA = sim.varA.name || 'a';
+        elements.simHudA.textContent = `a = ${valA.toFixed(2)} (${labelA}) ${isPhaseA ? '✦' : ''}`;
     }
+
     if (elements.simHudLayers) {
-        elements.simHudLayers.textContent = `${sim.varB.name}: ${valB.toFixed(2)}`;
+        const labelB = sim.varB.name || 'b';
+        elements.simHudLayers.textContent = `b = ${valB.toFixed(2)} (${labelB}) ${isPhaseB ? '✦' : ''}`;
     }
 }
 
