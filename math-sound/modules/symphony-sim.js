@@ -111,7 +111,9 @@ export const SIM_CATEGORIES = {
             'incomprehensiblePlusWaveTangent',
             'incomprehensiblePlusRotatingOvals',
             'incomprehensiblePlusEight',
-            'incomprehensiblePlusFinalDense'
+            'incomprehensiblePlusFinalDense',
+            'incomprehensiblePlusSaturnWave',
+            'incomprehensiblePlusSaturnOvals'
         ]
     },
 };
@@ -797,7 +799,7 @@ const BASE_LAYERS = {
         sonicProfile: 'density',
         f: (x, y, a) => {
             const denom = Math.sin(y) + Math.sin(x) + 0.1;
-            return boolField(gcd(Math.round((x / denom) * 5), Math.round(y * fantasticPhase(a, 0, 1.9) * 5)) === 1);
+            return boolField(gcd(Math.round((x / denom) * 5), Math.round(y * fantasticPhase(a, 0.18, 1.9) * 5)) === 1);
         }
     },
     fantasticGrid: {
@@ -805,6 +807,7 @@ const BASE_LAYERS = {
         label: 'Fantastic Grid',
         type: 'implicit',
         color: '#84cc16',
+        colorMode: 'inkGrid',
         baseFreq: 520,
         audioScale: 90,
         gain: 0.24,
@@ -839,8 +842,8 @@ const BASE_LAYERS = {
         gain: 0.29,
         sonicProfile: 'density',
         fn: (x, a) => {
-            const k = incrediblePhase(a, 0, 7.9);
-            return Math.tan(Math.sin(2 * x) * Math.cos(k * x)) + Math.sin(k * x);
+            const k = incrediblePhase(a, 0, 18);
+            return Math.tan(Math.sin(3.5 * x) * Math.cos(k * x)) + Math.sin(1.35 * k * x);
         }
     },
     incredibleSurfaceRipple: {
@@ -1518,7 +1521,7 @@ export const SIM_FUNCTIONS = {
         latex: 'r_1=\\sin(2\\theta+\\sin(4\\theta v)),\\ r_2=6\\sin(1.2\\theta+2\\pi v)-\\cos(6\\theta)',
         range: INSANE_WIDE_RANGE,
         ...BASE_TIMING,
-        layers: [BASE_LAYERS.insaneTrigTomfoolery, BASE_LAYERS.insaneMasterpiece]
+        layers: [{ ...BASE_LAYERS.insaneTrigTomfoolery, id: 'insaneTrigTomfooleryLarge', radiusScale: 3.2 }, BASE_LAYERS.insaneMasterpiece]
     },
     insanePlusWebTwist: {
         category: 'insane-plus',
@@ -1602,8 +1605,8 @@ export const SIM_FUNCTIONS = {
         name: 'Dynamic Interference',
         variable: 'k',
         type: 'single',
-        formula: 'y = tan(sin(2x)cos(kx)) + sin(kx)',
-        latex: 'y=\\tan(\\sin(2x)\\cos(kx))+\\sin(kx)',
+        formula: 'y = tan(sin(3.5x)cos(kx)) + sin(1.35kx)',
+        latex: 'y=\\tan(\\sin(3.5x)\\cos(kx))+\\sin(1.35kx)',
         range: INCR_5_RANGE,
         ...BASE_TIMING,
         layers: [BASE_LAYERS.incredibleDynamicInterference]
@@ -1706,6 +1709,28 @@ export const SIM_FUNCTIONS = {
         range: INCOMP_DENSE_RANGE,
         ...BASE_TIMING,
         layers: [BASE_LAYERS.incomprehensibleFinalDense]
+    },
+    incomprehensiblePlusSaturnWave: {
+        category: 'incomprehensible-plus',
+        name: 'Saturn Wave Convergence',
+        variable: 'v',
+        type: 'layered',
+        formula: '(sin t, 2sin(t+2v)+cos t), (sin t+cos t, tan(vt/2)cos(3vt)+sin(vt+v6))',
+        latex: '(\\sin t,2\\sin(t+2v)+\\cos t),\\ (\\sin t+\\cos t,\\tan(vt/2)\\cos(3vt)+\\sin(vt+v_6))',
+        range: INCOMP_WAVE_RANGE,
+        ...BASE_TIMING,
+        layers: [{ ...BASE_LAYERS.incomprehensibleSaturn, scaleX: 1.75, scaleY: 1.75 }, BASE_LAYERS.incomprehensibleWaveTangent]
+    },
+    incomprehensiblePlusSaturnOvals: {
+        category: 'incomprehensible-plus',
+        name: 'Saturn Oval Engine',
+        variable: 'v',
+        type: 'layered',
+        formula: '(sin t, 2sin(t+2v)+cos t), (sin(0.98t)+cos t, cos(10v+t))',
+        latex: '(\\sin t,2\\sin(t+2v)+\\cos t),\\ (\\sin(0.98t)+\\cos t,\\cos(10v+t))',
+        range: INCOMP_SATURN_RANGE,
+        ...BASE_TIMING,
+        layers: [BASE_LAYERS.incomprehensibleSaturn, BASE_LAYERS.incomprehensibleRotatingOvals]
     }
 };
 
@@ -1925,8 +1950,8 @@ function drawParametricLayer(graphCtx, layer, range, width, height, progress, a)
 
     for (let i = 0; i <= steps; i++) {
         const t = tMin + ((tMax - tMin) * i) / totalSteps;
-        const x = layer.x(t, a);
-        const y = layer.y(t, a);
+        const x = layer.x(t, a) * (layer.scaleX || 1);
+        const y = layer.y(t, a) * (layer.scaleY || 1);
         if (!Number.isFinite(x) || !Number.isFinite(y)) {
             first = true;
             continue;
@@ -1965,7 +1990,7 @@ function drawPolarLayer(graphCtx, layer, range, width, height, progress, a) {
 
     for (let i = 0; i <= steps; i++) {
         const theta = thetaMin + ((thetaMax - thetaMin) * i) / totalSteps;
-        const r = layer.r(theta, a);
+        const r = layer.r(theta, a) * (layer.radiusScale || 1);
         const x = r * Math.cos(theta);
         const y = r * Math.sin(theta);
         if (!Number.isFinite(x) || !Number.isFinite(y)) {
@@ -2025,6 +2050,16 @@ function strokeSegment(graphCtx, layer, x1, y1, x2, y2, progress, value, a) {
 }
 
 function colorForLayer(layer, progress, value, a) {
+    if (layer.colorMode === 'inkGrid') {
+        const phase = Math.sin(progress * 68 + (value || 0) * 18 + a * 0.32);
+        if (phase > -0.18) {
+            const ink = 4 + 9 * Math.max(0, phase);
+            return `hsl(225, 42%, ${ink}%)`;
+        }
+        const hue = (82 + progress * 95 + a * 2.4) % 360;
+        return `hsl(${hue}, 92%, 58%)`;
+    }
+
     const base = COLOR_PALETTE[Math.abs(hashString(layer.id)) % COLOR_PALETTE.length];
     const wave = Math.sin((value || 0) * 1.8 + a * 0.11) * 24;
     const hue = (base + progress * 190 + wave + 360) % 360;
@@ -2123,8 +2158,8 @@ function pointForLayer(layer, range, progress, a) {
         const tMin = layer.tRange?.min ?? 0;
         const tMax = layer.tRange?.max ?? 1;
         const t = tMin + (tMax - tMin) * progress;
-        const x = layer.x(t, a);
-        const y = layer.y(t, a);
+        const x = layer.x(t, a) * (layer.scaleX || 1);
+        const y = layer.y(t, a) * (layer.scaleY || 1);
         const soundY = layer.audioY ? layer.audioY(t, a) : normalizeY(y, yMin, yMax);
         return { x: normalizeX(x, xMin, xMax), y: normalizeY(y, yMin, yMax), soundY };
     }
@@ -2133,7 +2168,7 @@ function pointForLayer(layer, range, progress, a) {
         const thetaMin = layer.thetaRange?.min ?? 0;
         const thetaMax = layer.thetaRange?.max ?? Math.PI * 2;
         const theta = thetaMin + (thetaMax - thetaMin) * progress;
-        const r = layer.r(theta, a);
+        const r = layer.r(theta, a) * (layer.radiusScale || 1);
         const x = r * Math.cos(theta);
         const y = r * Math.sin(theta);
         return { x: normalizeX(x, xMin, xMax), y: normalizeY(y, yMin, yMax), soundY: clamp(r / Math.max(1, Math.abs(xMax)), -1, 1) };
@@ -2287,13 +2322,13 @@ function formatVariableValue(sim, a) {
         case 'fantasticCellularTrig':
             return fantasticPhase(a, 0, 1.4).toFixed(2);
         case 'fantasticInterferenceMesh':
-            return fantasticPhase(a, 0, 1.9).toFixed(2);
+            return fantasticPhase(a, 0.18, 1.9).toFixed(2);
         case 'fantasticGrid':
             return fantasticPhase(a, 0, 7).toFixed(2);
         case 'fantasticUltimateGcd':
             return fantasticPhase(a, 0, 5.966).toFixed(2);
         case 'incredibleDynamicInterference':
-            return incrediblePhase(a, 0, 7.9).toFixed(2);
+            return incrediblePhase(a, 0, 18).toFixed(2);
         case 'incredibleSurfaceRipple':
         case 'incredibleChaosStar':
             return incrediblePhase(a, 0, 19.5).toFixed(2);
