@@ -379,14 +379,14 @@ export const CSIM_FUNCTIONS = {
     },
     cardioidSim: {
         id: 'cardioidSim', category: 'curves-plus', name: 'Cardioid Sim', type: 'polar',
-        formula: 'r = a·(1 - cosθ)',
-        latex: 'r = a(1 - \\cos\\theta)',
-        viewBox: { xMin: -2.5, xMax: 2.5, yMin: -2.5, yMax: 2.5 },
+        formula: 'r = a·(1 - cosθ) + b·sin(5θ)',
+        latex: 'r = a(1 - \\cos\\theta) + b\\sin(5\\theta)',
+        viewBox: { xMin: -4, xMax: 4, yMin: -4, yMax: 4 },
         tRange: { min: 0, max: 2 * Math.PI },
         drawMs: 2000, durationMs: 12000,
         varA: { name: 'Scale', min: 0.5, max: 2.0, default: 1.0 },
-        varB: { name: 'None', min: 1, max: 1, default: 1 },
-        r: (theta, a, b) => a * (1 - Math.cos(theta)),
+        varB: { name: 'Wobble', min: 0, max: 1.0, default: 0.2 },
+        r: (theta, a, b) => a * (1 - Math.cos(theta)) + b * Math.sin(5 * theta),
         audioScale: 280, baseFreq: 300
     },
     rose4Sim: {
@@ -476,16 +476,17 @@ export const CSIM_FUNCTIONS = {
         audioScale: 180, baseFreq: 260
     },
     spiralSim: {
-        id: 'spiralSim', category: 'curves-plus', name: 'Spiral Sim', type: 'polar',
-        formula: 'r = a·θ',
-        latex: 'r = a \\theta',
-        viewBox: { xMin: -3, xMax: 3, yMin: -3, yMax: 3 },
-        tRange: { min: 0, max: 6 * Math.PI },
-        drawMs: 2000, durationMs: 12000,
-        varA: { name: 'Tightness', min: 0.05, max: 0.5, default: 0.1 },
-        varB: { name: 'None', min: 1, max: 1, default: 1 },
-        r: (theta, a, b) => a * theta,
-        audioScale: 250, baseFreq: 350
+        id: 'spiralSim', category: 'curves-plus', name: 'Spiral Sim', type: 'parametric',
+        formula: 'r = a·e^(0.1t), Rotating',
+        latex: '\\vec{r}(t) = a e^{0.1t} \\langle \\cos(t + b), \\sin(t + b) \\rangle',
+        viewBox: { xMin: -15, xMax: 15, yMin: -15, yMax: 15 },
+        tRange: { min: 0, max: 10 * Math.PI },
+        drawMs: 2000, durationMs: 15000,
+        varA: { name: 'Growth', min: 0.1, max: 1.0, default: 0.5 },
+        varB: { name: 'Rotation', min: 0, max: 2 * Math.PI, default: 0 },
+        x: (t, a, b) => a * Math.exp(0.1 * t) * Math.cos(t + b),
+        y: (t, a, b) => a * Math.exp(0.1 * t) * Math.sin(t + b),
+        audioScale: 200, baseFreq: 300
     },
     epicycloidSim: {
         id: 'epicycloidSim', category: 'curves-plus', name: 'Epicycloid Sim', type: 'parametric',
