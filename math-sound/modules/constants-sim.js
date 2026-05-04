@@ -709,12 +709,12 @@ export const CSIM_FUNCTIONS = {
         latex: 'y = \\frac{\\sin(ax)}{ax}',
         range: { xMin: -3, xMax: 3, yMin: -0.5, yMax: 1.5 },
         drawMs: 2000, durationMs: 12000,
-        varA: { name: 'Frequency', min: 1, max: 20, default: 4 * Math.PI },
-        varB: { name: 'Decay', min: 0.1, max: 2.0, default: 1.0 },
+        varA: { name: 'Frequency', min: 0.1, max: 60, default: 4 * Math.PI },
+        varB: { name: 'Decay', min: 0.3, max: 2.0, default: 1.0 },
         fn: (x, a, b) => {
             const val = x * a;
-            if (Math.abs(val) < 0.001) return 1;
-            return Math.sin(val) / (val * b);
+            if (Math.abs(val) < 0.0001) return 1 / b;
+            return (Math.sin(val) / val) / b;
         },
         audioScale: 400, baseFreq: 380
     },
