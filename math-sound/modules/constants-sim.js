@@ -24,6 +24,14 @@ export const CSIM_CATEGORIES = {
             'micPatternSim', 'lemniscateSim', 'infiniteHeartSim', 'butterflySim', 
             'spiralSim', 'epicycloidSim'
         ]
+    },
+    'art-plus': {
+        name: '🎨 Art+',
+        functions: [
+            'sunflowerSim', 'limacon3Sim', 'starSim', 'explosionSim', 'fairySim',
+            'trigChaosSim', 'shiningStarSim', 'splitPulseSim', 'vibrationSim',
+            'diamondSim', 'monsterWaveSim'
+        ]
     }
 };
 
@@ -379,14 +387,14 @@ export const CSIM_FUNCTIONS = {
     },
     cardioidSim: {
         id: 'cardioidSim', category: 'curves-plus', name: 'Cardioid Sim', type: 'polar',
-        formula: 'r = a·(1 - cosθ) + b·sin(5θ)',
-        latex: 'r = a(1 - \\cos\\theta) + b\\sin(5\\theta)',
-        viewBox: { xMin: -4, xMax: 4, yMin: -4, yMax: 4 },
+        formula: 'r = a·(1 - cosθ)',
+        latex: 'r = a(1 - \\cos\\theta)',
+        viewBox: { xMin: -2.5, xMax: 2.5, yMin: -2.5, yMax: 2.5 },
         tRange: { min: 0, max: 2 * Math.PI },
         drawMs: 2000, durationMs: 12000,
         varA: { name: 'Scale', min: 0.5, max: 2.0, default: 1.0 },
-        varB: { name: 'Wobble', min: 0, max: 1.0, default: 0.2 },
-        r: (theta, a, b) => a * (1 - Math.cos(theta)) + b * Math.sin(5 * theta),
+        varB: { name: 'None', min: 1, max: 1, default: 1 },
+        r: (theta, a, b) => a * (1 - Math.cos(theta)),
         audioScale: 280, baseFreq: 300
     },
     rose4Sim: {
@@ -439,29 +447,29 @@ export const CSIM_FUNCTIONS = {
     },
     lemniscateSim: {
         id: 'lemniscateSim', category: 'curves-plus', name: 'Lemniscate Sim', type: 'parametric',
-        formula: 'x = a·cost/(1+sin²t), y = b·sint cost/(1+sin²t)',
-        latex: '\\vec{r}(t) = \\langle \\frac{a\\cos t}{1+\\sin^2 t}, \\frac{b\\sin t \\cos t}{1+\\sin^2 t} \\rangle',
-        viewBox: { xMin: -1.8, xMax: 1.8, yMin: -1.2, yMax: 1.2 },
+        formula: 'x = a·cost/(1+sin²t), y = a·sint cost/(1+sin²t)',
+        latex: '\\vec{r}(t) = a \\langle \\frac{\\cos t}{1+\\sin^2 t}, \\frac{\\sin t \\cos t}{1+\\sin^2 t} \\rangle',
+        viewBox: { xMin: -1.5, xMax: 1.5, yMin: -1, yMax: 1 },
         tRange: { min: 0, max: 2 * Math.PI },
         drawMs: 2000, durationMs: 12000,
-        varA: { name: 'Width', min: 0.5, max: 2.0, default: 1.0 },
-        varB: { name: 'Twist', min: 0.5, max: 2.0, default: 1.0 },
-        x: (t, a, b) => (a * Math.cos(t)) / (1 + Math.pow(Math.sin(t), 2)),
-        y: (t, a, b) => (b * Math.sin(t) * Math.cos(t)) / (1 + Math.pow(Math.sin(t), 2)),
+        varA: { name: 'Size', min: 0.5, max: 1.5, default: 1.0 },
+        varB: { name: 'None', min: 1, max: 1, default: 1 },
+        x: (t, a, b) => a * Math.cos(t) / (1 + Math.pow(Math.sin(t), 2)),
+        y: (t, a, b) => a * (Math.sin(t) * Math.cos(t)) / (1 + Math.pow(Math.sin(t), 2)),
         audioScale: 300, baseFreq: 320
     },
-    infiniteHeartSim: {
-        id: 'infiniteHeartSim', category: 'curves-plus', name: 'Infinite Heart Sim', type: 'parametric',
-        formula: 'Fusion of Heart and Infinity',
-        latex: '\\vec{r}(t) = \\langle a\\sin(bt), c\\cos(t) \\rangle',
-        viewBox: { xMin: -2.5, xMax: 2.5, yMin: -2.5, yMax: 2.5 },
+    lissajous2Sim: {
+        id: 'lissajous2Sim', category: 'curves-plus', name: 'Lissajous 2 Sim', type: 'parametric',
+        formula: 'x = sin(at), y = sin(bt)',
+        latex: '\\vec{r}(t) = \\langle \\sin(at), \\sin(bt) \\rangle',
+        viewBox: { xMin: -1.5, xMax: 1.5, yMin: -1.5, yMax: 1.5 },
         tRange: { min: 0, max: 2 * Math.PI },
         drawMs: 2000, durationMs: 12000,
-        varA: { name: 'Size', min: 0.5, max: 2.0, default: 1.2 },
-        varB: { name: 'Complexity', min: 1, max: 5, default: 2 },
-        x: (t, a, b) => a * Math.sin(t) * Math.cos(b * t),
-        y: (t, a, b) => a * (Math.abs(Math.sin(t)) * Math.sin(t) - Math.cos(t)),
-        audioScale: 200, baseFreq: 260
+        varA: { name: 'Freq X', min: 1, max: 10, default: 3 },
+        varB: { name: 'Freq Y', min: 1, max: 10, default: 4 },
+        x: (t, a, b) => Math.sin(a * t),
+        y: (t, a, b) => Math.sin(b * t),
+        audioScale: 360, baseFreq: 400
     },
     butterflySim: {
         id: 'butterflySim', category: 'curves-plus', name: 'Butterfly Sim', type: 'polar',
@@ -476,17 +484,16 @@ export const CSIM_FUNCTIONS = {
         audioScale: 180, baseFreq: 260
     },
     spiralSim: {
-        id: 'spiralSim', category: 'curves-plus', name: 'Spiral Sim', type: 'parametric',
-        formula: 'r = a·e^(0.1t), Rotating',
-        latex: '\\vec{r}(t) = a e^{0.1t} \\langle \\cos(t + b), \\sin(t + b) \\rangle',
-        viewBox: { xMin: -15, xMax: 15, yMin: -15, yMax: 15 },
-        tRange: { min: 0, max: 10 * Math.PI },
-        drawMs: 2000, durationMs: 15000,
-        varA: { name: 'Growth', min: 0.1, max: 1.0, default: 0.5 },
-        varB: { name: 'Rotation', min: 0, max: 2 * Math.PI, default: 0 },
-        x: (t, a, b) => a * Math.exp(0.1 * t) * Math.cos(t + b),
-        y: (t, a, b) => a * Math.exp(0.1 * t) * Math.sin(t + b),
-        audioScale: 200, baseFreq: 300
+        id: 'spiralSim', category: 'curves-plus', name: 'Spiral Sim', type: 'polar',
+        formula: 'r = a·θ',
+        latex: 'r = a \\theta',
+        viewBox: { xMin: -3, xMax: 3, yMin: -3, yMax: 3 },
+        tRange: { min: 0, max: 6 * Math.PI },
+        drawMs: 2000, durationMs: 12000,
+        varA: { name: 'Tightness', min: 0.05, max: 0.5, default: 0.1 },
+        varB: { name: 'None', min: 1, max: 1, default: 1 },
+        r: (theta, a, b) => a * theta,
+        audioScale: 250, baseFreq: 350
     },
     epicycloidSim: {
         id: 'epicycloidSim', category: 'curves-plus', name: 'Epicycloid Sim', type: 'parametric',
@@ -500,6 +507,147 @@ export const CSIM_FUNCTIONS = {
         x: (t, a, b) => (a + b) * Math.cos(t) - b * Math.cos(((a + b) / b) * t),
         y: (t, a, b) => (a + b) * Math.sin(t) - b * Math.sin(((a + b) / b) * t),
         audioScale: 200, baseFreq: 280
+    },
+
+    // ---------- Art+ (Total 11) ----------
+    sunflowerSim: {
+        id: 'sunflowerSim', category: 'art-plus', name: 'Sunflower Sim', type: 'polar',
+        formula: 'r = -8·sin(aθ)',
+        latex: 'r = -8\\sin(a\\theta)',
+        viewBox: { xMin: -10, xMax: 10, yMin: -10, yMax: 10 },
+        tRange: { min: 0, max: 2 * Math.PI },
+        drawMs: 2000, durationMs: 12000,
+        varA: { name: 'Petals', min: 1, max: 64, default: 32 },
+        varB: { name: 'Density', min: 1, max: 10, default: 1 },
+        r: (theta, a, b) => -8 * Math.sin(a * theta * b),
+        audioScale: 350, baseFreq: 440
+    },
+    limacon3Sim: {
+        id: 'limacon3Sim', category: 'art-plus', name: 'Limaçon 3 Sim', type: 'polar',
+        formula: 'r = a - b·cos(3θ)',
+        latex: 'r = a - b\\cos(3\\theta)',
+        viewBox: { xMin: -15, xMax: 15, yMin: -13, yMax: 13 },
+        tRange: { min: 0, max: 2 * Math.PI },
+        drawMs: 2000, durationMs: 12000,
+        varA: { name: 'Base', min: 1, max: 10, default: 5 },
+        varB: { name: 'Loop', min: 1, max: 15, default: 9 },
+        r: (theta, a, b) => a - b * Math.cos(3 * theta),
+        audioScale: 280, baseFreq: 330
+    },
+    starSim: {
+        id: 'starSim', category: 'art-plus', name: 'Star Sim', type: 'polar',
+        formula: 'r = sin(2θ) - a·cos³(bθ)',
+        latex: 'r = \\sin(2\\theta) - a(\\cos(b\\theta))^3',
+        viewBox: { xMin: -8, xMax: 8, yMin: -8, yMax: 8 },
+        tRange: { min: 0, max: 2 * Math.PI },
+        drawMs: 2000, durationMs: 12000,
+        varA: { name: 'Sharpness', min: 1, max: 10, default: 6 },
+        varB: { name: 'Points', min: 2, max: 12, default: 6 },
+        r: (theta, a, b) => Math.sin(2 * theta) - a * Math.pow(Math.cos(b * theta), 3),
+        audioScale: 150, baseFreq: 220
+    },
+    explosionSim: {
+        id: 'explosionSim', category: 'art-plus', name: 'Explosion Sim', type: 'polar',
+        formula: 'r = a·cos³(bθ)',
+        latex: 'r = a(\\cos(b\\theta))^3',
+        viewBox: { xMin: -4, xMax: 4, yMin: -4, yMax: 4 },
+        tRange: { min: 0, max: Math.PI },
+        drawMs: 2000, durationMs: 12000,
+        varA: { name: 'Intensity', min: 1, max: 5, default: 3 },
+        varB: { name: 'Spikes', min: 2, max: 30, default: 14 },
+        r: (theta, a, b) => a * Math.pow(Math.cos(b * theta), 3),
+        audioScale: 200, baseFreq: 440
+    },
+    fairySim: {
+        id: 'fairySim', category: 'art-plus', name: 'Fairy Sim', type: 'polar',
+        formula: 'r = (sin aθ cos aθ) / θ',
+        latex: 'r = \\frac{\\sin(a\\theta)\\cos(a\\theta)}{\\theta}',
+        viewBox: { xMin: -2, xMax: 2, yMin: -2, yMax: 2 },
+        tRange: { min: 0, max: 6 * Math.PI },
+        drawMs: 2000, durationMs: 12000,
+        varA: { name: 'Wings', min: 1, max: 5, default: 2 },
+        varB: { name: 'Drift', min: 0, max: 1, default: 0 },
+        r: (theta, a, b) => {
+            if (Math.abs(theta) < 0.001) return a;
+            return (Math.sin(a * theta) * Math.cos(a * theta)) / (theta + b);
+        },
+        audioScale: 300, baseFreq: 330
+    },
+    trigChaosSim: {
+        id: 'trigChaosSim', category: 'art-plus', name: 'Trig Chaos Sim', type: 'polar',
+        formula: 'r = -a·sin(cos(tan bθ))',
+        latex: 'r = -a\\sin(\\cos(\\tan(b\\theta)))',
+        viewBox: { xMin: -5, xMax: 5, yMin: -5, yMax: 5 },
+        tRange: { min: 0, max: 2 * Math.PI },
+        drawMs: 2000, durationMs: 12000,
+        varA: { name: 'Amplitude', min: 1, max: 8, default: 4 },
+        varB: { name: 'Chaos', min: 0.5, max: 3, default: 1 },
+        r: (theta, a, b) => -a * Math.sin(Math.cos(Math.tan(b * theta))),
+        audioScale: 250, baseFreq: 380
+    },
+    shiningStarSim: {
+        id: 'shiningStarSim', category: 'art-plus', name: 'Shining Star Sim', type: 'polar',
+        formula: 'r = a·[cos(asin(0.9sin(bθ))) + 0.5]',
+        latex: 'r = a(\\cos(\\arcsin(0.9\\sin(b\\theta))) + 0.5)',
+        viewBox: { xMin: -5, xMax: 5, yMin: -5, yMax: 5 },
+        tRange: { min: 0, max: 4 * Math.PI },
+        drawMs: 2000, durationMs: 12000,
+        varA: { name: 'Size', min: 1, max: 4, default: 2 },
+        varB: { name: 'Points', min: 1, max: 10, default: 2.5 },
+        r: (theta, a, b) => a * (Math.cos(Math.asin(0.9 * Math.sin(b * theta))) + 0.5),
+        audioScale: 300, baseFreq: 220
+    },
+    splitPulseSim: {
+        id: 'splitPulseSim', category: 'art-plus', name: 'Split Pulse Sim', type: 'polar',
+        formula: 'r = -sin(aθ) / (2cosθ)',
+        latex: 'r = -\\frac{\\sin(a\\theta)}{2\\cos\\theta}',
+        viewBox: { xMin: -4, xMax: 4, yMin: -4, yMax: 4 },
+        tRange: { min: 0, max: 2 * Math.PI },
+        drawMs: 2000, durationMs: 12000,
+        varA: { name: 'Frequency', min: 2, max: 20, default: 10 },
+        varB: { name: 'Split', min: 1, max: 5, default: 2 },
+        r: (theta, a, b) => {
+            const denom = b * Math.cos(theta);
+            if (Math.abs(denom) < 0.01) return 0;
+            return -Math.sin(a * theta) / denom;
+        },
+        audioScale: 280, baseFreq: 300
+    },
+    vibrationSim: {
+        id: 'vibrationSim', category: 'art-plus', name: 'Vibration Sim', type: 'cartesian',
+        formula: 'y = a·x · sin(bx)',
+        latex: 'y = a \\cdot x \\cdot \\sin(bx)',
+        range: { xMin: -10, xMax: 10, yMin: -12, yMax: 12 },
+        drawMs: 2000, durationMs: 12000,
+        varA: { name: 'Envelope', min: 0.1, max: 2.0, default: 1.0 },
+        varB: { name: 'Frequency', min: 1, max: 50, default: 10 },
+        fn: (x, a, b) => a * x * Math.sin(x * b),
+        audioScale: 150, baseFreq: 330
+    },
+    diamondSim: {
+        id: 'diamondSim', category: 'art-plus', name: 'Diamond Sim', type: 'cartesian',
+        formula: 'y = a·(2-|x|)·sin(bx)',
+        latex: 'y = a(2-|x|) \\cdot \\sin(bx)',
+        range: { xMin: -2, xMax: 2, yMin: -2.5, yMax: 2.5 },
+        drawMs: 2000, durationMs: 12000,
+        varA: { name: 'Size', min: 0.5, max: 2.0, default: 1.0 },
+        varB: { name: 'Frequency', min: 10, max: 200, default: 60 },
+        fn: (x, a, b) => a * (2 - Math.abs(x)) * Math.sin(x * b),
+        audioScale: 120, baseFreq: 440
+    },
+    monsterWaveSim: {
+        id: 'monsterWaveSim', category: 'art-plus', name: 'Monster Wave Sim', type: 'cartesian',
+        formula: 'y = envelope(a) · sin(bx)',
+        latex: 'y = \\left(\\sqrt{4-x^2} \\cdot (a + |\\sin(2.3x)|) + 3e^{-15x^2}\\right) \\cdot \\sin(bx)',
+        range: { xMin: -2.1, xMax: 2.1, yMin: -5, yMax: 5 },
+        drawMs: 2000, durationMs: 12000,
+        varA: { name: 'Envelope', min: 0.1, max: 1.0, default: 0.2 },
+        varB: { name: 'Frequency', min: 10, max: 200, default: 100 },
+        fn: (x, a, b) => {
+            const env = (Math.sqrt(Math.max(0, 4 - x * x)) * (a + Math.abs(Math.sin(2.3 * x))) + 3 * Math.exp(-15 * x * x));
+            return env * Math.sin(b * x);
+        },
+        audioScale: 100, baseFreq: 440
     }
 };
 
