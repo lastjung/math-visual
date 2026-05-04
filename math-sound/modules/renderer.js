@@ -26,7 +26,7 @@ export function drawStaticGraph() {
     const graphCtx = ctx.graph;
 
     graphCtx.clearRect(0, 0, width, height);
-    graphCtx.fillStyle = '#ffffff';
+    graphCtx.fillStyle = state.theme === 'dark' ? '#050505' : '#ffffff';
     graphCtx.fillRect(0, 0, width, height);
 
     if (!state.currentFunction) {
@@ -442,7 +442,7 @@ export function drawAxes(width, height, xMin, xMax, yMin, yMax) {
     const centerX = ((-xMin) / xRange) * width;
     const centerY = ((yMax) / yRange) * height;
 
-    graphCtx.strokeStyle = '#cbd5e1';
+    graphCtx.strokeStyle = state.theme === 'dark' ? 'rgba(255, 255, 255, 0.15)' : '#cbd5e1';
     graphCtx.lineWidth = 1.5;
 
     if (centerY >= 0 && centerY <= height) {
@@ -458,7 +458,7 @@ export function drawAxes(width, height, xMin, xMax, yMin, yMax) {
         graphCtx.stroke();
     }
 
-    graphCtx.fillStyle = '#9ca3af';
+    graphCtx.fillStyle = state.theme === 'dark' ? 'rgba(255, 255, 255, 0.3)' : '#9ca3af';
     graphCtx.beginPath();
     graphCtx.moveTo(width - 10, centerY - 4);
     graphCtx.lineTo(width, centerY);
@@ -552,7 +552,7 @@ export function animate() {
     state.drawProgress = newProgress;
 
     graphCtx.clearRect(0, 0, width, height);
-    graphCtx.fillStyle = '#ffffff';
+    graphCtx.fillStyle = state.theme === 'dark' ? '#050505' : '#ffffff';
     graphCtx.fillRect(0, 0, width, height);
 
     // 1. Draw Axis
@@ -877,7 +877,7 @@ export function drawWaveform() {
     state.analyser.getByteTimeDomainData(dataArray);
 
     const waveformCtx = ctx.waveform;
-    waveformCtx.fillStyle = '#f3f4f6';
+    waveformCtx.fillStyle = state.theme === 'dark' ? '#1e293b' : '#f3f4f6';
     waveformCtx.fillRect(0, 0, width, height);
 
     const funcData = MATH_FUNCTIONS[state.currentFunction];

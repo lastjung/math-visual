@@ -39,7 +39,8 @@ export const state = {
     isQueueMode: false,
     isPrimingPlayback: false,
     introOverlayTimer: null,
-    showGhost: true
+    showGhost: true,
+    theme: 'light' // 'light' or 'dark'
 };
 
 export const elements = {
@@ -85,7 +86,8 @@ export const elements = {
     fullscreenBtn: document.getElementById('fullscreenBtn'),
     equationIntroOverlay: document.getElementById('equationIntroOverlay'),
     equationIntroFormula: document.getElementById('equationIntroFormula'),
-    equationIntroCopy: document.getElementById('equationIntroCopy')
+    equationIntroCopy: document.getElementById('equationIntroCopy'),
+    themeBtn: document.getElementById('themeBtn')
 };
 
 // Canvas contexts (Initialised in app.js or renderer.js)

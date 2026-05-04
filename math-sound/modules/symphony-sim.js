@@ -1763,7 +1763,7 @@ export function drawSymphonySimStatic(functionId) {
     const graphCtx = ctx.graph;
 
     graphCtx.clearRect(0, 0, width, height);
-    graphCtx.fillStyle = '#050505';
+    graphCtx.fillStyle = state.theme === 'dark' ? '#050505' : '#ffffff';
     graphCtx.fillRect(0, 0, width, height);
     drawAxes(graphCtx, width, height, sim.range);
     drawSimLayers(graphCtx, sim, width, height, 1, 1.6);
@@ -1878,7 +1878,7 @@ function drawFrame(sim, progress, a) {
     const height = elements.graphCanvas.offsetHeight;
     const graphCtx = ctx.graph;
     graphCtx.clearRect(0, 0, width, height);
-    graphCtx.fillStyle = '#050505';
+    graphCtx.fillStyle = state.theme === 'dark' ? '#050505' : '#ffffff';
     graphCtx.fillRect(0, 0, width, height);
     drawAxes(graphCtx, width, height, sim.range);
     drawSimLayers(graphCtx, sim, width, height, progress, a);
@@ -2355,7 +2355,7 @@ function clearWaveform() {
     if (!ctx.waveform || !elements.waveformCanvas) return;
     const width = elements.waveformCanvas.offsetWidth;
     const height = elements.waveformCanvas.offsetHeight;
-    ctx.waveform.fillStyle = '#f3f4f6';
+    ctx.waveform.fillStyle = state.theme === 'dark' ? '#1e293b' : '#f3f4f6';
     ctx.waveform.fillRect(0, 0, width, height);
     ctx.waveform.strokeStyle = 'rgba(15, 23, 42, 0.16)';
     ctx.waveform.lineWidth = 1;
@@ -2374,7 +2374,7 @@ function drawWaveform(sim) {
     simAudio.analyser.getByteTimeDomainData(dataArray);
 
     const waveformCtx = ctx.waveform;
-    waveformCtx.fillStyle = '#f3f4f6';
+    waveformCtx.fillStyle = state.theme === 'dark' ? '#1e293b' : '#f3f4f6';
     waveformCtx.fillRect(0, 0, width, height);
     waveformCtx.strokeStyle = sim.layers.length === 1 ? sim.layers[0].color : '#ff8a00';
     waveformCtx.lineWidth = 2.4;
@@ -2395,7 +2395,7 @@ function drawWaveform(sim) {
 function drawAxes(graphCtx, width, height, range) {
     const { xMin, xMax, yMin, yMax } = range;
     graphCtx.save();
-    graphCtx.strokeStyle = 'rgba(255, 255, 255, 0.14)';
+    graphCtx.strokeStyle = state.theme === 'dark' ? 'rgba(255, 255, 255, 0.15)' : '#cbd5e1';
     graphCtx.lineWidth = 1;
     const zeroX = ((0 - xMin) / (xMax - xMin)) * width;
     const zeroY = ((yMax - 0) / (yMax - yMin)) * height;

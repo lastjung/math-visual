@@ -131,6 +131,10 @@ function setupEventListeners() {
         elements.fullscreenBtn.addEventListener('click', toggleFullscreen);
     }
 
+    if (elements.themeBtn) {
+        elements.themeBtn.addEventListener('click', toggleTheme);
+    }
+
     const ghostBtn = document.getElementById('ghostBtn');
     if (ghostBtn) {
         ghostBtn.addEventListener('click', () => {
@@ -1052,4 +1056,14 @@ function toggleFullscreen() {
         setupCanvas();
         renderCurrentGraph();
     }, 50);
+}
+
+function toggleTheme() {
+    state.theme = state.theme === 'light' ? 'dark' : 'light';
+    document.body.classList.toggle('dark-theme', state.theme === 'dark');
+    if (elements.themeBtn) {
+        elements.themeBtn.classList.toggle('dark', state.theme === 'dark');
+        elements.themeBtn.querySelector('.icon').textContent = state.theme === 'dark' ? '☀️' : '🌓';
+    }
+    renderCurrentGraph();
 }
