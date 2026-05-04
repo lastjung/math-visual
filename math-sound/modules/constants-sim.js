@@ -1123,8 +1123,17 @@ function pointForSim(sim, progress, valA, valB) {
 function updateHud(sim, valA, valB, isPhaseA) {
     if (!elements.simHud) return;
     elements.simHud.hidden = false;
-    if (elements.simHudA) elements.simHudA.textContent = `${sim.varA.name} = ${valA.toFixed(2)} ${isPhaseA ? '✦' : ''}`;
-    if (elements.simHudLayers) elements.simHudLayers.textContent = `${sim.varB.name} = ${valB.toFixed(2)} ${!isPhaseA && isPhaseA !== null ? '✦' : ''}`;
+    
+    const labelA = `${sim.varA.name} a = ${valA.toFixed(2)}`;
+    const labelB = `${sim.varB.name} b = ${valB.toFixed(2)}`;
+
+    if (elements.simHudA) elements.simHudA.textContent = `${labelA} ${isPhaseA ? '✦' : ''}`;
+    if (elements.simHudLayers) elements.simHudLayers.textContent = `${labelB} ${!isPhaseA && isPhaseA !== null ? '✦' : ''}`;
+
+    // Also update main subtitle for better visibility
+    if (elements.functionSubtitle) {
+        elements.functionSubtitle.textContent = `${labelA} | ${labelB}`;
+    }
 }
 
 function clearWaveform() {
