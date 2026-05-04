@@ -11,6 +11,15 @@ import {
     startSymphonySim,
     stopSymphonySim
 } from './modules/symphony-sim.js';
+import {
+    CSIM_CATEGORIES,
+    CSIM_FUNCTIONS,
+    isConstantsSimCategory,
+    isConstantsSimFunction,
+    drawConstantsSimStatic,
+    startConstantsSim,
+    stopConstantsSim
+} from './modules/constants-sim.js';
 
 const FAVORITES_KEY = 'math-sound:favorites';
 const QUEUE_STORAGE_KEY = 'math-sound:play-queue';
@@ -21,17 +30,22 @@ const EQUATION_OUTRO_DURATION_MS = 2000;
 let favoriteSet = new Set();
 
 function getAllFunctionKeys() {
-    return [...Object.keys(MATH_FUNCTIONS), ...Object.keys(SIM_FUNCTIONS)];
+    return [...Object.keys(MATH_FUNCTIONS), ...Object.keys(SIM_FUNCTIONS), ...Object.keys(CSIM_FUNCTIONS)];
 }
 
 function getFunctionData(funcKey) {
-    return SIM_FUNCTIONS[funcKey] || MATH_FUNCTIONS[funcKey];
+    return CSIM_FUNCTIONS[funcKey] || SIM_FUNCTIONS[funcKey] || MATH_FUNCTIONS[funcKey];
 }
 
 function renderCurrentGraph() {
     if (isSymphonySimFunction(state.currentFunction)) {
         elements.canvasWrapper.classList.add('sim-mode');
         drawSymphonySimStatic(state.currentFunction);
+        return;
+    }
+    if (isConstantsSimFunction(state.currentFunction)) {
+        elements.canvasWrapper.classList.add('sim-mode');
+        drawConstantsSimStatic(state.currentFunction);
         return;
     }
     elements.canvasWrapper.classList.remove('sim-mode');
@@ -312,6 +326,7 @@ function setupEventListeners() {
 // ==========================================
 function renderCategoryTabs() {
     const existingContainer = elements.categoryTabsExisting;
+    const constantsSimContainer = elements.categoryTabsConstantsSim;
     const symphonyContainer = elements.categoryTabsSymphony;
     const symphonyPlusContainer = elements.categoryTabsSymphonyPlus || symphonyContainer;
     const cosmicContainer = elements.categoryTabsCosmic;
@@ -319,6 +334,7 @@ function renderCategoryTabs() {
     if (!existingContainer || !symphonyContainer || !cosmicContainer) return;
 
     existingContainer.innerHTML = '';
+    if (constantsSimContainer) constantsSimContainer.innerHTML = '';
     symphonyContainer.innerHTML = '';
     if (symphonyPlusContainer !== symphonyContainer) symphonyPlusContainer.innerHTML = '';
     cosmicContainer.innerHTML = '';
@@ -354,6 +370,17 @@ function renderCategoryTabs() {
         }
     });
 
+    // 3. Constants Sim categories (own row)
+    Object.entries(CSIM_CATEGORIES).forEach(([catId, cat]) => {
+        const btn = document.createElement('button');
+        btn.className = 'category-tab' + (catId === state.currentCategory ? ' active' : '');
+        btn.dataset.category = catId;
+        btn.textContent = cat.name;
+        btn.addEventListener('click', () => selectCategory(catId, true));
+        if (constantsSimContainer) constantsSimContainer.appendChild(btn);
+    });
+
+    // 4. Symphony Sim categories (plus row)
     Object.entries(SIM_CATEGORIES).forEach(([catId, cat]) => {
         const btn = document.createElement('button');
         btn.className = 'category-tab' + (catId === state.currentCategory ? ' active' : '');
@@ -364,7 +391,7 @@ function renderCategoryTabs() {
     });
 
     // Horizontal scroll & Drag support for all containers
-    [existingContainer, symphonyContainer, symphonyPlusContainer, cosmicContainer].forEach(container => {
+    [existingContainer, constantsSimContainer, symphonyContainer, symphonyPlusContainer, cosmicContainer].forEach(container => {
         if (!container) return;
         let isDown = false;
         let startX;
@@ -452,7 +479,7 @@ function renderFunctionButtons(category) {
         card.tabIndex = 0;
         card.draggable = true;
 
-        const categoryLabel = SIM_CATEGORIES[func.category]?.name || CATEGORIES[func.category]?.name || func.category;
+        const categoryLabel = CSIM_CATEGORIES[func.category]?.name || SIM_CATEGORIES[func.category]?.name || CATEGORIES[func.category]?.name || func.category;
         card.innerHTML = `
             <div class="card-top">
                 <span class="card-title">${func.name}</span>
@@ -571,12 +598,16 @@ function selectFunction(funcName) {
     elements.canvasWrapper.classList.add('zoom-in-effect');
     
     stopSymphonySim();
+    stopConstantsSim();
     renderCurrentGraph();
     
     if (state.isPlaying) {
         if (isSymphonySimFunction(state.currentFunction)) {
             stopPreview();
             startSymphonySim(state.currentFunction);
+        } else if (isConstantsSimFunction(state.currentFunction)) {
+            stopPreview();
+            startConstantsSim(state.currentFunction);
         } else {
             playSound(state.currentFunction);
             animate();
@@ -597,6 +628,7 @@ function navigateFunction(direction) {
 function getCategoryFunctions(category) {
     if (category === 'all') return getAllFunctionKeys();
     if (isSymphonySimCategory(category)) return SIM_CATEGORIES[category]?.functions || [];
+    if (isConstantsSimCategory(category)) return CSIM_CATEGORIES[category]?.functions || [];
     return CATEGORIES[category]?.functions || [];
 }
 
@@ -754,8 +786,12 @@ function startPlaybackNow() {
     if (isSymphonySimFunction(state.currentFunction)) {
         stopPreview();
         startSymphonySim(state.currentFunction);
+    } else if (isConstantsSimFunction(state.currentFunction)) {
+        stopPreview();
+        startConstantsSim(state.currentFunction);
     } else {
         stopSymphonySim();
+        stopConstantsSim();
         playSound();
         animate();
     }
@@ -909,6 +945,7 @@ function pause() {
     // Only stop the preview sound, keep MIDI layers active
     stopPreview();
     stopSymphonySim();
+    stopConstantsSim();
     
     if (state.animationId) cancelAnimationFrame(state.animationId);
     renderQueue();

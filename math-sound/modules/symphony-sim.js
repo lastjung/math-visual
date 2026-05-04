@@ -2357,7 +2357,7 @@ function clearWaveform() {
     const height = elements.waveformCanvas.offsetHeight;
     ctx.waveform.fillStyle = state.theme === 'dark' ? '#1e293b' : '#f3f4f6';
     ctx.waveform.fillRect(0, 0, width, height);
-    ctx.waveform.strokeStyle = 'rgba(15, 23, 42, 0.16)';
+    ctx.waveform.strokeStyle = state.theme === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(15, 23, 42, 0.16)';
     ctx.waveform.lineWidth = 1;
     ctx.waveform.beginPath();
     ctx.waveform.moveTo(0, height / 2);

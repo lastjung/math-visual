@@ -67,6 +67,7 @@ export const elements = {
     slidersPanel: document.getElementById('slidersPanel'),
     slidersToggle: document.getElementById('slidersToggle'),
     categoryTabsExisting: document.getElementById('categoryTabsExisting'),
+    categoryTabsConstantsSim: document.getElementById('categoryTabsConstantsSim'),
     categoryTabsSymphony: document.getElementById('categoryTabsSymphony'),
     categoryTabsSymphonyPlus: document.getElementById('categoryTabsSymphonyPlus'),
     categoryTabsCosmic: document.getElementById('categoryTabsCosmic'),
