@@ -32,6 +32,13 @@ export const CSIM_CATEGORIES = {
             'trigChaosSim', 'shiningStarSim', 'splitPulseSim', 'vibrationSim',
             'diamondSim', 'monsterWaveSim'
         ]
+    },
+    'math-plus': {
+        name: '📐 Math+',
+        functions: [
+            'fourierSquareSim', 'complexWaveSim', 'gaussianSim', 'sincSim',
+            'logisticSim', 'hyperbolicSim', 'parabolaSim'
+        ]
     }
 };
 
@@ -648,6 +655,103 @@ export const CSIM_FUNCTIONS = {
             return env * Math.sin(b * x);
         },
         audioScale: 100, baseFreq: 440
+    },
+
+    // ---------- Math+ (Total 7) ----------
+    fourierSquareSim: {
+        id: 'fourierSquareSim', category: 'math-plus', name: 'Fourier Square Sim', type: 'cartesian',
+        formula: 'y = -24/π Σ sin((2n+1)ax)/(2n+1)',
+        latex: 'y = -\\frac{24}{\\pi} \\sum_{n=0}^{10} \\frac{\\sin((2n+1)ax)}{2n+1}',
+        range: { xMin: -2, xMax: 2, yMin: -10, yMax: 10 },
+        drawMs: 2000, durationMs: 12000,
+        varA: { name: 'Frequency', min: 0.1, max: 12, default: 2 * Math.PI },
+        varB: { name: 'Harmonics', min: 1, max: 20, default: 10 },
+        fn: (x, a, b) => {
+            let sum = 0; const phase = x * a;
+            for (let n = 0; n <= Math.floor(b); n++) {
+                const k = 2 * n + 1; sum += Math.sin(k * phase) / k;
+            }
+            return -(24 / Math.PI) * sum;
+        },
+        audioScale: 100, baseFreq: 110
+    },
+    complexWaveSim: {
+        id: 'complexWaveSim', category: 'math-plus', name: 'Complex Wave Sim', type: 'cartesian',
+        formula: 'y = 24/π Σ sin((4n+1)ax)/(n+1)',
+        latex: 'y = \\frac{24}{\\pi} \\sum_{n=0}^{7} \\frac{\\sin((4n+1)ax)}{n+1}',
+        range: { xMin: -2, xMax: 2, yMin: -15, yMax: 15 },
+        drawMs: 2000, durationMs: 12000,
+        varA: { name: 'Frequency', min: 0.1, max: 12, default: 2 * Math.PI },
+        varB: { name: 'Complexity', min: 1, max: 15, default: 7 },
+        fn: (x, a, b) => {
+            let sum = 0; const phase = x * a;
+            for (let n = 0; n <= Math.floor(b); n++) {
+                sum += Math.sin((4 * n + 1) * phase) / (n + 1);
+            }
+            return (24 / Math.PI) * sum;
+        },
+        audioScale: 80, baseFreq: 130
+    },
+    gaussianSim: {
+        id: 'gaussianSim', category: 'math-plus', name: 'Gaussian Sim', type: 'cartesian',
+        formula: 'y = b·e^(-(ax)²)',
+        latex: 'y = b e^{-(ax)^2}',
+        range: { xMin: -3, xMax: 3, yMin: -0.5, yMax: 2.5 },
+        drawMs: 2000, durationMs: 12000,
+        varA: { name: 'Width', min: 0.1, max: 5.0, default: 1.0 },
+        varB: { name: 'Amplitude', min: 0.5, max: 2.0, default: 1.0 },
+        fn: (x, a, b) => b * Math.exp(-(a * x) * (a * x)),
+        audioScale: 500, baseFreq: 440
+    },
+    sincSim: {
+        id: 'sincSim', category: 'math-plus', name: 'Sinc Sim', type: 'cartesian',
+        formula: 'y = sin(ax)/(ax)',
+        latex: 'y = \\frac{\\sin(ax)}{ax}',
+        range: { xMin: -3, xMax: 3, yMin: -0.5, yMax: 1.5 },
+        drawMs: 2000, durationMs: 12000,
+        varA: { name: 'Frequency', min: 1, max: 20, default: 4 * Math.PI },
+        varB: { name: 'Decay', min: 0.1, max: 2.0, default: 1.0 },
+        fn: (x, a, b) => {
+            const val = x * a;
+            if (Math.abs(val) < 0.001) return 1;
+            return Math.sin(val) / (val * b);
+        },
+        audioScale: 400, baseFreq: 380
+    },
+    logisticSim: {
+        id: 'logisticSim', category: 'math-plus', name: 'Logistic Sim', type: 'cartesian',
+        formula: 'y = 1 / (1 + e^(-ax))',
+        latex: 'y = \\frac{1}{1 + e^{-ax}}',
+        range: { xMin: -4, xMax: 4, yMin: -0.5, yMax: 1.5 },
+        drawMs: 2000, durationMs: 12000,
+        varA: { name: 'Steepness', min: 0.5, max: 10, default: 2 },
+        varB: { name: 'Midpoint', min: -2, max: 2, default: 0 },
+        fn: (x, a, b) => 1 / (1 + Math.exp(-a * (x - b))),
+        audioScale: 600, baseFreq: 500
+    },
+    hyperbolicSim: {
+        id: 'hyperbolicSim', category: 'math-plus', name: 'Hyperbolic Sim', type: 'parametric',
+        formula: 'x = cosh(at), y = sinh(at)',
+        latex: '\\vec{r}(t) = \\langle \\cosh(at), \\sinh(at) \\rangle',
+        viewBox: { xMin: -1, xMax: 5, yMin: -3, yMax: 3 },
+        tRange: { min: -4, max: 4 },
+        drawMs: 2000, durationMs: 12000,
+        varA: { name: 'Curvature', min: 0.1, max: 1.0, default: 0.5 },
+        varB: { name: 'Scale', min: 0.5, max: 2.0, default: 1.0 },
+        x: (t, a, b) => b * Math.cosh(t * a),
+        y: (t, a, b) => b * Math.sinh(t * a),
+        audioScale: 300, baseFreq: 340
+    },
+    parabolaSim: {
+        id: 'parabolaSim', category: 'math-plus', name: 'Parabola Sim', type: 'cartesian',
+        formula: 'y = a·x²',
+        latex: 'y = ax^2',
+        range: { xMin: -2, xMax: 2, yMin: -0.5, yMax: 4.5 },
+        drawMs: 2000, durationMs: 12000,
+        varA: { name: 'Curvature', min: 0.1, max: 4, default: 1.0 },
+        varB: { name: 'Shift', min: -2, max: 2, default: 0 },
+        fn: (x, a, b) => a * (x - b) * (x - b),
+        audioScale: 200, baseFreq: 220
     }
 };
 
