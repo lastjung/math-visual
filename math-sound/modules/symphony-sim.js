@@ -65,7 +65,53 @@ export const SIM_CATEGORIES = {
             'hyperPlusRealityBender',
             'hyperPlusDeadpool',
             'hyperPlusRoseClover',
-            'hyperPlusRealityWeave'
+            'hyperPlusRealityWeave',
+            'hyperPlusRoseDeadpool'
+        ]
+    },
+    'insane-plus': {
+        name: '👹 Insane+',
+        functions: [
+            'insanePlusTrigTomfoolery',
+            'insanePlusSecantTwist',
+            'insanePlusInverseFractal',
+            'insanePlusUnlimitedStar',
+            'insanePlusArachnidWeb',
+            'insanePlusPowerSun',
+            'insanePlusMasterpiece',
+            'insanePlusTrigMasterpiece',
+            'insanePlusWebTwist',
+            'insanePlusFractalStar'
+        ]
+    },
+    'fantastic-plus': {
+        name: '✨ Fantastic+',
+        functions: [
+            'fantasticPlusRelativePrimality',
+            'fantasticPlusCellularTrig',
+            'fantasticPlusInterferenceMesh',
+            'fantasticPlusGrid',
+            'fantasticPlusUltimateGcd'
+        ]
+    },
+    'incredible-plus': {
+        name: '🌟 Incredible+',
+        functions: [
+            'incrediblePlusDynamicInterference',
+            'incrediblePlusSurfaceRipple',
+            'incrediblePlusGlobalGate',
+            'incrediblePlusConcentric',
+            'incrediblePlusChaosStar'
+        ]
+    },
+    'incomprehensible-plus': {
+        name: '🤯 Incomprehensible+',
+        functions: [
+            'incomprehensiblePlusSaturn',
+            'incomprehensiblePlusWaveTangent',
+            'incomprehensiblePlusRotatingOvals',
+            'incomprehensiblePlusEight',
+            'incomprehensiblePlusFinalDense'
         ]
     },
 };
@@ -94,8 +140,29 @@ const FUSION_PETAL_RANGE = { xMin: -3, xMax: 3, yMin: -3, yMax: 3 };
 const HYPER_SMALL_RANGE = { xMin: -1.2, xMax: 1.2, yMin: -1.2, yMax: 1.2 };
 const HYPER_LISSAJOUS_RANGE = { xMin: -2.5, xMax: 2.5, yMin: -1.8, yMax: 1.8 };
 const HYPER_CLOVER_RANGE = { xMin: -2.5, xMax: 2.5, yMin: -2.5, yMax: 2.5 };
-const HYPER_REALITY_RANGE = { xMin: -10, xMax: 10, yMin: -10, yMax: 10 };
+const HYPER_REALITY_RANGE = { xMin: -10, xMax: 10, yMin: -18, yMax: 18 };
+const HYPER_REALITY_WEAVE_RANGE = { xMin: -3.2, xMax: 3.2, yMin: -2.4, yMax: 2.4 };
 const HYPER_DEADPOOL_RANGE = { xMin: -4, xMax: 4, yMin: -4, yMax: 4 };
+const INSANE_SMALL_RANGE = { xMin: -1.2, xMax: 1.2, yMin: -1.2, yMax: 1.2 };
+const INSANE_WIDE_RANGE = { xMin: -10, xMax: 10, yMin: -10, yMax: 10 };
+const INSANE_FRACTAL_RANGE = { xMin: -5, xMax: 5, yMin: -5, yMax: 5 };
+const INSANE_STAR_RANGE = { xMin: -15, xMax: 15, yMin: -15, yMax: 15 };
+const INSANE_WEB_RANGE = { xMin: -12, xMax: 12, yMin: -12, yMax: 12 };
+const INSANE_SUN_RANGE = { xMin: -8, xMax: 8, yMin: -8, yMax: 8 };
+const FANTASTIC_10_RANGE = { xMin: -10, xMax: 10, yMin: -10, yMax: 10 };
+const FANTASTIC_8_RANGE = { xMin: -8, xMax: 8, yMin: -8, yMax: 8 };
+const FANTASTIC_6_RANGE = { xMin: -6, xMax: 6, yMin: -6, yMax: 6 };
+const FANTASTIC_5_RANGE = { xMin: -5, xMax: 5, yMin: -5, yMax: 5 };
+const FANTASTIC_4_RANGE = { xMin: -4, xMax: 4, yMin: -4, yMax: 4 };
+const INCR_5_RANGE = { xMin: -10, xMax: 10, yMin: -5, yMax: 5 };
+const INCR_10_RANGE = { xMin: -10, xMax: 10, yMin: -10, yMax: 10 };
+const INCR_15_RANGE = { xMin: -15, xMax: 15, yMin: -15, yMax: 15 };
+const INCR_8_RANGE = { xMin: -8, xMax: 8, yMin: -8, yMax: 8 };
+const INCOMP_SATURN_RANGE = { xMin: -2, xMax: 2, yMin: -4, yMax: 4 };
+const INCOMP_WAVE_RANGE = { xMin: -3, xMax: 3, yMin: -10, yMax: 10 };
+const INCOMP_OVAL_RANGE = { xMin: -3, xMax: 3, yMin: -2, yMax: 2 };
+const INCOMP_BIG_RANGE = { xMin: -15, xMax: 15, yMin: -15, yMax: 15 };
+const INCOMP_DENSE_RANGE = { xMin: -10, xMax: 10, yMin: -10, yMax: 10 };
 const BASE_TIMING = { durationMs: 16000, drawMs: 6000 };
 const COLOR_PALETTE = [342, 28, 52, 145, 190, 224, 266, 310];
 const BASE_LAYERS = {
@@ -587,7 +654,7 @@ const BASE_LAYERS = {
         sonicProfile: 'stepped',
         fn: (x, a) => {
             const v = hyperPhase(a, 0, 7);
-            return (gcd(Math.round(2025 * x)) % 5) + v * Math.sin(x) + Math.ceil(v * x) / 5;
+            return ((gcd(Math.round(2025 * x)) % 5) + v * Math.sin(x) + Math.ceil(v * x) / 5) * 0.32;
         }
     },
     deadpoolGeometry: {
@@ -605,6 +672,289 @@ const BASE_LAYERS = {
             const l = 2.025;
             return Math.abs(Math.sin(theta + l - v) - Math.ceil(2 * Math.sin(2 * theta + v + 1.55)));
         }
+    },
+    insaneTrigTomfoolery: {
+        id: 'insaneTrigTomfoolery',
+        label: 'Trig Tomfoolery',
+        type: 'polar',
+        color: '#f43f5e',
+        baseFreq: 330,
+        audioScale: 180,
+        gain: 0.3,
+        sonicProfile: 'spin',
+        thetaRange: { min: 0, max: 2 * Math.PI },
+        r: (theta, a) => Math.sin(2 * theta + Math.sin(4 * theta * insanePhase(a, 0.314, 5.966)))
+    },
+    insaneSecantTwist: {
+        id: 'insaneSecantTwist',
+        label: 'Secant Plot Twist',
+        type: 'polar',
+        color: '#fb923c',
+        baseFreq: 220,
+        audioScale: 100,
+        gain: 0.27,
+        sonicProfile: 'density',
+        thetaRange: { min: 0, max: 2 * Math.PI },
+        r: (theta, a) => 1 / Math.cos(3 * theta + 2 * Math.PI * insanePhase(a, 0, 5.966) * Math.sin(theta))
+    },
+    insaneInverseFractal: {
+        id: 'insaneInverseFractal',
+        label: 'Inverse Fractal',
+        type: 'polar',
+        color: '#a78bfa',
+        baseFreq: 110,
+        audioScale: 150,
+        gain: 0.28,
+        sonicProfile: 'spin',
+        thetaRange: { min: 0, max: 40 * Math.PI },
+        r: (theta, a) => {
+            const v = insanePhase(a, 0.55, 5.852);
+            return v * Math.asin(Math.sin(0.8 * theta * v));
+        }
+    },
+    insaneUnlimitedStar: {
+        id: 'insaneUnlimitedStar',
+        label: 'Unlimited Star',
+        type: 'polar',
+        color: '#22c55e',
+        baseFreq: 150,
+        audioScale: 80,
+        gain: 0.25,
+        sonicProfile: 'spin',
+        thetaRange: { min: 0, max: 2 * Math.PI },
+        r: (theta, a) => Math.exp(Math.sin(2 * theta * insanePhase(a, 0, 5.652) + 2) + 1.5)
+    },
+    insaneArachnidWeb: {
+        id: 'insaneArachnidWeb',
+        label: 'Arachnid Web',
+        type: 'polar',
+        color: '#06b6d4',
+        baseFreq: 440,
+        audioScale: 120,
+        gain: 0.25,
+        sonicProfile: 'density',
+        thetaRange: { min: 0, max: 20 * Math.PI },
+        r: (theta, a) => 9 * Math.tanh(theta / 10 + Math.sin(99 * theta * arachnidPhase(a)))
+    },
+    insanePowerSun: {
+        id: 'insanePowerSun',
+        label: 'Power of the Sun',
+        type: 'polar',
+        color: '#facc15',
+        baseFreq: 520,
+        audioScale: 110,
+        gain: 0.24,
+        sonicProfile: 'spin',
+        thetaRange: { min: 0, max: 2 * Math.PI },
+        r: (theta, a) => {
+            const v = insanePhase(a, 0, 5.966);
+            const core = Math.atan(0.5 * Math.tan(6 * theta + 2 * Math.PI * v)) + 2;
+            return 5 * Math.exp(-Math.abs(v * core)) + 2;
+        }
+    },
+    insaneMasterpiece: {
+        id: 'insaneMasterpiece',
+        label: 'The Masterpiece',
+        type: 'polar',
+        color: '#60a5fa',
+        baseFreq: 220,
+        audioScale: 140,
+        gain: 0.28,
+        sonicProfile: 'spin',
+        thetaRange: { min: 0, max: 10 * Math.PI },
+        r: (theta, a) => 6 * Math.sin(1.2 * theta + 2 * Math.PI * insanePhase(a, 0, 6.061)) - Math.cos(6 * theta)
+    },
+    fantasticRelativePrimality: {
+        id: 'fantasticRelativePrimality',
+        label: 'Relative Primality',
+        type: 'implicit',
+        color: '#f59e0b',
+        baseFreq: 220,
+        audioScale: 80,
+        gain: 0.26,
+        sonicProfile: 'density',
+        f: (x, y, a) => boolField(gcd(Math.round(x * fantasticPhase(a, 2, 11)), Math.round(y * fantasticPhase(a, 2, 11))) === 1)
+    },
+    fantasticCellularTrig: {
+        id: 'fantasticCellularTrig',
+        label: 'Cellular Trigonometry',
+        type: 'implicit',
+        color: '#14b8a6',
+        baseFreq: 330,
+        audioScale: 100,
+        gain: 0.25,
+        sonicProfile: 'density',
+        f: (x, y, a) => boolField(gcd(Math.round(Math.tan(y) * 10), Math.round(Math.sin(x) * 10 * fantasticPhase(a, 0, 1.4))) === 1)
+    },
+    fantasticInterferenceMesh: {
+        id: 'fantasticInterferenceMesh',
+        label: 'Interference Mesh',
+        type: 'implicit',
+        color: '#38bdf8',
+        baseFreq: 440,
+        audioScale: 120,
+        gain: 0.24,
+        sonicProfile: 'density',
+        f: (x, y, a) => {
+            const denom = Math.sin(y) + Math.sin(x) + 0.1;
+            return boolField(gcd(Math.round((x / denom) * 5), Math.round(y * fantasticPhase(a, 0, 1.9) * 5)) === 1);
+        }
+    },
+    fantasticGrid: {
+        id: 'fantasticGrid',
+        label: 'Fantastic Grid',
+        type: 'implicit',
+        color: '#84cc16',
+        baseFreq: 520,
+        audioScale: 90,
+        gain: 0.24,
+        sonicProfile: 'density',
+        f: (x, y, a) => {
+            const left = 1 / Math.cos(x) + Math.tan(y);
+            return boolField(gcd(Math.round(left * 5), Math.round(Math.sin(9 * x + fantasticPhase(a, 0, 7)) * 5)) === 1);
+        }
+    },
+    fantasticUltimateGcd: {
+        id: 'fantasticUltimateGcd',
+        label: 'Ultimate GCD',
+        type: 'implicit',
+        color: '#fb7185',
+        baseFreq: 660,
+        audioScale: 110,
+        gain: 0.22,
+        sonicProfile: 'density',
+        f: (x, y, a) => {
+            const v = fantasticPhase(a, 0, 5.966);
+            const left = 1 / Math.sin(x) + Math.tan(y) / Math.sin(2 * x + v);
+            const right = Math.sin(x) * y + Math.cos(y) * Math.tan(x);
+            return boolField(gcd(Math.round(left * 3), Math.round(right * 3)) === 1);
+        }
+    },
+    incredibleDynamicInterference: {
+        id: 'incredibleDynamicInterference',
+        label: 'Dynamic Interference',
+        color: '#22d3ee',
+        baseFreq: 220,
+        audioScale: 100,
+        gain: 0.29,
+        sonicProfile: 'density',
+        fn: (x, a) => {
+            const k = incrediblePhase(a, 0, 7.9);
+            return Math.tan(Math.sin(2 * x) * Math.cos(k * x)) + Math.sin(k * x);
+        }
+    },
+    incredibleSurfaceRipple: {
+        id: 'incredibleSurfaceRipple',
+        label: 'Surface Ripple Field',
+        type: 'implicit',
+        color: '#a78bfa',
+        baseFreq: 240,
+        audioScale: 120,
+        gain: 0.25,
+        sonicProfile: 'density',
+        f: (x, y, a) => Math.abs(y - 5 * Math.sin(x - Math.PI) * Math.cos(incrediblePhase(a, 0, 19.5) * y)) - 0.6
+    },
+    incredibleGlobalGate: {
+        id: 'incredibleGlobalGate',
+        label: 'Global Implicit Gate',
+        type: 'implicit',
+        color: '#f97316',
+        baseFreq: 330,
+        audioScale: 150,
+        gain: 0.24,
+        sonicProfile: 'density',
+        f: (x, y, a) => Math.abs((incrediblePhase(a, 1, 58) * Math.sin(Math.cos(y) + Math.sin(x))) - (Math.cos(x) + Math.sin(y))) - 0.8
+    },
+    incredibleConcentric: {
+        id: 'incredibleConcentric',
+        label: 'Concentric Modulation',
+        type: 'implicit',
+        color: '#34d399',
+        baseFreq: 260,
+        audioScale: 130,
+        gain: 0.25,
+        sonicProfile: 'density',
+        f: (x, y, a) => Math.abs(Math.sin(incrediblePhase(a, 0, 39) * x) - Math.sin(x * x + y * y)) - 0.5
+    },
+    incredibleChaosStar: {
+        id: 'incredibleChaosStar',
+        label: 'Chaos Star Grid',
+        type: 'implicit',
+        color: '#e879f9',
+        baseFreq: 440,
+        audioScale: 140,
+        gain: 0.24,
+        sonicProfile: 'density',
+        f: (x, y, a) => Math.abs(Math.sin(x * x + y * y) - (incrediblePhase(a, 0, 19.5) * Math.cos(x * y))) - 0.5
+    },
+    incomprehensibleSaturn: {
+        id: 'incomprehensibleSaturn',
+        label: 'Saturn Orbit',
+        type: 'parametric',
+        color: '#facc15',
+        baseFreq: 180,
+        audioScale: 110,
+        gain: 0.3,
+        sonicProfile: 'spin',
+        tRange: { min: 0, max: 2 * Math.PI },
+        x: (t) => Math.sin(t),
+        y: (t, a) => 2 * Math.sin(t + 2 * incomprehensiblePhase(a, 0, 5.966)) + Math.cos(t)
+    },
+    incomprehensibleWaveTangent: {
+        id: 'incomprehensibleWaveTangent',
+        label: 'Wave Tangent Twist',
+        type: 'parametric',
+        color: '#06b6d4',
+        baseFreq: 330,
+        audioScale: 90,
+        gain: 0.25,
+        sonicProfile: 'density',
+        tRange: { min: 0, max: 4 * Math.PI },
+        x: (t) => Math.sin(t) + Math.cos(t),
+        y: (t, a) => {
+            const v3 = incomprehensiblePhase(a, 0.172, 3.268);
+            const v6 = incomprehensiblePhase(a, 0.314, 5.966);
+            return Math.tan((v3 * t) / 2) * Math.cos(3 * v3 * t) + Math.sin(v3 * t + v6);
+        }
+    },
+    incomprehensibleRotatingOvals: {
+        id: 'incomprehensibleRotatingOvals',
+        label: 'Rotating Ovals',
+        type: 'parametric',
+        color: '#4ade80',
+        baseFreq: 220,
+        audioScale: 130,
+        gain: 0.28,
+        sonicProfile: 'spin',
+        tRange: { min: 0, max: 60 * Math.PI },
+        x: (t) => Math.sin(0.98 * t) + Math.cos(t),
+        y: (t, a) => Math.cos(10 * incomprehensiblePhase(a, 0, 14.25) + t)
+    },
+    incomprehensibleEight: {
+        id: 'incomprehensibleEight',
+        label: 'Higher Dimension 8',
+        type: 'parametric',
+        color: '#fb7185',
+        baseFreq: 440,
+        audioScale: 80,
+        gain: 0.23,
+        sonicProfile: 'density',
+        tRange: { min: 0, max: 4 * Math.PI },
+        x: (t) => Math.tan(20.5 * t),
+        y: (t, a) => (1 / Math.cos(t)) + Math.sin(41 * t) * Math.tan((incomprehensiblePhase(a, 0, 1.8) * t) / 2)
+    },
+    incomprehensibleFinalDense: {
+        id: 'incomprehensibleFinalDense',
+        label: 'Final Chapter Dense',
+        type: 'parametric',
+        color: '#f97316',
+        baseFreq: 520,
+        audioScale: 70,
+        gain: 0.22,
+        sonicProfile: 'density',
+        tRange: { min: 0, max: 2 * Math.PI },
+        x: (t, a) => Math.tan(50 * t + incomprehensiblePhase(a, 0, 2.9) * Math.PI) / 4 + Math.sin(t + incomprehensiblePhase(a, 0, 2.9) * Math.PI),
+        y: (t, a) => (1 / Math.sin(t)) + Math.sin(100 * t) * Math.cos(1.2 * t + incomprehensiblePhase(a, 0, 2.9) * Math.PI)
     }
 };
 
@@ -1067,9 +1417,295 @@ export const SIM_FUNCTIONS = {
         type: 'layered',
         formula: '(4cos(sin(20t+v)+v), sin(25t+v)), y = mod(gcd(2025x),5)+v sin x+ceil(vx)/5',
         latex: '(4\\cos(\\sin(20t+v)+v),\\sin(25t+v)),\\ y=\\gcd(2025x)\\bmod5+v\\sin x+\\frac{\\lceil vx\\rceil}{5}',
-        range: HYPER_REALITY_RANGE,
+        range: HYPER_REALITY_WEAVE_RANGE,
         ...BASE_TIMING,
         layers: [BASE_LAYERS.hyperLissajous, BASE_LAYERS.realityBenderLow]
+    },
+    hyperPlusRoseDeadpool: {
+        category: 'hyper-plus',
+        name: 'Hyper Rose Deadpool',
+        variable: 'v',
+        type: 'layered',
+        formula: 'r1 = sin(2025θ/d), r2 = |sin(θ+l-v) - ceil(2sin(2θ+v+1.55))|',
+        latex: 'r_1=\\sin\\left(\\frac{2025\\theta}{d}\\right),\\ r_2=|\\sin(\\theta+l-v)-\\lceil2\\sin(2\\theta+v+1.55)\\rceil|',
+        range: HYPER_DEADPOOL_RANGE,
+        ...BASE_TIMING,
+        layers: [BASE_LAYERS.millennialRose, BASE_LAYERS.deadpoolGeometry]
+    },
+    insanePlusTrigTomfoolery: {
+        category: 'insane-plus',
+        name: 'Trig Tomfoolery',
+        variable: 'v',
+        type: 'single',
+        formula: 'r = sin(2θ + sin(4θv))',
+        latex: 'r=\\sin(2\\theta+\\sin(4\\theta v))',
+        range: INSANE_SMALL_RANGE,
+        ...BASE_TIMING,
+        layers: [BASE_LAYERS.insaneTrigTomfoolery]
+    },
+    insanePlusSecantTwist: {
+        category: 'insane-plus',
+        name: 'Secant Plot Twist',
+        variable: 'v',
+        type: 'single',
+        formula: 'r = sec(3θ + 2πv sinθ)',
+        latex: 'r=\\sec(3\\theta+2\\pi v\\sin\\theta)',
+        range: INSANE_WIDE_RANGE,
+        ...BASE_TIMING,
+        layers: [BASE_LAYERS.insaneSecantTwist]
+    },
+    insanePlusInverseFractal: {
+        category: 'insane-plus',
+        name: 'Inverse Fractal',
+        variable: 'v',
+        type: 'single',
+        formula: 'r = v asin(sin(0.8θv))',
+        latex: 'r=v\\arcsin(\\sin(0.8\\theta v))',
+        range: INSANE_FRACTAL_RANGE,
+        ...BASE_TIMING,
+        layers: [BASE_LAYERS.insaneInverseFractal]
+    },
+    insanePlusUnlimitedStar: {
+        category: 'insane-plus',
+        name: 'Unlimited Star',
+        variable: 'v',
+        type: 'single',
+        formula: 'r = exp(sin(2θv + 2) + 1.5)',
+        latex: 'r=e^{\\sin(2\\theta v+2)+1.5}',
+        range: INSANE_STAR_RANGE,
+        ...BASE_TIMING,
+        layers: [BASE_LAYERS.insaneUnlimitedStar]
+    },
+    insanePlusArachnidWeb: {
+        category: 'insane-plus',
+        name: 'Arachnid Web',
+        variable: 'v',
+        type: 'single',
+        formula: 'r = 9 tanh(θ/10 + sin(99θv))',
+        latex: 'r=9\\tanh(\\theta/10+\\sin(99\\theta v))',
+        range: INSANE_WEB_RANGE,
+        ...BASE_TIMING,
+        layers: [BASE_LAYERS.insaneArachnidWeb]
+    },
+    insanePlusPowerSun: {
+        category: 'insane-plus',
+        name: 'Power of the Sun',
+        variable: 'v',
+        type: 'single',
+        formula: 'r = 5exp(-|v atan(.5tan(6θ+2πv))|)+2',
+        latex: 'r=5e^{-|v\\arctan(.5\\tan(6\\theta+2\\pi v))|}+2',
+        range: INSANE_SUN_RANGE,
+        ...BASE_TIMING,
+        layers: [BASE_LAYERS.insanePowerSun]
+    },
+    insanePlusMasterpiece: {
+        category: 'insane-plus',
+        name: 'The Masterpiece',
+        variable: 'v',
+        type: 'single',
+        formula: 'r = 6sin(1.2θ+2πv) - cos(6θ)',
+        latex: 'r=6\\sin(1.2\\theta+2\\pi v)-\\cos(6\\theta)',
+        range: INSANE_WIDE_RANGE,
+        ...BASE_TIMING,
+        layers: [BASE_LAYERS.insaneMasterpiece]
+    },
+    insanePlusTrigMasterpiece: {
+        category: 'insane-plus',
+        name: 'Insane Trig Masterpiece',
+        variable: 'v',
+        type: 'layered',
+        formula: 'r1 = sin(2θ+sin(4θv)), r2 = 6sin(1.2θ+2πv)-cos(6θ)',
+        latex: 'r_1=\\sin(2\\theta+\\sin(4\\theta v)),\\ r_2=6\\sin(1.2\\theta+2\\pi v)-\\cos(6\\theta)',
+        range: INSANE_WIDE_RANGE,
+        ...BASE_TIMING,
+        layers: [BASE_LAYERS.insaneTrigTomfoolery, BASE_LAYERS.insaneMasterpiece]
+    },
+    insanePlusWebTwist: {
+        category: 'insane-plus',
+        name: 'Insane Web Twist',
+        variable: 'v',
+        type: 'layered',
+        formula: 'r1 = sec(3θ+2πv sinθ), r2 = 9tanh(θ/10+sin(99θv))',
+        latex: 'r_1=\\sec(3\\theta+2\\pi v\\sin\\theta),\\ r_2=9\\tanh(\\theta/10+\\sin(99\\theta v))',
+        range: INSANE_WEB_RANGE,
+        ...BASE_TIMING,
+        layers: [BASE_LAYERS.insaneSecantTwist, BASE_LAYERS.insaneArachnidWeb]
+    },
+    insanePlusFractalStar: {
+        category: 'insane-plus',
+        name: 'Insane Fractal Star',
+        variable: 'v',
+        type: 'layered',
+        formula: 'r1 = v asin(sin(0.8θv)), r2 = exp(sin(2θv+2)+1.5)',
+        latex: 'r_1=v\\arcsin(\\sin(0.8\\theta v)),\\ r_2=e^{\\sin(2\\theta v+2)+1.5}',
+        range: INSANE_STAR_RANGE,
+        ...BASE_TIMING,
+        layers: [BASE_LAYERS.insaneInverseFractal, BASE_LAYERS.insaneUnlimitedStar]
+    },
+    fantasticPlusRelativePrimality: {
+        category: 'fantastic-plus',
+        name: 'Relative Primality',
+        variable: 'v',
+        type: 'single',
+        formula: 'gcd(vx, vy) = 1',
+        latex: '\\gcd(vx,vy)=1',
+        range: FANTASTIC_10_RANGE,
+        ...BASE_TIMING,
+        layers: [BASE_LAYERS.fantasticRelativePrimality]
+    },
+    fantasticPlusCellularTrig: {
+        category: 'fantastic-plus',
+        name: 'Cellular Trigonometry',
+        variable: 'v',
+        type: 'single',
+        formula: 'gcd(10tan y, 10v sin x) = 1',
+        latex: '\\gcd(10\\tan y,10v\\sin x)=1',
+        range: FANTASTIC_5_RANGE,
+        ...BASE_TIMING,
+        layers: [BASE_LAYERS.fantasticCellularTrig]
+    },
+    fantasticPlusInterferenceMesh: {
+        category: 'fantastic-plus',
+        name: 'Interference Mesh',
+        variable: 'v',
+        type: 'single',
+        formula: 'gcd(5x/(sin y+sin x), 5yv) = 1',
+        latex: '\\gcd(5x/(\\sin y+\\sin x),5yv)=1',
+        range: FANTASTIC_8_RANGE,
+        ...BASE_TIMING,
+        layers: [BASE_LAYERS.fantasticInterferenceMesh]
+    },
+    fantasticPlusGrid: {
+        category: 'fantastic-plus',
+        name: 'Fantastic Grid',
+        variable: 'v',
+        type: 'single',
+        formula: 'gcd(5(sec x+tan y), 5sin(9x+v)) = 1',
+        latex: '\\gcd(5(\\sec x+\\tan y),5\\sin(9x+v))=1',
+        range: FANTASTIC_6_RANGE,
+        ...BASE_TIMING,
+        layers: [BASE_LAYERS.fantasticGrid]
+    },
+    fantasticPlusUltimateGcd: {
+        category: 'fantastic-plus',
+        name: 'Ultimate GCD',
+        variable: 'v',
+        type: 'single',
+        formula: 'gcd(3(csc x+tan y/sin(2x+v)), 3(sin x y+cos y tan x)) = 1',
+        latex: '\\gcd(3(\\csc x+\\tan y/\\sin(2x+v)),3(\\sin x\\,y+\\cos y\\tan x))=1',
+        range: FANTASTIC_4_RANGE,
+        ...BASE_TIMING,
+        layers: [BASE_LAYERS.fantasticUltimateGcd]
+    },
+    incrediblePlusDynamicInterference: {
+        category: 'incredible-plus',
+        name: 'Dynamic Interference',
+        variable: 'k',
+        type: 'single',
+        formula: 'y = tan(sin(2x)cos(kx)) + sin(kx)',
+        latex: 'y=\\tan(\\sin(2x)\\cos(kx))+\\sin(kx)',
+        range: INCR_5_RANGE,
+        ...BASE_TIMING,
+        layers: [BASE_LAYERS.incredibleDynamicInterference]
+    },
+    incrediblePlusSurfaceRipple: {
+        category: 'incredible-plus',
+        name: 'Surface Ripple Field',
+        variable: 'k',
+        type: 'single',
+        formula: 'y = 5sin(x-π)cos(ky)',
+        latex: 'y=5\\sin(x-\\pi)\\cos(ky)',
+        range: INCR_10_RANGE,
+        ...BASE_TIMING,
+        layers: [BASE_LAYERS.incredibleSurfaceRipple]
+    },
+    incrediblePlusGlobalGate: {
+        category: 'incredible-plus',
+        name: 'Global Implicit Gate',
+        variable: 'k',
+        type: 'single',
+        formula: 'k sin(cos y + sin x) = cos x + sin y',
+        latex: 'k\\sin(\\cos y+\\sin x)=\\cos x+\\sin y',
+        range: INCR_15_RANGE,
+        ...BASE_TIMING,
+        layers: [BASE_LAYERS.incredibleGlobalGate]
+    },
+    incrediblePlusConcentric: {
+        category: 'incredible-plus',
+        name: 'Concentric Modulation',
+        variable: 'k',
+        type: 'single',
+        formula: 'sin(kx) = sin(x²+y²)',
+        latex: '\\sin(kx)=\\sin(x^2+y^2)',
+        range: INCR_8_RANGE,
+        ...BASE_TIMING,
+        layers: [BASE_LAYERS.incredibleConcentric]
+    },
+    incrediblePlusChaosStar: {
+        category: 'incredible-plus',
+        name: 'Chaos Star Grid',
+        variable: 'k',
+        type: 'single',
+        formula: 'sin(x²+y²) = k cos(xy)',
+        latex: '\\sin(x^2+y^2)=k\\cos(xy)',
+        range: INCR_8_RANGE,
+        ...BASE_TIMING,
+        layers: [BASE_LAYERS.incredibleChaosStar]
+    },
+    incomprehensiblePlusSaturn: {
+        category: 'incomprehensible-plus',
+        name: 'Saturn Orbit',
+        variable: 'v',
+        type: 'single',
+        formula: '(sin t, 2sin(t+2v)+cos t)',
+        latex: '(\\sin t,2\\sin(t+2v)+\\cos t)',
+        range: INCOMP_SATURN_RANGE,
+        ...BASE_TIMING,
+        layers: [BASE_LAYERS.incomprehensibleSaturn]
+    },
+    incomprehensiblePlusWaveTangent: {
+        category: 'incomprehensible-plus',
+        name: 'Wave Tangent Twist',
+        variable: 'v',
+        type: 'single',
+        formula: '(sin t+cos t, tan(vt/2)cos(3vt)+sin(vt+v6))',
+        latex: '(\\sin t+\\cos t,\\tan(vt/2)\\cos(3vt)+\\sin(vt+v_6))',
+        range: INCOMP_WAVE_RANGE,
+        ...BASE_TIMING,
+        layers: [BASE_LAYERS.incomprehensibleWaveTangent]
+    },
+    incomprehensiblePlusRotatingOvals: {
+        category: 'incomprehensible-plus',
+        name: 'Rotating Ovals',
+        variable: 'v',
+        type: 'single',
+        formula: '(sin(0.98t)+cos t, cos(10v+t))',
+        latex: '(\\sin(0.98t)+\\cos t,\\cos(10v+t))',
+        range: INCOMP_OVAL_RANGE,
+        ...BASE_TIMING,
+        layers: [BASE_LAYERS.incomprehensibleRotatingOvals]
+    },
+    incomprehensiblePlusEight: {
+        category: 'incomprehensible-plus',
+        name: 'Higher Dimension 8',
+        variable: 'v',
+        type: 'single',
+        formula: '(tan(20.5t), sec t + sin(41t)tan(vt/2))',
+        latex: '(\\tan(20.5t),\\sec t+\\sin(41t)\\tan(vt/2))',
+        range: INCOMP_BIG_RANGE,
+        ...BASE_TIMING,
+        layers: [BASE_LAYERS.incomprehensibleEight]
+    },
+    incomprehensiblePlusFinalDense: {
+        category: 'incomprehensible-plus',
+        name: 'Final Chapter Dense',
+        variable: 'v',
+        type: 'single',
+        formula: '(tan(50t+vπ)/4+sin(t+vπ), csc t+sin(100t)cos(1.2t+vπ))',
+        latex: '(\\tan(50t+v\\pi)/4+\\sin(t+v\\pi),\\csc t+\\sin(100t)\\cos(1.2t+v\\pi))',
+        range: INCOMP_DENSE_RANGE,
+        ...BASE_TIMING,
+        layers: [BASE_LAYERS.incomprehensibleFinalDense]
     }
 };
 
@@ -1633,6 +2269,48 @@ function formatVariableValue(sim, a) {
             return hyperPhase(a, 0, 7).toFixed(2);
         case 'deadpoolGeometry':
             return hyperPhase(a, 0, 23.864).toFixed(2);
+        case 'insaneTrigTomfoolery':
+            return insanePhase(a, 0.314, 5.966).toFixed(2);
+        case 'insaneSecantTwist':
+        case 'insanePowerSun':
+            return insanePhase(a, 0, 5.966).toFixed(2);
+        case 'insaneArachnidWeb':
+            return arachnidPhase(a).toFixed(2);
+        case 'insaneInverseFractal':
+            return insanePhase(a, 0.55, 5.852).toFixed(2);
+        case 'insaneUnlimitedStar':
+            return insanePhase(a, 0, 5.652).toFixed(2);
+        case 'insaneMasterpiece':
+            return insanePhase(a, 0, 6.061).toFixed(2);
+        case 'fantasticRelativePrimality':
+            return fantasticPhase(a, 2, 11).toFixed(2);
+        case 'fantasticCellularTrig':
+            return fantasticPhase(a, 0, 1.4).toFixed(2);
+        case 'fantasticInterferenceMesh':
+            return fantasticPhase(a, 0, 1.9).toFixed(2);
+        case 'fantasticGrid':
+            return fantasticPhase(a, 0, 7).toFixed(2);
+        case 'fantasticUltimateGcd':
+            return fantasticPhase(a, 0, 5.966).toFixed(2);
+        case 'incredibleDynamicInterference':
+            return incrediblePhase(a, 0, 7.9).toFixed(2);
+        case 'incredibleSurfaceRipple':
+        case 'incredibleChaosStar':
+            return incrediblePhase(a, 0, 19.5).toFixed(2);
+        case 'incredibleGlobalGate':
+            return incrediblePhase(a, 1, 58).toFixed(2);
+        case 'incredibleConcentric':
+            return incrediblePhase(a, 0, 39).toFixed(2);
+        case 'incomprehensibleSaturn':
+            return incomprehensiblePhase(a, 0, 5.966).toFixed(2);
+        case 'incomprehensibleWaveTangent':
+            return incomprehensiblePhase(a, 0.172, 3.268).toFixed(2);
+        case 'incomprehensibleRotatingOvals':
+            return incomprehensiblePhase(a, 0, 14.25).toFixed(2);
+        case 'incomprehensibleEight':
+            return incomprehensiblePhase(a, 0, 1.8).toFixed(2);
+        case 'incomprehensibleFinalDense':
+            return incomprehensiblePhase(a, 0, 2.9).toFixed(2);
         default:
             return beautifulPhase(a, 0, 1).toFixed(2);
     }
@@ -1724,6 +2402,36 @@ function fusionPhase(a, min, max) {
 function hyperPhase(a, min, max) {
     const t = clamp((a - 1.6) / 28.4, 0, 1);
     return min + (max - min) * t;
+}
+
+function insanePhase(a, min, max) {
+    const t = clamp((a - 1.6) / 28.4, 0, 1);
+    return min + (max - min) * t;
+}
+
+function arachnidPhase(a) {
+    const t = clamp((a - 1.6) / 28.4, 0, 1);
+    const eased = t * t * 0.45;
+    return 0.05 + (0.42 - 0.05) * eased;
+}
+
+function fantasticPhase(a, min, max) {
+    const t = clamp((a - 1.6) / 28.4, 0, 1);
+    return min + (max - min) * t;
+}
+
+function incrediblePhase(a, min, max) {
+    const t = clamp((a - 1.6) / 28.4, 0, 1);
+    return min + (max - min) * t;
+}
+
+function incomprehensiblePhase(a, min, max) {
+    const t = clamp((a - 1.6) / 28.4, 0, 1);
+    return min + (max - min) * t;
+}
+
+function boolField(hit) {
+    return hit ? 0 : 999;
 }
 
 function gcd(aIn, bIn = 0) {
