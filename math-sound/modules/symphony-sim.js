@@ -165,7 +165,7 @@ const INCOMP_WAVE_RANGE = { xMin: -3, xMax: 3, yMin: -10, yMax: 10 };
 const INCOMP_OVAL_RANGE = { xMin: -3, xMax: 3, yMin: -2, yMax: 2 };
 const INCOMP_BIG_RANGE = { xMin: -15, xMax: 15, yMin: -15, yMax: 15 };
 const INCOMP_DENSE_RANGE = { xMin: -10, xMax: 10, yMin: -10, yMax: 10 };
-const BASE_TIMING = { durationMs: 16000, drawMs: 6000 };
+const BASE_TIMING = { durationMs: 14200, drawMs: 4200 };
 const COLOR_PALETTE = [342, 28, 52, 145, 190, 224, 266, 310];
 const BASE_LAYERS = {
     standard: {
@@ -343,7 +343,7 @@ const BASE_LAYERS = {
         gain: 0.32,
         sonicProfile: 'density',
         f: (x, y, a) => {
-            const v = -8 + beautifulPhase(a, 0, 1) * 16;
+            const v = -8 + beautifulPhase(a, 0, 0.5) * 16;
             return y - (v * Math.sign(v * x - y) + Math.cos(v + x));
         }
     },
@@ -356,7 +356,7 @@ const BASE_LAYERS = {
         gain: 0.33,
         sonicProfile: 'stepped',
         fn: (x, a) => {
-            const v = beautifulPhase(a, 1, 10);
+            const v = beautifulPhase(a, 1, 5.5);
             return gcd(Math.round(v * x)) * Math.sign(Math.sin(x)) - Math.sin(x);
         }
     },
@@ -1854,7 +1854,7 @@ function tick() {
     const animateProgress = Math.max(0, (elapsed - sim.drawMs) / Math.max(1, sim.durationMs - sim.drawMs));
     const a = animateProgress <= 0
         ? 1.6
-        : 1.6 + 28.4 * (0.5 - 0.5 * Math.cos(animateProgress * Math.PI * 2));
+        : 1.6 + 56.8 * (0.5 - 0.5 * Math.cos(animateProgress * Math.PI * 2));
 
     state.drawProgress = drawProgress;
     drawFrame(sim, drawProgress, a);
@@ -2420,48 +2420,48 @@ function clamp(value, min, max) {
 }
 
 function beautifulPhase(a, min, max) {
-    const t = clamp((a - 1.6) / 28.4, 0, 1);
+    const t = clamp((a - 1.6) / 28.4, 0, 2);
     return min + (max - min) * t;
 }
 
 function harmonicPhase(a, min, max) {
-    const t = clamp((a - 1.6) / 28.4, 0, 1);
+    const t = clamp((a - 1.6) / 56.8, 0, 1);
     return min + (max - min) * t;
 }
 
 function fusionPhase(a, min, max) {
-    const t = clamp((a - 1.6) / 28.4, 0, 1);
+    const t = clamp((a - 1.6) / 56.8, 0, 1);
     return min + (max - min) * t;
 }
 
 function hyperPhase(a, min, max) {
-    const t = clamp((a - 1.6) / 28.4, 0, 1);
+    const t = clamp((a - 1.6) / 56.8, 0, 1);
     return min + (max - min) * t;
 }
 
 function insanePhase(a, min, max) {
-    const t = clamp((a - 1.6) / 28.4, 0, 1);
+    const t = clamp((a - 1.6) / 56.8, 0, 1);
     return min + (max - min) * t;
 }
 
 function arachnidPhase(a) {
-    const t = clamp((a - 1.6) / 28.4, 0, 1);
+    const t = clamp((a - 1.6) / 56.8, 0, 1);
     const eased = t * t * 0.45;
     return 0.05 + (0.42 - 0.05) * eased;
 }
 
 function fantasticPhase(a, min, max) {
-    const t = clamp((a - 1.6) / 28.4, 0, 1);
+    const t = clamp((a - 1.6) / 56.8, 0, 1);
     return min + (max - min) * t;
 }
 
 function incrediblePhase(a, min, max) {
-    const t = clamp((a - 1.6) / 28.4, 0, 1);
+    const t = clamp((a - 1.6) / 56.8, 0, 1);
     return min + (max - min) * t;
 }
 
 function incomprehensiblePhase(a, min, max) {
-    const t = clamp((a - 1.6) / 28.4, 0, 1);
+    const t = clamp((a - 1.6) / 56.8, 0, 1);
     return min + (max - min) * t;
 }
 
