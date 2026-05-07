@@ -13,19 +13,21 @@ export const COSMOS_SIM_CATEGORIES = {
     'cosmos-plus': {
         name: '🌌 Cosmos+',
         functions: [
-            'spiralGalaxySim', 'eventHorizonSim', 'saturnRingsSim', 'wormholeTunnelSim'
+            'spiralGalaxySim', 'eventHorizonSim', 'saturnRingsSim', 'solarPlasmaSim', 
+            'pulsarBeamSim', 'supernovaSim', 'wormholeTunnelSim', 'gravitationalWavesSim'
         ]
     },
     'chaos-plus': {
         name: '💾 Chaos+',
         functions: [
-            'lorenzAttractorSim', 'ikedaMapSim', 'nestedSineSim'
+            'lorenzAttractorSim', 'ikedaMapSim', 'nestedSineSim', 'chaosSawSim', 
+            'circularChaosSim', 'desmosInterferenceSim', 'powerGlitchSim'
         ]
     },
     'cosmic-wave-plus': {
         name: '🌊 Cosmic Wave+',
         functions: [
-            'symphonicTanSim', 'glitchMasterSim'
+            'symphonicTanSim', 'glitchMasterSim', 'deepMatrixSim', 'secantGateSim', 'circularSineSim'
         ]
     }
 };
@@ -289,6 +291,180 @@ export const COSMOS_SIM_FUNCTIONS = {
             return Math.tan(Math.sin(2 * x) * Math.cos(b * x)) + Math.sin(a * x);
         },
         audioScale: 80, baseFreq: 220
+    },
+    solarPlasmaSim: {
+        id: 'solarPlasmaSim', category: 'cosmos-plus', name: 'Solar Plasma', type: 'polar',
+        formula: 'r = (5 + b·sin(10θ)) · ripples(θ, a)',
+        latex: 'r = (5 + b\\sin(10\\theta)) \\cdot \\text{plasma}(\\theta, a)',
+        tRange: { min: 0, max: 2 * Math.PI },
+        viewBox: { xMin: -8, xMax: 8, yMin: -8, yMax: 8 },
+        drawMs: 2000, durationMs: 12000,
+        varA: { name: 'Surface Ripple', min: 10, max: 120, default: 60 },
+        varB: { name: 'Resonance Depth', min: 0.5, max: 2.5, default: 1.5 },
+        r: (theta, a, b) => {
+            const base = 5;
+            const ripples = Math.sin(theta * a) > 0 ? 1 : 0.88;
+            const casini = Math.abs(Math.sin(theta * 3)) < 0.95 ? 1 : 0.3;
+            return (base + b * Math.sin(theta * 10)) * ripples * casini;
+        },
+        audioScale: 120, baseFreq: 100
+    },
+    pulsarBeamSim: {
+        id: 'pulsarBeamSim', category: 'cosmos-plus', name: 'Pulsar Beam', type: 'polar',
+        formula: 'r = 0.2 + b · |sin(θ)|^a',
+        latex: 'r = 0.2 + b \\cdot |\\sin\\theta|^{a}',
+        tRange: { min: 0, max: 2 * Math.PI },
+        viewBox: { xMin: -10, xMax: 10, yMin: -10, yMax: 10 },
+        drawMs: 2000, durationMs: 12000,
+        varA: { name: 'Beam Sharpness', min: 50, max: 500, default: 250 },
+        varB: { name: 'Beam Scale', min: 2.0, max: 15.0, default: 8.0 },
+        r: (theta, a, b) => {
+            return 0.2 + b * Math.pow(Math.abs(Math.sin(theta)), a);
+        },
+        audioScale: 400, baseFreq: 80
+    },
+    supernovaSim: {
+        id: 'supernovaSim', category: 'cosmos-plus', name: 'Supernova', type: 'parametric',
+        formula: 'r = (0.5+8p^1.5)·(1+0.12sin(a·t)), spin = b·t',
+        latex: 'r = (0.5 + 8p^{1.5}) \\cdot (1 + 0.12\\sin(a t))',
+        tRange: { min: 0, max: 2 * Math.PI },
+        viewBox: { xMin: -10, xMax: 10, yMin: -10, yMax: 10 },
+        drawMs: 2000, durationMs: 12000,
+        varA: { name: 'Ejecta Ripples', min: 10, max: 60, default: 30 },
+        varB: { name: 'Shockwave Speed', min: 2, max: 12, default: 5 },
+        x: (t, a, b) => {
+            const p = t / (2 * Math.PI);
+            const r = (0.5 + 8 * Math.pow(p, 1.5)) * (1 + 0.12 * Math.sin(t * a));
+            return r * Math.cos(t * b);
+        },
+        y: (t, a, b) => {
+            const p = t / (2 * Math.PI);
+            const r = (0.5 + 8 * Math.pow(p, 1.5)) * (1 + 0.12 * Math.sin(t * a));
+            return r * Math.sin(t * b);
+        },
+        audioScale: 120, baseFreq: 150
+    },
+    gravitationalWavesSim: {
+        id: 'gravitationalWavesSim', category: 'cosmos-plus', name: 'Gravitational Waves', type: 'cartesian',
+        formula: 'y = sin(a·x) · sin(b·x)',
+        latex: 'y = \\sin(a x) \\cdot \\sin(b x)',
+        range: { xMin: -5, xMax: 5, yMin: -1.5, yMax: 1.5 },
+        drawMs: 2000, durationMs: 12000,
+        varA: { name: 'Frequency A', min: 2.0, max: 15.0, default: 8.0 },
+        varB: { name: 'Frequency B', min: 2.0, max: 15.0, default: 8.5 },
+        fn: (x, a, b) => {
+            return Math.sin(x * a) * Math.sin(x * b);
+        },
+        audioScale: 150, baseFreq: 220
+    },
+    chaosSawSim: {
+        id: 'chaosSawSim', category: 'chaos-plus', name: 'Chaos Sawtooth', type: 'cartesian',
+        formula: 'y = (x·floor(a/tan(x))) % 10 / b',
+        latex: 'y = x \\lfloor \\frac{a}{\\tan x} \\rfloor \\div b',
+        range: { xMin: -10, xMax: 10, yMin: -10, yMax: 10 },
+        drawMs: 2000, durationMs: 12000,
+        varA: { name: 'Saw Step', min: 0.1, max: 2.0, default: 1.0 },
+        varB: { name: 'Scale Factor', min: 1.0, max: 10.0, default: 5.0 },
+        fn: (x, a, b) => {
+            const tanX = Math.tan(x);
+            if (Math.abs(tanX) < 0.01) return 0;
+            return (x * Math.floor(a / tanX)) % 10 / b;
+        },
+        audioScale: 100, baseFreq: 200
+    },
+    circularChaosSim: {
+        id: 'circularChaosSim', category: 'chaos-plus', name: 'Circular Chaos', type: 'polar',
+        formula: 'r = tan(sin(a·θ)) · floor(cos(b·θ)+1.2)',
+        latex: 'r = \\tan(\\sin(a\\theta)) \\cdot \\lfloor \\cos(b\\theta) + 1.2 \\rfloor',
+        tRange: { min: 0, max: 2 * Math.PI },
+        viewBox: { xMin: -5, xMax: 5, yMin: -5, yMax: 5 },
+        drawMs: 2000, durationMs: 12000,
+        varA: { name: 'Modulation', min: 5, max: 25, default: 10 },
+        varB: { name: 'Noise Density', min: 10, max: 80, default: 50 },
+        r: (theta, a, b) => {
+            return Math.tan(Math.sin(theta * a)) * Math.floor(Math.cos(theta * b) + 1.2);
+        },
+        audioScale: 150, baseFreq: 200
+    },
+    desmosInterferenceSim: {
+        id: 'desmosInterferenceSim', category: 'chaos-plus', name: 'Interference Noise', type: 'cartesian',
+        formula: 'y = sin(a·x) · (a%x) · tan(b·π·x)',
+        latex: 'y = \\sin(a x) \\cdot (a \\pmod x) \\cdot \\tan(b \\pi x)',
+        range: { xMin: -5, xMax: 5, yMin: -20, yMax: 20 },
+        drawMs: 2000, durationMs: 12000,
+        varA: { name: 'Spike Pitch', min: 10, max: 50, default: 23 },
+        varB: { name: 'Mod Frequency', min: 0.5, max: 4.0, default: 1.0 },
+        fn: (x, a, b) => {
+            return Math.sin(a * x) * (a % (x || 1)) * Math.tan(b * Math.PI * x);
+        },
+        audioScale: 50, baseFreq: 180
+    },
+    powerGlitchSim: {
+        id: 'powerGlitchSim', category: 'chaos-plus', name: 'Power Glitch', type: 'cartesian',
+        formula: 'y = x^sin(x · cos(x·b)) · a',
+        latex: 'y = x^{\\sin(x \\cos(x \\cdot b))} \\cdot a',
+        range: { xMin: -10, xMax: 10, yMin: -5, yMax: 10 },
+        drawMs: 2000, durationMs: 12000,
+        varA: { name: 'Glitch Power', min: 1.0, max: 6.0, default: 2.0 },
+        varB: { name: 'Noise Modulation', min: 2, max: 16, default: 8 },
+        fn: (x, a, b) => {
+            const xAbs = Math.abs(x) + 1.1;
+            const exponent = Math.sin(x * b + Math.cos(x * 4)) * a;
+            return (Math.pow(xAbs, exponent) * 2) % 10 - 2;
+        },
+        audioScale: 100, baseFreq: 150
+    },
+    deepMatrixSim: {
+        id: 'deepMatrixSim', category: 'cosmic-wave-plus', name: 'Deep Matrix', type: 'cartesian',
+        formula: 'y = a · sin(a · sin(y) · sin(x)) - cos(cos(x) · sin(y))',
+        latex: 'y = a\\sin(a\\sin y\\sin x) - \\cos(\\cos x\\sin y)',
+        range: { xMin: -10, xMax: 10, yMin: -10, yMax: 10 },
+        drawMs: 2000, durationMs: 12000,
+        varA: { name: 'Grid Density', min: -20, max: -2, default: -10 },
+        varB: { name: 'Wave Phase', min: 1.0, max: 10.0, default: 5.0 },
+        fn: (x, a, b) => {
+            let y = 0;
+            for(let i=0; i<3; i++) {
+                y = a * Math.sin(a * Math.sin(y || 0.1) * Math.sin(x)) - Math.cos(Math.cos(x) * Math.sin(y || 0.1));
+            }
+            return y;
+        },
+        audioScale: 100, baseFreq: 150
+    },
+    secantGateSim: {
+        id: 'secantGateSim', category: 'cosmic-wave-plus', name: 'Secant Gate', type: 'cartesian',
+        formula: 'y = a · sin(sin(x) + cos(y)) - sin(a·y) + sec(x)',
+        latex: 'y = a\\sin(\\sin x + \\cos y) - \\sin(ay) + \\sec x',
+        range: { xMin: -10, xMax: 10, yMin: -10, yMax: 10 },
+        drawMs: 2000, durationMs: 12000,
+        varA: { name: 'Gate Frequency', min: 0.5, max: 5.0, default: 1.53 },
+        varB: { name: 'Orbit Wave', min: 1.0, max: 10.0, default: 5.0 },
+        fn: (x, a, b) => {
+            let y = 0;
+            const secX = 1 / (Math.cos(x) || 0.1);
+            for(let i=0; i<3; i++) {
+                y = a * Math.sin(Math.sin(x) + Math.cos(y || 0.1)) - Math.sin(a * (y || 0.1)) + secX;
+            }
+            return Math.max(-15, Math.min(15, y));
+        },
+        audioScale: 120, baseFreq: 240
+    },
+    circularSineSim: {
+        id: 'circularSineSim', category: 'cosmic-wave-plus', name: 'Circular Sine', type: 'cartesian',
+        formula: 'y = b · x · sin(x² + y² + a)',
+        latex: 'y = b x \\sin(x^2 + y^2 + a)',
+        range: { xMin: -5, xMax: 5, yMin: -5, yMax: 5 },
+        drawMs: 2000, durationMs: 12000,
+        varA: { name: 'Orbit Phase', min: 2.0, max: 30.0, default: 12.5 },
+        varB: { name: 'Warp Factor', min: 0.5, max: 4.0, default: 1.0 },
+        fn: (x, a, b) => {
+            let y = 0;
+            for(let i=0; i<3; i++) {
+                y = b * x * Math.sin(x * x + y * y + a);
+            }
+            return y;
+        },
+        audioScale: 140, baseFreq: 180
     }
 };
 
@@ -473,64 +649,6 @@ function drawSimCurve(graphCtx, sim, width, height, progress, valA, valB) {
     }
     graphCtx.stroke();
 
-    // === NEON PHOTON RIDER ===
-    if (progress > 0) {
-        let beadPx = prevPx, beadPy = prevPy;
-        
-        if (progress === 1.0) {
-            const beadProgress = (performance.now() / 4000) % 1.0;
-            const beadIdx = Math.floor(beadProgress * totalSteps);
-            const bp = beadIdx / totalSteps;
-            let bx, by;
-            
-            if (sim.type === 'cartesian') {
-                bx = xMin + bp * (xMax - xMin); by = sim.fn(bx, valA, valB);
-            } else if (sim.type === 'parametric') {
-                const t = sim.tRange.min + bp * (sim.tRange.max - sim.tRange.min);
-                bx = sim.x(t, valA, valB); by = sim.y(t, valA, valB);
-            } else if (sim.type === 'polar') {
-                const theta = sim.tRange.min + bp * (sim.tRange.max - sim.tRange.min);
-                const r = sim.r(theta, valA, valB);
-                bx = r * Math.cos(theta); by = r * Math.sin(theta);
-            }
-            
-            if (Number.isFinite(bx) && Number.isFinite(by)) {
-                beadPx = ((bx - xMin) / (xMax - xMin)) * width;
-                beadPy = ((yMax - by) / (yMax - yMin)) * height;
-            }
-        }
-
-        let audioAmp = 0;
-        if (simAudio.analyser) {
-            const dataArray = new Uint8Array(simAudio.analyser.frequencyBinCount);
-            simAudio.analyser.getByteTimeDomainData(dataArray);
-            let sum = 0;
-            for (let j = 0; j < dataArray.length; j++) {
-                sum += Math.abs(dataArray[j] - 128);
-            }
-            audioAmp = sum / dataArray.length;
-        }
-
-        const baseHue = ((state.functionIndex || 0) * 137.5) % 360;
-        const color = sim.color ? sim.color : `hsl(${baseHue}, 85%, 55%)`;
-        const flareSize = 4.5 + Math.min(8.5, audioAmp * 0.25);
-
-        graphCtx.save();
-        const rGrd = graphCtx.createRadialGradient(beadPx, beadPy, 1, beadPx, beadPy, flareSize);
-        rGrd.addColorStop(0, '#ffffff');
-        rGrd.addColorStop(0.2, color);
-        const alphaColor = color.startsWith('hsl') ? color.replace('hsl(', 'hsla(').replace(')', ', 0.35)') : color;
-        rGrd.addColorStop(0.5, alphaColor);
-        rGrd.addColorStop(1, 'rgba(0,0,0,0)');
-
-        graphCtx.fillStyle = rGrd;
-        graphCtx.shadowBlur = flareSize * 0.5;
-        graphCtx.shadowColor = color;
-        graphCtx.beginPath();
-        graphCtx.arc(beadPx, beadPy, flareSize, 0, Math.PI * 2);
-        graphCtx.fill();
-        graphCtx.restore();
-    }
 }
 
 function updateAudio(sim, progress, valA, valB) {

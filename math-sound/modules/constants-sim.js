@@ -1171,64 +1171,6 @@ function drawSimCurve(graphCtx, sim, width, height, progress, valA, valB) {
     }
     graphCtx.stroke();
 
-    // === NEON PHOTON RIDER ===
-    if (progress > 0) {
-        let beadPx = prevPx, beadPy = prevPy;
-        
-        if (progress === 1.0) {
-            const beadProgress = (performance.now() / 4000) % 1.0;
-            const beadIdx = Math.floor(beadProgress * totalSteps);
-            const bp = beadIdx / totalSteps;
-            let bx, by;
-            
-            if (sim.type === 'cartesian') {
-                bx = xMin + bp * (xMax - xMin); by = sim.fn(bx, valA, valB);
-            } else if (sim.type === 'parametric') {
-                const t = sim.tRange.min + bp * (sim.tRange.max - sim.tRange.min);
-                bx = sim.x(t, valA, valB); by = sim.y(t, valA, valB);
-            } else if (sim.type === 'polar') {
-                const theta = sim.tRange.min + bp * (sim.tRange.max - sim.tRange.min);
-                const r = sim.r(theta, valA, valB);
-                bx = r * Math.cos(theta); by = r * Math.sin(theta);
-            }
-            
-            if (Number.isFinite(bx) && Number.isFinite(by)) {
-                beadPx = ((bx - xMin) / (xMax - xMin)) * width;
-                beadPy = ((yMax - by) / (yMax - yMin)) * height;
-            }
-        }
-
-        let audioAmp = 0;
-        if (simAudio.analyser) {
-            const dataArray = new Uint8Array(simAudio.analyser.frequencyBinCount);
-            simAudio.analyser.getByteTimeDomainData(dataArray);
-            let sum = 0;
-            for (let j = 0; j < dataArray.length; j++) {
-                sum += Math.abs(dataArray[j] - 128);
-            }
-            audioAmp = sum / dataArray.length;
-        }
-
-        const baseHue = ((state.functionIndex || 0) * 137.5) % 360;
-        const color = sim.color ? sim.color : `hsl(${baseHue}, 85%, 55%)`;
-        const flareSize = 4.5 + Math.min(8.5, audioAmp * 0.25);
-
-        graphCtx.save();
-        const rGrd = graphCtx.createRadialGradient(beadPx, beadPy, 1, beadPx, beadPy, flareSize);
-        rGrd.addColorStop(0, '#ffffff');
-        rGrd.addColorStop(0.2, color);
-        const alphaColor = color.startsWith('hsl') ? color.replace('hsl(', 'hsla(').replace(')', ', 0.35)') : color;
-        rGrd.addColorStop(0.5, alphaColor);
-        rGrd.addColorStop(1, 'rgba(0,0,0,0)');
-
-        graphCtx.fillStyle = rGrd;
-        graphCtx.shadowBlur = flareSize * 0.5;
-        graphCtx.shadowColor = color;
-        graphCtx.beginPath();
-        graphCtx.arc(beadPx, beadPy, flareSize, 0, Math.PI * 2);
-        graphCtx.fill();
-        graphCtx.restore();
-    }
 }
 
 function updateAudio(sim, progress, valA, valB) {
