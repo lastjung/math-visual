@@ -10,7 +10,7 @@ export const CSIM_CATEGORIES = {
     'waves-plus': {
         name: '🌊 Waves+',
         functions: [
-            'sineMultiSim', 'squareFourierSim', 'sawtoothFourierSim', 'triangleSim',
+            'sineMultiSim', 'pulseHarmonicsSim', 'wavePacketSim', 'squareFourierSim', 'sawtoothFourierSim', 'triangleSim',
             'pulsePwmSim', 'steppyQuantizeSim', 'tanhTanClipSim', 'dampedDecaySim',
             'chaosInterferenceSim', 'softHarmonicsSim'
         ]
@@ -72,43 +72,78 @@ export const CSIM_FUNCTIONS = {
         id: 'sineMultiSim', category: 'waves-plus', name: 'Sine Multi Sim', type: 'cartesian',
         formula: 'y = Σ sin(x + i·b/10)',
         latex: 'y = \\sum_{i=1}^{a} \\sin(x + \\frac{i \\cdot b}{10})',
-        range: { xMin: -6.28, xMax: 6.28, yMin: -120, yMax: 120 },
+        range: { xMin: -6.28, xMax: 6.28, yMin: -30, yMax: 30 },
         drawMs: 2000, durationMs: 12000,
         varA: { name: 'Layers', min: 1, max: 100, default: 10 },
         varB: { name: 'Phase', min: 0, max: 20, default: 2 },
         fn: (x, a, b) => {
-            let s = 0; const n = Math.floor(a);
+            let s = 0; const n = Math.floor(a); const frac = a - n;
             for (let i = 1; i <= n; i++) s += Math.sin(x + (i * b) / 10);
+            if (frac > 0) s += frac * Math.sin(x + ((n + 1) * b) / 10);
+            return s;
+        },
+        audioScale: 150, baseFreq: 220
+    },
+    pulseHarmonicsSim: {
+        id: 'pulseHarmonicsSim', category: 'waves-plus', name: 'Pulse Harmonics Sim', type: 'cartesian',
+        formula: 'y = Σ sin(i·x + b)',
+        latex: 'y = \\sum_{i=1}^{a} \\sin(i \\cdot x + b)',
+        range: { xMin: -6.28, xMax: 6.28, yMin: -30, yMax: 30 },
+        drawMs: 2000, durationMs: 12000,
+        varA: { name: 'Harmonics', min: 1, max: 100, default: 10 },
+        varB: { name: 'Phase Shift', min: -20, max: 20, default: 0 },
+        fn: (x, a, b) => {
+            let s = 0; const n = Math.floor(a); const frac = a - n;
+            for (let i = 1; i <= n; i++) s += Math.sin(i * x + b);
+            if (frac > 0) s += frac * Math.sin((n + 1) * x + b);
+            return s;
+        },
+        audioScale: 150, baseFreq: 220
+    },
+    wavePacketSim: {
+        id: 'wavePacketSim', category: 'waves-plus', name: 'Wave Packet Sim', type: 'cartesian',
+        formula: 'y = Σ sin(x·(1 + i·b/10))',
+        latex: 'y = \\sum_{i=1}^{a} \\sin\\left(x \\cdot \\left(1 + \\frac{i \\cdot b}{10}\\right)\\right)',
+        range: { xMin: -31.4, xMax: 31.4, yMin: -30, yMax: 30 },
+        drawMs: 2000, durationMs: 12000,
+        varA: { name: 'Waves', min: 1, max: 100, default: 10 },
+        varB: { name: 'Freq Spread', min: 0, max: 10, default: 1 },
+        fn: (x, a, b) => {
+            let s = 0; const n = Math.floor(a); const frac = a - n;
+            for (let i = 1; i <= n; i++) s += Math.sin(x * (1 + (i * b) / 10));
+            if (frac > 0) s += frac * Math.sin(x * (1 + ((n + 1) * b) / 10));
             return s;
         },
         audioScale: 150, baseFreq: 220
     },
     squareFourierSim: {
         id: 'squareFourierSim', category: 'waves-plus', name: 'Square Fourier Sim', type: 'cartesian',
-        formula: 'y = Σ sin((2n+1)x)/(2n+1)',
-        latex: 'y = \\frac{4}{\\pi}\\sum_{n=0}^{a} \\frac{\\sin((2n+1)x)}{2n+1}',
+        formula: 'y = Σ sin((2n+1)bx)/(2n+1)',
+        latex: 'y = \\frac{4}{\\pi}\\sum_{n=0}^{a} \\frac{\\sin((2n+1)bx)}{2n+1}',
         range: { xMin: -6.28, xMax: 6.28, yMin: -2, yMax: 2 },
         drawMs: 2000, durationMs: 12000,
         varA: { name: 'Harmonics', min: 0, max: 100, default: 5 },
         varB: { name: 'Frequency', min: 0.1, max: 24, default: 1 },
         fn: (x, a, b) => {
-            let sq = 0; const n = Math.floor(a);
+            let sq = 0; const n = Math.floor(a); const frac = a - n;
             for (let i = 0; i <= n; i++) { const k = 2 * i + 1; sq += Math.sin(k * b * x) / k; }
+            if (frac > 0) { const k = 2 * (n + 1) + 1; sq += frac * Math.sin(k * b * x) / k; }
             return (4 / Math.PI) * sq;
         },
         audioScale: 180, baseFreq: 260
     },
     sawtoothFourierSim: {
         id: 'sawtoothFourierSim', category: 'waves-plus', name: 'Sawtooth Fourier Sim', type: 'cartesian',
-        formula: 'y = Σ sin(nx)/n',
-        latex: 'y = \\frac{2}{\\pi}\\sum_{n=1}^{a} \\frac{\\sin(nx)}{n}',
+        formula: 'y = Σ sin(nbx)/n',
+        latex: 'y = \\frac{2}{\\pi}\\sum_{n=1}^{a} \\frac{\\sin(nbx)}{n}',
         range: { xMin: -6.28, xMax: 6.28, yMin: -2, yMax: 2 },
         drawMs: 2000, durationMs: 12000,
         varA: { name: 'Harmonics', min: 1, max: 100, default: 5 },
         varB: { name: 'Frequency', min: 0.1, max: 24, default: 1 },
         fn: (x, a, b) => {
-            let sw = 0; const n = Math.floor(a);
+            let sw = 0; const n = Math.floor(a); const frac = a - n;
             for (let i = 1; i <= n; i++) sw += Math.sin(i * b * x) / i;
+            if (frac > 0) sw += frac * Math.sin((n + 1) * b * x) / (n + 1);
             return (2 / Math.PI) * sw;
         },
         audioScale: 160, baseFreq: 240
@@ -191,8 +226,9 @@ export const CSIM_FUNCTIONS = {
         varA: { name: 'Layers', min: 1, max: 100, default: 5 },
         varB: { name: 'Frequency', min: 0.1, max: 24, default: 1 },
         fn: (x, a, b) => {
-            let sf = 0; const n = Math.floor(a);
+            let sf = 0; const n = Math.floor(a); const frac = a - n;
             for (let i = 1; i <= n; i++) sf += Math.tanh(Math.sin(i * b * x)) / i;
+            if (frac > 0) sf += frac * Math.tanh(Math.sin((n + 1) * b * x)) / (n + 1);
             return sf;
         },
         audioScale: 110, baseFreq: 200
@@ -414,8 +450,8 @@ export const CSIM_FUNCTIONS = {
     },
     rose4Sim: {
         id: 'rose4Sim', category: 'curves-plus', name: 'Rose 4 Sim', type: 'polar',
-        formula: 'r = a·cos(4θ)',
-        latex: 'r = a \\cos(4\\theta)',
+        formula: 'r = a·cos(bθ)',
+        latex: 'r = a \\cos(b\\theta)',
         viewBox: { xMin: -1.5, xMax: 1.5, yMin: -1.5, yMax: 1.5 },
         tRange: { min: 0, max: 2 * Math.PI },
         drawMs: 2000, durationMs: 12000,
@@ -426,8 +462,8 @@ export const CSIM_FUNCTIONS = {
     },
     rose3Sim: {
         id: 'rose3Sim', category: 'curves-plus', name: 'Rose 3 Sim', type: 'polar',
-        formula: 'r = a·sin(3θ)',
-        latex: 'r = a \\sin(3\\theta)',
+        formula: 'r = a·sin(bθ)',
+        latex: 'r = a \\sin(b\\theta)',
         viewBox: { xMin: -1.5, xMax: 1.5, yMin: -1.5, yMax: 1.5 },
         tRange: { min: 0, max: Math.PI },
         drawMs: 2000, durationMs: 12000,
@@ -527,8 +563,8 @@ export const CSIM_FUNCTIONS = {
     // ---------- Art+ (Total 11) ----------
     sunflowerSim: {
         id: 'sunflowerSim', category: 'art-plus', name: 'Sunflower Sim', type: 'polar',
-        formula: 'r = -8·sin(aθ)',
-        latex: 'r = -8\\sin(a\\theta)',
+        formula: 'r = -8·sin(abθ)',
+        latex: 'r = -8\\sin(ab\\theta)',
         viewBox: { xMin: -10, xMax: 10, yMin: -10, yMax: 10 },
         tRange: { min: 0, max: 2 * Math.PI },
         drawMs: 2000, durationMs: 12000,
@@ -669,15 +705,18 @@ export const CSIM_FUNCTIONS = {
     fourierSquareSim: {
         id: 'fourierSquareSim', category: 'math-plus', name: 'Fourier Square Sim', type: 'cartesian',
         formula: 'y = -24/π Σ sin((2n+1)ax)/(2n+1)',
-        latex: 'y = -\\frac{24}{\\pi} \\sum_{n=0}^{10} \\frac{\\sin((2n+1)ax)}{2n+1}',
+        latex: 'y = -\\frac{24}{\\pi} \\sum_{n=0}^{b} \\frac{\\sin((2n+1)ax)}{2n+1}',
         range: { xMin: -2, xMax: 2, yMin: -10, yMax: 10 },
         drawMs: 2000, durationMs: 12000,
         varA: { name: 'Frequency', min: 0.1, max: 30, default: 2 * Math.PI },
         varB: { name: 'Harmonics', min: 1, max: 100, default: 10 },
         fn: (x, a, b) => {
-            let sum = 0; const phase = x * a;
-            for (let n = 0; n <= Math.floor(b); n++) {
+            let sum = 0; const phase = x * a; const nMax = Math.floor(b); const frac = b - nMax;
+            for (let n = 0; n <= nMax; n++) {
                 const k = 2 * n + 1; sum += Math.sin(k * phase) / k;
+            }
+            if (frac > 0) {
+                const k = 2 * (nMax + 1) + 1; sum += frac * Math.sin(k * phase) / k;
             }
             return -(24 / Math.PI) * sum;
         },
@@ -686,15 +725,18 @@ export const CSIM_FUNCTIONS = {
     complexWaveSim: {
         id: 'complexWaveSim', category: 'math-plus', name: 'Complex Wave Sim', type: 'cartesian',
         formula: 'y = 24/π Σ sin((4n+1)ax)/(n+1)',
-        latex: 'y = \\frac{24}{\\pi} \\sum_{n=0}^{7} \\frac{\\sin((4n+1)ax)}{n+1}',
+        latex: 'y = \\frac{24}{\\pi} \\sum_{n=0}^{b} \\frac{\\sin((4n+1)ax)}{n+1}',
         range: { xMin: -2, xMax: 2, yMin: -15, yMax: 15 },
         drawMs: 2000, durationMs: 12000,
         varA: { name: 'Frequency', min: 0.1, max: 30, default: 2 * Math.PI },
         varB: { name: 'Complexity', min: 1, max: 64, default: 7 },
         fn: (x, a, b) => {
-            let sum = 0; const phase = x * a;
-            for (let n = 0; n <= Math.floor(b); n++) {
+            let sum = 0; const phase = x * a; const nMax = Math.floor(b); const frac = b - nMax;
+            for (let n = 0; n <= nMax; n++) {
                 sum += Math.sin((4 * n + 1) * phase) / (n + 1);
+            }
+            if (frac > 0) {
+                sum += frac * Math.sin((4 * (nMax + 1) + 1) * phase) / (nMax + 2);
             }
             return (24 / Math.PI) * sum;
         },
@@ -713,8 +755,8 @@ export const CSIM_FUNCTIONS = {
     },
     sincSim: {
         id: 'sincSim', category: 'math-plus', name: 'Sinc Sim', type: 'cartesian',
-        formula: 'y = sin(ax)/(ax)',
-        latex: 'y = \\frac{\\sin(ax)}{ax}',
+        formula: 'y = (1/b) · sin(ax)/(ax)',
+        latex: 'y = \\frac{1}{b}\\frac{\\sin(ax)}{ax}',
         range: { xMin: -3, xMax: 3, yMin: -0.5, yMax: 1.5 },
         drawMs: 2000, durationMs: 12000,
         varA: { name: 'Frequency', min: 0.1, max: 100, default: 4 * Math.PI },
@@ -728,8 +770,8 @@ export const CSIM_FUNCTIONS = {
     },
     logisticSim: {
         id: 'logisticSim', category: 'math-plus', name: 'Logistic Sim', type: 'cartesian',
-        formula: 'y = 1 / (1 + e^(-ax))',
-        latex: 'y = \\frac{1}{1 + e^{-ax}}',
+        formula: 'y = 1 / (1 + e^(-a(x-b)))',
+        latex: 'y = \\frac{1}{1 + e^{-a(x-b)}}',
         range: { xMin: -4, xMax: 4, yMin: -0.5, yMax: 1.5 },
         drawMs: 2000, durationMs: 12000,
         varA: { name: 'Steepness', min: 0.1, max: 30, default: 2 },
@@ -752,8 +794,8 @@ export const CSIM_FUNCTIONS = {
     },
     parabolaSim: {
         id: 'parabolaSim', category: 'math-plus', name: 'Parabola Sim', type: 'cartesian',
-        formula: 'y = a·x²',
-        latex: 'y = ax^2',
+        formula: 'y = a·(x-b)²',
+        latex: 'y = a(x-b)^2',
         range: { xMin: -2, xMax: 2, yMin: -0.5, yMax: 4.5 },
         drawMs: 2000, durationMs: 12000,
         varA: { name: 'Curvature', min: 0.1, max: 4, default: 1.0 },
@@ -805,8 +847,9 @@ export const CSIM_FUNCTIONS = {
         varA: { name: 'Base Freq', min: 0.1, max: 50, default: 4 },
         varB: { name: 'Layers', min: 1, max: 32, default: 4 },
         fn: (x, a, b) => {
-            let s = 0; const n = Math.floor(b);
+            let s = 0; const n = Math.floor(b); const frac = b - n;
             for (let i = 1; i <= n; i++) s += Math.sin(i * a * x) / i;
+            if (frac > 0) s += frac * Math.sin((n + 1) * a * x) / (n + 1);
             return s;
         },
         audioScale: 280, baseFreq: 260
