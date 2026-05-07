@@ -27,11 +27,18 @@ export const CSIM_CATEGORIES = {
             'diamondSim', 'monsterWaveSim', 'vibrationPolarSim'
         ]
     },
-    'math-plus': {
-        name: '📐 Math+',
+    'math-1-plus': {
+        name: '📐 Math 1+',
         functions: [
-            'fourierSquareSim', 'complexWaveSim', 'gaussianSim', 'sincSim',
-            'logisticSim', 'hyperbolicSim', 'parabolaSim'
+            'gaussianSim', 'sincSim', 'logisticSim', 'hyperbolicSim', 'parabolaSim'
+        ]
+    },
+    'math-2-plus': {
+        name: '📐 Math 2+',
+        functions: [
+            'fourierSquareSim', 'complexWaveSim', 'schrodingerPacketSim', 'planckRadiationSim',
+            'breitWignerSim', 'dampedHarmonicSim', 'besselSim', 'fermiDiracSim',
+            'lennardJonesSim', 'solitonSim'
         ]
     },
     'sound-plus': {
@@ -539,9 +546,9 @@ export const CSIM_FUNCTIONS = {
         audioScale: 200, baseFreq: 220
     },
 
-    // ---------- Math+ (Total 7) ----------
+    // ---------- Math 1+ & 2+ ----------
     fourierSquareSim: {
-        id: 'fourierSquareSim', category: 'math-plus', name: 'Fourier Square Sim', type: 'cartesian',
+        id: 'fourierSquareSim', category: 'math-2-plus', name: 'Fourier Square Sim', type: 'cartesian',
         formula: 'y = -24/π Σ sin((2n+1)ax)/(2n+1)',
         latex: 'y = -\\frac{24}{\\pi} \\sum_{n=0}^{b} \\frac{\\sin((2n+1)ax)}{2n+1}',
         range: { xMin: -2, xMax: 2, yMin: -10, yMax: 10 },
@@ -561,7 +568,7 @@ export const CSIM_FUNCTIONS = {
         audioScale: 100, baseFreq: 110
     },
     complexWaveSim: {
-        id: 'complexWaveSim', category: 'math-plus', name: 'Complex Wave Sim', type: 'cartesian',
+        id: 'complexWaveSim', category: 'math-2-plus', name: 'Complex Wave Sim', type: 'cartesian',
         formula: 'y = 24/π Σ sin((4n+1)ax)/(n+1)',
         latex: 'y = \\frac{24}{\\pi} \\sum_{n=0}^{b} \\frac{\\sin((4n+1)ax)}{n+1}',
         range: { xMin: -2, xMax: 2, yMin: -15, yMax: 15 },
@@ -581,7 +588,7 @@ export const CSIM_FUNCTIONS = {
         audioScale: 80, baseFreq: 130
     },
     gaussianSim: {
-        id: 'gaussianSim', category: 'math-plus', name: 'Gaussian Sim', type: 'cartesian',
+        id: 'gaussianSim', category: 'math-1-plus', name: 'Gaussian Sim', type: 'cartesian',
         formula: 'y = b·e^(-(ax)²)',
         latex: 'y = b e^{-(ax)^2}',
         range: { xMin: -3, xMax: 3, yMin: -0.5, yMax: 2.5 },
@@ -592,7 +599,7 @@ export const CSIM_FUNCTIONS = {
         audioScale: 500, baseFreq: 440
     },
     sincSim: {
-        id: 'sincSim', category: 'math-plus', name: 'Sinc Sim', type: 'cartesian',
+        id: 'sincSim', category: 'math-1-plus', name: 'Sinc Sim', type: 'cartesian',
         formula: 'y = (1/b) · sin(ax)/(ax)',
         latex: 'y = \\frac{1}{b}\\frac{\\sin(ax)}{ax}',
         range: { xMin: -3, xMax: 3, yMin: -0.5, yMax: 1.5 },
@@ -607,7 +614,7 @@ export const CSIM_FUNCTIONS = {
         audioScale: 400, baseFreq: 380
     },
     logisticSim: {
-        id: 'logisticSim', category: 'math-plus', name: 'Logistic Sim', type: 'cartesian',
+        id: 'logisticSim', category: 'math-1-plus', name: 'Logistic Sim', type: 'cartesian',
         formula: 'y = 1 / (1 + e^(-a(x-b)))',
         latex: 'y = \\frac{1}{1 + e^{-a(x-b)}}',
         range: { xMin: -4, xMax: 4, yMin: -0.5, yMax: 1.5 },
@@ -618,7 +625,7 @@ export const CSIM_FUNCTIONS = {
         audioScale: 600, baseFreq: 500
     },
     hyperbolicSim: {
-        id: 'hyperbolicSim', category: 'math-plus', name: 'Hyperbolic Sim', type: 'parametric',
+        id: 'hyperbolicSim', category: 'math-1-plus', name: 'Hyperbolic Sim', type: 'parametric',
         formula: 'x = cosh(at), y = sinh(at)',
         latex: '\\vec{r}(t) = \\langle \\cosh(at), \\sinh(at) \\rangle',
         viewBox: { xMin: -1, xMax: 5, yMin: -3, yMax: 3 },
@@ -631,7 +638,7 @@ export const CSIM_FUNCTIONS = {
         audioScale: 300, baseFreq: 340
     },
     parabolaSim: {
-        id: 'parabolaSim', category: 'math-plus', name: 'Parabola Sim', type: 'cartesian',
+        id: 'parabolaSim', category: 'math-1-plus', name: 'Parabola Sim', type: 'cartesian',
         formula: 'y = a·(x-b)²',
         latex: 'y = a(x-b)^2',
         range: { xMin: -2, xMax: 2, yMin: -0.5, yMax: 4.5 },
@@ -640,6 +647,106 @@ export const CSIM_FUNCTIONS = {
         varB: { name: 'Shift', min: -2, max: 2, default: 0 },
         fn: (x, a, b) => a * (x - b) * (x - b),
         audioScale: 200, baseFreq: 220
+    },
+    schrodingerPacketSim: {
+        id: 'schrodingerPacketSim', category: 'math-2-plus', name: 'Schrödinger Wave Packet', type: 'cartesian',
+        formula: 'y = b·e^(-(ax)²)·cos(15x)',
+        latex: 'y = b e^{-(ax)^2} \\cos(15x)',
+        range: { xMin: -3, xMax: 3, yMin: -3, yMax: 3 },
+        drawMs: 2000, durationMs: 12000,
+        varA: { name: 'Envelope Width', min: 0.2, max: 3.0, default: 1.0 },
+        varB: { name: 'Amplitude', min: 0.5, max: 2.5, default: 1.8 },
+        fn: (x, a, b) => b * Math.exp(-(a * x) * (a * x)) * Math.cos(15 * x),
+        audioScale: 350, baseFreq: 330
+    },
+    planckRadiationSim: {
+        id: 'planckRadiationSim', category: 'math-2-plus', name: "Planck's Radiation Law", type: 'cartesian',
+        formula: 'y = a·x³ / (e^(bx) - 1)',
+        latex: 'y = \\frac{a x^3}{e^{bx} - 1}',
+        range: { xMin: 0.01, xMax: 4, yMin: -0.5, yMax: 5.5 },
+        drawMs: 2000, durationMs: 12000,
+        varA: { name: 'Intensity Scale', min: 1, max: 20, default: 8 },
+        varB: { name: 'Decay Factor', min: 0.5, max: 4.0, default: 1.5 },
+        fn: (x, a, b) => {
+            const val = Math.max(0.001, x);
+            return (a * val * val * val) / (Math.exp(b * val) - 1);
+        },
+        audioScale: 200, baseFreq: 220
+    },
+    breitWignerSim: {
+        id: 'breitWignerSim', category: 'math-2-plus', name: 'Breit-Wigner Resonance', type: 'cartesian',
+        formula: 'y = a / ((x - b)² + a²)',
+        latex: 'y = \\frac{a}{(x - b)^2 + a^2}',
+        range: { xMin: -4, xMax: 4, yMin: -0.5, yMax: 3.5 },
+        drawMs: 2000, durationMs: 12000,
+        varA: { name: 'Peak Sharpness', min: 0.2, max: 1.5, default: 0.5 },
+        varB: { name: 'Resonance Center', min: -2, max: 2, default: 0 },
+        fn: (x, a, b) => a / ((x - b) * (x - b) + a * a),
+        audioScale: 400, baseFreq: 440
+    },
+    dampedHarmonicSim: {
+        id: 'dampedHarmonicSim', category: 'math-2-plus', name: 'Damped Harmonic Oscillator', type: 'cartesian',
+        formula: 'y = b·e^(-ax)·cos(12x)',
+        latex: 'y = b e^{-ax} \\cos(12x)',
+        range: { xMin: -0.5, xMax: 4, yMin: -2.5, yMax: 2.5 },
+        drawMs: 2000, durationMs: 12000,
+        varA: { name: 'Damping Rate', min: 0.1, max: 2.0, default: 0.5 },
+        varB: { name: 'Amplitude', min: 0.5, max: 2.5, default: 2.0 },
+        fn: (x, a, b) => {
+            if (x < 0) return 0;
+            return b * Math.exp(-a * x) * Math.cos(12 * x);
+        },
+        audioScale: 300, baseFreq: 260
+    },
+    besselSim: {
+        id: 'besselSim', category: 'math-2-plus', name: 'Bessel Function (Drum Wave)', type: 'cartesian',
+        formula: 'y = a · J₀(bx) ≈ a·cos(bx)/√(|x|+0.1)',
+        latex: 'y = a J_0(bx) \\approx a \\frac{\\cos(bx)}{\\sqrt{|x|+0.1}}',
+        range: { xMin: -10, xMax: 10, yMin: -3.5, yMax: 3.5 },
+        drawMs: 2000, durationMs: 12000,
+        varA: { name: 'Amplitude', min: 0.5, max: 5.0, default: 2.0 },
+        varB: { name: 'Drum Tension', min: 1.0, max: 15.0, default: 5.0 },
+        fn: (x, a, b) => a * Math.cos(b * x) / Math.sqrt(Math.abs(x) + 0.1),
+        audioScale: 200, baseFreq: 220
+    },
+    fermiDiracSim: {
+        id: 'fermiDiracSim', category: 'math-2-plus', name: 'Fermi-Dirac Distribution', type: 'cartesian',
+        formula: 'y = 2.5 / (e^((x-b)/a) + 1)',
+        latex: 'y = \\frac{2.5}{e^{\\frac{x-b}{a}} + 1}',
+        range: { xMin: -4, xMax: 4, yMin: -0.5, yMax: 3.5 },
+        drawMs: 2000, durationMs: 12000,
+        varA: { name: 'Temperature', min: 0.05, max: 1.0, default: 0.2 },
+        varB: { name: 'Fermi Level', min: -2.0, max: 2.0, default: 0.0 },
+        fn: (x, a, b) => 2.5 / (Math.exp((x - b) / a) + 1),
+        audioScale: 300, baseFreq: 300
+    },
+    lennardJonesSim: {
+        id: 'lennardJonesSim', category: 'math-2-plus', name: 'Lennard-Jones Potential', type: 'cartesian',
+        formula: 'y = a · [(b/x)¹² - (b/x)⁶]',
+        latex: 'y = a \\left[ \\left(\\frac{b}{x}\\right)^{12} - \\left(\\frac{b}{x}\\right)^6 \\right]',
+        range: { xMin: 0.5, xMax: 3.5, yMin: -2.5, yMax: 5.5 },
+        drawMs: 2000, durationMs: 12000,
+        varA: { name: 'Well Depth', min: 0.5, max: 4.0, default: 2.0 },
+        varB: { name: 'Bond Distance', min: 0.8, max: 1.8, default: 1.1 },
+        fn: (x, a, b) => {
+            const r6 = Math.pow(b / x, 6);
+            return Math.min(10, a * (r6 * r6 - r6));
+        },
+        audioScale: 250, baseFreq: 180
+    },
+    solitonSim: {
+        id: 'solitonSim', category: 'math-2-plus', name: 'KdV Soliton Wave', type: 'cartesian',
+        formula: 'y = a · sech²(bx)',
+        latex: 'y = a \\operatorname{sech}^2(bx)',
+        range: { xMin: -4, xMax: 4, yMin: -0.5, yMax: 4.5 },
+        drawMs: 2000, durationMs: 12000,
+        varA: { name: 'Amplitude', min: 1.0, max: 4.0, default: 3.0 },
+        varB: { name: 'Steepness', min: 0.5, max: 3.0, default: 1.5 },
+        fn: (x, a, b) => {
+            const ch = Math.cosh(b * x);
+            return a / (ch * ch);
+        },
+        audioScale: 300, baseFreq: 200
     },
 
     // ---------- Sound+ (Total 13) ----------
@@ -991,6 +1098,33 @@ function updateAudio(sim, progress, valA, valB) {
         } else {
             dynamicBase *= (valB / sim.varB.default);
         }
+    }
+
+    // Custom physical frequency modulation for legendary equations
+    if (sim.id === 'schrodingerPacketSim') {
+        // Tighter envelope width (smaller valA) -> Higher frequency (quantum confinement)
+        dynamicBase *= (1.0 / valA);
+    } else if (sim.id === 'planckRadiationSim') {
+        // Smaller decay factor (valB) corresponds to higher temperature -> Higher frequency (Wien's Law)
+        dynamicBase *= (1.5 / valB);
+    } else if (sim.id === 'breitWignerSim') {
+        // Resonance center (valB) directly shifts the resonant pitch
+        dynamicBase += valB * 120;
+    } else if (sim.id === 'dampedHarmonicSim') {
+        // Frequency changes with damping rate
+        dynamicBase *= (1.2 - valA * 0.2);
+    } else if (sim.id === 'besselSim') {
+        // Higher drum tension (valB) -> Higher vibrational frequency
+        dynamicBase *= (valB / 5.0);
+    } else if (sim.id === 'fermiDiracSim') {
+        // Shift Fermi Level (valB) -> Shift the pitch base
+        dynamicBase += valB * 80;
+    } else if (sim.id === 'lennardJonesSim') {
+        // Smaller bond distance (valB) -> Higher vibrational frequency
+        dynamicBase *= (1.1 / valB);
+    } else if (sim.id === 'solitonSim') {
+        // Steeper wave width (valB) -> Higher energy velocity frequency
+        dynamicBase *= (valB / 1.5);
     }
     
     const intensityMod = (aName.includes('size') || aName.includes('intens') || aName.includes('scale')) ? valA : 1;
