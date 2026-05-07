@@ -186,13 +186,13 @@ export const CSIM_FUNCTIONS = {
     },
     tanhTanClipSim: {
         id: 'tanhTanClipSim', category: 'waves-plus', name: 'Tanh-Tan Clip Sim', type: 'cartesian',
-        formula: 'y = tanh(a·tan bx)',
-        latex: 'y = \\tanh(a \\cdot \\tan(bx))',
+        formula: 'y = 3·tanh(a·tan bx)',
+        latex: 'y = 3 \\tanh(a \\cdot \\tan(bx))',
         range: { xMin: -6.28, xMax: 6.28, yMin: -4, yMax: 4 },
         drawMs: 2000, durationMs: 12000,
         varA: { name: 'Gain', min: 0.1, max: 50, default: 1 },
         varB: { name: 'Frequency', min: 0.1, max: 30, default: 1 },
-        fn: (x, a, b) => Math.tanh(a * Math.tan(b * x / 10)),
+        fn: (x, a, b) => 3 * Math.tanh(a * Math.tan(b * x)),
         audioScale: 100, baseFreq: 330
     },
     dampedDecaySim: {
