@@ -30,7 +30,8 @@ export const CSIM_CATEGORIES = {
     'math-1-plus': {
         name: '📐 Math 1+',
         functions: [
-            'gaussianSim', 'sincSim', 'logisticSim', 'hyperbolicSim', 'parabolaSim'
+            'gaussianSim', 'sincSim', 'logisticSim', 'hyperbolicSim', 'parabolaSim',
+            'taylorSeriesSim', 'dirichletSeriesSim', 'continuedFractionSim'
         ]
     },
     'math-2-plus': {
@@ -648,6 +649,86 @@ export const CSIM_FUNCTIONS = {
         fn: (x, a, b) => a * (x - b) * (x - b),
         audioScale: 200, baseFreq: 220
     },
+    taylorSeriesSim: {
+        id: 'taylorSeriesSim', category: 'math-1-plus', name: 'Taylor Series (Sine)', type: 'cartesian',
+        formula: 'y = Σ_{n=0}^a (-1)ⁿ(bx)²ⁿ⁺¹ / (2n+1)!',
+        latex: 'y = \\sum_{n=0}^{\\lfloor a \\rfloor} \\frac{(-1)^n (bx)^{2n+1}}{(2n+1)!}',
+        range: { xMin: -4.5, xMax: 4.5, yMin: -3.5, yMax: 3.5 },
+        drawMs: 2000, durationMs: 12000,
+        varA: { name: 'Sigma Terms', min: 0.0, max: 8.0, default: 3.0 },
+        varB: { name: 'Frequency Scale', min: 0.5, max: 2.2, default: 1.0 },
+        fn: (x, a, b) => {
+            let sum = 0;
+            const arg = x * b;
+            const terms = Math.floor(a);
+            const frac = a - terms;
+            for (let n = 0; n <= terms; n++) {
+                let term = Math.pow(arg, 2 * n + 1);
+                let fact = 1;
+                for (let i = 1; i <= 2 * n + 1; i++) fact *= i;
+                term = term / fact;
+                if (n % 2 === 1) term = -term;
+                sum += term;
+            }
+            if (frac > 0) {
+                const n = terms + 1;
+                let term = Math.pow(arg, 2 * n + 1);
+                let fact = 1;
+                for (let i = 1; i <= 2 * n + 1; i++) fact *= i;
+                term = (term / fact) * frac;
+                if (n % 2 === 1) term = -term;
+                sum += term;
+            }
+            return Math.max(-10, Math.min(10, sum));
+        },
+        audioScale: 300, baseFreq: 220
+    },
+    dirichletSeriesSim: {
+        id: 'dirichletSeriesSim', category: 'math-1-plus', name: 'Dirichlet Zeta Series', type: 'cartesian',
+        formula: 'y = 2 · Σ_{n=1}^b cos(nx) / n^a',
+        latex: 'y = 2 \\sum_{n=1}^{\\lfloor b \\rfloor} \\frac{\\cos(nx)}{n^a}',
+        range: { xMin: -10, xMax: 10, yMin: -3.5, yMax: 5.5 },
+        drawMs: 2000, durationMs: 12000,
+        varA: { name: 'Power Decay', min: 0.3, max: 3.0, default: 1.1 },
+        varB: { name: 'Sigma Terms', min: 1, max: 40, default: 12 },
+        fn: (x, a, b) => {
+            let sum = 0;
+            const terms = Math.floor(b);
+            const frac = b - terms;
+            for (let n = 1; n <= terms; n++) {
+                sum += Math.cos(n * x) / Math.pow(n, a);
+            }
+            if (frac > 0) {
+                sum += frac * Math.cos((terms + 1) * x) / Math.pow(terms + 1, a);
+            }
+            return Math.max(-10, Math.min(15, sum * 2.0));
+        },
+        audioScale: 250, baseFreq: 200
+    },
+    continuedFractionSim: {
+        id: 'continuedFractionSim', category: 'math-1-plus', name: 'Continued Fraction (Exp)', type: 'cartesian',
+        formula: 'y = ContinuedFraction(1 + bx / (n + f_n))',
+        latex: 'y = 1 + \\cfrac{bx}{1 + \\cfrac{bx}{2 + \\cfrac{bx}{3 + \\dots}}}',
+        range: { xMin: -3.0, xMax: 3.0, yMin: -0.5, yMax: 5.5 },
+        drawMs: 2000, durationMs: 12000,
+        varA: { name: 'Fraction Depth', min: 1.0, max: 10.0, default: 4.0 },
+        varB: { name: 'Growth Scale', min: 0.2, max: 6.0, default: 1.5 },
+        fn: (x, a, b) => {
+            const depth = Math.floor(a);
+            const frac = a - depth;
+            const evalFraction = (d, xx, bb) => {
+                if (d <= 0) return 1;
+                const denom = d + evalFraction(d - 1, xx, bb);
+                return 1 + (bb * xx) / (Math.abs(denom) < 0.001 ? 0.001 : denom);
+            };
+            const val1 = evalFraction(depth, x, b);
+            if (frac <= 0) return Math.max(-2, Math.min(10, val1));
+            const val2 = evalFraction(depth + 1, x, b);
+            const result = val1 + frac * (val2 - val1);
+            return Math.max(-2, Math.min(10, result));
+        },
+        audioScale: 300, baseFreq: 220
+    },
     schrodingerPacketSim: {
         id: 'schrodingerPacketSim', category: 'math-2-plus', name: 'Schrödinger Wave Packet', type: 'cartesian',
         formula: 'y = b·e^(-(ax)²)·cos(15x)',
@@ -1125,6 +1206,12 @@ function updateAudio(sim, progress, valA, valB) {
     } else if (sim.id === 'solitonSim') {
         // Steeper wave width (valB) -> Higher energy velocity frequency
         dynamicBase *= (valB / 1.5);
+    } else if (sim.id === 'dirichletSeriesSim') {
+        // Less decay (smaller valA) -> More sharp peaks -> Higher perceived pitch & brightness
+        dynamicBase *= (1.5 / valA);
+    } else if (sim.id === 'continuedFractionSim') {
+        // As growth scale (valB) increases, the curve curves up faster -> Higher frequency
+        dynamicBase *= valB;
     }
     
     const intensityMod = (aName.includes('size') || aName.includes('intens') || aName.includes('scale')) ? valA : 1;
