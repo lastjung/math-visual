@@ -24,7 +24,7 @@ export const CSIM_CATEGORIES = {
         functions: [
             'sunflowerSim', 'limacon3Sim', 'starSim', 'explosionSim', 'fairySim',
             'trigChaosSim', 'shiningStarSim', 'splitPulseSim', 'vibrationSim',
-            'diamondSim', 'monsterWaveSim'
+            'diamondSim', 'monsterWaveSim', 'polarVibrationSim'
         ]
     },
     'math-plus': {
@@ -440,18 +440,15 @@ export const CSIM_FUNCTIONS = {
     },
     fairySim: {
         id: 'fairySim', category: 'art-plus', name: 'Fairy Sim', type: 'polar',
-        formula: 'r = (sin aθ cos aθ) / θ',
-        latex: 'r = \\frac{\\sin(a\\theta)\\cos(a\\theta)}{\\theta}',
-        viewBox: { xMin: -2, xMax: 2, yMin: -2, yMax: 2 },
-        tRange: { min: 0, max: 6 * Math.PI },
+        formula: 'r = a · sin(θ/4) · cos(bθ/10)',
+        latex: 'r = a \\sin\\left(\\frac{\\theta}{4}\\right) \\cos\\left(\\frac{b\\theta}{10}\\right)',
+        viewBox: { xMin: -4, xMax: 4, yMin: -4, yMax: 4 },
+        tRange: { min: 0, max: 8 * Math.PI },
         drawMs: 2000, durationMs: 12000,
-        varA: { name: 'Wings', min: 1, max: 24, default: 2 },
-        varB: { name: 'Drift', min: 0, max: 5, default: 0 },
-        r: (theta, a, b) => {
-            if (Math.abs(theta) < 0.001) return a;
-            return (Math.sin(a * theta) * Math.cos(a * theta)) / (theta + b);
-        },
-        audioScale: 300, baseFreq: 330
+        varA: { name: 'Size', min: 1, max: 10, default: 3 },
+        varB: { name: 'Feathers', min: 1, max: 30, default: 6 },
+        r: (theta, a, b) => a * Math.sin(theta / 4) * Math.cos((b * theta) / 10),
+        audioScale: 200, baseFreq: 330
     },
     trigChaosSim: {
         id: 'trigChaosSim', category: 'art-plus', name: 'Trig Chaos Sim', type: 'polar',
