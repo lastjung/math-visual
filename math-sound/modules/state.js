@@ -71,6 +71,7 @@ export const elements = {
     categoryTabsSymphony: document.getElementById('categoryTabsSymphony'),
     categoryTabsSymphonyPlus: document.getElementById('categoryTabsSymphonyPlus'),
     categoryTabsCosmic: document.getElementById('categoryTabsCosmic'),
+    categoryTabsCosmicPlus: document.getElementById('categoryTabsCosmicPlus'),
     categoryTabs: document.querySelectorAll('.category-tab'),
     menuPanel: document.getElementById('menuPanel'),
     closeMenuBtn: document.getElementById('closeMenuBtn'),

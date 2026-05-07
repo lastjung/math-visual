@@ -20,6 +20,15 @@ import {
     startConstantsSim,
     stopConstantsSim
 } from './modules/constants-sim.js';
+import {
+    COSMOS_SIM_CATEGORIES,
+    COSMOS_SIM_FUNCTIONS,
+    isCosmosSimCategory,
+    isCosmosSimFunction,
+    drawCosmosSimStatic,
+    startCosmosSim,
+    stopCosmosSim
+} from './modules/cosmos-sim.js';
 
 const FAVORITES_KEY = 'math-sound:favorites';
 const QUEUE_STORAGE_KEY = 'math-sound:play-queue';
@@ -30,11 +39,16 @@ const EQUATION_OUTRO_DURATION_MS = 2000;
 let favoriteSet = new Set();
 
 function getAllFunctionKeys() {
-    return [...Object.keys(MATH_FUNCTIONS), ...Object.keys(SIM_FUNCTIONS), ...Object.keys(CSIM_FUNCTIONS)];
+    return [
+        ...Object.keys(MATH_FUNCTIONS),
+        ...Object.keys(SIM_FUNCTIONS),
+        ...Object.keys(CSIM_FUNCTIONS),
+        ...Object.keys(COSMOS_SIM_FUNCTIONS)
+    ];
 }
 
 function getFunctionData(funcKey) {
-    return CSIM_FUNCTIONS[funcKey] || SIM_FUNCTIONS[funcKey] || MATH_FUNCTIONS[funcKey];
+    return COSMOS_SIM_FUNCTIONS[funcKey] || CSIM_FUNCTIONS[funcKey] || SIM_FUNCTIONS[funcKey] || MATH_FUNCTIONS[funcKey];
 }
 
 function renderCurrentGraph() {
@@ -46,6 +60,11 @@ function renderCurrentGraph() {
     if (isConstantsSimFunction(state.currentFunction)) {
         elements.canvasWrapper.classList.add('sim-mode');
         drawConstantsSimStatic(state.currentFunction);
+        return;
+    }
+    if (isCosmosSimFunction(state.currentFunction)) {
+        elements.canvasWrapper.classList.add('sim-mode');
+        drawCosmosSimStatic(state.currentFunction);
         return;
     }
     elements.canvasWrapper.classList.remove('sim-mode');
@@ -330,6 +349,7 @@ function renderCategoryTabs() {
     const symphonyContainer = elements.categoryTabsSymphony;
     const symphonyPlusContainer = elements.categoryTabsSymphonyPlus || symphonyContainer;
     const cosmicContainer = elements.categoryTabsCosmic;
+    const cosmicPlusContainer = elements.categoryTabsCosmicPlus;
     
     if (!existingContainer || !symphonyContainer || !cosmicContainer) return;
 
@@ -338,6 +358,7 @@ function renderCategoryTabs() {
     symphonyContainer.innerHTML = '';
     if (symphonyPlusContainer !== symphonyContainer) symphonyPlusContainer.innerHTML = '';
     cosmicContainer.innerHTML = '';
+    if (cosmicPlusContainer) cosmicPlusContainer.innerHTML = '';
 
     // 1. Add 'All' button to existing row
     const allBtn = document.createElement('button');
@@ -390,8 +411,18 @@ function renderCategoryTabs() {
         symphonyPlusContainer.appendChild(btn);
     });
 
+    // 5. Cosmos Sim categories (cosmic row)
+    Object.entries(COSMOS_SIM_CATEGORIES).forEach(([catId, cat]) => {
+        const btn = document.createElement('button');
+        btn.className = 'category-tab' + (catId === state.currentCategory ? ' active' : '');
+        btn.dataset.category = catId;
+        btn.textContent = cat.name;
+        btn.addEventListener('click', () => selectCategory(catId, true));
+        if (cosmicPlusContainer) cosmicPlusContainer.appendChild(btn);
+    });
+
     // Horizontal scroll & Drag support for all containers
-    [existingContainer, constantsSimContainer, symphonyContainer, symphonyPlusContainer, cosmicContainer].forEach(container => {
+    [existingContainer, constantsSimContainer, symphonyContainer, symphonyPlusContainer, cosmicContainer, cosmicPlusContainer].forEach(container => {
         if (!container) return;
         let isDown = false;
         let startX;
@@ -479,7 +510,7 @@ function renderFunctionButtons(category) {
         card.tabIndex = 0;
         card.draggable = true;
 
-        const categoryLabel = CSIM_CATEGORIES[func.category]?.name || SIM_CATEGORIES[func.category]?.name || CATEGORIES[func.category]?.name || func.category;
+        const categoryLabel = COSMOS_SIM_CATEGORIES[func.category]?.name || CSIM_CATEGORIES[func.category]?.name || SIM_CATEGORIES[func.category]?.name || CATEGORIES[func.category]?.name || func.category;
         card.innerHTML = `
             <div class="card-top">
                 <span class="card-title">${func.name}</span>
@@ -599,6 +630,7 @@ function selectFunction(funcName) {
     
     stopSymphonySim();
     stopConstantsSim();
+    stopCosmosSim();
     renderCurrentGraph();
     
     if (state.isPlaying) {
@@ -608,6 +640,9 @@ function selectFunction(funcName) {
         } else if (isConstantsSimFunction(state.currentFunction)) {
             stopPreview();
             startConstantsSim(state.currentFunction);
+        } else if (isCosmosSimFunction(state.currentFunction)) {
+            stopPreview();
+            startCosmosSim(state.currentFunction);
         } else {
             playSound(state.currentFunction);
             animate();
@@ -629,6 +664,7 @@ function getCategoryFunctions(category) {
     if (category === 'all') return getAllFunctionKeys();
     if (isSymphonySimCategory(category)) return SIM_CATEGORIES[category]?.functions || [];
     if (isConstantsSimCategory(category)) return CSIM_CATEGORIES[category]?.functions || [];
+    if (isCosmosSimCategory(category)) return COSMOS_SIM_CATEGORIES[category]?.functions || [];
     return CATEGORIES[category]?.functions || [];
 }
 
@@ -789,9 +825,13 @@ function startPlaybackNow() {
     } else if (isConstantsSimFunction(state.currentFunction)) {
         stopPreview();
         startConstantsSim(state.currentFunction);
+    } else if (isCosmosSimFunction(state.currentFunction)) {
+        stopPreview();
+        startCosmosSim(state.currentFunction);
     } else {
         stopSymphonySim();
         stopConstantsSim();
+        stopCosmosSim();
         playSound();
         animate();
     }
@@ -946,6 +986,7 @@ function pause() {
     stopPreview();
     stopSymphonySim();
     stopConstantsSim();
+    stopCosmosSim();
     
     if (state.animationId) cancelAnimationFrame(state.animationId);
     renderQueue();
