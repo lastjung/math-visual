@@ -24,7 +24,7 @@ export const CSIM_CATEGORIES = {
         functions: [
             'sunflowerSim', 'limacon3Sim', 'starSim', 'explosionSim', 'fairySim',
             'trigChaosSim', 'shiningStarSim', 'splitPulseSim', 'vibrationSim',
-            'diamondSim', 'monsterWaveSim', 'polarVibrationSim'
+            'diamondSim', 'monsterWaveSim', 'vibrationPolarSim'
         ]
     },
     'math-plus': {
@@ -526,6 +526,18 @@ export const CSIM_FUNCTIONS = {
         },
         audioScale: 100, baseFreq: 440
     },
+    vibrationPolarSim: {
+        id: 'vibrationPolarSim', category: 'art-plus', name: 'Vibration Polar', type: 'polar',
+        formula: 'r = a · θ · sin(bθ/5)',
+        latex: 'r = a \\cdot \\theta \\cdot \\sin\\left(\\frac{b\\theta}{5}\\right)',
+        viewBox: { xMin: -15, xMax: 15, yMin: -15, yMax: 15 },
+        tRange: { min: 0, max: 12 * Math.PI },
+        drawMs: 3000, durationMs: 12000,
+        varA: { name: 'Growth', min: 0.05, max: 1.0, default: 0.3 },
+        varB: { name: 'Lobes', min: 1, max: 10, default: 5 },
+        r: (theta, a, b) => a * theta * Math.sin((b * theta) / 5),
+        audioScale: 200, baseFreq: 220
+    },
 
     // ---------- Math+ (Total 7) ----------
     fourierSquareSim: {
@@ -876,6 +888,15 @@ function tick() {
     updateAudio(sim, drawProgress, valA, valB);
     drawWaveform();
     updateHud(sim, valA, valB, animateProgress < 0.5);
+    
+    if (elements.canvasClock) {
+        const total = Math.floor(elapsed);
+        const mm = String(Math.floor(total / 60000)).padStart(2, '0');
+        const ss = String(Math.floor((total % 60000) / 1000)).padStart(2, '0');
+        const ms = String(Math.floor((total % 1000) / 10)).padStart(2, '0');
+        elements.canvasClock.textContent = `${mm}:${ss}.${ms}`;
+    }
+    
     simAudio.rafId = requestAnimationFrame(tick);
 }
 
@@ -895,22 +916,27 @@ function drawSimCurve(graphCtx, sim, width, height, progress, valA, valB) {
     const totalSteps = (sim.type === 'cartesian') ? 2200 : 3000;
     const steps = Math.max(2, Math.floor(totalSteps * progress));
     
-    graphCtx.beginPath();
     graphCtx.lineWidth = 2.8;
-    graphCtx.strokeStyle = getSimColor();
     graphCtx.lineJoin = 'round'; graphCtx.lineCap = 'round';
 
+    let currentTurn = -1;
+    let prevPx = 0, prevPy = 0;
     let first = true;
+
     for (let i = 0; i <= steps; i++) {
         let x, y;
         const p = i / totalSteps;
+        let turn = 0;
+
         if (sim.type === 'cartesian') {
             x = xMin + p * (xMax - xMin); y = sim.fn(x, valA, valB);
         } else if (sim.type === 'parametric') {
             const t = sim.tRange.min + p * (sim.tRange.max - sim.tRange.min);
+            turn = Math.floor((t - sim.tRange.min) / (2 * Math.PI));
             x = sim.x(t, valA, valB); y = sim.y(t, valA, valB);
         } else if (sim.type === 'polar') {
             const theta = sim.tRange.min + p * (sim.tRange.max - sim.tRange.min);
+            turn = Math.floor((theta - sim.tRange.min) / (2 * Math.PI));
             const r = sim.r(theta, valA, valB);
             x = r * Math.cos(theta); y = r * Math.sin(theta);
         }
@@ -918,7 +944,32 @@ function drawSimCurve(graphCtx, sim, width, height, progress, valA, valB) {
         if (!Number.isFinite(x) || !Number.isFinite(y)) { first = true; continue; }
         const px = ((x - xMin) / (xMax - xMin)) * width;
         const py = ((yMax - y) / (yMax - yMin)) * height;
+
+        if (turn !== currentTurn) {
+            if (currentTurn !== -1) {
+                graphCtx.stroke();
+            }
+            currentTurn = turn;
+            graphCtx.beginPath();
+            
+            const baseHue = ((state.functionIndex || 0) * 137.5) % 360;
+            const hue = (baseHue + turn * 35) % 360;
+            const saturation = 85;
+            const lightness = state.theme === 'dark' ? 68 : 45;
+            graphCtx.strokeStyle = sim.color ? sim.color : `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+            
+            if (i > 0) {
+                graphCtx.moveTo(prevPx, prevPy);
+                first = false;
+            } else {
+                first = true;
+            }
+        }
+
         if (first) { graphCtx.moveTo(px, py); first = false; } else { graphCtx.lineTo(px, py); }
+        
+        prevPx = px;
+        prevPy = py;
     }
     graphCtx.stroke();
 }
