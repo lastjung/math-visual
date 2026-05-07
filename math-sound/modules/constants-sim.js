@@ -959,15 +959,25 @@ export const CSIM_FUNCTIONS = {
     },
     recursiveSineSim: {
         id: 'recursiveSineSim', category: 'sound-plus', name: 'Recursive Sine Sim', type: 'cartesian',
-        formula: 'y = sin(ax + sin(ax + sin(ax)))',
-        latex: 'y = \\sin(ax + \\sin(ax + \\sin(ax)))',
+        formula: 'y = f_b(x) where f_n = sin(ax + f_{n-1})',
+        latex: 'y = f_{\\lfloor b \\rfloor}(x), \\quad f_n(x) = \\sin(ax + f_{n-1}(x))',
         range: { xMin: -10, xMax: 10, yMin: -1.5, yMax: 1.5 },
         drawMs: 2000, durationMs: 12000,
-        varA: { name: 'Frequency', min: 0.5, max: 5, default: 1 },
-        varB: { name: 'Depth', min: 1, max: 10, default: 1 },
+        varA: { name: 'Frequency', min: 0.1, max: 4, default: 0.8 },
+        varB: { name: 'Depth', min: 1, max: 10, default: 3 },
         fn: (x, a, b) => {
             const f = x * a;
-            return Math.sin(f + Math.sin(f + Math.sin(f * b)));
+            const depth = Math.floor(b);
+            const frac = b - depth;
+            let val = 0;
+            for (let i = 0; i < depth; i++) {
+                val = Math.sin(f + val);
+            }
+            if (frac > 0) {
+                const valNext = Math.sin(f + val);
+                val = val + frac * (valNext - val);
+            }
+            return val;
         },
         audioScale: 400, baseFreq: 330
     },
@@ -978,7 +988,7 @@ export const CSIM_FUNCTIONS = {
         range: { xMin: -4, xMax: 4, yMin: -1.5, yMax: 1.5 },
         drawMs: 2000, durationMs: 12000,
         varA: { name: 'Sweep', min: 1, max: 10, default: 4 },
-        varB: { name: 'Start', min: 0, max: 20, default: 0 },
+        varB: { name: 'Start', min: 0, max: 20, default: 10 },
         fn: (x, a, b) => Math.sin(a * x * x + b * x),
         audioScale: 250, baseFreq: 350
     }
